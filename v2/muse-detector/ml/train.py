@@ -159,7 +159,7 @@ def create_dataloaders(
         TensorDataset(X_train, y_train),
         batch_size=batch_size,
         shuffle=True,
-        drop_last=True
+        drop_last=False
     )
 
     val_loader = DataLoader(
