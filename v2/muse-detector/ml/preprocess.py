@@ -341,6 +341,13 @@ def train_val_split(
     """
     np.random.seed(random_seed)
 
+    n_samples = len(dataset.y)
+    if n_samples < 2:
+        raise ValueError(
+            "Not enough windows to split into train/val. "
+            f"Need at least 2 windows, got {n_samples}."
+        )
+
     unique_sessions = list(set(dataset.session_ids))
 
     # Fall back to random split if only 1 session (can't stratify by session)
@@ -349,6 +356,7 @@ def train_val_split(
         np.random.shuffle(unique_sessions)
 
         n_val_sessions = max(1, int(len(unique_sessions) * val_ratio))
+        n_val_sessions = min(n_val_sessions, len(unique_sessions) - 1)
         val_sessions = set(unique_sessions[:n_val_sessions])
         train_sessions = set(unique_sessions[n_val_sessions:])
 
@@ -361,12 +369,16 @@ def train_val_split(
         # Random split (used when only 1 session or stratify_by_session=False)
         if len(unique_sessions) == 1:
             logger.info(f"Single session detected - using random split within session")
-        n_val = int(len(dataset.y) * val_ratio)
-        indices = np.random.permutation(len(dataset.y))
+        n_val = int(n_samples * val_ratio)
+        if n_val == 0:
+            n_val = 1
+        if n_val >= n_samples:
+            n_val = n_samples - 1
+        indices = np.random.permutation(n_samples)
         val_indices = indices[:n_val]
         train_indices = indices[n_val:]
 
-        train_mask = np.zeros(len(dataset.y), dtype=bool)
+        train_mask = np.zeros(n_samples, dtype=bool)
         train_mask[train_indices] = True
         val_mask = ~train_mask
 
@@ -388,6 +400,13 @@ def train_val_split(
         channel_means=dataset.channel_means,
         channel_stds=dataset.channel_stds,
     )
+
+    if train_dataset.n_windows == 0 or val_dataset.n_windows == 0:
+        raise ValueError(
+            "Train/val split resulted in empty dataset. "
+            f"Train={train_dataset.n_windows}, Val={val_dataset.n_windows}. "
+            "Collect more data or adjust val_ratio."
+        )
 
     logger.info(f"Train: {train_dataset.n_windows} windows ({train_dataset.positive_ratio:.1%} positive)")
     logger.info(f"Val: {val_dataset.n_windows} windows ({val_dataset.positive_ratio:.1%} positive)")

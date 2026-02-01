@@ -149,6 +149,15 @@ def create_dataloaders(
     batch_size: int = 32
 ) -> Tuple[DataLoader, DataLoader]:
     """Create PyTorch DataLoaders from preprocessed datasets."""
+    if train_dataset.n_windows == 0 or val_dataset.n_windows == 0:
+        raise ValueError(
+            "Cannot create dataloaders with empty datasets. "
+            f"Train={train_dataset.n_windows}, Val={val_dataset.n_windows}."
+        )
+
+    effective_batch_size = min(batch_size, train_dataset.n_windows)
+    drop_last = train_dataset.n_windows >= effective_batch_size
+
     # Convert to tensors
     X_train = torch.tensor(train_dataset.X, dtype=torch.float32)
     y_train = torch.tensor(train_dataset.y, dtype=torch.float32)
@@ -157,14 +166,14 @@ def create_dataloaders(
 
     train_loader = DataLoader(
         TensorDataset(X_train, y_train),
-        batch_size=batch_size,
+        batch_size=effective_batch_size,
         shuffle=True,
-        drop_last=True
+        drop_last=drop_last
     )
 
     val_loader = DataLoader(
         TensorDataset(X_val, y_val),
-        batch_size=batch_size,
+        batch_size=min(batch_size, val_dataset.n_windows),
         shuffle=False
     )
 
@@ -194,6 +203,8 @@ def train_epoch(
 
         total_loss += loss.item()
 
+    if len(train_loader) == 0:
+        raise ValueError("Training loader is empty. Check dataset size and batch_size.")
     return total_loss / len(train_loader)
 
 
@@ -226,6 +237,8 @@ def evaluate(
             all_proba.extend(proba.cpu().numpy())
             all_labels.extend(y_batch.squeeze(-1).cpu().numpy())
 
+    if len(val_loader) == 0:
+        raise ValueError("Validation loader is empty. Check dataset size and val_ratio.")
     avg_loss = total_loss / len(val_loader)
     metrics = compute_metrics(
         np.array(all_labels),
@@ -289,6 +302,11 @@ def train_model(
         val_ratio=config.val_ratio,
         stratify_by_session=config.stratify_by_session
     )
+    if train_dataset.n_windows == 0 or val_dataset.n_windows == 0:
+        raise ValueError(
+            "Train/val split produced an empty set. "
+            "Collect more data or adjust val_ratio."
+        )
 
     # Apply data augmentation to training set only
     if config.augment:
