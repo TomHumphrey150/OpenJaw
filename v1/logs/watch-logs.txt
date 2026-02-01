@@ -1,0 +1,1602 @@
+[Watch] WatchConnectivityManager init()
+[Watch] Session delegate set, activating...
+[Watch] WatchConnectivity session initialized
+WCSession has not been activated
+[Watch] Session reachable: false
+[Watch] Activation state will be reported in delegate callback
+Application context data is nil
+Application context data is nil
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:00:06Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:00:42Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:00:46Z, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:00:47Z]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:00:49Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:00:50Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:00:52Z, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:01:02Z, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:05Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:16Z, "pattern": double_tap, "action": haptic]
+[Watch] Extended runtime session requested
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] ✅ Activation complete - state: 2
+[Watch] ✅ isReachable: false
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 1, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #1)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 2, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #2)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 3, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #3)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 4, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #4)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 5, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #5)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 6, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #6)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 7, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #7)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 8, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #8)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 9, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #9)
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 10, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #10)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:01:18Z, "pattern": double_tap]
+[Watch] ✅ Extended runtime session started - app will stay active
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 11, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #11)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:21Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 12, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #12)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:23Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 13, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #13)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:24Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 14, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #14)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:33Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 15, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #15)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:35Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 16, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #16)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:35Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 17, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #17)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:01:35Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 18, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #18)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:41Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 19, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #19)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:01:43Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 20, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #20)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:50Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 21, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #21)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:50Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 22, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #22)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:50Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 23, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #23)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:51Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 24, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #24)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:01:52Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 25, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #25)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:53Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 26, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #26)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:54Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 27, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #27)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:01:55Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 28, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #28)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:01:59Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 29, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #29)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:02:09Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 30, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #30)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:02:10Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 31, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #31)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:02:45Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 32, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #32)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:02:54Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 33, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #33)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:02:54Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 34, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #34)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:02:54Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 35, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #35)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T00:03:04Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 36, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #36)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:03:05Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 37, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #37)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:03:06Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 38, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #38)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:28Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 39, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #39)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:29Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 40, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #40)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:29Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 41, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #41)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:31Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 42, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #42)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:34Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 43, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #43)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:34Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 44, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #44)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:36Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 45, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #45)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:03:42Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 46, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #46)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:04:13Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 47, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #47)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:06:06Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 48, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #48)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:06:06Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 49, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #49)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:08:08Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 50, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #50)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:08:08Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 51, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #51)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:08:45Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 52, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #52)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:08:48Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 53, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #53)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T00:08:52Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 54, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #54)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:08:57Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 55, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #55)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:08:58Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 56, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #56)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:09:05Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 57, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #57)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:09:10Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 58, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #58)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:09:16Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 59, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #59)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:10:03Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 60, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #60)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:44:15Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 61, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #61)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:44:25Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 62, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #62)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:44:26Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 63, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #63)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:44:29Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 64, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #64)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:44:31Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 65, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #65)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:44:32Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 66, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #66)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T00:44:34Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 67, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #67)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T00:44:34Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 68, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #68)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:44:42Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 69, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #69)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:44:43Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 70, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #70)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T00:44:46Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 71, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #71)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:10:11Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 72, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #72)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:10:14Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 73, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #73)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:10:14Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 74, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #74)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:10:14Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 75, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #75)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:10:23Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 76, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #76)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:10:24Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 77, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #77)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:10:24Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 78, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #78)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:21:40Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 79, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #79)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:21:41Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 80, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #80)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:21:49Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 81, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #81)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:27:15Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 82, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #82)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:29:52Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 83, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #83)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:29:52Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 84, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #84)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T01:29:53Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 85, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #85)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T01:29:54Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 86, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #86)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T01:29:54Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 87, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #87)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:29:55Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 88, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #88)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:29:56Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 89, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #89)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:33:35Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 90, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #90)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:33:35Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 91, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #91)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:33:38Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 92, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #92)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:38:06Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 93, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #93)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:38:06Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 94, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #94)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:38:07Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 95, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #95)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:38:09Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 96, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #96)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:38:09Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 97, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #97)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:38:11Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 98, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #98)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:38:11Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 99, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #99)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:40:55Z, "action": haptic, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 100, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #100)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:40:55Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 101, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #101)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["timestamp": 2026-02-01T01:40:57Z, "pattern": double_tap, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 102, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #102)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "action": haptic, "timestamp": 2026-02-01T01:40:57Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 103, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #103)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:40:58Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 104, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #104)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T01:40:59Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 105, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #105)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T01:41:05Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 106, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #106)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T01:41:10Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 107, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #107)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T02:26:42Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 108, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #108)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "timestamp": 2026-02-01T02:26:42Z, "pattern": double_tap]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 109, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #109)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T02:26:43Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 110, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #110)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T02:26:43Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 111, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #111)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["pattern": double_tap, "timestamp": 2026-02-01T02:26:46Z, "action": haptic]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 112, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #112)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T02:26:50Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 113, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #113)
+[Watch] 🟡 didReceiveUserInfo called (queued message)
+[Watch] 🟡 UserInfo: ["action": haptic, "pattern": double_tap, "timestamp": 2026-02-01T02:26:51Z]
+[Watch] 🟡 Handling queued message on MainActor
+[Watch] 📥 handleMessage() called with action: haptic
+[Watch] 🎯 handleHapticTrigger() called
+[Watch] 🎯 Pattern from message: double_tap
+[Watch] 🎯 Stats updated - totalEvents: 114, lastPattern: Double Tap
+[Watch] 🎯 About to call hapticEngine.play(Double Tap)
+[HapticEngine] Playing pattern: Double Tap
+[HapticEngine] Double tap played
+[HapticEngine] ✅ Double tap initiated (async completion)
+[Watch] 🎯 hapticEngine.play() call completed
+[Watch] Played haptic pattern: Double Tap (Event #114)
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/A5F3D752-51B5-4031-8425-BF2793C7B5E9/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/93CCCE49-047F-4826-A6FD-CFFBD7013295/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/5C5009D6-6235-473B-A64E-70C616E4EE10/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2D3714DD-DC10-4F2A-B882-0D436D473EF1/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/EDC814D1-A1D8-4581-9C8C-548FC2F32166/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FFDB9AA2-6110-4242-BE11-FC457AD9F3A9/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/A0E77F8D-86A2-4986-9C78-856F93B4541F/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/F68C1256-A788-457E-806A-F734B0AAF74C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/9043DFCE-D1C1-4768-B379-63375A24DAB2/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/D5D30417-8278-4130-AEB3-32F88E4F21FC/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/63DF7417-0925-424B-8BB8-01C14CDA3AE5/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2D8A5120-7E00-42B5-8A0F-07E6D7C1388A/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/A8A654E6-28F1-43D2-9336-55A160274673/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/A0E9D450-5045-493D-8CDE-569335BCE704/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/42CDF97E-5A26-42DE-B1B6-61E5AC140468/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/A591536C-1265-4E58-8F72-CC501CCBF2D0/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/3BD564F8-269C-4FC3-A361-7A64E6AF0C88/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/D690F778-9EC9-40DD-A1BF-FCAE33E7829F/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/D0CE38DD-BEB4-4423-9758-5ED1791140D5/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/CD664BE4-B970-400E-B079-1AAFC9FDCCEE/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/6585751C-4175-4ED5-B853-FC4D7BE54950/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/CC4928EC-496D-40B0-96CB-B93B99E3218C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/4B1B96BE-B3ED-4D0F-85F2-E9674A3DDAAD/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/42162059-72C9-48D3-8CFF-48739A3249B9/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/3F5885E4-24E9-4D09-B659-FC89B268C0C4/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/114B40E4-3C78-4128-BBDB-9B4A94978223/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/3CC46307-DCBF-4D5C-9B1A-80A6E9A8FB29/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/4C74FB99-AA69-4A13-A38E-19E6F9C56720/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/32B7B051-746E-46B0-89E0-E72E4FA46CE6/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/072DCD43-0AFB-43D9-86A3-69B31C8E87A2/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/5FE0359F-596C-4BE9-9FFD-0DF34C172A22/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/E2DB0640-0CD3-44D9-B251-C8EDA4C61D72/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/0CE4C4C4-7465-4FF1-852A-50D1F3A2BA3A/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/1FBD81F4-2F4F-444C-B44F-F3D379206187/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/45A0894B-1FC3-4785-9CAD-CAD3A35A27CD/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/0F08C24D-A7E1-448C-ADF9-912624757942/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/45467EBA-3B42-4575-AF1C-603CFF74618E/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/E185232B-777B-400A-B6D7-E01791D710AA/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2D6B5003-F85E-43B5-B9AB-BACE19FFF868/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/45E74014-3E39-4ADD-BCA2-D56655589801/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/974F6737-8438-48D1-A60B-1575CFA0991C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/A10FF3F4-1162-4CA3-81C3-F20CDC7DB084/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/776F41EE-C73A-414C-9481-30547512E905/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/CE44BD0F-79C7-4FAF-BB9B-41B0C43B5C6B/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FBE4A2BA-710E-484B-89EF-D1AADA05B2DE/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/BCB92804-4377-439D-AF90-1B92F95E3BEB/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/7E6489E3-3447-4CB7-93E8-C7FAB7601642/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2D4A6009-DE69-4990-A7F4-5D4788178B9B/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/02938EB9-BEA2-4F05-B011-808A2A30A770/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/5C442DB7-B0D3-4757-9B77-1C781B198C30/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/C9951E06-2AAB-4FA1-869E-056AC9B354AF/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/B80E0499-2B0B-4891-88D9-3AEA07EEC222/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/5CEB4CBD-D52A-40EB-9064-4BADB71AC6EE/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FD0C7C89-0AEB-46D4-B959-760EC8BEC74F/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/0195EC30-57B4-4B27-B902-05B33B5DE15B/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/4E51017E-81E6-4A28-BEA8-4AC18E4EE7F9/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/D1523007-3D0C-49F6-9FE4-F09EC956BA99/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/22626FB4-D046-40B0-A977-1EB972B085A9/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/48AECA39-3AF7-42AD-B0DA-9856B8C764A6/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/13FB5E01-192F-4FE1-A1B1-281B1D666BCB/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/1A53AA1A-DD50-4A56-9B61-50839B82571C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/59B80C42-1F18-4C92-BA73-994D5EFE521E/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/76748E54-4703-4D5F-9115-B76FF92FDC82/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/5BD0B803-D9EE-4615-AA37-38A3F0EBB73F/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2E30D8D8-2F55-4C80-BE1F-A8E13A185FAD/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/901C33D2-D050-4E11-85A9-13C1828BA430/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/9440653E-0898-4B8D-97EE-843BEB781D8E/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/453969B8-EC42-415B-8DE1-169FAAC83DBE/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/8EEA75B6-E179-400E-B659-A3100BB630CC/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/DEAE5824-4C66-4F2F-9D01-0A987470ACEF/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/92E909A2-82C6-4340-B59C-7EB0877D45A0/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/CFD078F1-A48F-49E3-8C0E-37F43CF65850/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/07662A5D-4AFC-4686-A1FD-3F34FEDFB986/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/96FFBE82-1C80-4E7D-946C-FE030C770090/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/7CDC778D-FB1B-4F34-83A0-A4D53D432C10/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/520514A8-209C-4EE3-AA21-C075731E1103/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2B6543FF-BAC0-4056-8777-BDC588083235/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/05FD813E-DDC4-47C9-9DBA-B423AE7D3BA5/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/4DD3F24C-5802-4D5D-B408-D8918D430F69/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/5D6C283E-57A6-47B1-83AF-FEC5DF4E70F4/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/848B3D1E-ADE7-4727-9FEC-C5EF07CA247B/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/92D40DAB-8F4B-42F2-96F3-598B78CE86CB/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/F3F8130E-2DF0-4C49-B6B0-6EBE2E530A45/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/BC9EDFBC-97B6-4A5F-82AA-FB7CF8CBBFA0/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/D782B215-0624-45A6-A1EB-2D9BD61EF7F7/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FFAD03AA-14B4-4F69-8C8C-B6FC69537589/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/8662705E-0F3B-42C1-8103-0F96A900AE2B/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/9CF10218-F6AF-4308-AC74-528C3D229417/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/0D68D094-A5AE-4343-B7B6-58C5DD287373/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FC77C766-0DA5-40CF-9EBA-D64E1473CC4C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/53458247-50BC-4901-AB2B-5B98535265F5/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/60470C34-D7E3-491E-AA69-4D04EC13527D/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FA119DF9-60FC-4B37-BCC5-F30B18B4C290/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/9981506F-5463-4EB6-BBF0-71A2065F3A47/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/F889262C-3A0F-445D-93AE-EC24532F4C0F/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/4E06B749-3AAC-4F65-A2F5-F3629B4DDA8E/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/2F0DFDCC-6F26-4650-9716-BA22D089A408/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/B653F650-6F9A-4D04-9FC5-222842ABE1D2/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/4F7FA8DF-01B7-4F95-B2B4-4760C6AD6C71/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/0B53CC99-C696-4BB7-96DB-87F0AE39D3E1/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/6798E0DF-A4F7-43F8-9CBD-7C345332CEF0/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/9C4D7B59-4407-491D-82A0-E3552567A73C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/7DBE59C5-5640-4916-8A91-3C00081A6A5C/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/FBDD1D90-5C54-43C4-88DC-1E81FB09E9C3/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/75600CC0-18F8-4DFE-B700-BCF91FD7826B/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/F4E3FA9A-58AA-41F9-B008-D1C788FDCCBA/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+-[WCFileStorage enumerateIncomingUserInfosWithBlock:] could not load user info data at path /var/mobile/Containers/Data/Application/F606FCCE-5D5F-466B-8353-89A641A39B01/Documents/Inbox/com.apple.watchconnectivity/918FDAB2-AA51-46BC-84E4-98123A66918E/UserInfo/3DD0701E-7E1C-4115-9E79-916ACBEF05CD/userinfo-transfer-object-data due to NSFileReadNoSuchFileError -> ENOENT
+[Watch] Reachability changed: true

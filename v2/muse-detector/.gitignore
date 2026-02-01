@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.env
+
+# Logs (keep CHANGELOG.md for debugging history)
+logs/runs/
+logs/events_*.jsonl
+
+# ML data (training data and models can be large)
+data/raw/*.parquet
+data/models/*.pt
+data/models/*.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store

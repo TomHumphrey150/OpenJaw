@@ -1,0 +1,250 @@
+{
+  "sections": [
+    {
+      "id": "what_is_bruxism",
+      "title": "What is Bruxism?",
+      "icon": "questionmark.circle.fill",
+      "color": "blue",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Bruxism is the involuntary grinding, gnashing, or clenching of teeth. Sleep bruxism occurs during sleep and is classified as a sleep-related movement disorder.",
+          "citationIds": ["nhs_bruxism"]
+        },
+        {
+          "type": "paragraph",
+          "text": "It affects approximately 8-31% of the general population, with higher rates in children. Most people are unaware they grind their teeth until a partner notices or a dentist spots wear patterns.",
+          "citationIds": ["cochrane_splints"]
+        }
+      ]
+    },
+    {
+      "id": "symptoms",
+      "title": "Common Symptoms",
+      "icon": "list.bullet.clipboard.fill",
+      "color": "orange",
+      "content": [
+        {
+          "type": "bulletList",
+          "items": [
+            "Teeth grinding or clenching loud enough to wake your partner",
+            "Teeth that are flattened, fractured, chipped, or loose",
+            "Worn tooth enamel exposing deeper layers",
+            "Increased tooth sensitivity or pain",
+            "Tired or tight jaw muscles, especially upon waking",
+            "Jaw, neck, or face pain or soreness",
+            "Dull headache starting at the temples",
+            "Sleep disruption for you or your partner"
+          ],
+          "citationIds": ["nhs_bruxism", "ada_bruxism"]
+        }
+      ]
+    },
+    {
+      "id": "causes",
+      "title": "Potential Causes",
+      "icon": "arrow.triangle.branch",
+      "color": "purple",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "The exact cause of bruxism isn't fully understood, but research has identified several risk factors:",
+          "citationIds": []
+        },
+        {
+          "type": "bulletList",
+          "items": [
+            "Stress, anxiety, or tension (most common trigger)",
+            "Sleep disorders like obstructive sleep apnea",
+            "Abnormal bite or missing/crooked teeth",
+            "Lifestyle factors: caffeine (~1.5x odds), alcohol (~2x odds), smoking (>2x odds)",
+            "Certain medications, especially SSRIs (responsible for ~74% of reported antidepressant-induced bruxism cases)",
+            "Genetic factors",
+            "GERD (acid reflux) - associated in case-control studies"
+          ],
+          "citationIds": ["lifestyle_factors", "ssri_bruxism"]
+        }
+      ]
+    },
+    {
+      "id": "treatments",
+      "title": "Treatment Approaches",
+      "icon": "cross.case.fill",
+      "color": "green",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "No single intervention cures bruxism, but a strategic combination of evidence-based approaches can effectively manage symptoms:",
+          "citationIds": []
+        },
+        {
+          "type": "treatmentList",
+          "items": [
+            {
+              "name": "Night Guards",
+              "description": "Custom-fitted hard acrylic splints protect teeth from damage. Per the 2007 Cochrane review (most recent available), they don't reduce grinding but prevent costly dental repairs.",
+              "citationIds": ["cochrane_splints"]
+            },
+            {
+              "name": "Biofeedback",
+              "description": "Real-time monitoring with gentle alerts may reduce clenching in the short term, though effects can diminish over time.",
+              "citationIds": ["biofeedback_review"]
+            },
+            {
+              "name": "Lifestyle Changes",
+              "description": "Reducing caffeine, alcohol, and improving sleep hygiene. Zero cost with documented risk reduction.",
+              "citationIds": ["lifestyle_factors"]
+            },
+            {
+              "name": "Stress Management",
+              "description": "Meditation, deep breathing, exercise. Addresses a major trigger for bruxism.",
+              "citationIds": []
+            },
+            {
+              "name": "Medication Review",
+              "description": "If bruxism started after beginning an SSRI, discuss with your doctor (never stop abruptly). Buspirone may help after 2-3 weeks.",
+              "citationIds": ["ssri_bruxism"]
+            },
+            {
+              "name": "Botox (Severe Cases)",
+              "description": "Effective for pain and force reduction, but expensive and requires ongoing treatment.",
+              "citationIds": ["botox_meta"]
+            }
+          ],
+          "citationIds": []
+        }
+      ]
+    },
+    {
+      "id": "how_openjaw_helps",
+      "title": "How OpenJaw Helps",
+      "icon": "waveform.path.ecg",
+      "color": "blue",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "OpenJaw uses EMG (electromyography) monitoring through a Muse headband to detect jaw muscle activity during sleep.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "When clenching is detected, your Apple Watch delivers a gentle haptic vibration to interrupt the grinding pattern without fully waking you.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Small studies suggest biofeedback may reduce EMG activity in the short term, though a 2018 systematic review notes that long-term evidence is limited and habituation can occur after several weeks of use.",
+          "citationIds": ["biofeedback_review"]
+        },
+        {
+          "type": "paragraph",
+          "text": "Beyond real-time biofeedback, OpenJaw provides a central place to track all your bruxism management habits, monitor your progress over time, and access evidence-based information to help you take control of your treatment.",
+          "citationIds": []
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Learn More",
+      "icon": "book.fill",
+      "color": "indigo",
+      "content": [
+        {
+          "type": "resourceList",
+          "items": [
+            {
+              "title": "NHS - Teeth Grinding",
+              "subtitle": "Comprehensive overview from the UK National Health Service",
+              "url": "https://www.nhs.uk/symptoms/teeth-grinding/",
+              "isPrimary": true
+            },
+            {
+              "title": "American Dental Association",
+              "subtitle": "Bruxism overview and treatment options",
+              "url": "https://www.mouthhealthy.org/all-topics-a-z/teeth-grinding",
+              "isPrimary": false
+            },
+            {
+              "title": "Sleep Foundation",
+              "subtitle": "Sleep bruxism causes and symptoms",
+              "url": "https://www.sleepfoundation.org/bruxism",
+              "isPrimary": false
+            },
+            {
+              "title": "Cochrane Review (2007)",
+              "subtitle": "Evidence summary on occlusal splints (most recent Cochrane review)",
+              "url": "https://www.cochrane.org/evidence/CD005514_occlusal-splints-treating-sleep-bruxism-tooth-grinding",
+              "isPrimary": false
+            },
+            {
+              "title": "NIH - Sleep Bruxism Studies",
+              "subtitle": "Research and clinical studies",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=sleep+bruxism",
+              "isPrimary": false
+            }
+          ],
+          "citationIds": []
+        }
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cochrane_splints",
+      "title": "Occlusal splints for treating sleep bruxism (tooth grinding)",
+      "source": "Cochrane",
+      "year": 2007,
+      "url": "https://www.cochrane.org/evidence/CD005514_occlusal-splints-treating-sleep-bruxism-tooth-grinding",
+      "type": "cochrane"
+    },
+    {
+      "id": "biofeedback_review",
+      "title": "Efficacy of biofeedback therapy on sleep bruxism: A systematic review and meta-analysis",
+      "source": "J Oral Rehabil",
+      "year": 2018,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/29577362/",
+      "type": "systematicReview"
+    },
+    {
+      "id": "ssri_bruxism",
+      "title": "SSRI-associated bruxism: A systematic review of published case reports",
+      "source": "PMC",
+      "year": 2018,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5914744/",
+      "type": "systematicReview"
+    },
+    {
+      "id": "lifestyle_factors",
+      "title": "Association between sleep bruxism and alcohol, caffeine, tobacco, and drug abuse: A systematic review",
+      "source": "JADA",
+      "year": 2016,
+      "url": "https://jada.ada.org/article/s0002-8177(16)30541-4/abstract",
+      "type": "systematicReview"
+    },
+    {
+      "id": "botox_meta",
+      "title": "Efficacy of botulinum-A for nocturnal bruxism pain and the occurrence of bruxism events: a meta-analysis and systematic review",
+      "source": "Br J Oral Maxillofac Surg",
+      "year": 2022,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34955330/",
+      "type": "metaAnalysis"
+    },
+    {
+      "id": "nhs_bruxism",
+      "title": "Teeth grinding (bruxism)",
+      "source": "NHS",
+      "year": 2022,
+      "url": "https://www.nhs.uk/symptoms/teeth-grinding/",
+      "type": "guideline"
+    },
+    {
+      "id": "ada_bruxism",
+      "title": "Bruxism (teeth grinding or clenching)",
+      "source": "ADA",
+      "year": 2024,
+      "url": "https://www.mouthhealthy.org/all-topics-a-z/teeth-grinding",
+      "type": "guideline"
+    }
+  ],
+  "disclaimer": "This information is for educational purposes only and is not a substitute for professional medical advice. Please consult with a healthcare provider or dentist for diagnosis and treatment of bruxism."
+}

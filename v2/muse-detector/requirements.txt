@@ -1,0 +1,21 @@
+# OpenMuse for Muse S Athena (MS-03) connectivity via LSL
+OpenMuse @ https://github.com/DominiqueMakowski/OpenMuse/zipball/main
+
+# Signal processing
+scipy>=1.11.0
+numpy>=1.24.0
+
+# WebSocket server
+websockets>=12.0
+
+# Bonjour/mDNS service advertisement
+zeroconf>=0.132.2
+
+# ML dependencies
+torch>=2.0.0
+pandas>=2.0.0
+pyarrow>=14.0.0
+pynput>=1.7.6
+
+# Testing
+pytest>=7.0.0

@@ -1,0 +1,399 @@
+./run.sh
+============================================
+Bruxism Biofeedback Relay Server
+============================================
+
+📡 Network Configuration:
+   Mac IP Address: 192.168.1.48
+
+📱 Mind Monitor Setup (iPhone 1):
+   - OSC Target IP: 192.168.1.48
+   - OSC Port: 5000
+
+📱 iOS App Setup (iPhone 2):
+   - Open Settings in app
+   - Server IP: 192.168.1.48
+   - Server Port: 8765
+   - Tap Connect to Server
+
+============================================
+
+Starting relay server with caffeinate (prevents Mac sleep)...
+Press Ctrl+C to stop
+
+2026-01-31 23:29:49,432 - INFO - ============================================================
+2026-01-31 23:29:49,432 - INFO - Bruxism Biofeedback Relay Server Starting
+2026-01-31 23:29:49,432 - INFO - ============================================================
+2026-01-31 23:29:49,432 - INFO - Log file: /Users/tomhumphrey/src/Skywalker/v1/relay-server/logs/relay_2026-01-31.log
+2026-01-31 23:29:49,432 - INFO - 
+2026-01-31 23:29:49,432 - INFO - Waiting for connections:
+2026-01-31 23:29:49,432 - INFO -   - Mind Monitor (OSC/UDP): 0.0.0.0:5000
+2026-01-31 23:29:49,432 - INFO -   - iPhone 2 App (WebSocket): 0.0.0.0:8765
+2026-01-31 23:29:49,432 - INFO - 
+2026-01-31 23:29:49,433 - INFO - Press Ctrl+C to stop
+2026-01-31 23:29:49,433 - INFO - ============================================================
+2026-01-31 23:29:49,433 - INFO - [OSC] Server listening on 0.0.0.0:5000
+2026-01-31 23:29:49,433 - INFO - server listening on 0.0.0.0:8765
+2026-01-31 23:29:49,433 - INFO - [WebSocket] Server listening on 0.0.0.0:8765
+2026-01-31 23:29:49,434 - INFO - [Bonjour] Local IP: 192.168.1.48
+2026-01-31 23:29:49,788 - INFO - [Bonjour] Service advertised as 'Skywalker Relay Server._skywalker-relay._tcp.local.' on port 8765
+2026-01-31 23:30:37,489 - INFO - connection rejected (400 Bad Request)
+2026-01-31 23:30:37,491 - INFO - connection closed
+2026-01-31 23:30:40,863 - INFO - connection open
+2026-01-31 23:30:40,864 - INFO - [WebSocket] Client connected: 192.168.1.227:57264
+2026-01-31 23:34:11,820 - INFO - [OSC] Jaw clench detected (#1)
+2026-01-31 23:34:11,822 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:34:11.820847", "count": 1}
+2026-01-31 23:34:15,302 - INFO - [OSC] Jaw clench detected (#2)
+2026-01-31 23:34:15,303 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:34:15.302878", "count": 2}
+2026-01-31 23:34:33,540 - INFO - [OSC] Jaw clench detected (#3)
+2026-01-31 23:34:33,542 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:34:33.540671", "count": 3}
+2026-01-31 23:34:50,977 - INFO - [OSC] Jaw clench detected (#4)
+2026-01-31 23:34:50,978 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:34:50.977390", "count": 4}
+2026-01-31 23:34:55,262 - INFO - [OSC] Jaw clench detected (#5)
+2026-01-31 23:34:55,263 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:34:55.262629", "count": 5}
+2026-01-31 23:35:29,515 - INFO - [OSC] Jaw clench detected (#6)
+2026-01-31 23:35:29,517 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:35:29.515624", "count": 6}
+2026-01-31 23:35:41,747 - INFO - [OSC] Jaw clench detected (#7)
+2026-01-31 23:35:41,748 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:35:41.746956", "count": 7}
+2026-01-31 23:35:41,991 - INFO - [OSC] Jaw clench detected (#8)
+2026-01-31 23:35:41,991 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:35:41.991020", "count": 8}
+The app on my Apple Watch keeps going to sleep and showing disconnected on the UI. I can't connect it very reliably from the iPhone that's paired to that Apple Watch. What's going on? How do I fix this?
+
+Also I need to be able to swipe maybe to the left or the right on the Apple Watch and just show a black screen that isn't for debugging but is just for actually sleeping. How can we keep the Apple Watch connected, much more reliably? Is there anything we can do to tell the Apple Watch to stay awake? 2026-01-31 23:36:22,668 - INFO - [OSC] Jaw clench detected (#9)
+2026-01-31 23:36:22,669 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:36:22.668702", "count": 9}
+2026-01-31 23:36:48,469 - INFO - [OSC] Jaw clench detected (#10)
+2026-01-31 23:36:48,470 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:36:48.469536", "count": 10}
+2026-01-31 23:36:52,231 - INFO - [OSC] Jaw clench detected (#11)
+2026-01-31 23:36:52,231 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:36:52.231283", "count": 11}
+2026-01-31 23:38:37,845 - INFO - [OSC] Jaw clench detected (#12)
+2026-01-31 23:38:37,847 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:38:37.845922", "count": 12}
+2026-01-31 23:38:44,077 - INFO - [OSC] Jaw clench detected (#13)
+2026-01-31 23:38:44,077 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-01-31T23:38:44.077086", "count": 13}
+2026-01-31 23:40:26,769 - INFO - [WebSocket] Client disconnected: 192.168.1.227:57264
+2026-01-31 23:40:26,769 - INFO - [WebSocket] Client removed: 192.168.1.227:57264 (active clients: 0)
+2026-01-31 23:40:26,770 - INFO - connection closed
+2026-01-31 23:42:46,268 - INFO - [OSC] Jaw clench detected (#14)
+2026-01-31 23:42:46,269 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:43:37,990 - INFO - [OSC] Jaw clench detected (#15)
+2026-01-31 23:43:37,991 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:43:42,722 - INFO - [OSC] Jaw clench detected (#16)
+2026-01-31 23:43:42,723 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:43:43,872 - INFO - [OSC] Jaw clench detected (#17)
+2026-01-31 23:43:43,873 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:43:44,004 - INFO - [OSC] Jaw clench detected (#18)
+2026-01-31 23:43:44,005 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:44:03,300 - INFO - [OSC] Jaw clench detected (#19)
+2026-01-31 23:44:03,300 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:44:43,709 - INFO - [OSC] Jaw clench detected (#20)
+2026-01-31 23:44:43,709 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:46:56,101 - INFO - [OSC] Jaw clench detected (#21)
+2026-01-31 23:46:56,102 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:46:57,672 - INFO - [OSC] Jaw clench detected (#22)
+2026-01-31 23:46:57,673 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:49:31,807 - INFO - [OSC] Jaw clench detected (#23)
+2026-01-31 23:49:31,811 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:51:07,217 - INFO - [OSC] Jaw clench detected (#24)
+2026-01-31 23:51:07,218 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:56:47,904 - INFO - [OSC] Jaw clench detected (#25)
+2026-01-31 23:56:47,906 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:56:48,017 - INFO - [OSC] Jaw clench detected (#26)
+2026-01-31 23:56:48,018 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:56:51,561 - INFO - [OSC] Jaw clench detected (#27)
+2026-01-31 23:56:51,562 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:56:52,093 - INFO - [OSC] Jaw clench detected (#28)
+2026-01-31 23:56:52,094 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:56:53,274 - INFO - [OSC] Jaw clench detected (#29)
+2026-01-31 23:56:53,274 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:56:53,666 - INFO - [OSC] Jaw clench detected (#30)
+2026-01-31 23:56:53,667 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:04,148 - INFO - [OSC] Jaw clench detected (#31)
+2026-01-31 23:57:04,148 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:05,846 - INFO - [OSC] Jaw clench detected (#32)
+2026-01-31 23:57:05,846 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:06,767 - INFO - [OSC] Jaw clench detected (#33)
+2026-01-31 23:57:06,768 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:09,980 - INFO - [OSC] Jaw clench detected (#34)
+2026-01-31 23:57:09,980 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:17,260 - INFO - [OSC] Jaw clench detected (#35)
+2026-01-31 23:57:17,260 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:17,265 - INFO - [OSC] Jaw clench detected (#36)
+2026-01-31 23:57:17,265 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:20,922 - INFO - [OSC] Jaw clench detected (#37)
+2026-01-31 23:57:20,922 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:21,459 - INFO - [OSC] Jaw clench detected (#38)
+2026-01-31 23:57:21,460 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:23,082 - INFO - [OSC] Jaw clench detected (#39)
+2026-01-31 23:57:23,082 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:25,128 - INFO - [OSC] Jaw clench detected (#40)
+2026-01-31 23:57:25,129 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:26,166 - INFO - [OSC] Jaw clench detected (#41)
+2026-01-31 23:57:26,167 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:28,797 - INFO - [OSC] Jaw clench detected (#42)
+2026-01-31 23:57:28,797 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:39,808 - INFO - [OSC] Jaw clench detected (#43)
+2026-01-31 23:57:39,809 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:45,576 - INFO - [OSC] Jaw clench detected (#44)
+2026-01-31 23:57:45,577 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:47,665 - INFO - [OSC] Jaw clench detected (#45)
+2026-01-31 23:57:47,666 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:57:48,185 - INFO - [OSC] Jaw clench detected (#46)
+2026-01-31 23:57:48,185 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:07,582 - INFO - [OSC] Jaw clench detected (#47)
+2026-01-31 23:58:07,582 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:07,593 - INFO - [OSC] Jaw clench detected (#48)
+2026-01-31 23:58:07,593 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:23,924 - INFO - [OSC] Jaw clench detected (#49)
+2026-01-31 23:58:23,925 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:28,035 - INFO - [OSC] Jaw clench detected (#50)
+2026-01-31 23:58:28,035 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:40,613 - INFO - [OSC] Jaw clench detected (#51)
+2026-01-31 23:58:40,618 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:40,625 - INFO - [OSC] Jaw clench detected (#52)
+2026-01-31 23:58:40,626 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:44,813 - INFO - [OSC] Jaw clench detected (#53)
+2026-01-31 23:58:44,813 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:58:52,204 - INFO - [OSC] Jaw clench detected (#54)
+2026-01-31 23:58:52,204 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:59:17,847 - INFO - [OSC] Jaw clench detected (#55)
+2026-01-31 23:59:17,848 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:59:17,909 - INFO - [OSC] Jaw clench detected (#56)
+2026-01-31 23:59:17,909 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:59:36,719 - INFO - [OSC] Jaw clench detected (#57)
+2026-01-31 23:59:36,720 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:59:37,844 - INFO - [OSC] Jaw clench detected (#58)
+2026-01-31 23:59:37,845 - WARNING - [WebSocket] No clients connected, event not sent
+2026-01-31 23:59:59,272 - INFO - connection rejected (400 Bad Request)
+2026-01-31 23:59:59,274 - INFO - connection closed
+2026-02-01 00:00:05,152 - INFO - connection open
+2026-02-01 00:00:05,152 - INFO - [WebSocket] Client connected: 192.168.1.227:57285
+2026-02-01 00:00:06,650 - INFO - [OSC] Jaw clench detected (#59)
+2026-02-01 00:00:06,651 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:06.650854", "count": 59}
+2026-02-01 00:00:42,260 - INFO - [OSC] Jaw clench detected (#60)
+2026-02-01 00:00:42,260 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:42.260541", "count": 60}
+2026-02-01 00:00:46,453 - INFO - [OSC] Jaw clench detected (#61)
+2026-02-01 00:00:46,453 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:46.453228", "count": 61}
+2026-02-01 00:00:47,503 - INFO - [OSC] Jaw clench detected (#62)
+2026-02-01 00:00:47,504 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:47.503782", "count": 62}
+2026-02-01 00:00:49,076 - INFO - [OSC] Jaw clench detected (#63)
+2026-02-01 00:00:49,077 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:49.076648", "count": 63}
+2026-02-01 00:00:50,280 - INFO - [OSC] Jaw clench detected (#64)
+2026-02-01 00:00:50,280 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:50.280117", "count": 64}
+2026-02-01 00:00:52,220 - INFO - [OSC] Jaw clench detected (#65)
+2026-02-01 00:00:52,220 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:00:52.220532", "count": 65}
+2026-02-01 00:01:02,172 - INFO - [OSC] Jaw clench detected (#66)
+2026-02-01 00:01:02,173 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:02.172836", "count": 66}
+2026-02-01 00:01:05,865 - INFO - [OSC] Jaw clench detected (#67)
+2026-02-01 00:01:05,865 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:05.865538", "count": 67}
+2026-02-01 00:01:16,954 - INFO - [OSC] Jaw clench detected (#68)
+2026-02-01 00:01:16,956 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:16.954681", "count": 68}
+2026-02-01 00:01:18,427 - INFO - [OSC] Jaw clench detected (#69)
+2026-02-01 00:01:18,427 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:18.427076", "count": 69}
+2026-02-01 00:01:21,050 - INFO - [OSC] Jaw clench detected (#70)
+2026-02-01 00:01:21,050 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:21.050409", "count": 70}
+2026-02-01 00:01:23,822 - INFO - [OSC] Jaw clench detected (#71)
+2026-02-01 00:01:23,823 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:23.821984", "count": 71}
+2026-02-01 00:01:24,724 - INFO - [OSC] Jaw clench detected (#72)
+2026-02-01 00:01:24,725 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:24.724886", "count": 72}
+2026-02-01 00:01:33,643 - INFO - [OSC] Jaw clench detected (#73)
+2026-02-01 00:01:33,643 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:33.643331", "count": 73}
+2026-02-01 00:01:35,203 - INFO - [OSC] Jaw clench detected (#74)
+2026-02-01 00:01:35,204 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:35.203742", "count": 74}
+2026-02-01 00:01:35,214 - INFO - [OSC] Jaw clench detected (#75)
+2026-02-01 00:01:35,214 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:35.214168", "count": 75}
+2026-02-01 00:01:35,296 - INFO - [OSC] Jaw clench detected (#76)
+2026-02-01 00:01:35,296 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:35.296316", "count": 76}
+2026-02-01 00:01:41,023 - INFO - [OSC] Jaw clench detected (#77)
+2026-02-01 00:01:41,023 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:41.023465", "count": 77}
+2026-02-01 00:01:43,604 - INFO - [OSC] Jaw clench detected (#78)
+2026-02-01 00:01:43,605 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:43.604608", "count": 78}
+2026-02-01 00:01:49,974 - INFO - [OSC] Jaw clench detected (#79)
+2026-02-01 00:01:49,975 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:49.974918", "count": 79}
+2026-02-01 00:01:50,000 - INFO - [OSC] Jaw clench detected (#80)
+2026-02-01 00:01:50,000 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:50.000445", "count": 80}
+2026-02-01 00:01:50,412 - INFO - [OSC] Jaw clench detected (#81)
+2026-02-01 00:01:50,413 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:50.412925", "count": 81}
+2026-02-01 00:01:51,000 - INFO - [OSC] Jaw clench detected (#82)
+2026-02-01 00:01:51,000 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:51.000211", "count": 82}
+2026-02-01 00:01:52,518 - INFO - [OSC] Jaw clench detected (#83)
+2026-02-01 00:01:52,518 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:52.518570", "count": 83}
+2026-02-01 00:01:53,625 - INFO - [OSC] Jaw clench detected (#84)
+2026-02-01 00:01:53,626 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:53.625902", "count": 84}
+2026-02-01 00:01:54,241 - INFO - [OSC] Jaw clench detected (#85)
+2026-02-01 00:01:54,241 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:54.241364", "count": 85}
+2026-02-01 00:01:55,145 - INFO - [OSC] Jaw clench detected (#86)
+2026-02-01 00:01:55,145 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:55.145080", "count": 86}
+2026-02-01 00:01:59,343 - INFO - [OSC] Jaw clench detected (#87)
+2026-02-01 00:01:59,343 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:01:59.343310", "count": 87}
+2026-02-01 00:02:09,939 - INFO - [OSC] Jaw clench detected (#88)
+2026-02-01 00:02:09,940 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:02:09.939926", "count": 88}
+2026-02-01 00:02:10,337 - INFO - [OSC] Jaw clench detected (#89)
+2026-02-01 00:02:10,337 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:02:10.337449", "count": 89}
+2026-02-01 00:02:45,514 - INFO - [OSC] Jaw clench detected (#90)
+2026-02-01 00:02:45,516 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:02:45.514113", "count": 90}
+2026-02-01 00:02:54,383 - INFO - [OSC] Jaw clench detected (#91)
+2026-02-01 00:02:54,383 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:02:54.383289", "count": 91}
+2026-02-01 00:02:54,897 - INFO - [OSC] Jaw clench detected (#92)
+2026-02-01 00:02:54,898 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:02:54.897521", "count": 92}
+2026-02-01 00:02:54,964 - INFO - [OSC] Jaw clench detected (#93)
+2026-02-01 00:02:54,965 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:02:54.964495", "count": 93}
+2026-02-01 00:03:04,939 - INFO - [OSC] Jaw clench detected (#94)
+2026-02-01 00:03:04,940 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:04.938709", "count": 94}
+2026-02-01 00:03:05,909 - INFO - [OSC] Jaw clench detected (#95)
+2026-02-01 00:03:05,909 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:05.909346", "count": 95}
+2026-02-01 00:03:06,444 - INFO - [OSC] Jaw clench detected (#96)
+2026-02-01 00:03:06,444 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:06.444473", "count": 96}
+2026-02-01 00:03:28,458 - INFO - [OSC] Jaw clench detected (#97)
+2026-02-01 00:03:28,458 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:28.458561", "count": 97}
+2026-02-01 00:03:28,982 - INFO - [OSC] Jaw clench detected (#98)
+2026-02-01 00:03:28,982 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:28.982413", "count": 98}
+2026-02-01 00:03:29,515 - INFO - [OSC] Jaw clench detected (#99)
+2026-02-01 00:03:29,516 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:29.515723", "count": 99}
+2026-02-01 00:03:31,615 - INFO - [OSC] Jaw clench detected (#100)
+2026-02-01 00:03:31,615 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:31.615171", "count": 100}
+2026-02-01 00:03:34,745 - INFO - [OSC] Jaw clench detected (#101)
+2026-02-01 00:03:34,747 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:34.745883", "count": 101}
+2026-02-01 00:03:34,859 - INFO - [OSC] Jaw clench detected (#102)
+2026-02-01 00:03:34,860 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:34.859791", "count": 102}
+2026-02-01 00:03:36,325 - INFO - [OSC] Jaw clench detected (#103)
+2026-02-01 00:03:36,325 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:36.325381", "count": 103}
+2026-02-01 00:03:42,219 - INFO - [OSC] Jaw clench detected (#104)
+2026-02-01 00:03:42,220 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:03:42.219714", "count": 104}
+2026-02-01 00:04:13,026 - INFO - [OSC] Jaw clench detected (#105)
+2026-02-01 00:04:13,026 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:04:13.026597", "count": 105}
+2026-02-01 00:06:06,370 - INFO - [OSC] Jaw clench detected (#106)
+2026-02-01 00:06:06,372 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:06:06.370766", "count": 106}
+2026-02-01 00:06:06,797 - INFO - [OSC] Jaw clench detected (#107)
+2026-02-01 00:06:06,798 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:06:06.797804", "count": 107}
+2026-02-01 00:08:08,436 - INFO - [OSC] Jaw clench detected (#108)
+2026-02-01 00:08:08,438 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:08.436896", "count": 108}
+2026-02-01 00:08:08,589 - INFO - [OSC] Jaw clench detected (#109)
+2026-02-01 00:08:08,589 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:08.589064", "count": 109}
+2026-02-01 00:08:45,122 - INFO - [OSC] Jaw clench detected (#110)
+2026-02-01 00:08:45,124 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:45.122762", "count": 110}
+2026-02-01 00:08:48,274 - INFO - [OSC] Jaw clench detected (#111)
+2026-02-01 00:08:48,274 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:48.274098", "count": 111}
+2026-02-01 00:08:52,468 - INFO - [OSC] Jaw clench detected (#112)
+2026-02-01 00:08:52,469 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:52.468966", "count": 112}
+2026-02-01 00:08:57,194 - INFO - [OSC] Jaw clench detected (#113)
+2026-02-01 00:08:57,194 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:57.194096", "count": 113}
+2026-02-01 00:08:58,233 - INFO - [OSC] Jaw clench detected (#114)
+2026-02-01 00:08:58,233 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:08:58.233164", "count": 114}
+2026-02-01 00:09:05,573 - INFO - [OSC] Jaw clench detected (#115)
+2026-02-01 00:09:05,574 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:09:05.573022", "count": 115}
+2026-02-01 00:09:10,304 - INFO - [OSC] Jaw clench detected (#116)
+2026-02-01 00:09:10,304 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:09:10.304553", "count": 116}
+2026-02-01 00:09:16,138 - INFO - [OSC] Jaw clench detected (#117)
+2026-02-01 00:09:16,139 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:09:16.138567", "count": 117}
+2026-02-01 00:10:03,252 - INFO - [OSC] Jaw clench detected (#118)
+2026-02-01 00:10:03,253 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:10:03.252586", "count": 118}
+2026-02-01 00:44:15,324 - INFO - [OSC] Jaw clench detected (#119)
+2026-02-01 00:44:15,325 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:15.323572", "count": 119}
+2026-02-01 00:44:25,350 - INFO - [OSC] Jaw clench detected (#120)
+2026-02-01 00:44:25,350 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:25.350243", "count": 120}
+2026-02-01 00:44:26,472 - INFO - [OSC] Jaw clench detected (#121)
+2026-02-01 00:44:26,473 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:26.472121", "count": 121}
+2026-02-01 00:44:28,984 - INFO - [OSC] Jaw clench detected (#122)
+2026-02-01 00:44:28,985 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:28.984730", "count": 122}
+2026-02-01 00:44:31,579 - INFO - [OSC] Jaw clench detected (#123)
+2026-02-01 00:44:31,579 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:31.579268", "count": 123}
+2026-02-01 00:44:32,096 - INFO - [OSC] Jaw clench detected (#124)
+2026-02-01 00:44:32,097 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:32.096374", "count": 124}
+2026-02-01 00:44:34,722 - INFO - [OSC] Jaw clench detected (#125)
+2026-02-01 00:44:34,723 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:34.722835", "count": 125}
+2026-02-01 00:44:34,835 - INFO - [OSC] Jaw clench detected (#126)
+2026-02-01 00:44:34,835 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:34.835538", "count": 126}
+2026-02-01 00:44:42,057 - INFO - [OSC] Jaw clench detected (#127)
+2026-02-01 00:44:42,058 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:42.057590", "count": 127}
+2026-02-01 00:44:43,108 - INFO - [OSC] Jaw clench detected (#128)
+2026-02-01 00:44:43,109 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:43.108934", "count": 128}
+2026-02-01 00:44:46,249 - INFO - [OSC] Jaw clench detected (#129)
+2026-02-01 00:44:46,249 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T00:44:46.248988", "count": 129}
+2026-02-01 01:10:11,420 - INFO - [OSC] Jaw clench detected (#130)
+2026-02-01 01:10:11,421 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:11.420534", "count": 130}
+2026-02-01 01:10:14,043 - INFO - [OSC] Jaw clench detected (#131)
+2026-02-01 01:10:14,044 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:14.043681", "count": 131}
+2026-02-01 01:10:14,640 - INFO - [OSC] Jaw clench detected (#132)
+2026-02-01 01:10:14,640 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:14.640024", "count": 132}
+2026-02-01 01:10:14,648 - INFO - [OSC] Jaw clench detected (#133)
+2026-02-01 01:10:14,648 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:14.648350", "count": 133}
+2026-02-01 01:10:22,946 - INFO - [OSC] Jaw clench detected (#134)
+2026-02-01 01:10:22,946 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:22.946101", "count": 134}
+2026-02-01 01:10:24,004 - INFO - [OSC] Jaw clench detected (#135)
+2026-02-01 01:10:24,005 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:24.004747", "count": 135}
+2026-02-01 01:10:24,015 - INFO - [OSC] Jaw clench detected (#136)
+2026-02-01 01:10:24,015 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:10:24.015346", "count": 136}
+2026-02-01 01:21:40,859 - INFO - [OSC] Jaw clench detected (#137)
+2026-02-01 01:21:40,859 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:21:40.859573", "count": 137}
+2026-02-01 01:21:41,907 - INFO - [OSC] Jaw clench detected (#138)
+2026-02-01 01:21:41,907 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:21:41.907114", "count": 138}
+2026-02-01 01:21:49,778 - INFO - [OSC] Jaw clench detected (#139)
+2026-02-01 01:21:49,779 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:21:49.778930", "count": 139}
+2026-02-01 01:27:15,359 - INFO - [OSC] Jaw clench detected (#140)
+2026-02-01 01:27:15,361 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:27:15.359694", "count": 140}
+2026-02-01 01:29:52,112 - INFO - [OSC] Jaw clench detected (#141)
+2026-02-01 01:29:52,115 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:52.112440", "count": 141}
+2026-02-01 01:29:52,126 - INFO - [OSC] Jaw clench detected (#142)
+2026-02-01 01:29:52,126 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:52.126541", "count": 142}
+2026-02-01 01:29:53,784 - INFO - [OSC] Jaw clench detected (#143)
+2026-02-01 01:29:53,785 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:53.784009", "count": 143}
+2026-02-01 01:29:54,221 - INFO - [OSC] Jaw clench detected (#144)
+2026-02-01 01:29:54,221 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:54.221504", "count": 144}
+2026-02-01 01:29:54,320 - INFO - [OSC] Jaw clench detected (#145)
+2026-02-01 01:29:54,321 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:54.320151", "count": 145}
+2026-02-01 01:29:55,799 - INFO - [OSC] Jaw clench detected (#146)
+2026-02-01 01:29:55,800 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:55.799837", "count": 146}
+2026-02-01 01:29:56,840 - INFO - [OSC] Jaw clench detected (#147)
+2026-02-01 01:29:56,840 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:29:56.840569", "count": 147}
+2026-02-01 01:33:35,086 - INFO - [OSC] Jaw clench detected (#148)
+2026-02-01 01:33:35,086 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:33:35.086105", "count": 148}
+2026-02-01 01:33:35,472 - INFO - [OSC] Jaw clench detected (#149)
+2026-02-01 01:33:35,473 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:33:35.472704", "count": 149}
+2026-02-01 01:33:38,619 - INFO - [OSC] Jaw clench detected (#150)
+2026-02-01 01:33:38,619 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:33:38.619406", "count": 150}
+2026-02-01 01:38:06,523 - INFO - [OSC] Jaw clench detected (#151)
+2026-02-01 01:38:06,525 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:06.523651", "count": 151}
+2026-02-01 01:38:06,537 - INFO - [OSC] Jaw clench detected (#152)
+2026-02-01 01:38:06,538 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:06.537762", "count": 152}
+2026-02-01 01:38:07,052 - INFO - [OSC] Jaw clench detected (#153)
+2026-02-01 01:38:07,052 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:07.052371", "count": 153}
+2026-02-01 01:38:09,148 - INFO - [OSC] Jaw clench detected (#154)
+2026-02-01 01:38:09,148 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:09.148247", "count": 154}
+2026-02-01 01:38:09,681 - INFO - [OSC] Jaw clench detected (#155)
+2026-02-01 01:38:09,681 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:09.681160", "count": 155}
+2026-02-01 01:38:11,243 - INFO - [OSC] Jaw clench detected (#156)
+2026-02-01 01:38:11,243 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:11.243354", "count": 156}
+2026-02-01 01:38:11,853 - INFO - [OSC] Jaw clench detected (#157)
+2026-02-01 01:38:11,854 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:38:11.853426", "count": 157}
+2026-02-01 01:40:55,341 - INFO - [OSC] Jaw clench detected (#158)
+2026-02-01 01:40:55,341 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:40:55.341078", "count": 158}
+2026-02-01 01:40:55,889 - INFO - [OSC] Jaw clench detected (#159)
+2026-02-01 01:40:55,889 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:40:55.889561", "count": 159}
+2026-02-01 01:40:57,004 - INFO - [OSC] Jaw clench detected (#160)
+2026-02-01 01:40:57,004 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:40:57.004588", "count": 160}
+2026-02-01 01:40:57,507 - INFO - [OSC] Jaw clench detected (#161)
+2026-02-01 01:40:57,508 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:40:57.507825", "count": 161}
+2026-02-01 01:40:58,509 - INFO - [OSC] Jaw clench detected (#162)
+2026-02-01 01:40:58,509 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:40:58.509441", "count": 162}
+2026-02-01 01:40:59,020 - INFO - [OSC] Jaw clench detected (#163)
+2026-02-01 01:40:59,021 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:40:59.020964", "count": 163}
+2026-02-01 01:41:05,383 - INFO - [OSC] Jaw clench detected (#164)
+2026-02-01 01:41:05,383 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:41:05.383166", "count": 164}
+2026-02-01 01:41:10,552 - INFO - [OSC] Jaw clench detected (#165)
+2026-02-01 01:41:10,552 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T01:41:10.552107", "count": 165}
+2026-02-01 02:26:42,570 - INFO - [OSC] Jaw clench detected (#166)
+2026-02-01 02:26:42,571 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:42.570168", "count": 166}
+2026-02-01 02:26:42,573 - INFO - [OSC] Jaw clench detected (#167)
+2026-02-01 02:26:42,573 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:42.573787", "count": 167}
+2026-02-01 02:26:43,100 - INFO - [OSC] Jaw clench detected (#168)
+2026-02-01 02:26:43,100 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:43.100191", "count": 168}
+2026-02-01 02:26:43,622 - INFO - [OSC] Jaw clench detected (#169)
+2026-02-01 02:26:43,622 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:43.622227", "count": 169}
+2026-02-01 02:26:46,240 - INFO - [OSC] Jaw clench detected (#170)
+2026-02-01 02:26:46,240 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:46.240378", "count": 170}
+2026-02-01 02:26:49,989 - INFO - [OSC] Jaw clench detected (#171)
+2026-02-01 02:26:49,990 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:49.989512", "count": 171}
+2026-02-01 02:26:50,959 - INFO - [OSC] Jaw clench detected (#172)
+2026-02-01 02:26:50,959 - INFO - [WebSocket] Broadcasting to 1 client(s): {"event": "jaw_clench", "timestamp": "2026-02-01T02:26:50.959336", "count": 172}
+2026-02-01 05:40:34,441 - INFO - [WebSocket] Client disconnected: 192.168.1.227:57285
+2026-02-01 05:40:34,443 - INFO - [WebSocket] Client removed: 192.168.1.227:57285 (active clients: 0)
+2026-02-01 05:40:34,443 - INFO - connection closed
