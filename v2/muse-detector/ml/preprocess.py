@@ -341,6 +341,13 @@ def train_val_split(
     """
     np.random.seed(random_seed)
 
+    total_windows = len(dataset.y)
+    if total_windows < 2:
+        raise ValueError(
+            "Not enough windows to split into train/val. "
+            "Collect more data or reduce the window size/stride."
+        )
+
     unique_sessions = list(set(dataset.session_ids))
 
     # Fall back to random split if only 1 session (can't stratify by session)
@@ -349,6 +356,13 @@ def train_val_split(
         np.random.shuffle(unique_sessions)
 
         n_val_sessions = max(1, int(len(unique_sessions) * val_ratio))
+        if n_val_sessions >= len(unique_sessions):
+            n_val_sessions = len(unique_sessions) - 1
+            if n_val_sessions < 1:
+                raise ValueError(
+                    "Not enough sessions to split into train/val. "
+                    "Collect another session or set stratify_by_session=False."
+                )
         val_sessions = set(unique_sessions[:n_val_sessions])
         train_sessions = set(unique_sessions[n_val_sessions:])
 
@@ -361,7 +375,14 @@ def train_val_split(
         # Random split (used when only 1 session or stratify_by_session=False)
         if len(unique_sessions) == 1:
             logger.info(f"Single session detected - using random split within session")
-        n_val = int(len(dataset.y) * val_ratio)
+        n_val = max(1, int(total_windows * val_ratio))
+        if n_val >= total_windows:
+            n_val = total_windows - 1
+            if n_val < 1:
+                raise ValueError(
+                    "Not enough windows to split into train/val. "
+                    "Collect more data or reduce val_ratio."
+                )
         indices = np.random.permutation(len(dataset.y))
         val_indices = indices[:n_val]
         train_indices = indices[n_val:]
@@ -388,6 +409,12 @@ def train_val_split(
         channel_means=dataset.channel_means,
         channel_stds=dataset.channel_stds,
     )
+
+    if train_dataset.n_windows == 0 or val_dataset.n_windows == 0:
+        raise ValueError(
+            "Train/val split resulted in an empty dataset. "
+            "Collect more data or adjust val_ratio."
+        )
 
     logger.info(f"Train: {train_dataset.n_windows} windows ({train_dataset.positive_ratio:.1%} positive)")
     logger.info(f"Val: {val_dataset.n_windows} windows ({val_dataset.positive_ratio:.1%} positive)")

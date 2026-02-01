@@ -155,11 +155,12 @@ def create_dataloaders(
     X_val = torch.tensor(val_dataset.X, dtype=torch.float32)
     y_val = torch.tensor(val_dataset.y, dtype=torch.float32)
 
+    drop_last = len(train_dataset.X) >= batch_size
     train_loader = DataLoader(
         TensorDataset(X_train, y_train),
         batch_size=batch_size,
         shuffle=True,
-        drop_last=True
+        drop_last=drop_last
     )
 
     val_loader = DataLoader(
@@ -289,6 +290,11 @@ def train_model(
         val_ratio=config.val_ratio,
         stratify_by_session=config.stratify_by_session
     )
+    if train_dataset.n_windows == 0 or val_dataset.n_windows == 0:
+        raise ValueError(
+            "Train/val split produced an empty dataset. "
+            "Collect more data or adjust val_ratio."
+        )
 
     # Apply data augmentation to training set only
     if config.augment:
