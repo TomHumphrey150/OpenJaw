@@ -9,8 +9,10 @@
 Two-iPhone architecture for sleep bruxism (teeth grinding) detection and haptic feedback:
 
 ```
-Muse Headband → iPhone 1 (Mind Monitor) → MacBook (Relay Server) → iPhone 2 (This App) → Apple Watch (Haptic)
+Muse Headband → Any iPhone (Mind Monitor) → MacBook (Relay Server) → Watch-paired iPhone (This App) → Apple Watch (Haptic)
 ```
+
+**Important:** This app must run on the iPhone that's paired with your Apple Watch. The Mind Monitor iPhone can be any spare device.
 
 ## Build/Test Commands
 
@@ -192,7 +194,7 @@ This is expected behavior! Apple's `isReachable` property is stricter than you'd
 The "Test Haptic" button is always enabled regardless of reachability status.
 
 **Watch truly not receiving haptics:**
-1. Verify watch is paired with iPhone 2 (not iPhone 1)
+1. Verify watch is paired with the iPhone running OpenJaw (not the Mind Monitor iPhone)
 2. Force quit both watch and iPhone apps, then restart both
 3. Check Bluetooth is enabled on both devices
 4. Ensure watch is on wrist and unlocked
@@ -215,9 +217,9 @@ All devices must be on the same WiFi network:
 | Device | IP (example) | Port | Role |
 |--------|--------------|------|------|
 | MacBook | 192.168.1.43 | 5000 (OSC), 8765 (WS) | Relay Server |
-| iPhone 1 | 192.168.1.50 | - | Mind Monitor |
-| iPhone 2 | 192.168.1.51 | - | This App |
-| Apple Watch | (via iPhone 2 BLE) | - | Haptic Output |
+| Any iPhone | 192.168.1.50 | - | Mind Monitor (spare phone) |
+| Watch-paired iPhone | 192.168.1.51 | - | This App |
+| Apple Watch | (via paired iPhone) | - | Haptic Output |
 
 ## Required Capabilities (Info.plist)
 

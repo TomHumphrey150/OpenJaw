@@ -24,6 +24,18 @@ Commercial biofeedback devices exist but cost $500-2000+ and use proprietary har
 
 ---
 
+## Important Disclaimers
+
+**This is experimental.** OpenJaw is a DIY project, not a medical device. It has not been clinically validated, and there's no proof that it works. It's one person's attempt to build something that might help with bruxism.
+
+**Don't replace medical advice.** If you have bruxism, keep working with your dentist and doctors. This is something to try *in addition to* their recommendations, not instead of them.
+
+**The hardware is expensive.** You'll need a Muse S Athena headband (~$500), two iPhones, an Apple Watch, and a Mac. That said, if you already have a spare iPhone lying around and you wear an Apple Watch, you're most of the way there — you'd just need to buy the Muse.
+
+**The risk is mostly time and money.** If this doesn't work for you, the worst case is you've spent money on a Muse headband and wasted some time setting things up. The Muse is a legitimate meditation/sleep device on its own, so it's not a total loss. As long as you're still following your doctors' advice, trying biofeedback feels like a low-risk experiment.
+
+---
+
 ## Current Status
 
 | Version | Status | Description |
@@ -37,17 +49,25 @@ Commercial biofeedback devices exist but cost $500-2000+ and use proprietary har
 
 ## Hardware
 
-### Current: Muse S Athena
+**Total cost if starting from scratch:** ~$2,000+ (Muse + two iPhones + Apple Watch + Mac)
 
-We currently use the [Muse S Athena](https://choosemuse.com/products/muse-s-athena) (~$500), a consumer EEG headband designed for sleep. Its temporal electrodes (TP9/TP10) sit over the temporalis muscle — the main jaw-closing muscle. When you clench, EMG signals from the muscle create distinctive patterns we can detect.
+**Cost if you already have Apple devices:** ~$500 (just the Muse headband)
+
+Most people interested in this project already have an iPhone, Apple Watch, and Mac. If you have an old iPhone in a drawer somewhere, that can be your Mind Monitor phone. In that case, you only need to buy the Muse.
+
+### Muse S Athena (~$500)
+
+We use the [Muse S Athena](https://choosemuse.com/products/muse-s-athena), a consumer EEG headband designed for sleep. Its temporal electrodes (TP9/TP10) sit over the temporalis muscle — the main jaw-closing muscle. When you clench, EMG signals from the muscle create distinctive patterns we can detect.
 
 **Limitations:** The Muse wasn't designed for jaw detection — it's an EEG device that happens to pick up jaw muscle signals as "artifacts." We're exploring alternatives that might be better suited for EMG detection specifically.
 
+**Silver lining:** Even if OpenJaw doesn't work for you, the Muse is a legitimate meditation and sleep tracking device on its own.
+
 ### Also Required
-- **iPhone** (iOS 15+) for the OpenJaw app
-- **Apple Watch** (Series 3+) for haptic feedback
+- **iPhone** (iOS 15+) for the OpenJaw app — **must be paired with your Apple Watch**
+- **Apple Watch** (Series 3+) for haptic feedback — paired with the OpenJaw iPhone
 - **Mac** for running the relay/detection server
-- **Second iPhone** (V1 only) dedicated to running Mind Monitor
+- **Second iPhone** (V1 only) for running Mind Monitor — any old iPhone will do, doesn't need to be paired with anything
 
 ---
 
@@ -75,6 +95,8 @@ We currently use the [Muse S Athena](https://choosemuse.com/products/muse-s-athe
 
 V1 uses [Mind Monitor](https://mind-monitor.com/) ($15 iOS app) for jaw clench detection.
 
+**Prerequisites:** Make sure you have all the [required hardware](#also-required) before starting.
+
 ### 1. Start the relay server on your Mac
 
 ```bash
@@ -83,7 +105,9 @@ pip install -r requirements.txt
 ./run.sh
 ```
 
-### 2. Configure Mind Monitor on iPhone 1
+### 2. Configure Mind Monitor on a spare iPhone
+
+This can be any iPhone — it just runs Mind Monitor and streams data. It doesn't need to be paired with your Apple Watch.
 
 - Install Mind Monitor from App Store
 - Connect to your Muse headband
@@ -91,16 +115,18 @@ pip install -r requirements.txt
 - Settings → OSC Stream Port: `5000`
 - Start streaming (tap the OSC icon)
 
-### 3. Install OpenJaw on iPhone 2
+### 3. Install OpenJaw on your Watch-paired iPhone
+
+**Important:** This must be the iPhone that's paired with your Apple Watch. The Watch receives haptic triggers via WatchConnectivity, which only works between paired devices.
 
 - Open `v1/Skywalker/Skywalker.xcodeproj` in Xcode
-- Build and run on your iPhone
+- Build and run on your Watch-paired iPhone
 - The app will auto-discover the relay server
 
 ### 4. Install Watch app
 
 - Select the Watch target in Xcode
-- Build and run on your paired Apple Watch
+- Build and run on your Apple Watch (paired with the OpenJaw iPhone)
 
 ### 5. Test it
 
@@ -116,10 +142,10 @@ For detailed setup instructions, see [`v1/Skywalker/Claude.md`](v1/Skywalker/Cla
 ### V1: Two-iPhone Architecture (Working)
 
 ```
-Muse ──► iPhone 1 (Mind Monitor) ──► Mac (Relay) ──► iPhone 2 (OpenJaw) ──► Watch
+Muse ──► Any iPhone (Mind Monitor) ──► Mac (Relay) ──► Watch-paired iPhone (OpenJaw) ──► Watch
 ```
 
-Uses Mind Monitor's built-in jaw clench detection. Reliable but requires two iPhones because Mind Monitor must stay in the foreground.
+Uses Mind Monitor's built-in jaw clench detection. Reliable but requires two iPhones because Mind Monitor must stay in the foreground. The OpenJaw iPhone must be the one paired with your Apple Watch; the Mind Monitor iPhone can be any spare device.
 
 **Documentation:**
 - [`v1/plan.md`](v1/plan.md) — Full technical design document

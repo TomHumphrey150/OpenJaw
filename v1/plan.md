@@ -61,11 +61,20 @@ A non-invasive, comfortable sleep monitoring system that:
 - Worn on wrist during sleep
 - Delivers haptic taps via WatchKit's `WKInterfaceDevice.current().play(.notification)` or custom haptic patterns
 
-### Required Mobile Device
-- iPhone (iOS 15+) running:
-  - Mind Monitor app (signal acquisition)
-  - Custom iOS app (event relay to Watch)
-- Must remain on same WiFi network as any relay server
+### Required Mobile Devices (Two iPhones)
+
+**Mind Monitor iPhone** (any spare iPhone):
+- iPhone (iOS 15+) running Mind Monitor app
+- Connects to Muse via Bluetooth, streams data via WiFi
+- Must stay in foreground (Mind Monitor can't run in background)
+- Does NOT need to be paired with the Apple Watch
+
+**OpenJaw iPhone** (must be Watch-paired):
+- iPhone (iOS 15+) running the OpenJaw app
+- **Must be paired with your Apple Watch** — WatchConnectivity only works between paired devices
+- Receives events from relay server, triggers Watch haptics
+
+Both must remain on the same WiFi network as the relay server.
 
 ---
 
@@ -122,7 +131,7 @@ We have validated that Mind Monitor's jaw clench detection works with the Athena
 ```
 ┌─────────────────┐      BLE       ┌─────────────────┐
 │  Muse S Athena  │ ─────────────► │  Mind Monitor   │
-│   (Headband)    │                │    (iPhone)     │
+│   (Headband)    │                │  (Any iPhone)   │
 └─────────────────┘                └────────┬────────┘
                                             │ OSC/UDP
                                             │ WiFi
@@ -136,13 +145,14 @@ We have validated that Mind Monitor's jaw clench detection works with the Athena
                                             │ UDP Broadcast
                                             ▼
                                    ┌─────────────────┐
-                                   │  Bruxism App    │
-                                   │    (iPhone)     │
+                                   │   OpenJaw App   │
+                                   │ (Watch-paired   │
+                                   │     iPhone)     │
                                    └────────┬────────┘
                                             │ WatchConnectivity
                                             ▼
                                    ┌─────────────────┐
-                                   │  Bruxism App    │
+                                   │   OpenJaw App   │
                                    │  (Apple Watch)  │
                                    │                 │
                                    │  ┌───────────┐  │
@@ -151,6 +161,8 @@ We have validated that Mind Monitor's jaw clench detection works with the Athena
                                    │  └───────────┘  │
                                    └─────────────────┘
 ```
+
+**Important pairing constraint:** The OpenJaw iPhone must be paired with the Apple Watch (WatchConnectivity only works between paired devices). The Mind Monitor iPhone can be any spare device.
 
 ### Why This Architecture?
 

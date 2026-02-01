@@ -21,7 +21,7 @@ Muse S Athena (EEG Headband)
         │
         │ Bluetooth LE
         ▼
-iPhone 1 (Mind Monitor app)
+Any iPhone (Mind Monitor app)
         │
         │ OSC/UDP over WiFi
         ▼
@@ -29,15 +29,24 @@ MacBook (Python Relay Server)
         │
         │ WebSocket over WiFi
         ▼
-iPhone 2 (Skywalker iOS App)
+Watch-paired iPhone (OpenJaw iOS App)
         │
         │ WatchConnectivity
         ▼
-Apple Watch (Skywalker watchOS App)
+Apple Watch (OpenJaw watchOS App)
         │
         ▼
     Haptic Feedback
 ```
+
+**Why two iPhones?**
+- Mind Monitor must stay in the foreground to stream data — it can't run in the background
+- The OpenJaw app needs to receive events and relay them to the Watch
+- These can't both happen on one phone, so we need two
+
+**Important pairing constraint:**
+- The **OpenJaw iPhone must be paired with your Apple Watch** — WatchConnectivity only works between paired devices
+- The **Mind Monitor iPhone can be any spare iPhone** — it just streams data over WiFi, no pairing required
 
 **Why this architecture?**
 - Mind Monitor is a third-party app that streams EEG data via OSC protocol
@@ -247,6 +256,8 @@ This lets you test the iOS app without the Muse headband.
 - [ ] System runs for 8 hours without intervention
 
 > **Important:** Running via Xcode keeps the watch artificially "reachable". For realistic testing, deploy standalone and restart both apps.
+
+> **Pairing reminder:** The Watch must be paired with the iPhone running OpenJaw, not the Mind Monitor iPhone.
 
 ## Required Permissions
 
