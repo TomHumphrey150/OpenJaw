@@ -342,6 +342,10 @@ def train_val_split(
     np.random.seed(random_seed)
 
     unique_sessions = list(set(dataset.session_ids))
+    if len(dataset.y) < 2:
+        raise ValueError(
+            "Need at least 2 windows to split into train/val sets."
+        )
 
     # Fall back to random split if only 1 session (can't stratify by session)
     if stratify_by_session and len(unique_sessions) > 1:
@@ -349,6 +353,7 @@ def train_val_split(
         np.random.shuffle(unique_sessions)
 
         n_val_sessions = max(1, int(len(unique_sessions) * val_ratio))
+        n_val_sessions = min(n_val_sessions, len(unique_sessions) - 1)
         val_sessions = set(unique_sessions[:n_val_sessions])
         train_sessions = set(unique_sessions[n_val_sessions:])
 
@@ -362,6 +367,7 @@ def train_val_split(
         if len(unique_sessions) == 1:
             logger.info(f"Single session detected - using random split within session")
         n_val = int(len(dataset.y) * val_ratio)
+        n_val = max(1, min(n_val, len(dataset.y) - 1))
         indices = np.random.permutation(len(dataset.y))
         val_indices = indices[:n_val]
         train_indices = indices[n_val:]
