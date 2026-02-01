@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/OpenJawHeaderImage.png" alt="OpenJaw logo" width="400">
+</p>
+
 # OpenJaw
 
 **Sleep bruxism biofeedback system** — detect teeth grinding in real-time and deliver gentle haptic feedback via Apple Watch to interrupt the behavior.
@@ -8,7 +12,8 @@ OpenJaw is a biofeedback system for sleep bruxism (teeth grinding). It uses a co
 
 **The goal:** Train your brain to stop grinding over time, rather than just protecting your teeth with a mouth guard.
 
-> **Note on naming:** This project is called "OpenJaw" publicly but you'll see "Skywalker" throughout the codebase and internal documentation. Skywalker was the original working name. We kept it in the code to avoid breaking changes during development.
+> [!NOTE]
+> **On naming:** This project is called "OpenJaw" publicly but you'll see "Skywalker" throughout the codebase and internal documentation. Skywalker was the original working name — we kept it in the code to avoid breaking changes.
 
 ## Why build this?
 
@@ -26,13 +31,16 @@ Commercial biofeedback devices exist but cost $500-2000+ and use proprietary har
 
 ## Important Disclaimers
 
-**This is experimental.** OpenJaw is a DIY project, not a medical device. It has not been clinically validated, and there's no proof that it works. It's one person's attempt to build something that might help with bruxism.
+> [!CAUTION]
+> **This is experimental.** OpenJaw is a DIY project, not a medical device. It has not been clinically validated, and there's no proof that it works. It's one person's attempt to build something that might help with bruxism.
 
-**Don't replace medical advice.** If you have bruxism, keep working with your dentist and doctors. This is something to try *in addition to* their recommendations, not instead of them.
+> [!WARNING]
+> **Don't replace medical advice.** If you have bruxism, keep working with your dentist and doctors. This is something to try *in addition to* their recommendations, not instead of them.
 
 **The hardware is expensive.** You'll need a Muse S Athena headband (~$500), two iPhones, an Apple Watch, and a Mac. That said, if you already have a spare iPhone lying around and you wear an Apple Watch, you're most of the way there — you'd just need to buy the Muse.
 
-**The risk is mostly time and money.** If this doesn't work for you, the worst case is you've spent money on a Muse headband and wasted some time setting things up. The Muse is a legitimate meditation/sleep device on its own, so it's not a total loss. As long as you're still following your doctors' advice, trying biofeedback feels like a low-risk experiment.
+> [!TIP]
+> **The risk is mostly time and money.** If this doesn't work for you, the worst case is you've spent money on a Muse headband and wasted some time setting things up. The Muse is a legitimate meditation/sleep device on its own, so it's not a total loss. As long as you're still following your doctors' advice, trying biofeedback feels like a low-risk experiment.
 
 ---
 
@@ -43,7 +51,8 @@ Commercial biofeedback devices exist but cost $500-2000+ and use proprietary har
 | **V1** | **Working** | Uses Mind Monitor app for detection. Requires two iPhones. |
 | **V2** | Not working yet | Direct detection via ML. Needs more training data. |
 
-**If you want to use this today, use V1.** See [Quick Start](#quick-start-v1) below.
+> [!IMPORTANT]
+> **If you want to use this today, use V1.** See [Quick Start](#quick-start-v1) below.
 
 ---
 
@@ -61,7 +70,8 @@ We use the [Muse S Athena](https://choosemuse.com/products/muse-s-athena), a con
 
 **Limitations:** The Muse wasn't designed for jaw detection — it's an EEG device that happens to pick up jaw muscle signals as "artifacts." We're exploring alternatives that might be better suited for EMG detection specifically.
 
-**Silver lining:** Even if OpenJaw doesn't work for you, the Muse is a legitimate meditation and sleep tracking device on its own.
+> [!TIP]
+> **Silver lining:** Even if OpenJaw doesn't work for you, the Muse is a legitimate meditation and sleep tracking device on its own.
 
 ### Also Required
 - **iPhone** (iOS 15+) for the OpenJaw app — **must be paired with your Apple Watch**
@@ -117,7 +127,8 @@ This can be any iPhone — it just runs Mind Monitor and streams data. It doesn'
 
 ### 3. Install OpenJaw on your Watch-paired iPhone
 
-**Important:** This must be the iPhone that's paired with your Apple Watch. The Watch receives haptic triggers via WatchConnectivity, which only works between paired devices.
+> [!IMPORTANT]
+> This must be the iPhone that's paired with your Apple Watch. The Watch receives haptic triggers via WatchConnectivity, which only works between paired devices.
 
 - Open `v1/Skywalker/Skywalker.xcodeproj` in Xcode
 - Build and run on your Watch-paired iPhone
