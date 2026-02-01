@@ -1,5 +1,11 @@
 # ML-Based Jaw Clench Detection System Design
 
+> **Historical Document:** This describes the original ML-first approach, which we discovered doesn't work well for bruxism detection. The model achieves good validation accuracy but fails to generalize to live inference. See [learnings/002-ml-approach-problems.md](learnings/002-ml-approach-problems.md) for why, and [HYBRID_BOOTSTRAP_DESIGN.md](HYBRID_BOOTSTRAP_DESIGN.md) for the current plan forward.
+
+**Related docs:** [V2 CLAUDE.md](../CLAUDE.md) | [Learnings Index](learnings/) | [Main README](../../../README.md)
+
+---
+
 ## Overview
 
 This document explains the design decisions behind the ML-based jaw clench detection system that replaces the original threshold-based EMG detection with a trained neural network.

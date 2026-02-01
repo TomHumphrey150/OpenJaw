@@ -1,6 +1,10 @@
-# Skywalker - Onboarding Guide
+# OpenJaw V1 - Onboarding Guide
 
-Welcome to Skywalker! This document will get you up to speed on how the project works.
+**Related docs:** [Main README](../README.md) | [iOS App Setup](Skywalker/Claude.md) | [Relay Server](relay-server/README.md) | [V1 Plan](plan.md) | [Documentation Index](../docs/DOCUMENTATION_INDEX.md)
+
+---
+
+Welcome to OpenJaw (codenamed Skywalker)! This document will get you up to speed on how the project works.
 
 ## What Is This?
 
@@ -361,14 +365,15 @@ The app can still receive and process haptics with the screen off.
 
 | File | What You'll Learn |
 |------|-------------------|
-| `plan.md` | Full product requirements and technical spec |
-| `relay-server/server.py` | How OSC/WebSocket bridging works |
-| `Skywalker/Services/WebSocketService.swift` | iOS WebSocket implementation |
-| `Skywalker/Services/WatchConnectivityService.swift` | iPhone↔Watch communication |
-| `Skywalker/ContentView.swift` | Main app UI and state management |
+| [`plan.md`](plan.md) | Full product requirements and technical spec |
+| [`relay-server/server.py`](relay-server/server.py) | How OSC/WebSocket bridging works |
+| `Skywalker/Skywalker/Services/WebSocketService.swift` | iOS WebSocket implementation |
+| `Skywalker/Skywalker/Services/WatchConnectivityService.swift` | iPhone↔Watch communication |
+| `Skywalker/Skywalker/ContentView.swift` | Main app UI and state management |
 
 ## Getting Help
 
-- Check `plan.md` for detailed requirements
-- Relay server has its own `README.md`
+- Check [`plan.md`](plan.md) for detailed requirements
+- Relay server has its own [`README.md`](relay-server/README.md)
+- See the [Documentation Index](../docs/DOCUMENTATION_INDEX.md) for all docs
 - Look at existing code patterns before implementing new features

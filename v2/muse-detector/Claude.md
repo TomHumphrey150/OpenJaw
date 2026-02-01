@@ -1,12 +1,32 @@
-# Skywalker v2 - Muse Jaw Clench Detector
+# OpenJaw V2 - Muse Jaw Clench Detector
+
+> **Status: Not Working Yet.** The pure ML approach doesn't generalize from training to live detection. See [learnings/002-ml-approach-problems.md](docs/learnings/002-ml-approach-problems.md) for why. **Use V1 for now.**
+
+**Related docs:** [Main README](../../README.md) | [V1 ONBOARDING](../../v1/ONBOARDING.md) | [Documentation Index](../../docs/DOCUMENTATION_INDEX.md)
+
+---
 
 ## Overview
 
-Python-based jaw clench detection from Muse EEG headband. Replaces v1's Mind Monitor + relay server with direct Muse connection via OpenMuse.
+Python-based jaw clench detection from Muse EEG headband. The goal was to replace V1's Mind Monitor + relay server with direct Muse connection via OpenMuse and ML-based detection.
 
 ```
 Muse Headband → OpenMuse (BLE) → LSL Stream → This Detector → WebSocket → iOS App → Apple Watch
 ```
+
+### Why It Doesn't Work
+
+The ML model achieves 86% validation accuracy on held-out data from the same session, but completely fails on live data. Key issues:
+
+1. **Training data doesn't generalize** — Model learns session-specific patterns, not jaw clench signatures
+2. **Signal is in motion, not EEG** — Model learned head movement patterns, not EMG ([details](docs/learnings/001-signal-in-motion-not-eeg.md))
+3. **Data collection is counterproductive** — Collecting training data means deliberately clenching, the exact behavior we're trying to stop
+
+See [002-ml-approach-problems.md](docs/learnings/002-ml-approach-problems.md) for the full post-mortem.
+
+### The Path Forward
+
+The [Hybrid Bootstrap Design](docs/HYBRID_BOOTSTRAP_DESIGN.md) describes a plan to use V1 as a "teacher" to automatically label data for V2. Over time, V2 would accumulate enough real-world data from involuntary sleep clenches to train a working model. This is not yet implemented.
 
 ## Quick Start (Single Command)
 

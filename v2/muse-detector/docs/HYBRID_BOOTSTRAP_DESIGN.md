@@ -1,5 +1,11 @@
 # Hybrid Bootstrap Architecture: V1 Teaching V2
 
+> **Status: Future Plan — Not Yet Implemented.** This describes the intended path forward for V2. The core insight: use V1's threshold-based detector to automatically label training data from real involuntary sleep clenches, eliminating the need for deliberate clenching during data collection.
+
+**Related docs:** [V2 CLAUDE.md](../CLAUDE.md) | [ML Learnings](learnings/002-ml-approach-problems.md) | [V1 Plan](../../../v1/plan.md)
+
+---
+
 ## Concept
 
 Use v1 (threshold-based) as a "teacher" to automatically label data for v2 (ML). Over time, v2 accumulates enough real-world data to become more sensitive than v1.

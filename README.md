@@ -8,6 +8,8 @@ OpenJaw is a biofeedback system for sleep bruxism (teeth grinding). It uses a co
 
 **The goal:** Train your brain to stop grinding over time, rather than just protecting your teeth with a mouth guard.
 
+> **Note on naming:** This project is called "OpenJaw" publicly but you'll see "Skywalker" throughout the codebase and internal documentation. Skywalker was the original working name. We kept it in the code to avoid breaking changes during development.
+
 ## Why build this?
 
 Sleep bruxism affects 8-13% of adults and causes:
@@ -181,7 +183,23 @@ OpenJaw/
 
 ## Research
 
-The [`docs/Bruxism-research/`](docs/Bruxism-research/) folder contains literature reviews on evidence-based interventions for bruxism, compiled from systematic reviews and meta-analyses.
+The [`docs/Bruxism-research/`](docs/Bruxism-research/) folder contains literature reviews on evidence-based interventions for bruxism, compiled from systematic reviews and meta-analyses. See the [research index](docs/Bruxism-research/README.md) for summaries.
+
+---
+
+## Documentation Guide
+
+For a complete index of all documentation, see [`docs/DOCUMENTATION_INDEX.md`](docs/DOCUMENTATION_INDEX.md).
+
+| What you want to do | Start here |
+|---------------------|------------|
+| Get started with V1 | [`v1/ONBOARDING.md`](v1/ONBOARDING.md) |
+| Set up the iOS/Watch app | [`v1/Skywalker/Claude.md`](v1/Skywalker/Claude.md) |
+| Set up the relay server | [`v1/relay-server/README.md`](v1/relay-server/README.md) |
+| Understand V1 technical design | [`v1/plan.md`](v1/plan.md) |
+| Learn about V2 and why ML doesn't work yet | [`v2/muse-detector/CLAUDE.md`](v2/muse-detector/CLAUDE.md) |
+| Read V2 learnings | [`v2/muse-detector/docs/learnings/`](v2/muse-detector/docs/learnings/) |
+| Learn about bruxism interventions | [`docs/Bruxism-research/README.md`](docs/Bruxism-research/README.md) |
 
 ---
 

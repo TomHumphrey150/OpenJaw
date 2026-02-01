@@ -1,4 +1,8 @@
-# Bruxism Biofeedback Relay Server
+# OpenJaw V1 Relay Server
+
+**Related docs:** [Main README](../../README.md) | [ONBOARDING.md](../ONBOARDING.md) | [iOS App Setup](../Skywalker/Claude.md) | [V1 Plan](../plan.md) | [Documentation Index](../../docs/DOCUMENTATION_INDEX.md)
+
+---
 
 Python relay server that receives OSC/UDP messages from Mind Monitor (iPhone 1) and forwards jaw clench events via WebSocket to the iOS app (iPhone 2).
 

@@ -1,4 +1,8 @@
-# Skywalker - Bruxism Biofeedback System
+# OpenJaw V1 iOS App - Bruxism Biofeedback System
+
+**Related docs:** [Main README](../../README.md) | [ONBOARDING.md](../ONBOARDING.md) | [Relay Server](../relay-server/README.md) | [V1 Plan](../plan.md) | [Documentation Index](../../docs/DOCUMENTATION_INDEX.md)
+
+---
 
 ## Project Overview
 
@@ -248,6 +252,6 @@ The following capabilities must be enabled in Xcode:
 
 ## Related Files
 
-- `/Users/tomhumphrey/src/skywalker/plan.md` - Original requirements document
-- `/Users/tomhumphrey/.claude/plans/zippy-munching-crayon.md` - Implementation plan
-- `/Users/tomhumphrey/src/skywalker/relay-server/README.md` - Relay server documentation
+- [`../plan.md`](../plan.md) — Original requirements document
+- [`../relay-server/README.md`](../relay-server/README.md) — Relay server documentation
+- [`../ONBOARDING.md`](../ONBOARDING.md) — Comprehensive onboarding guide

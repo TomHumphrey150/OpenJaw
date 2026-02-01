@@ -1,8 +1,14 @@
 # Bruxism Biofeedback Device: Product & Engineering Handoff
 
-**Document Version:** 1.0  
-**Date:** January 30, 2026  
-**Status:** Discovery Complete, Ready for Development
+> **Status: Implemented.** This plan has been implemented and V1 is working. See [ONBOARDING.md](ONBOARDING.md) to get started.
+
+**Related docs:** [Main README](../README.md) | [ONBOARDING.md](ONBOARDING.md) | [iOS App Setup](Skywalker/Claude.md) | [Relay Server](relay-server/README.md)
+
+---
+
+**Document Version:** 1.0
+**Date:** January 30, 2026
+**Original Status:** Discovery Complete, Ready for Development
 
 ---
 
