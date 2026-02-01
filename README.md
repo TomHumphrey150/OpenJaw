@@ -4,7 +4,7 @@
 
 ## What is this?
 
-OpenJaw is a biofeedback system for sleep bruxism (teeth grinding). It uses a consumer EEG headband ([Muse S Athena](https://choosemuse.com/products/muse-s-athena)) to detect jaw clenching during sleep, then delivers a gentle vibration through your Apple Watch to interrupt the grinding behavior before it causes damage.
+OpenJaw is a biofeedback system for sleep bruxism (teeth grinding). It uses a consumer EEG headband to detect jaw clenching during sleep, then delivers a gentle vibration through your Apple Watch to interrupt the grinding behavior before it causes damage.
 
 **The goal:** Train your brain to stop grinding over time, rather than just protecting your teeth with a mouth guard.
 
@@ -20,6 +20,35 @@ Current treatments (mouth guards, Botox) either just protect teeth or temporaril
 
 Commercial biofeedback devices exist but cost $500-2000+ and use proprietary hardware. OpenJaw uses consumer hardware you may already own and is completely open source.
 
+---
+
+## Current Status
+
+| Version | Status | Description |
+|---------|--------|-------------|
+| **V1** | **Working** | Uses Mind Monitor app for detection. Requires two iPhones. |
+| **V2** | Not working yet | Direct detection via ML. Needs more training data. |
+
+**If you want to use this today, use V1.** See [Quick Start](#quick-start-v1) below.
+
+---
+
+## Hardware
+
+### Current: Muse S Athena
+
+We currently use the [Muse S Athena](https://choosemuse.com/products/muse-s-athena) (~$500), a consumer EEG headband designed for sleep. Its temporal electrodes (TP9/TP10) sit over the temporalis muscle — the main jaw-closing muscle. When you clench, EMG signals from the muscle create distinctive patterns we can detect.
+
+**Limitations:** The Muse wasn't designed for jaw detection — it's an EEG device that happens to pick up jaw muscle signals as "artifacts." We're exploring alternatives that might be better suited for EMG detection specifically.
+
+### Also Required
+- **iPhone** (iOS 15+) for the OpenJaw app
+- **Apple Watch** (Series 3+) for haptic feedback
+- **Mac** for running the relay/detection server
+- **Second iPhone** (V1 only) dedicated to running Mind Monitor
+
+---
+
 ## How it works
 
 ```
@@ -29,145 +58,88 @@ Commercial biofeedback devices exist but cost $500-2000+ and use proprietary har
 │                 │         │   (Mac/Python)  │         │                 │
 └─────────────────┘         └─────────────────┘         └────────┬────────┘
                                                                   │
-     Worn during sleep            Detects jaw                     │
-     EEG + EMG signals            clenching                       ▼
-                                                         ┌─────────────────┐
+     Worn during sleep            Detects jaw                     ▼
+     EEG + EMG signals            clenching              ┌─────────────────┐
                                                          │  Apple Watch    │
-                                                         │                 │
                                                          │   *buzz buzz*   │
                                                          └─────────────────┘
-
-                                                         Gentle haptic wakes
-                                                         you just enough to
-                                                         stop grinding
 ```
 
-The Muse headband's temporal electrodes (TP9/TP10) sit directly over the temporalis muscle — the main jaw-closing muscle. When you clench, EMG signals from the muscle create distinctive high-amplitude patterns that we detect and respond to.
+**Target latency:** < 500ms from clench to haptic feedback.
 
 ---
 
-## Project Structure
+## Quick Start (V1)
 
-OpenJaw has two versions with different architectures:
+V1 uses [Mind Monitor](https://mind-monitor.com/) ($15 iOS app) for jaw clench detection.
 
-### V1: Two-iPhone Architecture (Production)
+### 1. Start the relay server on your Mac
 
-Uses Mind Monitor (a third-party app) for signal acquisition. Requires two iPhones.
-
-```
-Muse Headband ──► iPhone 1 (Mind Monitor) ──► Mac (Relay Server) ──► iPhone 2 (OpenJaw) ──► Apple Watch
-                        │                           │                       │
-                   Connects to Muse            Receives OSC,           Receives events,
-                   via BLE, streams           forwards via             triggers Watch
-                   jaw events via OSC          WebSocket               haptics
+```bash
+cd v1/relay-server
+pip install -r requirements.txt
+./run.sh
 ```
 
-**Components:**
-| Component | Location | Platform | Purpose |
-|-----------|----------|----------|---------|
-| Mind Monitor | App Store ($15) | iOS | Connects to Muse, detects jaw clenches, streams OSC |
-| Relay Server | `v1/relay-server/` | macOS/Python | Receives OSC, broadcasts via WebSocket |
-| OpenJaw iOS | `v1/Skywalker/` | iOS (Swift) | Receives events, manages Watch, logs history |
-| OpenJaw Watch | `v1/Skywalker/` | watchOS (Swift) | Delivers haptic feedback |
+### 2. Configure Mind Monitor on iPhone 1
 
-**Why two iPhones?** Mind Monitor must stay in the foreground to maintain the Bluetooth connection to the Muse. The second iPhone runs OpenJaw and can do other things (like stay on the nightstand with the screen off).
+- Install Mind Monitor from App Store
+- Connect to your Muse headband
+- Settings → OSC Stream Target IP: `<your Mac's IP>`
+- Settings → OSC Stream Port: `5000`
+- Start streaming (tap the OSC icon)
 
-### V2: Direct Connection Architecture (Experimental)
+### 3. Install OpenJaw on iPhone 2
 
-Bypasses Mind Monitor entirely using [OpenMuse](https://github.com/DominiqueMakowski/OpenMuse) for direct Bluetooth connection.
+- Open `v1/Skywalker/Skywalker.xcodeproj` in Xcode
+- Build and run on your iPhone
+- The app will auto-discover the relay server
 
-```
-Muse Headband ──► Mac (OpenMuse + Detector) ──► iPhone (OpenJaw) ──► Apple Watch
-                        │
-                   Direct BLE connection,
-                   custom detection algorithm,
-                   WebSocket server
-```
+### 4. Install Watch app
 
-**Components:**
-| Component | Location | Platform | Purpose |
-|-----------|----------|----------|---------|
-| OpenMuse | External dependency | macOS | Direct BLE connection to Muse, streams via LSL |
-| Detector Server | `v2/muse-detector/` | macOS/Python | Custom jaw detection algorithm, WebSocket server |
-| OpenJaw iOS | `v1/Skywalker/` | iOS (Swift) | Same app as V1 — protocol compatible |
-| OpenJaw Watch | `v1/Skywalker/` | watchOS (Swift) | Same app as V1 |
+- Select the Watch target in Xcode
+- Build and run on your paired Apple Watch
 
-**Advantages over V1:**
-- Only need one iPhone
-- No $15 Mind Monitor purchase
-- Full control over detection algorithm
-- Can tune sensitivity for sleep vs. awake
+### 5. Test it
 
-**Current status:** Experimental. The detection algorithm needs more tuning for sleep use.
+- Clench your jaw while wearing the Muse
+- Your Watch should vibrate within ~500ms
+
+For detailed setup instructions, see [`v1/Skywalker/Claude.md`](v1/Skywalker/Claude.md).
 
 ---
 
-## Hardware Requirements
+## V1 vs V2 Architecture
 
-### Required
-- **Muse S Athena** (MS-03) — the sleep-focused fabric headband (~$500)
-- **iPhone** — iOS 15+ for the OpenJaw app
-- **Apple Watch** — Series 3+ for haptic feedback
-- **Mac** — for running the relay/detection server
+### V1: Two-iPhone Architecture (Working)
 
-### For V1 only
-- **Second iPhone** — dedicated to running Mind Monitor
-- **Mind Monitor app** — $15 on App Store
+```
+Muse ──► iPhone 1 (Mind Monitor) ──► Mac (Relay) ──► iPhone 2 (OpenJaw) ──► Watch
+```
 
----
+Uses Mind Monitor's built-in jaw clench detection. Reliable but requires two iPhones because Mind Monitor must stay in the foreground.
 
-## Quick Start
+**Documentation:**
+- [`v1/plan.md`](v1/plan.md) — Full technical design document
+- [`v1/Skywalker/Claude.md`](v1/Skywalker/Claude.md) — iOS/watchOS app setup
+- [`v1/relay-server/README.md`](v1/relay-server/README.md) — Relay server details
 
-### V1 Setup (Recommended for first-time users)
+### V2: Direct ML Detection (Not Working Yet)
 
-1. **Start the relay server on your Mac:**
-   ```bash
-   cd v1/relay-server
-   pip install -r requirements.txt
-   ./run.sh
-   ```
+```
+Muse ──► Mac (OpenMuse + ML Detector) ──► iPhone (OpenJaw) ──► Watch
+```
 
-2. **Configure Mind Monitor on iPhone 1:**
-   - Install Mind Monitor from App Store
-   - Connect to your Muse headband
-   - Settings → OSC Stream Target IP: `<your Mac's IP>`
-   - Settings → OSC Stream Port: `5000`
-   - Start streaming (tap the OSC icon)
+Bypasses Mind Monitor using [OpenMuse](https://github.com/DominiqueMakowski/OpenMuse) for direct Bluetooth connection and a custom ML model for detection.
 
-3. **Install OpenJaw on iPhone 2:**
-   - Open `v1/Skywalker/Skywalker.xcodeproj` in Xcode
-   - Build and run on your iPhone
-   - The app will auto-discover the relay server
+**Why it doesn't work yet:** The ML model needs training data, and collecting training data means deliberately clenching your jaw — the exact behavior we're trying to stop. This creates a fundamental contradiction for bruxism sufferers.
 
-4. **Install Watch app:**
-   - Select the Watch target in Xcode
-   - Build and run on your paired Apple Watch
+**The plan:** Use V1 to bootstrap V2. While V1 runs normally, it logs sensor data with labels from its threshold-based detector. Over weeks/months of normal use, this accumulates enough real-world training data (from involuntary sleep clenches) to train the V2 ML model — without anyone having to deliberately clench.
 
-5. **Test it:**
-   - Clench your jaw while wearing the Muse
-   - Your Watch should vibrate within ~500ms
-
-### V2 Setup (Experimental)
-
-1. **Install OpenMuse:**
-   ```bash
-   pip install openmuse
-   ```
-
-2. **Start OpenMuse streaming:**
-   ```bash
-   OpenMuse find          # Find your Muse
-   OpenMuse stream --address <muse-address>
-   ```
-
-3. **Start the detector server:**
-   ```bash
-   cd v2/muse-detector
-   pip install -r requirements.txt
-   ./run.sh
-   ```
-
-4. **Connect the iOS app** (same as V1 step 3-4)
+**Documentation:**
+- [`v2/muse-detector/docs/HYBRID_BOOTSTRAP_DESIGN.md`](v2/muse-detector/docs/HYBRID_BOOTSTRAP_DESIGN.md) — The V1→V2 bootstrap plan
+- [`v2/muse-detector/docs/learnings/002-ml-approach-problems.md`](v2/muse-detector/docs/learnings/002-ml-approach-problems.md) — Why ML is hard for this problem
+- [`v2/muse-detector/docs/ML_SYSTEM_DESIGN.md`](v2/muse-detector/docs/ML_SYSTEM_DESIGN.md) — ML architecture details
 
 ---
 
@@ -177,45 +149,14 @@ Beyond biofeedback, the OpenJaw iOS app includes:
 
 ### Daily Habits
 Evidence-based interventions for managing bruxism:
-- **Daytime awareness reminders** — periodic prompts to check jaw position
-- **Lifestyle tracking** — caffeine, alcohol, stress management
-- **Exercises** — jaw stretches, massage techniques
+- Daytime awareness reminders
+- Lifestyle tracking (caffeine, alcohol, stress)
+- Jaw exercises and massage techniques
 
 ### Progress Tracking
 - Nightly event counts and trends
 - Week-over-week comparisons
-- Integration with HealthKit sleep data
-
-### Notification Grouping
-Combine multiple reminder habits into single notifications to reduce interruption fatigue.
-
----
-
-## Network Architecture
-
-All devices must be on the same WiFi network:
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Local WiFi Network                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│   Mac (Relay Server)          iPhone 1              iPhone 2         │
-│   ┌─────────────────┐         ┌──────────┐         ┌──────────┐     │
-│   │ OSC :5000       │◄────────│  Mind    │         │ OpenJaw  │     │
-│   │ WebSocket :8765 │────────►│ Monitor  │         │   App    │     │
-│   │ Bonjour ads     │         └──────────┘         └────┬─────┘     │
-│   └─────────────────┘                                    │          │
-│                                                          │ BLE      │
-│                                                          ▼          │
-│                                                    ┌──────────┐     │
-│                                                    │  Apple   │     │
-│                                                    │  Watch   │     │
-│                                                    └──────────┘     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-The relay server advertises itself via Bonjour/mDNS, so the iOS app can auto-discover it without manual IP configuration.
+- HealthKit sleep data integration
 
 ---
 
@@ -224,64 +165,23 @@ The relay server advertises itself via Bonjour/mDNS, so the iOS app can auto-dis
 ```
 OpenJaw/
 ├── v1/                          # Production system (Mind Monitor based)
-│   ├── Skywalker/               # iOS + watchOS apps (Xcode project)
-│   │   ├── Skywalker/           # iOS app source
-│   │   │   ├── Models/          # Data models
-│   │   │   ├── Views/           # SwiftUI views
-│   │   │   ├── Services/        # WebSocket, Watch connectivity, etc.
-│   │   │   └── Resources/       # Intervention catalog, bruxism info
-│   │   └── Skywalker-Watch Watch App/  # watchOS app source
+│   ├── Skywalker/               # iOS + watchOS Xcode project
 │   ├── relay-server/            # Python relay server
-│   │   ├── server.py            # Main server (OSC → WebSocket)
-│   │   ├── run.sh               # Startup script
-│   │   └── requirements.txt
-│   └── plan.md                  # Original technical design doc
+│   └── plan.md                  # Technical design document
 │
-├── v2/                          # Experimental (direct Muse connection)
-│   └── muse-detector/           # Python detection server
-│       ├── detector/            # Jaw clench detection algorithm
-│       ├── ml/                  # ML-based detection (WIP)
-│       ├── streaming/           # LSL receiver for OpenMuse
-│       └── server/              # WebSocket + Bonjour
+├── v2/                          # Experimental (direct ML detection)
+│   └── muse-detector/           # Python ML detector
+│       └── docs/                # Design docs and learnings
 │
 └── docs/                        # Research and documentation
-    ├── Bruxism-research/        # Literature review
-    └── OpenMuse/                # Muse protocol documentation
+    └── Bruxism-research/        # Literature review
 ```
 
 ---
 
-## Technical Details
+## Research
 
-### Detection Method
-
-The Muse headband's TP9 and TP10 electrodes sit over the temporalis muscles. When you clench your jaw:
-
-1. **EMG signals** (75-400 µV) from muscle contraction overwhelm the EEG signals (~10 µV)
-2. This creates distinctive high-amplitude artifacts in the temporal channels
-3. Mind Monitor (V1) or our custom algorithm (V2) detects these patterns
-4. Detection triggers a WebSocket message to the iOS app
-5. iOS app sends a message to the Watch via WatchConnectivity
-6. Watch plays a haptic pattern
-
-**Target latency:** < 500ms from clench to haptic
-
-### Sleep Considerations
-
-The system is designed for overnight use:
-- Relay server uses `caffeinate` to prevent Mac sleep
-- iOS app uses background audio to stay alive
-- Watch app uses extended runtime sessions
-- All connections have auto-reconnect logic
-
----
-
-## Research Background
-
-The `docs/Bruxism-research/` folder contains literature reviews on:
-- Evidence-based interventions for bruxism
-- Efficacy of different treatment approaches
-- The muscle-tension chain from jaw to throat symptoms
+The [`docs/Bruxism-research/`](docs/Bruxism-research/) folder contains literature reviews on evidence-based interventions for bruxism, compiled from systematic reviews and meta-analyses.
 
 ---
 
@@ -289,11 +189,11 @@ The `docs/Bruxism-research/` folder contains literature reviews on:
 
 This is a personal project built to solve my own bruxism. Contributions welcome!
 
-Areas that need work:
-- V2 detection algorithm tuning for sleep
+**Areas that need work:**
+- Better hardware for jaw muscle detection (alternatives to Muse)
+- V2 ML model improvements
 - Android support
-- Cloud sync for multi-device use
-- Better overnight reliability testing
+- Overnight reliability testing
 
 ---
 
@@ -305,6 +205,5 @@ MIT License — use freely, attribution appreciated.
 
 ## Acknowledgments
 
-- [Mind Monitor](https://mind-monitor.com/) — excellent third-party Muse app
-- [OpenMuse](https://github.com/DominiqueMakowski/OpenMuse) — open-source Muse protocol implementation
-- The Muse developer community for protocol documentation
+- [Mind Monitor](https://mind-monitor.com/) — third-party Muse app
+- [OpenMuse](https://github.com/DominiqueMakowski/OpenMuse) — open-source Muse protocol
