@@ -149,6 +149,15 @@ def create_dataloaders(
     batch_size: int = 32
 ) -> Tuple[DataLoader, DataLoader]:
     """Create PyTorch DataLoaders from preprocessed datasets."""
+    if train_dataset.n_windows == 0 or val_dataset.n_windows == 0:
+        raise ValueError(
+            "Cannot create dataloaders with empty datasets. "
+            f"Train={train_dataset.n_windows}, Val={val_dataset.n_windows}."
+        )
+
+    effective_batch_size = min(batch_size, train_dataset.n_windows)
+    drop_last = train_dataset.n_windows >= effective_batch_size
+
     # Convert to tensors
     X_train = torch.tensor(train_dataset.X, dtype=torch.float32)
     y_train = torch.tensor(train_dataset.y, dtype=torch.float32)
@@ -157,14 +166,14 @@ def create_dataloaders(
 
     train_loader = DataLoader(
         TensorDataset(X_train, y_train),
-        batch_size=batch_size,
+        batch_size=effective_batch_size,
         shuffle=True,
-        drop_last=True
+        drop_last=drop_last
     )
 
     val_loader = DataLoader(
         TensorDataset(X_val, y_val),
-        batch_size=batch_size,
+        batch_size=min(batch_size, val_dataset.n_windows),
         shuffle=False
     )
 
