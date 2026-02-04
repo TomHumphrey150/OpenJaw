@@ -9,6 +9,12 @@ import Foundation
 import HealthKit
 import Observation
 
+enum HealthHintType: String, CaseIterable {
+    case exercise
+    case water
+    case mindfulness
+}
+
 @Observable
 @MainActor
 class HealthKitService {
@@ -17,6 +23,7 @@ class HealthKitService {
     var sleepSamples: [SleepSample] = []
     var isAuthorized = false
     var authorizationError: String?
+    var authorizedHintTypes: Set<HealthHintType> = []
 
     // MARK: - Sleep Data Model
 
@@ -98,6 +105,41 @@ class HealthKitService {
         }
     }
 
+    func requestAuthorization(for hintType: HealthHintType) async -> Bool {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            authorizationError = "HealthKit is not available on this device"
+            print("[HealthKit] Not available on this device")
+            return false
+        }
+
+        guard let objectType = objectType(for: hintType) else {
+            authorizationError = "HealthKit type not available"
+            print("[HealthKit] Type not available for \(hintType)")
+            return false
+        }
+
+        do {
+            try await healthStore.requestAuthorization(toShare: [], read: [objectType])
+            // Note: authorizationStatus(for:) only reports WRITE permission status.
+            // For read-only access, HealthKit doesn't reveal if user granted permission (privacy).
+            // We optimistically mark as authorized after request succeeds; actual data fetch
+            // will fail if user denied access.
+            authorizedHintTypes.insert(hintType)
+            print("[HealthKit] Authorization requested for \(hintType) - marked as authorized")
+            return true
+        } catch {
+            authorizationError = error.localizedDescription
+            print("[HealthKit] Authorization failed for \(hintType): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    func isAuthorized(for hintType: HealthHintType) -> Bool {
+        // We track authorized types in memory after successful authorization request.
+        // Note: authorizationStatus(for:) only works for WRITE permissions, not read-only.
+        return authorizedHintTypes.contains(hintType)
+    }
+
     // MARK: - Fetch Sleep Data
 
     /// Fetch sleep data for a specific night (from evening before to morning of the given date)
@@ -168,6 +210,103 @@ class HealthKitService {
         return samples
     }
 
+    // MARK: - Fetch Hint Data
+
+    func fetchWorkoutSummary(in interval: DateInterval) async throws -> (count: Int, minutes: Double) {
+        guard isAuthorized(for: .exercise) else {
+            throw HealthKitError.notAuthorized
+        }
+        let workoutType = HKWorkoutType.workoutType()
+        let predicate = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end, options: .strictStartDate)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: workoutType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: nil
+            ) { _, samples, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                let workouts = samples as? [HKWorkout] ?? []
+                let minutes = workouts.reduce(0.0) { total, workout in
+                    total + workout.duration / 60.0
+                }
+                continuation.resume(returning: (workouts.count, minutes))
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    func fetchWaterLiters(in interval: DateInterval) async throws -> Double {
+        guard isAuthorized(for: .water) else {
+            throw HealthKitError.notAuthorized
+        }
+        guard let waterType = HKObjectType.quantityType(forIdentifier: .dietaryWater) else {
+            throw HealthKitError.typeNotAvailable
+        }
+        let predicate = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end, options: .strictStartDate)
+        let unit = HKUnit.liter()
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: waterType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: nil
+            ) { _, samples, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                let quantitySamples = samples as? [HKQuantitySample] ?? []
+                let total = quantitySamples.reduce(0.0) { sum, sample in
+                    sum + sample.quantity.doubleValue(for: unit)
+                }
+                continuation.resume(returning: total)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    func fetchMindfulMinutes(in interval: DateInterval) async throws -> Double {
+        guard isAuthorized(for: .mindfulness) else {
+            throw HealthKitError.notAuthorized
+        }
+        guard let mindfulType = HKObjectType.categoryType(forIdentifier: .mindfulSession) else {
+            throw HealthKitError.typeNotAvailable
+        }
+        let predicate = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end, options: .strictStartDate)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: mindfulType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: nil
+            ) { _, samples, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                let sessions = samples as? [HKCategorySample] ?? []
+                let minutes = sessions.reduce(0.0) { total, sample in
+                    total + sample.endDate.timeIntervalSince(sample.startDate) / 60.0
+                }
+                continuation.resume(returning: minutes)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
     // MARK: - Sleep Statistics
 
     struct SleepStatistics {
@@ -230,6 +369,7 @@ class HealthKitService {
         case sleepTypeNotAvailable
         case dateCalculationFailed
         case notAuthorized
+        case typeNotAvailable
 
         var errorDescription: String? {
             switch self {
@@ -239,7 +379,22 @@ class HealthKitService {
                 return "Failed to calculate date range"
             case .notAuthorized:
                 return "HealthKit authorization not granted"
+            case .typeNotAvailable:
+                return "Health data type not available"
             }
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func objectType(for hintType: HealthHintType) -> HKObjectType? {
+        switch hintType {
+        case .exercise:
+            return HKWorkoutType.workoutType()
+        case .water:
+            return HKObjectType.quantityType(forIdentifier: .dietaryWater)
+        case .mindfulness:
+            return HKObjectType.categoryType(forIdentifier: .mindfulSession)
         }
     }
 }

@@ -3,8 +3,9 @@
 
 require 'xcodeproj'
 
-project_path = '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker.xcodeproj'
+project_path = File.expand_path('Skywalker.xcodeproj', __dir__)
 project = Xcodeproj::Project.open(project_path)
+root_path = File.expand_path(__dir__)
 
 # Get the main target
 target = project.targets.first
@@ -20,19 +21,10 @@ views_group = skywalker_group['Views'] || skywalker_group.new_group('Views')
 # Files to add
 files_to_add = {
   models_group => [
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Models/HapticPattern.swift',
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Models/JawClenchEvent.swift',
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Models/AppSettings.swift'
-  ],
-  services_group => [
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Services/WebSocketService.swift',
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Services/WatchConnectivityService.swift',
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Services/EventLogger.swift'
+    File.join(root_path, 'Skywalker/Models/CatchUpDeckBuilder.swift')
   ],
   views_group => [
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Views/StatusView.swift',
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Views/SettingsView.swift',
-    '/Users/tomhumphrey/src/skywalker/Skywalker/Skywalker/Views/EventHistoryView.swift'
+    File.join(root_path, 'Skywalker/Views/CatchUpModalView.swift')
   ]
 }
 

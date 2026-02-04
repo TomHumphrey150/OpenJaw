@@ -23,10 +23,22 @@ struct ContentView: View {
     @State private var connectionAttempted = false
     @State private var userDisconnected = false
     @State private var scanTimeoutExpired = false
+    @State private var showCatchUpModal = false
+    @State private var catchUpCards: [CatchUpCard] = []
+    @State private var catchUpCurrentSection: CurrentSectionInfo?
+    @Environment(\.scenePhase) private var scenePhase
 
     // Undo toast state
     @State private var showUndoToast = false
     @State private var lastCompletedIntervention: InterventionDefinition?
+
+    // Quick check modal state (for notification tap)
+    @State private var showQuickCheckModal = false
+    @State private var quickCheckInterventionIds: [String] = []
+
+    // Routine prompt state (for wake-up / wind-down)
+    @State private var routineService = RoutineService()
+    @State private var activeRoutinePrompt: RoutineService.RoutinePromptType?  // nil = no prompt shown
 
     init() {
         // Initialize WebSocketService with dependencies
@@ -80,6 +92,7 @@ struct ContentView: View {
                     // Daily habits / interventions
                     InterventionsSectionView(
                         interventionService: interventionService,
+                        routineService: routineService,
                         onShowUndoToast: { definition in
                             lastCompletedIntervention = definition
                             showUndoToast = true
@@ -152,6 +165,31 @@ struct ContentView: View {
             .sheet(isPresented: $showingBruxismInfo) {
                 BruxismInfoView()
             }
+            .sheet(isPresented: $showCatchUpModal, onDismiss: {
+                // After catch-up modal is dismissed, check for routine prompt
+                checkForRoutinePrompt()
+            }) {
+                CatchUpModalView(
+                    interventionService: interventionService,
+                    healthKitService: healthKitService,
+                    cards: catchUpCards,
+                    currentSectionInfo: catchUpCurrentSection
+                )
+            }
+            .sheet(isPresented: $showQuickCheckModal) {
+                QuickCheckModal(
+                    interventionIds: quickCheckInterventionIds,
+                    interventionService: interventionService
+                )
+            }
+            .sheet(item: $activeRoutinePrompt) { prompt in
+                RoutinePromptView(
+                    promptType: prompt,
+                    onConfirm: { handleRoutineConfirm(prompt) },
+                    onDismiss: { activeRoutinePrompt = nil },
+                    onLateStartOption: handleLateStartOption
+                )
+            }
             .onAppear {
                 guard !connectionAttempted else { return }
                 connectionAttempted = true
@@ -180,6 +218,18 @@ struct ContentView: View {
                         _ = try? await healthKitService.fetchLastNightSleep()
                     }
                 }
+
+                // Show catch-up modal first, then routine prompt after dismiss (or directly if no catch-up)
+                refreshCatchUpModalOrRoutinePrompt()
+            }
+            .onChange(of: scenePhase) { newPhase in
+                if newPhase == .active {
+                    // Try catch-up modal first; if none, check for routine prompt
+                    refreshCatchUpModalOrRoutinePrompt()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .notificationTapped)) { notification in
+                handleNotificationTap(notification)
             }
             .undoToast(
                 isPresented: $showUndoToast,
@@ -192,6 +242,30 @@ struct ContentView: View {
                 }
             )
         }
+    }
+
+    // MARK: - Catch-Up Modal
+
+    /// Show catch-up modal if there are cards, otherwise check for routine prompt
+    private func refreshCatchUpModalOrRoutinePrompt() {
+        let cards = CatchUpDeckBuilder.build(interventionService: interventionService)
+        catchUpCards = cards
+        catchUpCurrentSection = CatchUpDeckBuilder.currentSectionInfo()
+
+        if !cards.isEmpty {
+            // Show catch-up modal first; routine prompt will be checked on dismiss
+            showCatchUpModal = true
+        } else {
+            // No catch-up cards, check for routine prompt directly
+            checkForRoutinePrompt()
+        }
+    }
+
+    private func refreshCatchUpModal() {
+        let cards = CatchUpDeckBuilder.build(interventionService: interventionService)
+        catchUpCards = cards
+        catchUpCurrentSection = CatchUpDeckBuilder.currentSectionInfo()
+        showCatchUpModal = !cards.isEmpty
     }
 
     // MARK: - Biofeedback Section
@@ -590,6 +664,50 @@ struct ContentView: View {
     private func disconnectFromServer() {
         userDisconnected = true
         webSocketService.disconnect()
+    }
+
+    // MARK: - Notification Tap Handler
+
+    private func handleNotificationTap(_ notification: Notification) {
+        // Handle direct intervention IDs
+        if let ids = notification.userInfo?["interventionIds"] as? [String], !ids.isEmpty {
+            quickCheckInterventionIds = ids
+            showQuickCheckModal = true
+            return
+        }
+
+        // Handle reminder group ID - look up the group's intervention IDs
+        if let groupId = notification.userInfo?["groupId"] as? String {
+            // Find the reminder group and get its intervention IDs
+            if let group = interventionService.reminderGroups.first(where: { $0.id.uuidString == groupId }) {
+                quickCheckInterventionIds = group.interventionIds
+                showQuickCheckModal = true
+            }
+        }
+    }
+
+    // MARK: - Routine Prompt Logic
+
+    private func checkForRoutinePrompt() {
+        activeRoutinePrompt = routineService.determinePrompt()
+    }
+
+    private func handleRoutineConfirm(_ prompt: RoutineService.RoutinePromptType) {
+        switch prompt {
+        case .wakeUp:
+            routineService.startMorningRoutine()
+        case .windDown:
+            routineService.startWindDownRoutine()
+        case .lateStartCatchUp:
+            // This is handled by onLateStartOption
+            break
+        }
+        activeRoutinePrompt = nil
+    }
+
+    private func handleLateStartOption(_ option: RoutineService.LateStartOption) {
+        routineService.applyLateStartOption(option)
+        activeRoutinePrompt = nil
     }
 }
 

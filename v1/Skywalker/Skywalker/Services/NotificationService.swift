@@ -376,6 +376,13 @@ extension NotificationService: UNUserNotificationCenterDelegate {
     ) async {
         let actionIdentifier = response.actionIdentifier
         let notificationIdentifier = response.notification.request.identifier
+        let userInfo = response.notification.request.content.userInfo
+
+        // Handle tap on notification body (not action button) - show quick check modal
+        if actionIdentifier == UNNotificationDefaultActionIdentifier {
+            await handleNotificationTap(identifier: notificationIdentifier, userInfo: userInfo)
+            return
+        }
 
         // Extract intervention ID from notification identifier (nonisolated helper)
         if let interventionId = Self.extractInterventionId(from: notificationIdentifier) {
@@ -398,6 +405,42 @@ extension NotificationService: UNUserNotificationCenterDelegate {
                 break
             }
         }
+    }
+
+    /// Handle notification tap - post event to show quick check modal
+    nonisolated private func handleNotificationTap(identifier: String, userInfo: [AnyHashable: Any]) async {
+        var interventionIds: [String] = []
+
+        // Check if this is a group notification
+        if let groupId = userInfo["groupId"] as? String {
+            // For group notifications, we need to look up the group members
+            // This will be handled by ContentView which has access to InterventionService
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .notificationTapped,
+                    object: nil,
+                    userInfo: ["groupId": groupId]
+                )
+            }
+            print("[NotificationService] User tapped group notification: \(groupId)")
+            return
+        }
+
+        // Extract single intervention ID
+        if let interventionId = Self.extractInterventionId(from: identifier) {
+            interventionIds = [interventionId]
+        }
+
+        guard !interventionIds.isEmpty else { return }
+
+        await MainActor.run {
+            NotificationCenter.default.post(
+                name: .notificationTapped,
+                object: nil,
+                userInfo: ["interventionIds": interventionIds]
+            )
+        }
+        print("[NotificationService] User tapped notification for: \(interventionIds)")
     }
 
     // Nonisolated helper for extracting intervention ID
@@ -464,4 +507,5 @@ extension NotificationService: UNUserNotificationCenterDelegate {
 
 extension Notification.Name {
     static let interventionCompletedFromNotification = Notification.Name("interventionCompletedFromNotification")
+    static let notificationTapped = Notification.Name("notificationTapped")
 }

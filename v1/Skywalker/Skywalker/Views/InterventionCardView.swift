@@ -18,11 +18,14 @@ struct InterventionCardView: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
+                // Evidence tier dots (●●● = strong, ●●○ = moderate, ●○○ = lower)
+                tierDots
+
                 // Icon (using emoji from definition)
                 Text(definition.emoji)
                     .font(.title2)
                     .frame(width: 40, height: 40)
-                    .background(tierColor.opacity(0.15))
+                    .background(evidenceTierColor.opacity(0.15))
                     .cornerRadius(8)
 
                 // Name and status
@@ -68,7 +71,7 @@ struct InterventionCardView: View {
                     Text("\(todayCount)")
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(todayCount > 0 ? tierColor : .secondary)
+                        .foregroundColor(todayCount > 0 ? evidenceTierColor : .secondary)
                 } else if isCompletedToday {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -80,7 +83,7 @@ struct InterventionCardView: View {
                 }
             }
             .padding(12)
-            .background(Color.secondary.opacity(0.08))
+            .background(roiBackground)
             .cornerRadius(12)
         }
         .buttonStyle(PlainButtonStyle())
@@ -89,12 +92,55 @@ struct InterventionCardView: View {
         }
     }
 
-    private var tierColor: Color {
-        switch definition.tier {
-        case .strong: return .blue
-        case .moderate: return .orange
-        case .lower: return .purple
+    // MARK: - Evidence Tier Visual Indicator
+
+    /// Dot indicator showing evidence strength: ●●● = strong, ●●○ = moderate, ●○○ = lower
+    private var tierDots: some View {
+        HStack(spacing: 3) {
+            ForEach(0..<3, id: \.self) { index in
+                Circle()
+                    .fill(index < filledDotCount ? evidenceTierColor : Color.gray.opacity(0.3))
+                    .frame(width: 5, height: 5)
+            }
         }
+    }
+
+    /// Number of filled dots based on evidence tier
+    private var filledDotCount: Int {
+        switch definition.tier {
+        case .strong: return 3   // ●●●
+        case .moderate: return 2 // ●●○
+        case .lower: return 1    // ●○○
+        }
+    }
+
+    /// Color for evidence tier indicator
+    private var evidenceTierColor: Color {
+        switch definition.tier {
+        case .strong: return .green
+        case .moderate: return .blue
+        case .lower: return .orange
+        }
+    }
+
+    private var roiBackground: Color {
+        guard let roi = definition.roiTier else {
+            return Color.secondary.opacity(0.08)
+        }
+
+        let base = Color.green
+        let opacity: Double
+
+        switch roi {
+        case "A": opacity = 0.28
+        case "B": opacity = 0.22
+        case "C": opacity = 0.16
+        case "D": opacity = 0.12
+        case "E": opacity = 0.09
+        default: opacity = 0.08
+        }
+
+        return base.opacity(opacity)
     }
 
     private var statusText: String {
