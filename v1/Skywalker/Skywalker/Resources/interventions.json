@@ -22,7 +22,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 10
+      "defaultOrder": 10,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "vitamin_d",
@@ -46,7 +48,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 20
+      "defaultOrder": 20,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "multivitamin",
@@ -70,7 +74,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 30
+      "defaultOrder": 30,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "morning_fast",
@@ -94,7 +100,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 40
+      "defaultOrder": 40,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "morning_routine",
@@ -118,7 +126,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 50
+      "defaultOrder": 50,
+      "estimatedDurationMinutes": 10,
+      "energyLevel": "low"
     },
     {
       "id": "stress_reduction",
@@ -144,7 +154,10 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 60
+      "defaultOrder": 60,
+      "estimatedDurationMinutes": 15,
+      "energyLevel": "low",
+      "liteVariantDurationMinutes": 5
     },
     {
       "id": "oura_score_goal",
@@ -168,7 +181,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 70
+      "defaultOrder": 70,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "emg_check",
@@ -192,7 +207,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 80
+      "defaultOrder": 80,
+      "estimatedDurationMinutes": 2,
+      "energyLevel": "low"
     },
     {
       "id": "physical_therapy",
@@ -216,7 +233,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 90
+      "defaultOrder": 90,
+      "estimatedDurationMinutes": 10,
+      "energyLevel": "medium"
     },
     {
       "id": "hydration_mid_morning",
@@ -240,7 +259,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 100
+      "defaultOrder": 100,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "hydration_before_lunch",
@@ -264,7 +285,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 110
+      "defaultOrder": 110,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "caffeine_limit",
@@ -290,7 +313,9 @@
       "timeOfDay": [
         "afternoon"
       ],
-      "defaultOrder": 120
+      "defaultOrder": 120,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "hydration_afternoon",
@@ -314,7 +339,9 @@
       "timeOfDay": [
         "afternoon"
       ],
-      "defaultOrder": 130
+      "defaultOrder": 130,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "physio_exercises_lunch",
@@ -338,7 +365,9 @@
       "timeOfDay": [
         "afternoon"
       ],
-      "defaultOrder": 140
+      "defaultOrder": 140,
+      "estimatedDurationMinutes": 10,
+      "energyLevel": "medium"
     },
     {
       "id": "exercise_timing",
@@ -363,7 +392,9 @@
         "morning",
         "evening"
       ],
-      "defaultOrder": 150
+      "defaultOrder": 150,
+      "estimatedDurationMinutes": 30,
+      "energyLevel": "high"
     },
     {
       "id": "nature_exposure",
@@ -387,7 +418,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 160
+      "defaultOrder": 160,
+      "estimatedDurationMinutes": 20,
+      "energyLevel": "low"
     },
     {
       "id": "reflux_meal_timing",
@@ -411,7 +444,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 170
+      "defaultOrder": 170,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "posture",
@@ -435,7 +470,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 180
+      "defaultOrder": 180,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "tongue_posture",
@@ -459,7 +496,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 190
+      "defaultOrder": 190,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "jaw_relaxation",
@@ -483,7 +522,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 200
+      "defaultOrder": 200,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "jaw_massage",
@@ -509,7 +550,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 210
+      "defaultOrder": 210,
+      "estimatedDurationMinutes": 5,
+      "energyLevel": "low"
     },
     {
       "id": "heat_therapy",
@@ -533,7 +576,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 220
+      "defaultOrder": 220,
+      "estimatedDurationMinutes": 15,
+      "energyLevel": "low"
     },
     {
       "id": "hydration_before_dinner",
@@ -557,7 +602,9 @@
       "timeOfDay": [
         "evening"
       ],
-      "defaultOrder": 230
+      "defaultOrder": 230,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "physio_exercises_evening",
@@ -581,7 +628,9 @@
       "timeOfDay": [
         "evening"
       ],
-      "defaultOrder": 240
+      "defaultOrder": 240,
+      "estimatedDurationMinutes": 10,
+      "energyLevel": "medium"
     },
     {
       "id": "alcohol_limit",
@@ -607,7 +656,9 @@
       "timeOfDay": [
         "evening"
       ],
-      "defaultOrder": 250
+      "defaultOrder": 250,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "reflux_medications",
@@ -633,7 +684,9 @@
       "timeOfDay": [
         "evening"
       ],
-      "defaultOrder": 260
+      "defaultOrder": 260,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "strict_diet_phase",
@@ -657,7 +710,9 @@
       "timeOfDay": [
         "evening"
       ],
-      "defaultOrder": 270
+      "defaultOrder": 270,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "reflux_trigger_avoidance",
@@ -681,7 +736,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 280
+      "defaultOrder": 280,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "bed_elevation",
@@ -705,7 +762,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 290
+      "defaultOrder": 290,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "no_screens_prebed",
@@ -729,7 +788,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 300
+      "defaultOrder": 300,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "warm_shower",
@@ -753,7 +814,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 310
+      "defaultOrder": 310,
+      "estimatedDurationMinutes": 15,
+      "energyLevel": "low"
     },
     {
       "id": "yoga_prebed",
@@ -777,7 +840,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 320
+      "defaultOrder": 320,
+      "estimatedDurationMinutes": 20,
+      "energyLevel": "medium"
     },
     {
       "id": "neurosym_device",
@@ -801,7 +866,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 330
+      "defaultOrder": 330,
+      "estimatedDurationMinutes": 30,
+      "energyLevel": "low"
     },
     {
       "id": "intimacy_optional",
@@ -825,7 +892,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 340
+      "defaultOrder": 340,
+      "estimatedDurationMinutes": 15,
+      "energyLevel": "low"
     },
     {
       "id": "slow_breathing",
@@ -849,7 +918,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 350
+      "defaultOrder": 350,
+      "estimatedDurationMinutes": 7,
+      "energyLevel": "low"
     },
     {
       "id": "mindfulness_prebed",
@@ -873,7 +944,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 360
+      "defaultOrder": 360,
+      "estimatedDurationMinutes": 10,
+      "energyLevel": "low"
     },
     {
       "id": "magnesium",
@@ -899,7 +972,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 370
+      "defaultOrder": 370,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "l_theanine",
@@ -923,7 +998,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 380
+      "defaultOrder": 380,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "glycine",
@@ -947,7 +1024,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 390
+      "defaultOrder": 390,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "activate_emg_tracker",
@@ -971,7 +1050,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 400
+      "defaultOrder": 400,
+      "estimatedDurationMinutes": 2,
+      "energyLevel": "low"
     },
     {
       "id": "night_guard",
@@ -997,7 +1078,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 410
+      "defaultOrder": 410,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "biofeedback",
@@ -1023,7 +1106,9 @@
       "timeOfDay": [
         "morning"
       ],
-      "defaultOrder": 85
+      "defaultOrder": 85,
+      "estimatedDurationMinutes": 2,
+      "energyLevel": "low"
     },
     {
       "id": "sleep_hygiene",
@@ -1047,7 +1132,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 430
+      "defaultOrder": 430,
+      "estimatedDurationMinutes": 5,
+      "energyLevel": "low"
     },
     {
       "id": "hydration_before_bed",
@@ -1071,7 +1158,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 440
+      "defaultOrder": 440,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "bedtime_routine",
@@ -1095,7 +1184,9 @@
       "timeOfDay": [
         "preBed"
       ],
-      "defaultOrder": 450
+      "defaultOrder": 450,
+      "estimatedDurationMinutes": 60,
+      "energyLevel": "low"
     },
     {
       "id": "gerd_treatment",
@@ -1121,7 +1212,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 460
+      "defaultOrder": 460,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "sleep_apnea_treatment",
@@ -1147,7 +1240,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 470
+      "defaultOrder": 470,
+      "estimatedDurationMinutes": 5,
+      "energyLevel": "low"
     },
     {
       "id": "ssri_review",
@@ -1173,7 +1268,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 480
+      "defaultOrder": 480,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low"
     },
     {
       "id": "cbt",
@@ -1199,7 +1296,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 490
+      "defaultOrder": 490,
+      "estimatedDurationMinutes": 60,
+      "energyLevel": "medium"
     },
     {
       "id": "botox",
@@ -1225,7 +1324,9 @@
       "timeOfDay": [
         "anytime"
       ],
-      "defaultOrder": 500
+      "defaultOrder": 500,
+      "estimatedDurationMinutes": 30,
+      "energyLevel": "low"
     }
   ],
   "citations": [

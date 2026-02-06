@@ -26,7 +26,7 @@ enum TimeOfDaySection: String, CaseIterable, Codable {
         (.morning, 5, 12),
         (.afternoon, 12, 17),
         (.evening, 17, 21),
-        (.preBed, 21, 23)
+        (.preBed, 21, 5)  // Wraps around midnight (9pm to 5am)
     ]
 
     var displayName: String {
@@ -83,8 +83,20 @@ enum TimeOfDaySection: String, CaseIterable, Codable {
         }
 
         let startOfDay = calendar.startOfDay(for: day)
-        guard let start = calendar.date(byAdding: .hour, value: schedule.startHour, to: startOfDay),
-              let end = calendar.date(byAdding: .hour, value: schedule.endHour, to: startOfDay) else {
+        guard let start = calendar.date(byAdding: .hour, value: schedule.startHour, to: startOfDay) else {
+            return nil
+        }
+
+        // Handle midnight wrap (e.g., preBed 21:00 to 05:00 next day)
+        var endDay = startOfDay
+        if schedule.endHour < schedule.startHour {
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+                return nil
+            }
+            endDay = nextDay
+        }
+
+        guard let end = calendar.date(byAdding: .hour, value: schedule.endHour, to: endDay) else {
             return nil
         }
 
@@ -101,7 +113,8 @@ enum TimeOfDaySection: String, CaseIterable, Codable {
             return .afternoon
         case 17..<21:
             return .evening
-        case 21..<23:
+        case 21..<24, 0..<5:
+            // 9pm to 4:59am = pre-bed (covers late night)
             return .preBed
         default:
             return nil
@@ -168,6 +181,42 @@ enum TrackingType: String, Codable, CaseIterable {
         case .appointment: return "Appointment"
         case .automatic: return "Automatic"
         }
+    }
+}
+
+enum EnergyLevel: String, Codable, CaseIterable {
+    case low
+    case medium
+    case high
+
+    var displayName: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .low: return "battery.25"
+        case .medium: return "battery.50"
+        case .high: return "battery.100"
+        }
+    }
+
+    /// Numeric value for comparison (1=low, 2=medium, 3=high)
+    var numericValue: Int {
+        switch self {
+        case .low: return 1
+        case .medium: return 2
+        case .high: return 3
+        }
+    }
+
+    /// Check if this energy level is at or below the given maximum
+    func isWithin(max: EnergyLevel) -> Bool {
+        numericValue <= max.numericValue
     }
 }
 
@@ -348,12 +397,18 @@ struct InterventionDefinition: Identifiable, Codable, Equatable {
     let timeOfDay: [TimeOfDaySection]
     let defaultOrder: Int?
 
+    // Capacity filtering fields
+    let estimatedDurationMinutes: Int?  // Estimated time to complete (1-60 min)
+    let energyLevel: EnergyLevel?       // Required energy level (low/medium/high)
+    let liteVariantDurationMinutes: Int? // Shorter duration for "lite" mode (timer-based only)
+
     // Coding keys for JSON mapping
     private enum CodingKeys: String, CodingKey {
         case id, name, emoji, icon, description, detailedDescription
         case tier, frequency, trackingType, isRemindable, defaultReminderMinutes
         case externalLink, evidenceLevel, evidenceSummary, citationIds
         case roiTier, easeScore, costRange, timeOfDay, defaultOrder
+        case estimatedDurationMinutes, energyLevel, liteVariantDurationMinutes
     }
 
     init(from decoder: Decoder) throws {
@@ -396,6 +451,11 @@ struct InterventionDefinition: Identifiable, Codable, Equatable {
         } else {
             timeOfDay = [.anytime]
         }
+
+        // Capacity filtering fields
+        estimatedDurationMinutes = try container.decodeIfPresent(Int.self, forKey: .estimatedDurationMinutes)
+        energyLevel = try container.decodeIfPresent(EnergyLevel.self, forKey: .energyLevel)
+        liteVariantDurationMinutes = try container.decodeIfPresent(Int.self, forKey: .liteVariantDurationMinutes)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -421,6 +481,11 @@ struct InterventionDefinition: Identifiable, Codable, Equatable {
         try container.encodeIfPresent(costRange, forKey: .costRange)
         try container.encode(timeOfDay, forKey: .timeOfDay)
         try container.encodeIfPresent(defaultOrder, forKey: .defaultOrder)
+
+        // Capacity filtering fields
+        try container.encodeIfPresent(estimatedDurationMinutes, forKey: .estimatedDurationMinutes)
+        try container.encodeIfPresent(energyLevel, forKey: .energyLevel)
+        try container.encodeIfPresent(liteVariantDurationMinutes, forKey: .liteVariantDurationMinutes)
     }
 
     // Legacy initializer for backward compatibility (used in previews/tests)
@@ -444,7 +509,10 @@ struct InterventionDefinition: Identifiable, Codable, Equatable {
         easeScore: Int? = nil,
         costRange: String? = nil,
         timeOfDay: [TimeOfDaySection] = [.anytime],
-        defaultOrder: Int? = nil
+        defaultOrder: Int? = nil,
+        estimatedDurationMinutes: Int? = nil,
+        energyLevel: EnergyLevel? = nil,
+        liteVariantDurationMinutes: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -466,6 +534,9 @@ struct InterventionDefinition: Identifiable, Codable, Equatable {
         self.costRange = costRange
         self.timeOfDay = timeOfDay
         self.defaultOrder = defaultOrder
+        self.estimatedDurationMinutes = estimatedDurationMinutes
+        self.energyLevel = energyLevel
+        self.liteVariantDurationMinutes = liteVariantDurationMinutes
     }
 
     static func == (lhs: InterventionDefinition, rhs: InterventionDefinition) -> Bool {
@@ -486,6 +557,39 @@ struct InterventionDefinition: Identifiable, Codable, Equatable {
             "alcohol_limit"
         ]
         return timeOfDaySections.contains(.anytime) && reflectionIds.contains(id)
+    }
+
+    // MARK: - Capacity Filtering Helpers
+
+    /// Duration in minutes with fallback default (5 min)
+    var durationMinutes: Int {
+        estimatedDurationMinutes ?? 5
+    }
+
+    /// Energy level with fallback default (medium)
+    var requiredEnergy: EnergyLevel {
+        energyLevel ?? .medium
+    }
+
+    /// Duration display string (e.g., "5 min")
+    var durationDisplay: String {
+        let mins = durationMinutes
+        return mins == 1 ? "1 min" : "\(mins) min"
+    }
+
+    /// Check if this intervention fits within the given capacity constraints
+    func fitsCapacity(availableMinutes: Int, maxEnergy: EnergyLevel) -> Bool {
+        durationMinutes <= availableMinutes && requiredEnergy.isWithin(max: maxEnergy)
+    }
+
+    /// Whether this intervention has a lite (shorter) variant available
+    var hasLiteVariant: Bool {
+        liteVariantDurationMinutes != nil && trackingType == .timer
+    }
+
+    /// Duration for lite variant with fallback to regular duration
+    var liteDurationMinutes: Int {
+        liteVariantDurationMinutes ?? durationMinutes
     }
 
     /// Assign this intervention to a sub-block within its section

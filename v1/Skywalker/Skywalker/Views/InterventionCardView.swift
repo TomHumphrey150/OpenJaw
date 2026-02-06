@@ -148,9 +148,9 @@ struct InterventionCardView: View {
         case .counter:
             return "\(todayCount) today"
         case .binary, .checklist:
-            return isCompletedToday ? "Done today" : "Not done"
+            return isCompletedToday ? "Nice work!" : "Ready when you are"
         case .timer:
-            return isCompletedToday ? "Done today" : "Not started"
+            return isCompletedToday ? "Nice work!" : "Ready when you are"
         case .automatic:
             return "Automatic"
         case .appointment:

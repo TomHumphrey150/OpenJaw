@@ -750,7 +750,7 @@ private struct SubBlockView: View {
             Image(systemName: "lock.fill")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            Text("Complete previous block to unlock")
+            Text("This opens after the current block")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
