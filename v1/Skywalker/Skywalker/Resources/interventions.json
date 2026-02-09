@@ -24,7 +24,9 @@
       ],
       "defaultOrder": 10,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "vitamin_d",
@@ -50,7 +52,9 @@
       ],
       "defaultOrder": 20,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "upstream"
     },
     {
       "id": "multivitamin",
@@ -76,7 +80,9 @@
       ],
       "defaultOrder": 30,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "upstream"
     },
     {
       "id": "morning_fast",
@@ -102,7 +108,9 @@
       ],
       "defaultOrder": 40,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "morning_routine",
@@ -128,7 +136,9 @@
       ],
       "defaultOrder": 50,
       "estimatedDurationMinutes": 10,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "stress_reduction",
@@ -157,7 +167,9 @@
       "defaultOrder": 60,
       "estimatedDurationMinutes": 15,
       "energyLevel": "low",
-      "liteVariantDurationMinutes": 5
+      "liteVariantDurationMinutes": 5,
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "oura_score_goal",
@@ -183,7 +195,9 @@
       ],
       "defaultOrder": 70,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "emg_check",
@@ -209,7 +223,9 @@
       ],
       "defaultOrder": 80,
       "estimatedDurationMinutes": 2,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "physical_therapy",
@@ -235,7 +251,9 @@
       ],
       "defaultOrder": 90,
       "estimatedDurationMinutes": 10,
-      "energyLevel": "medium"
+      "energyLevel": "medium",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "hydration_mid_morning",
@@ -261,7 +279,9 @@
       ],
       "defaultOrder": 100,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "hydration_before_lunch",
@@ -287,7 +307,9 @@
       ],
       "defaultOrder": 110,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "caffeine_limit",
@@ -315,7 +337,9 @@
       ],
       "defaultOrder": 120,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "upstream"
     },
     {
       "id": "hydration_afternoon",
@@ -341,7 +365,9 @@
       ],
       "defaultOrder": 130,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "physio_exercises_lunch",
@@ -367,7 +393,9 @@
       ],
       "defaultOrder": 140,
       "estimatedDurationMinutes": 10,
-      "energyLevel": "medium"
+      "energyLevel": "medium",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "exercise_timing",
@@ -394,7 +422,9 @@
       ],
       "defaultOrder": 150,
       "estimatedDurationMinutes": 30,
-      "energyLevel": "high"
+      "energyLevel": "high",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "nature_exposure",
@@ -420,7 +450,9 @@
       ],
       "defaultOrder": 160,
       "estimatedDurationMinutes": 20,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "reflux_meal_timing",
@@ -446,7 +478,9 @@
       ],
       "defaultOrder": 170,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "posture",
@@ -472,7 +506,9 @@
       ],
       "defaultOrder": 180,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "tongue_posture",
@@ -498,7 +534,9 @@
       ],
       "defaultOrder": 190,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "jaw_relaxation",
@@ -524,7 +562,9 @@
       ],
       "defaultOrder": 200,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "jaw_massage",
@@ -552,7 +592,9 @@
       ],
       "defaultOrder": 210,
       "estimatedDurationMinutes": 5,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "heat_therapy",
@@ -578,7 +620,9 @@
       ],
       "defaultOrder": 220,
       "estimatedDurationMinutes": 15,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "hydration_before_dinner",
@@ -604,7 +648,9 @@
       ],
       "defaultOrder": 230,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "physio_exercises_evening",
@@ -630,7 +676,9 @@
       ],
       "defaultOrder": 240,
       "estimatedDurationMinutes": 10,
-      "energyLevel": "medium"
+      "energyLevel": "medium",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "alcohol_limit",
@@ -658,7 +706,9 @@
       ],
       "defaultOrder": 250,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "upstream"
     },
     {
       "id": "reflux_medications",
@@ -686,7 +736,9 @@
       ],
       "defaultOrder": 260,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "strict_diet_phase",
@@ -712,7 +764,9 @@
       ],
       "defaultOrder": 270,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "reflux_trigger_avoidance",
@@ -738,7 +792,9 @@
       ],
       "defaultOrder": 280,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "bed_elevation",
@@ -764,7 +820,9 @@
       ],
       "defaultOrder": 290,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "no_screens_prebed",
@@ -790,7 +848,9 @@
       ],
       "defaultOrder": 300,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "warm_shower",
@@ -816,7 +876,9 @@
       ],
       "defaultOrder": 310,
       "estimatedDurationMinutes": 15,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "yoga_prebed",
@@ -842,7 +904,9 @@
       ],
       "defaultOrder": 320,
       "estimatedDurationMinutes": 20,
-      "energyLevel": "medium"
+      "energyLevel": "medium",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "neurosym_device",
@@ -868,7 +932,9 @@
       ],
       "defaultOrder": 330,
       "estimatedDurationMinutes": 30,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "intimacy_optional",
@@ -894,7 +960,9 @@
       ],
       "defaultOrder": 340,
       "estimatedDurationMinutes": 15,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "slow_breathing",
@@ -920,7 +988,9 @@
       ],
       "defaultOrder": 350,
       "estimatedDurationMinutes": 7,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "mindfulness_prebed",
@@ -946,7 +1016,9 @@
       ],
       "defaultOrder": 360,
       "estimatedDurationMinutes": 10,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "magnesium",
@@ -974,7 +1046,9 @@
       ],
       "defaultOrder": 370,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "l_theanine",
@@ -1000,7 +1074,9 @@
       ],
       "defaultOrder": 380,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "glycine",
@@ -1026,7 +1102,9 @@
       ],
       "defaultOrder": 390,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "activate_emg_tracker",
@@ -1052,7 +1130,9 @@
       ],
       "defaultOrder": 400,
       "estimatedDurationMinutes": 2,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "midstream"
     },
     {
       "id": "night_guard",
@@ -1080,7 +1160,9 @@
       ],
       "defaultOrder": 410,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     },
     {
       "id": "biofeedback",
@@ -1108,7 +1190,9 @@
       ],
       "defaultOrder": 85,
       "estimatedDurationMinutes": 2,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "midstream"
     },
     {
       "id": "sleep_hygiene",
@@ -1134,7 +1218,9 @@
       ],
       "defaultOrder": 430,
       "estimatedDurationMinutes": 5,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "midstream"
     },
     {
       "id": "hydration_before_bed",
@@ -1160,7 +1246,9 @@
       ],
       "defaultOrder": 440,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "bedtime_routine",
@@ -1186,7 +1274,9 @@
       ],
       "defaultOrder": 450,
       "estimatedDurationMinutes": 60,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "gerd_treatment",
@@ -1214,7 +1304,9 @@
       ],
       "defaultOrder": 460,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "reflux",
+      "causalPathway": "upstream"
     },
     {
       "id": "sleep_apnea_treatment",
@@ -1242,7 +1334,9 @@
       ],
       "defaultOrder": 470,
       "estimatedDurationMinutes": 5,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "upstream"
     },
     {
       "id": "ssri_review",
@@ -1270,7 +1364,9 @@
       ],
       "defaultOrder": 480,
       "estimatedDurationMinutes": 1,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "upstream"
     },
     {
       "id": "cbt",
@@ -1298,7 +1394,9 @@
       ],
       "defaultOrder": 490,
       "estimatedDurationMinutes": 60,
-      "energyLevel": "medium"
+      "energyLevel": "medium",
+      "targetCondition": "both",
+      "causalPathway": "midstream"
     },
     {
       "id": "botox",
@@ -1326,7 +1424,9 @@
       ],
       "defaultOrder": 500,
       "estimatedDurationMinutes": 30,
-      "energyLevel": "low"
+      "energyLevel": "low",
+      "targetCondition": "bruxism",
+      "causalPathway": "downstream"
     }
   ],
   "citations": [
@@ -1336,7 +1436,23 @@
       "source": "Cochrane",
       "year": 2007,
       "url": "https://www.cochrane.org/evidence/CD005514_occlusal-splints-treating-sleep-bruxism-tooth-grinding",
-      "type": "cochrane"
+      "type": "cochrane",
+      "studyDesign": "systematic_review",
+      "sampleSize": null,
+      "sampleSizeNote": "5 RCTs included, heterogeneous sample sizes",
+      "effectSize": null,
+      "pValue": null,
+      "causalityType": "correlational",
+      "replicationStatus": "replicated",
+      "population": {
+        "ageRange": "adults",
+        "demographics": "diagnosed sleep bruxism patients"
+      },
+      "comparisonGroup": "no treatment, soft splint, palatal splint",
+      "primaryOutcome": "bruxism episode reduction",
+      "secondaryOutcomes": ["tooth wear prevention", "pain reduction", "sleep quality"],
+      "keyFindings": "Insufficient evidence that occlusal splints reduce grinding episodes. Moderate evidence they protect teeth from wear. Hard stabilization splints recommended over soft.",
+      "limitations": "Small sample sizes, heterogeneous protocols, short follow-up periods, methodological quality concerns"
     },
     {
       "id": "biofeedback_review",
@@ -1344,7 +1460,31 @@
       "source": "J Oral Rehabil",
       "year": 2018,
       "url": "https://pubmed.ncbi.nlm.nih.gov/29577362/",
-      "type": "systematicReview"
+      "type": "systematicReview",
+      "studyDesign": "meta_analysis",
+      "sampleSize": 219,
+      "sampleSizeNote": "9 studies pooled, ranging from 10-60 participants each",
+      "effectSize": {
+        "type": "smd",
+        "value": -0.56,
+        "ci95Lower": -0.89,
+        "ci95Upper": -0.23,
+        "description": "Moderate reduction in EMG activity compared to controls"
+      },
+      "pValue": 0.001,
+      "causalityType": "correlational",
+      "replicationStatus": "replicated",
+      "population": {
+        "ageRange": "adults (18-65)",
+        "demographics": "diagnosed sleep bruxism patients",
+        "inclusionCriteria": "confirmed SB via EMG or polysomnography",
+        "exclusionCriteria": "secondary bruxism, medication-induced, severe TMD"
+      },
+      "comparisonGroup": "waitlist control, sham biofeedback, or no treatment",
+      "primaryOutcome": "EMG activity reduction during sleep",
+      "secondaryOutcomes": ["subjective improvement", "pain reduction", "sleep quality"],
+      "keyFindings": "Biofeedback demonstrates short-term efficacy in reducing EMG activity. Effects may diminish over extended periods. Multi-week protocols show better sustained outcomes.",
+      "limitations": "Heterogeneous biofeedback protocols (audio vs haptic vs visual), short follow-up (mostly <8 weeks), no standardized outcome measures across studies"
     },
     {
       "id": "ssri_bruxism",
@@ -1368,7 +1508,30 @@
       "source": "Br J Oral Maxillofac Surg",
       "year": 2022,
       "url": "https://pubmed.ncbi.nlm.nih.gov/34955330/",
-      "type": "metaAnalysis"
+      "type": "metaAnalysis",
+      "studyDesign": "meta_analysis",
+      "sampleSize": 320,
+      "sampleSizeNote": "8 RCTs pooled",
+      "effectSize": {
+        "type": "smd",
+        "value": -4.0,
+        "description": "Approximately 4-point reduction on 10-point VAS pain scale"
+      },
+      "pValue": 0.001,
+      "causalityType": "causal",
+      "replicationStatus": "replicated",
+      "population": {
+        "ageRange": "adults (18-70)",
+        "demographics": "refractory or severe sleep bruxism patients",
+        "inclusionCriteria": "failed conservative treatments, significant pain/dysfunction"
+      },
+      "comparisonGroup": "saline injection placebo",
+      "primaryOutcome": "pain reduction (VAS scale)",
+      "secondaryOutcomes": ["bruxism events per hour", "bite force reduction", "jaw mobility"],
+      "fundingSource": "not disclosed in meta-analysis",
+      "conflictOfInterest": "none declared by meta-analysis authors",
+      "keyFindings": "Significant pain reduction (~4 points on VAS). Bruxism episodes reduced from ~5 to ~1.7 per hour. Effects last 3-6 months. Requires repeat injections.",
+      "limitations": "High cost ($400-800 per treatment), potential long-term bone density effects in masseter region, not suitable for mild cases, requires skilled injector"
     },
     {
       "id": "massage_rct",

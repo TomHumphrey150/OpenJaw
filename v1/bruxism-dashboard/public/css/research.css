@@ -1,0 +1,773 @@
+/* ============================================
+   Research Tab Styles
+   ============================================ */
+
+/* Research Header */
+.research-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.research-title h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.research-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 4px 0 0;
+}
+
+/* Research Filters */
+.research-filters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+}
+
+.research-filters .filter-group {
+    flex: 1;
+    min-width: 150px;
+    margin-bottom: 0;
+}
+
+/* Citations List */
+.citations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Citation Card */
+.citation-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    transition: border-color 0.2s;
+}
+
+.citation-card:hover {
+    border-color: var(--accent);
+}
+
+.citation-card.personal {
+    border-left: 3px solid var(--condition-both);
+}
+
+.citation-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.citation-type-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.citation-type-badge.cochrane { background: var(--citation-cochrane); color: #fff; }
+.citation-type-badge.systematicReview { background: var(--citation-systematic); color: #fff; }
+.citation-type-badge.metaAnalysis { background: var(--citation-meta); color: #fff; }
+.citation-type-badge.rct { background: var(--citation-rct); color: #fff; }
+.citation-type-badge.review { background: var(--citation-review); color: #fff; }
+.citation-type-badge.guideline { background: var(--citation-guideline); color: #fff; }
+
+.citation-title {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.citation-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+/* Study Badges */
+.study-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.study-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+}
+
+.study-badge.sample-size.large { background: rgba(129, 199, 132, 0.2); color: var(--evidence-high); }
+.study-badge.sample-size.medium { background: rgba(79, 195, 247, 0.2); color: var(--evidence-moderate); }
+.study-badge.sample-size.small { background: rgba(255, 183, 77, 0.2); color: var(--evidence-low); }
+
+.study-badge.effect-size { background: rgba(100, 181, 246, 0.2); color: var(--accent); }
+
+.study-badge.causality.causal { background: rgba(129, 199, 132, 0.2); color: var(--evidence-high); }
+.study-badge.causality.correlational { background: rgba(255, 213, 79, 0.2); color: var(--evidence-low-moderate); }
+.study-badge.causality.mechanistic { background: rgba(79, 195, 247, 0.2); color: var(--evidence-moderate); }
+
+.study-badge.replication.replicated { background: rgba(129, 199, 132, 0.2); color: var(--evidence-high); }
+.study-badge.replication.single_study { background: rgba(255, 213, 79, 0.2); color: var(--evidence-low-moderate); }
+.study-badge.replication.conflicting { background: rgba(229, 115, 115, 0.2); color: var(--roi-e); }
+
+/* Citation Details */
+.citation-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.citation-details.hidden {
+    display: none;
+}
+
+.detail-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.detail-row .label {
+    color: var(--text-muted);
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.detail-row .value {
+    color: var(--text-primary);
+}
+
+/* Citation Actions */
+.citation-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.citation-actions .btn-note,
+.citation-actions .btn-expand,
+.citation-actions .btn-external {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.citation-actions .btn-note:hover,
+.citation-actions .btn-expand:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.citation-actions .btn-external {
+    margin-left: auto;
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.citation-actions .btn-external:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+/* Citation Notes */
+.citation-notes {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.citation-notes .note {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.citation-notes .note:last-child {
+    margin-bottom: 0;
+}
+
+.citation-notes .note-content {
+    flex: 1;
+}
+
+.citation-notes .note-date {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.citation-notes .note-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.citation-notes .note-delete:hover {
+    color: var(--roi-e);
+}
+
+/* Add Note Form (inline) */
+.add-note-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.add-note-form input {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.add-note-form button {
+    padding: 8px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Personal Studies Section */
+.personal-studies-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+}
+
+.personal-studies-section h3 {
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+
+.personal-studies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.empty-state p {
+    margin-bottom: 16px;
+}
+
+/* ============================================
+   Experiments Tab Styles
+   ============================================ */
+
+.experiments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.experiments-title h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.experiments-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 4px 0 0;
+}
+
+.experiments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+    width: 100%;
+}
+
+.experiments-section h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+}
+
+.experiments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Experiment Card */
+.experiment-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 16px;
+}
+
+.experiment-card.active {
+    border-left: 3px solid var(--evidence-moderate);
+}
+
+.experiment-card.completed {
+    border-left: 3px solid var(--evidence-high);
+}
+
+.experiment-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.experiment-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.experiment-status.active {
+    background: rgba(79, 195, 247, 0.2);
+    color: var(--evidence-moderate);
+}
+
+.experiment-status.completed {
+    background: rgba(129, 199, 132, 0.2);
+    color: var(--evidence-high);
+}
+
+.experiment-card h4 {
+    flex: 1;
+    font-size: 15px;
+    margin: 0;
+}
+
+.experiment-duration {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Observation Timeline */
+.observation-timeline {
+    margin: 12px 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--border-color);
+}
+
+.observation {
+    position: relative;
+    padding-bottom: 12px;
+    font-size: 13px;
+}
+
+.observation:last-child {
+    padding-bottom: 0;
+}
+
+.observation::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: var(--bg-card);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+}
+
+.observation .date {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.observation .rating {
+    margin-left: 8px;
+    font-size: 12px;
+}
+
+.observation p {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+}
+
+/* Experiment Actions */
+.experiment-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.experiment-actions button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add-observation {
+    background: var(--accent);
+    border: none;
+    color: #000;
+}
+
+.btn-complete {
+    background: transparent;
+    border: 1px solid var(--evidence-high);
+    color: var(--evidence-high);
+}
+
+.btn-complete:hover {
+    background: var(--evidence-high);
+    color: #000;
+}
+
+.btn-abandon {
+    background: transparent;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+}
+
+.btn-abandon:hover {
+    border-color: var(--roi-e);
+    color: var(--roi-e);
+}
+
+/* Effectiveness Section */
+.effectiveness-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+}
+
+.effectiveness-section h3 {
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+
+.effectiveness-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.effectiveness-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.effectiveness-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.effectiveness-badge.works_for_me { background: var(--evidence-high); color: #000; }
+.effectiveness-badge.doesnt_work { background: var(--roi-e); color: #000; }
+.effectiveness-badge.untested { background: var(--condition-general); color: #000; }
+.effectiveness-badge.inconclusive { background: var(--evidence-low-moderate); color: #000; }
+
+.effectiveness-item .intervention-name {
+    flex: 1;
+    font-size: 13px;
+}
+
+/* ============================================
+   Modal Styles
+   ============================================ */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content.modal-large {
+    max-width: 700px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Data Management */
+.data-action {
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.data-action:last-child {
+    margin-bottom: 0;
+}
+
+.data-action h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.data-action p {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.data-action.danger {
+    border: 1px solid var(--roi-e);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-row .form-group.full-width {
+    flex-basis: 100%;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Buttons */
+.btn-primary {
+    background: var(--accent);
+    border: none;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-card);
+}
+
+.btn-danger {
+    background: var(--roi-e);
+    border: none;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.header-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Star Rating */
+.star-rating {
+    display: flex;
+    gap: 4px;
+}
+
+.star-rating span {
+    cursor: pointer;
+    font-size: 20px;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.star-rating span.active,
+.star-rating span:hover {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .experiments-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .research-filters {
+        flex-direction: column;
+    }
+}
