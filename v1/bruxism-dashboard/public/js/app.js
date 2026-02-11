@@ -3,7 +3,7 @@ import { buildCitationMap, renderCitations } from './citations.js';
 import { initFilters, applyFilters, getFilteredInterventions } from './filters.js';
 import { initResearch } from './research.js';
 import { initExperiments, renderExperiments, renderEffectivenessGrid } from './experiments.js';
-import { initCausalEditor } from './causalEditor.js';
+import { initCausalEditor, refreshPanZoom } from './causalEditor.js';
 import * as storage from './storage.js';
 
 let interventionsData = null;
@@ -103,6 +103,9 @@ function setupTabs() {
             if (allTabs[tab]) {
                 allTabs[tab].classList.add('active');
             }
+
+            // Refresh pan/zoom for diagrams in newly visible tab
+            refreshPanZoom();
 
             // Re-render experiments tab when switching to it (for fresh data)
             if (tab === 'experiments') {

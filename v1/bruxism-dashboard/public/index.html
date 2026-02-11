@@ -6,6 +6,10 @@
     <title>Bruxism Interventions Dashboard</title>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/research.css">
+    <!-- Cytoscape.js + ELK for causal graph diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-elk@2.2.0/dist/cytoscape-elk.js"></script>
 </head>
 <body>
     <!-- Server Status Banner (hidden when connected) -->
@@ -32,21 +36,21 @@
                 <p class="subtitle">Evidence-based strategies for managing sleep bruxism</p>
             </div>
             <nav class="tab-nav">
-                <button data-tab="interventions" class="tab-button active">
-                    <span class="tab-icon">💊</span>
-                    Interventions
+                <button data-tab="info" class="tab-button active">
+                    <span class="tab-icon">📚</span>
+                    Bruxism Info
                 </button>
                 <button data-tab="research" class="tab-button">
                     <span class="tab-icon">🔬</span>
                     Research
                 </button>
+                <button data-tab="interventions" class="tab-button">
+                    <span class="tab-icon">💊</span>
+                    Interventions
+                </button>
                 <button data-tab="experiments" class="tab-button">
                     <span class="tab-icon">🧪</span>
                     My Experiments
-                </button>
-                <button data-tab="info" class="tab-button">
-                    <span class="tab-icon">📚</span>
-                    Bruxism Info
                 </button>
             </nav>
             <div class="header-actions">
@@ -57,10 +61,10 @@
         </header>
 
         <!-- Interventions Tab -->
-        <div id="interventions-tab" class="tab-content active">
-            <!-- Causal Chain Diagram (rendered dynamically by causalEditor.js) -->
-            <div id="causal-chain" class="causal-chain">
-                <!-- Nodes rendered dynamically -->
+        <div id="interventions-tab" class="tab-content">
+            <!-- Causal Graph Diagram -->
+            <div id="causal-graph" class="causal-graph-container">
+                <div class="causal-graph-cy" id="causal-graph-cy"></div>
             </div>
 
             <!-- View Toggle -->
@@ -181,6 +185,11 @@
 
         <!-- Research Tab -->
         <div id="research-tab" class="tab-content">
+            <!-- Causal Graph Diagram (educational view) -->
+            <div id="causal-graph-research" class="causal-graph-container">
+                <div class="causal-graph-cy" id="causal-graph-research-cy"></div>
+            </div>
+
             <div class="research-header">
                 <div class="research-title">
                     <h2>Evidence Review</h2>
@@ -236,6 +245,11 @@
 
         <!-- Experiments Tab -->
         <div id="experiments-tab" class="tab-content">
+            <!-- Causal Graph Diagram (reference view) -->
+            <div id="causal-graph-experiments" class="causal-graph-container compact">
+                <div class="causal-graph-cy" id="causal-graph-experiments-cy"></div>
+            </div>
+
             <div class="experiments-header">
                 <div class="experiments-title">
                     <h2>My Experiments</h2>
@@ -262,8 +276,8 @@
             </section>
         </div>
 
-        <!-- Info Tab -->
-        <div id="info-tab" class="tab-content">
+        <!-- Info Tab (default) -->
+        <div id="info-tab" class="tab-content active">
             <main id="info-content">
                 <div id="info-sections"></div>
             </main>
