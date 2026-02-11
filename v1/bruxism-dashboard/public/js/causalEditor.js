@@ -60,6 +60,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: { evidence: 'Preliminary (observational)', stat: '1.5x odds', citation: 'Bertazzo-Silveira 2016, JADA', mechanism: 'Adenosine receptor antagonism increases arousal frequency' } } },
         { data: { id: 'ALCOHOL', label: 'Alcohol\n2x odds', styleClass: 'preliminary', confirmed: 'external',
             tooltip: { evidence: 'Preliminary (observational)', stat: '2x odds', citation: 'Bertazzo-Silveira 2016, JADA', mechanism: 'Rebound sympathetic activation during alcohol metabolism' } } },
+        { data: { id: 'SMOKING', label: 'Smoking\n>2x odds', styleClass: 'preliminary', confirmed: 'inactive',
+            tooltip: { evidence: 'Preliminary (observational)', stat: '>2x odds', citation: 'Bertazzo-Silveira 2016, JADA', mechanism: 'Nicotine increases sympathetic activation and arousal frequency' } } },
 
         // ── STRESS MECHANISMS ──
         { data: { id: 'CORTISOL', label: 'Cortisol ↑\nSMD 1.10', styleClass: 'moderate', confirmed: 'yes',
@@ -142,6 +144,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: { evidence: 'Low-Moderate', stat: 'LPR protocol component', citation: 'ENT clinical protocols', mechanism: 'Reduces morning reflux surge by allowing esophageal recovery' } } },
         { data: { id: 'REFLUX_DIET_TX', label: 'Reflux Diet\n& Avoidance', styleClass: 'intervention',
             tooltip: { evidence: 'Moderate', stat: 'Eliminates acid triggers', citation: 'Koufman 2012; ENT protocols', mechanism: 'Dietary modifications remove upstream acid/reflux triggers' } } },
+        { data: { id: 'MEAL_TIMING_TX', label: 'Meal Timing\n& Posture', styleClass: 'intervention',
+            tooltip: { evidence: 'Moderate', stat: 'Reduces reflux exposure', citation: 'ENT clinical protocols', mechanism: 'Eating upright, no drinks with meals, staying upright after, and early dinner reduce reflux episodes' } } },
         { data: { id: 'BED_ELEV_TX', label: 'Bed Elevation\n10-25cm', styleClass: 'intervention',
             tooltip: { evidence: 'Moderate', stat: 'Gravity-based clearance', citation: 'GERD treatment guidelines', mechanism: 'Gravity reduces nocturnal acid contact time in supine position' } } },
         { data: { id: 'MINDFULNESS_TX', label: 'Mindfulness\n& Stress Reduction', styleClass: 'intervention',
@@ -245,12 +249,16 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'Genetic predisposition affects arousal threshold (21-50% heritable)' } },
         { data: { source: 'SLEEP_DEP', target: 'MICRO', edgeType: 'forward', edgeColor: '#b45309',
             tooltip: 'Sleep deprivation increases microarousal frequency' } },
+        { data: { source: 'SLEEP_DEP', target: 'CORTISOL', edgeType: 'forward', edgeColor: '#b45309',
+            tooltip: 'Sleep deprivation elevates cortisol via HPA axis activation' } },
         { data: { source: 'SSRI', target: 'RMMA', label: '~24% risk', edgeType: 'forward', edgeColor: '#6b21a8',
             tooltip: 'SSRIs suppress dopaminergic inhibition of motor patterns (~24% bruxism risk)' } },
         { data: { source: 'CAFFEINE', target: 'MICRO', edgeType: 'forward', edgeColor: '#6b21a8',
             tooltip: 'Caffeine antagonizes adenosine receptors, increasing arousal (1.5x odds)' } },
         { data: { source: 'ALCOHOL', target: 'MICRO', edgeType: 'forward', edgeColor: '#6b21a8',
             tooltip: 'Alcohol causes rebound sympathetic activation during metabolism (2x odds)' } },
+        { data: { source: 'SMOKING', target: 'MICRO', edgeType: 'forward', edgeColor: '#6b21a8',
+            tooltip: 'Smoking increases sympathetic activation and arousal frequency (>2x odds)' } },
 
         // ── Neurochemistry → RMMA ──
         { data: { source: 'GABA_DEF', target: 'RMMA', edgeType: 'forward', edgeColor: '#6b21a8',
@@ -341,6 +349,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'Magnesium supplementation restores GABA cofactor levels' } },
         { data: { source: 'YOGA_TX', target: 'GABA_DEF', label: 'GABA +27%', edgeType: 'forward', edgeColor: '#065f46',
             tooltip: 'Yoga increases brain GABA by 27% (Streeter 2007, P=.018)' } },
+        { data: { source: 'YOGA_TX', target: 'CORTISOL', edgeType: 'forward', edgeColor: '#065f46',
+            tooltip: 'Yoga reduces cortisol levels (Streeter 2007/2010)' } },
 
         // ── Interventions (new) ──
         { data: { source: 'HYDRATION', target: 'ACID', edgeType: 'forward', edgeColor: '#065f46',
@@ -379,6 +389,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'Dietary modifications eliminate reflux triggers' } },
         { data: { source: 'REFLUX_DIET_TX', target: 'ACID', edgeType: 'forward', edgeColor: '#065f46',
             tooltip: 'Trigger avoidance reduces acid production and reflux episodes' } },
+        { data: { source: 'MEAL_TIMING_TX', target: 'GERD', edgeType: 'forward', edgeColor: '#065f46',
+            tooltip: 'Meal timing and upright posture reduce reflux episode frequency' } },
         { data: { source: 'POSTURE_TX', target: 'FHP', edgeType: 'forward', edgeColor: '#065f46',
             tooltip: 'Posture awareness corrects forward head positioning' } },
         { data: { source: 'POSTURE_TX', target: 'CERVICAL', edgeType: 'forward', edgeColor: '#065f46',
@@ -581,6 +593,14 @@ const CYTOSCAPE_STYLES = [
         style: { 'border-width': 2, 'border-color': '#60a5fa', 'z-index': 998 }
     },
     {
+        selector: 'node.hover-neighbor-2',
+        style: { 'border-width': 1, 'border-color': '#60a5fa', 'z-index': 997, 'opacity': 0.55 }
+    },
+    {
+        selector: 'edge.hover-highlight-2',
+        style: { 'opacity': 0.35, 'width': 1.5, 'z-index': 997 }
+    },
+    {
         selector: 'node.hover-dimmed',
         style: { 'opacity': 0.25 }
     },
@@ -621,6 +641,7 @@ let elkRegistered = false;
 let showInterventions = false; // Interventions hidden by default
 let showFeedbackEdges = true;  // Feedback edges visible by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
+let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
 
 // Cytoscape instance tracking (container ID string → cy instance)
 const cyInstances = new Map();
@@ -672,10 +693,37 @@ function initTooltip() {
     document.body.appendChild(tooltipEl);
 }
 
+function applyNeighborhoodHighlight(cy, node) {
+    cy.batch(() => {
+        cy.elements().addClass('hover-dimmed');
+        cy.nodes('[styleClass="groupLabel"]').removeClass('hover-dimmed');
+
+        // Tier 0: the clicked/hovered node
+        node.removeClass('hover-dimmed').addClass('hover-highlight');
+
+        // Tier 1: direct edges + neighbors
+        const t1Edges = node.connectedEdges();
+        t1Edges.removeClass('hover-dimmed').addClass('hover-highlight');
+        const t1Nodes = t1Edges.connectedNodes().not(node);
+        t1Nodes.removeClass('hover-dimmed').addClass('hover-neighbor');
+
+        // Tier 2: edges + neighbors one step further out
+        t1Nodes.forEach(n => {
+            const t2Edges = n.connectedEdges().not(t1Edges);
+            t2Edges.removeClass('hover-dimmed').addClass('hover-highlight-2');
+            const t2Nodes = t2Edges.connectedNodes().not(node).not(t1Nodes);
+            t2Nodes.removeClass('hover-dimmed').addClass('hover-neighbor-2');
+        });
+    });
+}
+
 function attachTooltipHandlers(cy, container) {
     cy.on('mouseover', 'node', (event) => {
         const node = event.target;
         const sc = node.data('styleClass');
+
+        // Skip hover entirely when a regular node is pinned
+        if (pinnedNode) return;
 
         // Show tooltip
         const tooltip = node.data('tooltip');
@@ -687,15 +735,7 @@ function attachTooltipHandlers(cy, container) {
         if (sc === 'groupLabel') return;
         if (sc === 'intervention' && showInterventions) return;
 
-        cy.batch(() => {
-            cy.elements().addClass('hover-dimmed');
-            cy.nodes('[styleClass="groupLabel"]').removeClass('hover-dimmed');
-            node.removeClass('hover-dimmed').addClass('hover-highlight');
-            const connected = node.connectedEdges();
-            connected.removeClass('hover-dimmed').addClass('hover-highlight');
-            connected.connectedNodes().removeClass('hover-dimmed').addClass('hover-neighbor');
-            node.removeClass('hover-neighbor').addClass('hover-highlight');
-        });
+        applyNeighborhoodHighlight(cy, node);
     });
 
     cy.on('mouseover', 'edge', (event) => {
@@ -709,9 +749,71 @@ function attachTooltipHandlers(cy, container) {
 
     cy.on('mouseout', 'node, edge', () => {
         hideTooltip();
+        if (pinnedNode) return;  // Don't clear highlighting when pinned
         cy.batch(() => {
-            cy.elements().removeClass('hover-dimmed hover-highlight hover-neighbor');
+            cy.elements().removeClass('hover-dimmed hover-highlight hover-neighbor hover-neighbor-2 hover-highlight-2');
         });
+    });
+
+    // Click-to-pin for regular nodes
+    cy.on('tap', 'node', (evt) => {
+        const node = evt.target;
+        const sc = node.data('styleClass');
+        if (sc === 'groupLabel') return;
+        if (sc === 'intervention') return;  // Handled by intervention system
+
+        const id = node.id();
+
+        if (pinnedNode === id) {
+            // Unpin — clear highlight
+            pinnedNode = null;
+            hideTooltip();
+            cy.remove(cy.edges('.dormant-edge'));
+            cy.batch(() => {
+                cy.elements().removeClass('hover-dimmed hover-highlight hover-neighbor hover-neighbor-2 hover-highlight-2');
+            });
+        } else {
+            // Pin this node — apply highlight
+            pinnedNode = id;
+            hideTooltip();
+            // Remove any previous dormant edges, then add relevant ones
+            cy.remove(cy.edges('.dormant-edge'));
+            const dIds = cy.scratch('dormantIds');
+            const dEdges = cy.scratch('dormantEdges');
+            if (dIds && dEdges) {
+                // Only add edges whose source AND target nodes exist in the graph
+                const canAdd = (e) => cy.getElementById(e.data.source).nonempty() && cy.getElementById(e.data.target).nonempty();
+                const addEdges = (edges) => {
+                    const valid = edges.filter(canAdd);
+                    if (valid.length) cy.add(valid.map(e => ({ group: 'edges', data: { ...e.data }, classes: 'dormant-edge' })));
+                };
+                // Round 1: edges connected to the pinned node
+                const round1 = dEdges.filter(e => e.data.source === id || e.data.target === id);
+                addEdges(round1);
+                // Collect tier-1 neighbor IDs (including through just-added edges)
+                const t1NodeIds = new Set();
+                node.connectedEdges().connectedNodes().not(node).forEach(n => t1NodeIds.add(n.id()));
+                // Round 2: edges of tier-1 neighbors
+                const round1Set = new Set(round1);
+                const round2 = dEdges.filter(e =>
+                    !round1Set.has(e) &&
+                    (t1NodeIds.has(e.data.source) || t1NodeIds.has(e.data.target))
+                );
+                addEdges(round2);
+            }
+            applyNeighborhoodHighlight(cy, node);
+        }
+    });
+
+    // Click empty canvas to unpin
+    cy.on('tap', (evt) => {
+        if (evt.target === cy && pinnedNode) {
+            pinnedNode = null;
+            cy.remove(cy.edges('.dormant-edge'));
+            cy.batch(() => {
+                cy.elements().removeClass('hover-dimmed hover-highlight hover-neighbor hover-neighbor-2 hover-highlight-2');
+            });
+        }
     });
 
     cy.on('pan zoom', () => {
@@ -976,7 +1078,17 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         return true;
     });
 
-    // Filter edges: remove any edge where source or target is a hidden intervention
+    // Build set of unconfirmed/inactive/external node IDs whose edges (and nodes) are hidden by default
+    const dormantIds = new Set(
+        graphData.nodes
+            .filter(n => n.data.confirmed === 'no' || n.data.confirmed === 'inactive' || n.data.confirmed === 'external')
+            .map(n => n.data.id)
+    );
+    const dormantEdges = graphData.edges.filter(e =>
+        dormantIds.has(e.data.source) || dormantIds.has(e.data.target)
+    );
+
+    // Filter edges: remove hidden interventions, feedback toggles, and dormant node edges
     const filteredEdges = graphData.edges.filter(e => {
         if (!showInterventions) {
             if (interventionIds.has(e.data.source) || interventionIds.has(e.data.target)) {
@@ -984,6 +1096,9 @@ function createCyInstance(containerId, graphData, isPreview = false) {
             }
         }
         if (!showFeedbackEdges && e.data.edgeType === 'feedback') {
+            return false;
+        }
+        if (dormantIds.has(e.data.source) || dormantIds.has(e.data.target)) {
             return false;
         }
         return true;
@@ -1019,6 +1134,8 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     });
 
     cyInstances.set(containerId, cy);
+    cy.scratch('dormantIds', dormantIds);
+    cy.scratch('dormantEdges', dormantEdges);
 
     // Layout: tiered columns for main graphs, ELK for edit-mode preview
     if (isPreview) {
@@ -1069,7 +1186,7 @@ function destroyCyInstance(containerId) {
 const NODE_TIERS = {
     // Tier 0: INPUTS (leftmost column)
     STRESS: 0, HEALTH_ANXIETY: 0, GERD: 0, FHP: 0, VIT_D: 0, SLEEP_DEP: 0,
-    OSA: 0, GENETICS: 0, SSRI: 0, CAFFEINE: 0, ALCOHOL: 0,
+    OSA: 0, GENETICS: 0, SSRI: 0, CAFFEINE: 0, ALCOHOL: 0, SMOKING: 0,
 
     // Tier 1: IMMEDIATE MECHANISMS
     CORTISOL: 1, CATECHOL: 1, SYMPATHETIC: 1,
@@ -1110,7 +1227,7 @@ const INTERVENTION_COLUMNS = {
     // Targeting Tier 0 + Tier 1
     MINDFULNESS_TX: 0.5, NATURE_TX: 0.5, EXERCISE_TX: 0.5, PPI_TX: 0.5,
     // Targeting Tier 0 + wider spans
-    REFLUX_DIET_TX: 0.5, BED_ELEV_TX: 0.5,
+    REFLUX_DIET_TX: 0.5, BED_ELEV_TX: 0.5, MEAL_TIMING_TX: 0.5,
     CIRCADIAN_TX: 0.5, SLEEP_HYG_TX: 0.5,
     PHYSIO_TX: 0.5, POSTURE_TX: 0.5,
     // Targeting Tier 1 only
