@@ -1594,6 +1594,12 @@ footer {
     border-color: #047857 !important;
 }
 
+.panzoom-btn-fb.active {
+    background: #b91c1c !important;
+    color: #fecaca !important;
+    border-color: #ef4444 !important;
+}
+
 /* Legend hint for intervention mode */
 .legend-hint {
     margin-top: 6px;

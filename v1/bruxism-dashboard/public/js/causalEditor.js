@@ -619,6 +619,7 @@ let currentGraphData = null;
 let isEditMode = false;
 let elkRegistered = false;
 let showInterventions = false; // Interventions hidden by default
+let showFeedbackEdges = true;  // Feedback edges visible by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 
 // Cytoscape instance tracking (container ID string → cy instance)
@@ -982,6 +983,9 @@ function createCyInstance(containerId, graphData, isPreview = false) {
                 return false;
             }
         }
+        if (!showFeedbackEdges && e.data.edgeType === 'feedback') {
+            return false;
+        }
         return true;
     });
 
@@ -1094,15 +1098,43 @@ const TIER_LABELS = {
 
 const NUM_TIERS = 5;
 
+// Intervention column assignments (half-tier positions between tier columns)
+// Column 0.5 = between INPUTS and MECHANISMS
+// Column 1.5 = between MECHANISMS and PATHWAYS
+// Column 2.5 = between PATHWAYS and CENTRAL
+// Column 3.5 = between CENTRAL and CONSEQUENCES
+const INTERVENTION_COLUMNS = {
+    // Targeting Tier 0 (inputs)
+    OSA_TX: 0.5, CBT_TX: 0.5, VIT_D_TX: 0.5, SCREENS_TX: 0.5,
+    SSRI_TX: 0.5, MORNING_FAST_TX: 0.5,
+    // Targeting Tier 0 + Tier 1
+    MINDFULNESS_TX: 0.5, NATURE_TX: 0.5, EXERCISE_TX: 0.5, PPI_TX: 0.5,
+    // Targeting Tier 0 + wider spans
+    REFLUX_DIET_TX: 0.5, BED_ELEV_TX: 0.5,
+    CIRCADIAN_TX: 0.5, SLEEP_HYG_TX: 0.5,
+    PHYSIO_TX: 0.5, POSTURE_TX: 0.5,
+    // Targeting Tier 1 only
+    BREATHING_TX: 0.5, WARM_SHOWER_TX: 0.5, MULTI_TX: 0.5,
+    TONGUE_TX: 0.5,
+    // Targeting Tier 1-2 or Tier 2 only
+    NEUROSYM_TX: 1.5,
+    YOGA_TX: 1.5, MG_SUPP: 1.5, THEANINE_TX: 1.5, GLYCINE_TX: 1.5,
+    HYDRATION: 1.5,
+    // Targeting Tier 3
+    BIOFEEDBACK_TX: 2.5, JAW_RELAX_TX: 2.5,
+    // Targeting Tier 3-4 or Tier 4 only
+    BOTOX_TX: 3.5,
+    MASSAGE_TX: 3.5, HEAT_TX: 3.5, SPLINT: 3.5,
+};
+
 function computeTieredPositions(cy, width, height) {
     const padX = 80;
     const padY = 60;
-    const labelHeight = 30; // space reserved for tier labels at top
+    const labelHeight = 30;
 
-    // Compute column x-coordinates
-    const tierX = {};
-    for (let t = 0; t < NUM_TIERS; t++) {
-        tierX[t] = padX + t * (width - 2 * padX) / (NUM_TIERS - 1);
+    // Column position helper: maps column 0..4 (inc. half-steps) to x-coordinate
+    function columnX(col) {
+        return padX + (col / 4) * (width - 2 * padX);
     }
 
     // Group non-intervention, non-label nodes by tier
@@ -1112,7 +1144,7 @@ function computeTieredPositions(cy, width, height) {
 
     cy.nodes().forEach(n => {
         const sc = n.data('styleClass');
-        if (sc === 'groupLabel') return; // labels positioned separately
+        if (sc === 'groupLabel') return;
         if (sc === 'intervention') {
             interventionNodes.push(n);
             return;
@@ -1130,7 +1162,7 @@ function computeTieredPositions(cy, width, height) {
         const ids = tierBuckets[t];
         if (ids.length === 0) continue;
 
-        const x = tierX[t];
+        const x = columnX(t);
         const usableH = height - 2 * padY - labelHeight;
         const startY = padY + labelHeight;
 
@@ -1142,44 +1174,63 @@ function computeTieredPositions(cy, width, height) {
         });
     }
 
-    // Place intervention nodes — offset to the left of their primary target
-    const interventionsByTarget = {};
+    // Place intervention nodes in dedicated half-tier columns
+    const interventionColumnBuckets = {};
     interventionNodes.forEach(n => {
-        // Find the primary target (first outgoing edge target)
-        const targets = n.outgoers('edge').targets();
-        let targetId = null;
-        if (targets.length > 0) {
-            targetId = targets[0].id();
+        const id = n.id();
+        let col = INTERVENTION_COLUMNS[id];
+
+        if (col === undefined) {
+            // Fallback: compute from target tiers
+            const targets = n.outgoers('edge').targets();
+            const tiers = targets.map(t => NODE_TIERS[t.id()]).filter(t => t !== undefined);
+            if (tiers.length === 0) {
+                col = 0.5;
+            } else {
+                const minT = Math.min(...tiers);
+                col = minT + 0.5;
+                col = Math.max(0.5, Math.min(3.5, col));
+            }
         }
-        if (!interventionsByTarget[targetId]) {
-            interventionsByTarget[targetId] = [];
-        }
-        interventionsByTarget[targetId].push(n.id());
+
+        if (!interventionColumnBuckets[col]) interventionColumnBuckets[col] = [];
+        interventionColumnBuckets[col].push(n);
     });
 
-    Object.entries(interventionsByTarget).forEach(([targetId, txIds]) => {
-        const targetPos = positions[targetId];
-        if (!targetPos) {
-            // Target not yet positioned — place interventions in a default spot
-            txIds.forEach((txId, i) => {
-                positions[txId] = { x: padX - 60, y: padY + labelHeight + i * 35 };
-            });
-            return;
+    // Position interventions within each column, aligned to primary target Y
+    const minGap = 35;
+    Object.entries(interventionColumnBuckets).forEach(([col, nodes]) => {
+        const x = columnX(parseFloat(col));
+
+        // Collect desired Y for each intervention (from primary target's position)
+        const entries = nodes.map(n => {
+            const targets = n.outgoers('edge').targets();
+            let targetY = null;
+            for (let i = 0; i < targets.length; i++) {
+                const tPos = positions[targets[i].id()];
+                if (tPos) { targetY = tPos.y; break; }
+            }
+            return { id: n.id(), y: targetY || (padY + labelHeight + height / 2) };
+        });
+
+        // Sort by Y for consistent stacking
+        entries.sort((a, b) => a.y - b.y);
+
+        // Enforce minimum vertical gap to prevent overlap
+        for (let i = 1; i < entries.length; i++) {
+            if (entries[i].y - entries[i - 1].y < minGap) {
+                entries[i].y = entries[i - 1].y + minGap;
+            }
         }
-        // Place interventions to the left of target, staggered vertically
-        const offsetX = -80;
-        txIds.forEach((txId, i) => {
-            const staggerY = (i - (txIds.length - 1) / 2) * 35;
-            positions[txId] = {
-                x: targetPos.x + offsetX - (i % 2) * 40,
-                y: targetPos.y + staggerY,
-            };
+
+        entries.forEach(entry => {
+            positions[entry.id] = { x, y: entry.y };
         });
     });
 
     // Place tier label nodes at the top of each column
     for (let t = 0; t < NUM_TIERS; t++) {
-        positions[`_tier_${t}`] = { x: tierX[t], y: padY };
+        positions[`_tier_${t}`] = { x: columnX(t), y: padY };
     }
 
     return positions;
@@ -1283,6 +1334,7 @@ function addZoomControls(container, cy) {
         <button class="panzoom-btn" title="Fit to view" data-action="fit">&#x21BA;</button>
         <button class="panzoom-btn" title="Fullscreen" data-action="fullscreen">&#x26F6;</button>
         <button class="panzoom-btn panzoom-btn-toggle ${showInterventions ? 'active' : ''}" title="${showInterventions ? 'Hide interventions' : 'Show interventions'}" data-action="toggleTx">Tx</button>
+        <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-fb ${showFeedbackEdges ? 'active' : ''}" title="${showFeedbackEdges ? 'Hide feedback loops' : 'Show feedback loops'}" data-action="toggleFb">Fb</button>
     `;
 
     const center = () => ({ x: container.offsetWidth / 2, y: container.offsetHeight / 2 });
@@ -1301,6 +1353,9 @@ function addZoomControls(container, cy) {
     });
     controls.querySelector('[data-action="toggleTx"]').addEventListener('click', () => {
         toggleInterventions();
+    });
+    controls.querySelector('[data-action="toggleFb"]').addEventListener('click', () => {
+        toggleFeedbackEdges();
     });
 
     controls.addEventListener('mousedown', (e) => e.stopPropagation());
@@ -1403,7 +1458,16 @@ function toggleInterventions() {
     showInterventions = !showInterventions;
     if (!showInterventions) pinnedInterventions.clear();
     if (_fullscreenContainer) {
-        // Only re-render the fullscreen graph (others are hidden behind it)
+        const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
+        if (config) renderGraph(config);
+    } else {
+        renderAllGraphs();
+    }
+}
+
+function toggleFeedbackEdges() {
+    showFeedbackEdges = !showFeedbackEdges;
+    if (_fullscreenContainer) {
         const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
         if (config) renderGraph(config);
     } else {
