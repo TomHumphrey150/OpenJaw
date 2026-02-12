@@ -942,7 +942,7 @@ function addLegend(container, interventionsVisible) {
             <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#ef4444"></span> Feedback (red)</div>
             <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#3b82f6"></span> Protective (blue)</div>
         </div>
-        ${interventionsVisible ? '<div class="legend-section"><div class="legend-hint">Hover intervention to highlight &middot; Click to pin</div></div>' : ''}
+        ${interventionsVisible ? '<div class="legend-section"><div class="legend-hint">Sidebar: hover to highlight, click to pin &middot; Badges: click for details</div></div>' : ''}
     `;
 
     parent.appendChild(legend);
@@ -1104,12 +1104,12 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     // Destroy previous instance
     destroyCyInstance(containerId);
 
-    // Build node set, filtering interventions if hidden
+    // Always exclude intervention nodes from the graph (shown via sidebar instead)
     const interventionIds = new Set();
     const filteredNodes = graphData.nodes.filter(n => {
         if (n.data.styleClass === 'intervention') {
             interventionIds.add(n.data.id);
-            return showInterventions;
+            return false; // Never render intervention nodes on graph
         }
         return true;
     });
@@ -1124,12 +1124,10 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         dormantIds.has(e.data.source) || dormantIds.has(e.data.target)
     );
 
-    // Filter edges: remove hidden interventions, feedback toggles, and dormant node edges
+    // Filter edges: always exclude intervention edges, plus feedback/protective/dormant toggles
     const filteredEdges = graphData.edges.filter(e => {
-        if (!showInterventions) {
-            if (interventionIds.has(e.data.source) || interventionIds.has(e.data.target)) {
-                return false;
-            }
+        if (interventionIds.has(e.data.source) || interventionIds.has(e.data.target)) {
+            return false;
         }
         if (!showFeedbackEdges && e.data.edgeType === 'feedback') {
             return false;
@@ -1143,16 +1141,10 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         return true;
     });
 
-    // Build Cytoscape elements, tagging intervention edges
+    // Build Cytoscape elements (clean mechanism graph, no intervention nodes)
     const elements = [
         ...filteredNodes.map(n => ({ group: 'nodes', data: { ...n.data } })),
-        ...filteredEdges.map(e => {
-            const edgeData = { ...e.data };
-            if (interventionIds.has(edgeData.source) || interventionIds.has(edgeData.target)) {
-                edgeData.isInterventionEdge = true;
-            }
-            return { group: 'edges', data: edgeData };
-        }),
+        ...filteredEdges.map(e => ({ group: 'edges', data: { ...e.data } })),
         // Inject tier label nodes for main (non-preview) graphs
         ...(!isPreview ? Object.entries(TIER_LABELS).map(([tier, label]) => ({
             group: 'nodes',
@@ -1189,10 +1181,12 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     attachTooltipHandlers(cy, container);
     addLegend(container, showInterventions);
 
-    // If interventions are visible, apply dimming and hover/click handlers
-    if (showInterventions) {
-        applyInterventionDimming(cy);
-        attachInterventionHandlers(cy);
+    // If interventions mode is active, show sidebar + badges
+    if (showInterventions && !isPreview) {
+        const maps = buildInterventionMaps(graphData);
+        cy.scratch('interventionMaps', maps);
+        buildInterventionSidebar(container, cy, maps);
+        addInterventionBadges(container, cy, maps);
     }
 
     return cy;
@@ -1212,6 +1206,11 @@ function destroyCyInstance(containerId) {
         }
         const controls = container.querySelector('.panzoom-controls');
         if (controls) controls.remove();
+        const sidebar = container.querySelector('.tx-sidebar');
+        if (sidebar) sidebar.remove();
+        removeInterventionBadges(container);
+        const popover = container.querySelector('.tx-popover');
+        if (popover) popover.remove();
         const legend = container.parentElement?.querySelector('.graph-legend');
         if (legend) legend.remove();
     }
@@ -1277,6 +1276,18 @@ const INTERVENTION_COLUMNS = {
     // Col 8.5 (targeting col 9 consequences)
     SPLINT: 8.5,
 };
+
+// Intervention categories for the sidebar panel
+const INTERVENTION_CATEGORIES = [
+    { name: 'Reflux', items: ['PPI_TX', 'MORNING_FAST_TX', 'REFLUX_DIET_TX', 'MEAL_TIMING_TX', 'BED_ELEV_TX', 'HYDRATION'] },
+    { name: 'Sleep', items: ['SCREENS_TX', 'CIRCADIAN_TX', 'SLEEP_HYG_TX', 'WARM_SHOWER_TX'] },
+    { name: 'Stress', items: ['CBT_TX', 'MINDFULNESS_TX', 'NATURE_TX', 'EXERCISE_TX', 'BREATHING_TX'] },
+    { name: 'Neurochemistry', items: ['MG_SUPP', 'THEANINE_TX', 'GLYCINE_TX', 'YOGA_TX', 'MULTI_TX', 'VIT_D_TX'] },
+    { name: 'Neuromodulation', items: ['NEUROSYM_TX', 'BIOFEEDBACK_TX'] },
+    { name: 'Motor / Jaw', items: ['JAW_RELAX_TX', 'BOTOX_TX'] },
+    { name: 'Physical Therapy', items: ['PHYSIO_TX', 'MASSAGE_TX', 'HEAT_TX', 'POSTURE_TX'] },
+    { name: 'Dental / Airway', items: ['SPLINT', 'OSA_TX', 'SSRI_TX', 'TONGUE_TX'] },
+];
 
 function computeTieredPositions(cy, width, height) {
     const padX = 80;
@@ -1520,93 +1531,259 @@ function addZoomControls(container, cy) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// INTERVENTION HIGHLIGHT SYSTEM (hover-to-highlight + click-to-pin)
+// INTERVENTION SIDEBAR + BADGE + POPOVER SYSTEM
 // ═══════════════════════════════════════════════════════════
 
-function applyInterventionDimming(cy) {
-    cy.batch(() => {
-        // Dim all non-intervention, non-group, non-label nodes
-        cy.nodes().filter(n => n.data('styleClass') !== 'intervention' && n.data('styleClass') !== 'groupLabel' && !n.isParent()).addClass('tx-dimmed');
-        // Dim all non-intervention edges
-        cy.edges().filter(e => !e.data('isInterventionEdge')).addClass('tx-dimmed');
+function buildInterventionMaps(graphData) {
+    const interventionNodeMap = new Map();
+    graphData.nodes.forEach(n => {
+        if (n.data.styleClass === 'intervention') {
+            interventionNodeMap.set(n.data.id, n.data);
+        }
     });
+
+    const interventionTargets = new Map();
+    const targetInterventions = new Map();
+
+    graphData.edges.forEach(e => {
+        const src = e.data.source;
+        const tgt = e.data.target;
+        if (interventionNodeMap.has(src)) {
+            if (!interventionTargets.has(src)) interventionTargets.set(src, []);
+            interventionTargets.get(src).push({ target: tgt, label: e.data.label, tooltip: e.data.tooltip });
+            if (!targetInterventions.has(tgt)) targetInterventions.set(tgt, []);
+            if (!targetInterventions.get(tgt).includes(src)) {
+                targetInterventions.get(tgt).push(src);
+            }
+        }
+    });
+
+    return { interventionNodeMap, interventionTargets, targetInterventions };
 }
 
-function highlightIntervention(cy, nodeId) {
-    cy.batch(() => {
-        // Deep-dim everything first
-        cy.elements().addClass('tx-deep-dimmed').removeClass('tx-dimmed tx-highlighted tx-target-highlighted');
+function buildInterventionSidebar(container, cy, maps) {
+    const existing = container.querySelector('.tx-sidebar');
+    if (existing) existing.remove();
 
-        // Keep parent/group nodes and group labels somewhat visible
-        cy.nodes(':parent').removeClass('tx-deep-dimmed').addClass('tx-dimmed');
+    const sidebar = document.createElement('div');
+    sidebar.className = 'tx-sidebar';
+
+    let html = '<div class="tx-sidebar-header">Interventions</div>';
+    INTERVENTION_CATEGORIES.forEach(cat => {
+        html += '<div class="tx-sidebar-category">';
+        html += `<div class="tx-sidebar-cat-header">${cat.name}</div>`;
+        cat.items.forEach(id => {
+            const node = maps.interventionNodeMap.get(id);
+            if (!node) return;
+            const label = node.label.replace(/\n/g, ' ');
+            const evidence = node.tooltip?.evidence || '';
+            const pinned = pinnedInterventions.has(id);
+            html += `<div class="tx-sidebar-item${pinned ? ' pinned' : ''}" data-tx-id="${id}">`;
+            html += `<span class="tx-sidebar-item-label">${label}</span>`;
+            html += `<span class="tx-sidebar-item-evidence">${evidence}</span>`;
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+
+    sidebar.innerHTML = html;
+
+    sidebar.querySelectorAll('.tx-sidebar-item').forEach(item => {
+        const txId = item.dataset.txId;
+
+        item.addEventListener('mouseenter', () => {
+            highlightInterventionTargets(cy, txId, maps);
+        });
+        item.addEventListener('mouseleave', () => {
+            restoreFromSidebarHighlight(cy, maps);
+        });
+        item.addEventListener('click', () => {
+            if (pinnedInterventions.has(txId)) {
+                pinnedInterventions.delete(txId);
+                item.classList.remove('pinned');
+            } else {
+                pinnedInterventions.add(txId);
+                item.classList.add('pinned');
+            }
+            restoreFromSidebarHighlight(cy, maps);
+        });
+    });
+
+    sidebar.addEventListener('mousedown', e => e.stopPropagation());
+    sidebar.addEventListener('touchstart', e => e.stopPropagation());
+    sidebar.addEventListener('wheel', e => e.stopPropagation());
+
+    container.appendChild(sidebar);
+}
+
+function highlightInterventionTargets(cy, txId, maps) {
+    const targets = maps.interventionTargets.get(txId) || [];
+    const targetIds = new Set(targets.map(t => t.target));
+
+    // Also include pinned intervention targets
+    pinnedInterventions.forEach(pinnedId => {
+        const pts = maps.interventionTargets.get(pinnedId) || [];
+        pts.forEach(t => targetIds.add(t.target));
+    });
+
+    cy.batch(() => {
+        cy.elements().addClass('tx-deep-dimmed').removeClass('tx-dimmed tx-highlighted tx-target-highlighted');
         cy.nodes('[styleClass="groupLabel"]').removeClass('tx-deep-dimmed');
 
-        // Highlight the hovered intervention node
-        const node = cy.getElementById(nodeId);
-        node.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
+        targetIds.forEach(tId => {
+            const node = cy.getElementById(tId);
+            if (node.length) node.removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+        });
 
-        // Highlight its outgoing edges and target nodes
-        const edges = node.outgoers('edge');
-        edges.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
-        edges.targets().removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
-
-        // Also highlight any pinned interventions
-        pinnedInterventions.forEach(pinnedId => {
-            const pNode = cy.getElementById(pinnedId);
-            if (pNode.length) {
-                pNode.removeClass('tx-deep-dimmed').addClass('tx-pinned tx-highlighted');
-                const pEdges = pNode.outgoers('edge');
-                pEdges.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
-                pEdges.targets().removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+        // Show edges between highlighted targets for context
+        cy.edges().forEach(e => {
+            if (targetIds.has(e.data('source')) && targetIds.has(e.data('target'))) {
+                e.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
             }
         });
     });
 }
 
-function restorePinnedState(cy) {
+function restoreFromSidebarHighlight(cy, maps) {
     cy.batch(() => {
-        cy.elements().removeClass('tx-deep-dimmed tx-highlighted tx-target-highlighted tx-pinned');
+        cy.elements().removeClass('tx-deep-dimmed tx-dimmed tx-highlighted tx-target-highlighted');
 
         if (pinnedInterventions.size > 0) {
-            // Deep-dim everything, then highlight pinned
             cy.elements().addClass('tx-deep-dimmed');
-            cy.nodes(':parent').removeClass('tx-deep-dimmed').addClass('tx-dimmed');
             cy.nodes('[styleClass="groupLabel"]').removeClass('tx-deep-dimmed');
 
+            const highlightedIds = new Set();
             pinnedInterventions.forEach(pinnedId => {
-                const node = cy.getElementById(pinnedId);
-                if (node.length) {
-                    node.removeClass('tx-deep-dimmed').addClass('tx-pinned tx-highlighted');
-                    const edges = node.outgoers('edge');
-                    edges.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
-                    edges.targets().removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+                const targets = maps.interventionTargets.get(pinnedId) || [];
+                targets.forEach(t => {
+                    const node = cy.getElementById(t.target);
+                    if (node.length) {
+                        node.removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+                        highlightedIds.add(t.target);
+                    }
+                });
+            });
+
+            cy.edges().forEach(e => {
+                if (highlightedIds.has(e.data('source')) && highlightedIds.has(e.data('target'))) {
+                    e.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
                 }
             });
-        } else {
-            // No pins — restore baseline dimming
-            applyInterventionDimming(cy);
         }
     });
 }
 
-function attachInterventionHandlers(cy) {
-    cy.on('mouseover', 'node[styleClass="intervention"]', (evt) => {
-        highlightIntervention(cy, evt.target.id());
+function addInterventionBadges(container, cy, maps) {
+    removeInterventionBadges(container);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'tx-badge-overlay';
+    container.appendChild(overlay);
+
+    function updatePositions() {
+        overlay.innerHTML = '';
+        maps.targetInterventions.forEach((txIds, nodeId) => {
+            const node = cy.getElementById(nodeId);
+            if (!node.length || node.removed()) return;
+            const bb = node.renderedBoundingBox();
+
+            const badge = document.createElement('div');
+            badge.className = 'tx-badge';
+            badge.textContent = txIds.length;
+            badge.dataset.nodeId = nodeId;
+            badge.style.left = `${bb.x2 - 2}px`;
+            badge.style.top = `${bb.y1 - 2}px`;
+
+            badge.addEventListener('click', e => {
+                e.stopPropagation();
+                showNodePopover(container, cy, nodeId, maps);
+            });
+
+            overlay.appendChild(badge);
+        });
+    }
+
+    updatePositions();
+    cy.on('pan zoom', updatePositions);
+    cy.one('layoutstop', updatePositions);
+    container._badgeHandler = updatePositions;
+}
+
+function removeInterventionBadges(container) {
+    const overlay = container.querySelector('.tx-badge-overlay');
+    if (overlay) overlay.remove();
+
+    const cy = cyInstances.get(container.id);
+    if (cy && container._badgeHandler) {
+        cy.off('pan zoom', container._badgeHandler);
+        container._badgeHandler = null;
+    }
+}
+
+function showNodePopover(container, cy, nodeId, maps) {
+    const existing = container.querySelector('.tx-popover');
+    if (existing) {
+        if (existing.dataset.nodeId === nodeId) { existing.remove(); return; }
+        existing.remove();
+    }
+
+    const txIds = maps.targetInterventions.get(nodeId) || [];
+    if (txIds.length === 0) return;
+
+    const node = cy.getElementById(nodeId);
+    if (!node.length) return;
+
+    const bb = node.renderedBoundingBox();
+    const popover = document.createElement('div');
+    popover.className = 'tx-popover';
+    popover.dataset.nodeId = nodeId;
+    popover.style.left = `${(bb.x1 + bb.x2) / 2}px`;
+    popover.style.top = `${bb.y2 + 8}px`;
+
+    const nodeLabel = node.data('label').split('\n')[0];
+    let html = `<div class="tx-popover-header">${txIds.length} intervention${txIds.length > 1 ? 's' : ''} targeting ${nodeLabel}</div>`;
+    txIds.forEach(txId => {
+        const txNode = maps.interventionNodeMap.get(txId);
+        if (!txNode) return;
+        const label = txNode.label.replace(/\n/g, ' ');
+        const pinned = pinnedInterventions.has(txId);
+        html += `<div class="tx-popover-item${pinned ? ' pinned' : ''}" data-tx-id="${txId}">${label}</div>`;
+    });
+    popover.innerHTML = html;
+
+    popover.querySelectorAll('.tx-popover-item').forEach(item => {
+        const txId = item.dataset.txId;
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            if (pinnedInterventions.has(txId)) {
+                pinnedInterventions.delete(txId);
+                item.classList.remove('pinned');
+            } else {
+                pinnedInterventions.add(txId);
+                item.classList.add('pinned');
+            }
+            const sidebarItem = container.querySelector(`.tx-sidebar-item[data-tx-id="${txId}"]`);
+            if (sidebarItem) sidebarItem.classList.toggle('pinned', pinnedInterventions.has(txId));
+            restoreFromSidebarHighlight(cy, maps);
+        });
+        item.addEventListener('mouseenter', () => {
+            highlightInterventionTargets(cy, txId, maps);
+        });
+        item.addEventListener('mouseleave', () => {
+            restoreFromSidebarHighlight(cy, maps);
+        });
     });
 
-    cy.on('mouseout', 'node[styleClass="intervention"]', () => {
-        restorePinnedState(cy);
-    });
+    popover.addEventListener('mousedown', e => e.stopPropagation());
+    container.appendChild(popover);
 
-    cy.on('tap', 'node[styleClass="intervention"]', (evt) => {
-        const id = evt.target.id();
-        if (pinnedInterventions.has(id)) {
-            pinnedInterventions.delete(id);
-        } else {
-            pinnedInterventions.add(id);
+    const closeHandler = e => {
+        if (!popover.contains(e.target) && !e.target.classList.contains('tx-badge')) {
+            popover.remove();
+            document.removeEventListener('click', closeHandler);
         }
-        restorePinnedState(cy);
-    });
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 100);
 }
 
 function toggleInterventions() {
