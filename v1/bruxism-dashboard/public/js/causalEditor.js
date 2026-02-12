@@ -482,16 +482,16 @@ const CYTOSCAPE_STYLES = [
         style: {
             'label': 'data(label)',
             'text-wrap': 'wrap',
-            'text-max-width': '160px',
+            'text-max-width': '200px',
             'text-valign': 'center',
             'text-halign': 'center',
-            'font-size': '11px',
+            'font-size': '13px',
             'color': '#fff',
             'background-color': '#374151',
             'border-width': 2,
             'border-color': '#1f2937',
             'shape': 'round-rectangle',
-            'padding': '10px',
+            'padding': '12px',
             'width': 'label',
             'height': 'label',
         }
@@ -1168,8 +1168,8 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         container: container,
         elements: elements,
         style: CYTOSCAPE_STYLES,
-        userZoomingEnabled: false,  // Custom wheel handler
-        userPanningEnabled: true,
+        userZoomingEnabled: false,
+        userPanningEnabled: false,  // Disabled: page scroll handles vertical movement
         boxSelectionEnabled: false,
         selectionType: 'single',
         minZoom: 0.1,
@@ -1314,13 +1314,13 @@ const INTERVENTION_CATEGORIES = [
 ];
 
 function computeTieredPositions(cy, width, height) {
-    const padX = 80;
-    const padY = 60;
-    const labelHeight = 30;
+    const padX = 60;
+    const padY = 80;
+    const labelWidth = 30;
 
-    // Column position helper: maps column 1..10 (inc. half-steps) to x-coordinate
-    function columnX(col) {
-        return padX + ((col - 1) / (NUM_TIERS - 1)) * (width - 2 * padX);
+    // Row position helper: maps tier 1..10 (inc. half-steps) to y-coordinate
+    function rowY(tier) {
+        return padY + ((tier - 1) / (NUM_TIERS - 1)) * (height - 2 * padY);
     }
 
     // Group non-intervention, non-label nodes by tier
@@ -1343,25 +1343,25 @@ function computeTieredPositions(cy, width, height) {
 
     const positions = {};
 
-    // Place mechanism/evidence nodes in their column
+    // Place mechanism/evidence nodes in their row (spread horizontally)
     for (let t = 1; t <= NUM_TIERS; t++) {
         const ids = tierBuckets[t];
         if (ids.length === 0) continue;
 
-        const x = columnX(t);
-        const usableH = height - 2 * padY - labelHeight;
-        const startY = padY + labelHeight;
+        const y = rowY(t);
+        const usableW = width - 2 * padX - labelWidth;
+        const startX = padX + labelWidth;
 
         ids.forEach((id, i) => {
-            const y = ids.length > 1
-                ? startY + i * usableH / (ids.length - 1)
-                : startY + usableH / 2;
+            const x = ids.length > 1
+                ? startX + i * usableW / (ids.length - 1)
+                : startX + usableW / 2;
             positions[id] = { x, y };
         });
     }
 
-    // Place intervention nodes in dedicated half-tier columns
-    const interventionColumnBuckets = {};
+    // Place intervention nodes at half-tier row positions
+    const interventionRowBuckets = {};
     interventionNodes.forEach(n => {
         const id = n.id();
         let col = INTERVENTION_COLUMNS[id];
@@ -1379,61 +1379,94 @@ function computeTieredPositions(cy, width, height) {
             }
         }
 
-        if (!interventionColumnBuckets[col]) interventionColumnBuckets[col] = [];
-        interventionColumnBuckets[col].push(n);
+        if (!interventionRowBuckets[col]) interventionRowBuckets[col] = [];
+        interventionRowBuckets[col].push(n);
     });
 
-    // Position interventions within each column, aligned to primary target Y
-    const minGap = 35;
-    Object.entries(interventionColumnBuckets).forEach(([col, nodes]) => {
-        const x = columnX(parseFloat(col));
+    // Position interventions within each row, aligned to primary target X
+    const minGap = 45;
+    Object.entries(interventionRowBuckets).forEach(([row, nodes]) => {
+        const y = rowY(parseFloat(row));
 
-        // Collect desired Y for each intervention (from primary target's position)
+        // Collect desired X for each intervention (from primary target's position)
         const entries = nodes.map(n => {
             const targets = n.outgoers('edge').targets();
-            let targetY = null;
+            let targetX = null;
             for (let i = 0; i < targets.length; i++) {
                 const tPos = positions[targets[i].id()];
-                if (tPos) { targetY = tPos.y; break; }
+                if (tPos) { targetX = tPos.x; break; }
             }
-            return { id: n.id(), y: targetY || (padY + labelHeight + height / 2) };
+            return { id: n.id(), x: targetX || (padX + labelWidth + (width - 2 * padX - labelWidth) / 2) };
         });
 
-        // Sort by Y for consistent stacking
-        entries.sort((a, b) => a.y - b.y);
+        // Sort by X for consistent stacking
+        entries.sort((a, b) => a.x - b.x);
 
-        // Enforce minimum vertical gap to prevent overlap
+        // Enforce minimum horizontal gap to prevent overlap
         for (let i = 1; i < entries.length; i++) {
-            if (entries[i].y - entries[i - 1].y < minGap) {
-                entries[i].y = entries[i - 1].y + minGap;
+            if (entries[i].x - entries[i - 1].x < minGap) {
+                entries[i].x = entries[i - 1].x + minGap;
             }
         }
 
         entries.forEach(entry => {
-            positions[entry.id] = { x, y: entry.y };
+            positions[entry.id] = { x: entry.x, y };
         });
     });
 
-    // Place tier label nodes at the top of each column
+    // Place tier label nodes at the left of each row
     for (let t = 1; t <= NUM_TIERS; t++) {
-        positions[`_tier_${t}`] = { x: columnX(t), y: padY };
+        positions[`_tier_${t}`] = { x: padX + 10, y: rowY(t) };
     }
 
     return positions;
 }
 
 function runTieredLayout(cy, container) {
+    const isFullscreen = container.classList.contains('fullscreen');
     const w = container.offsetWidth || 900;
-    const h = container.offsetHeight || 500;
-    const positions = computeTieredPositions(cy, w, h);
+
+    if (isFullscreen) {
+        // Fullscreen: fit everything into the viewport
+        const h = container.offsetHeight || 500;
+        const positions = computeTieredPositions(cy, w, h);
+        cy.layout({
+            name: 'preset',
+            positions: (node) => positions[node.id()] || undefined,
+            fit: false,
+            animate: false,
+        }).run();
+        cy.fit(cy.elements(), 40);
+        return;
+    }
+
+    // Portrait scroll mode: compute positions at an ideal height, then size
+    // the container to match so the page scroll reveals the graph naturally.
+    const idealH = 80 + (NUM_TIERS - 1) * 160 + 80; // ~1600px
+    const positions = computeTieredPositions(cy, w, idealH);
     cy.layout({
         name: 'preset',
         positions: (node) => positions[node.id()] || undefined,
         fit: false,
-        padding: 40,
         animate: false,
     }).run();
-    cy.fit(cy.elements(), 40);
+
+    // Measure actual bounding box and zoom to fit container width
+    const bb = cy.elements().boundingBox();
+    const PAD = 40;
+    const zoomForWidth = (w - 2 * PAD) / bb.w;
+
+    // Set container height to the scaled graph height
+    const scaledHeight = bb.h * zoomForWidth + 2 * PAD;
+    container.style.height = scaledHeight + 'px';
+    cy.resize();
+
+    // Apply zoom and position: fill width, align to top
+    cy.zoom(zoomForWidth);
+    cy.pan({
+        x: -bb.x1 * zoomForWidth + PAD,
+        y: -bb.y1 * zoomForWidth + PAD,
+    });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1474,6 +1507,15 @@ function runElkLayout(cy) {
 // ═══════════════════════════════════════════════════════════
 
 function attachWheelHandler(container, cy) {
+    // In portrait scroll mode, do NOT intercept wheel events — let the page scroll naturally.
+    // The fullscreen wheel handler is attached separately by enterFullscreen().
+    if (container._wheelHandler) {
+        container.removeEventListener('wheel', container._wheelHandler);
+        container._wheelHandler = null;
+    }
+}
+
+function attachWheelHandlerForFullscreen(container, cy) {
     if (container._wheelHandler) {
         container.removeEventListener('wheel', container._wheelHandler);
     }
@@ -2181,6 +2223,11 @@ function enterFullscreen(container, cy) {
     _fullscreenContainer = container;
     container._scrollY = window.scrollY;
     container.classList.add('fullscreen');
+    container.style.height = '100vh';
+
+    // Re-enable interactive pan/zoom for fullscreen exploration
+    cy.userPanningEnabled(true);
+    attachWheelHandlerForFullscreen(container, cy);
 
     const hint = document.createElement('div');
     hint.className = 'fullscreen-hint';
@@ -2198,6 +2245,14 @@ function enterFullscreen(container, cy) {
 function exitFullscreen(container, cy) {
     _fullscreenContainer = null;
     container.classList.remove('fullscreen');
+    container.style.height = '';  // Clear fixed height, let runTieredLayout set it
+
+    // Disable interactive pan, let page scroll handle it
+    cy.userPanningEnabled(false);
+    if (container._wheelHandler) {
+        container.removeEventListener('wheel', container._wheelHandler);
+        container._wheelHandler = null;
+    }
 
     const hint = container.querySelector('.fullscreen-hint');
     if (hint) hint.remove();
@@ -2265,6 +2320,9 @@ function renderGraph(config) {
         // Restore fullscreen state after recreation
         if (wasFullscreen && cy) {
             _fullscreenContainer = cyContainer;
+            cyContainer.style.height = '100vh';
+            cy.userPanningEnabled(true);
+            attachWheelHandlerForFullscreen(cyContainer, cy);
             const fsBtn = cyContainer.querySelector('[data-action="fullscreen"]');
             if (fsBtn) { fsBtn.innerHTML = '\u2716'; fsBtn.title = 'Exit fullscreen'; }
             setTimeout(() => { cy.resize(); runTieredLayout(cy, cyContainer); }, 50);
