@@ -24,6 +24,7 @@ const EMPTY_STORE = {
     experiments: [],
     interventionRatings: [],
     dailyCheckIns: {},          // { 'YYYY-MM-DD': ['INTERVENTION_ID', ...] }
+    hiddenInterventions: [],     // IDs of interventions hidden from check-in list
     customCausalDiagram: undefined
 };
 
@@ -334,6 +335,28 @@ export function getStreakCount(interventionId, days = 7) {
 }
 
 // ===========================================
+// Hidden Interventions
+// ===========================================
+
+export function toggleHiddenIntervention(interventionId) {
+    const data = loadData();
+    if (!data.hiddenInterventions) data.hiddenInterventions = [];
+    const idx = data.hiddenInterventions.indexOf(interventionId);
+    if (idx >= 0) {
+        data.hiddenInterventions.splice(idx, 1);
+    } else {
+        data.hiddenInterventions.push(interventionId);
+    }
+    saveData(data);
+    return data.hiddenInterventions;
+}
+
+export function getHiddenInterventions() {
+    const data = loadData();
+    return data.hiddenInterventions || [];
+}
+
+// ===========================================
 // Causal Diagram
 // ===========================================
 
@@ -386,6 +409,7 @@ export function importData(jsonString) {
             experiments: Array.isArray(data.experiments) ? data.experiments : [],
             interventionRatings: Array.isArray(data.interventionRatings) ? data.interventionRatings : [],
             dailyCheckIns: (data.dailyCheckIns && typeof data.dailyCheckIns === 'object') ? data.dailyCheckIns : {},
+            hiddenInterventions: Array.isArray(data.hiddenInterventions) ? data.hiddenInterventions : [],
             customCausalDiagram: data.customCausalDiagram || undefined
         };
 
@@ -438,6 +462,8 @@ export default {
     getCheckIns,
     getCheckInsRange,
     getStreakCount,
+    toggleHiddenIntervention,
+    getHiddenInterventions,
     saveDiagram,
     getDiagram,
     clearDiagram,

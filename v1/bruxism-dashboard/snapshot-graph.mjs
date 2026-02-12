@@ -189,7 +189,7 @@ async function main() {
         try {
             browser = await chromium.launch({ headless: true, args: BROWSER_ARGS });
             const context = await browser.newContext({
-                viewport: { width: 1400, height: 2000 },
+                viewport: { width: 1600, height: 2000 },
                 deviceScaleFactor: 2,
             });
             const page = await context.newPage();

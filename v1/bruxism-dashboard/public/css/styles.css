@@ -213,24 +213,6 @@ header h1 {
 }
 
 /* ============================================
-   Minimal Header (single-page layout)
-   ============================================ */
-.header-minimal {
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    padding: 8px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.header-minimal h1 {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-/* ============================================
    Single-page App Layout
    ============================================ */
 #app {
@@ -239,12 +221,370 @@ header h1 {
     padding: 0 12px 24px;
 }
 
-#app > .causal-graph-container {
-    margin-top: 12px;
+/* ── Graph + Sidebar Grid Layout ── */
+.graph-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
 }
 
-#app > #defense-checkin {
-    margin-top: 12px;
+.graph-layout .graph-main {
+    min-width: 0;
+}
+
+.graph-layout .graph-main .causal-graph-container {
+    margin-bottom: 0;
+}
+
+/* ── Defense Sidebar (left column) ── */
+.defense-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    align-self: start;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+    border-radius: 12px 0 0 12px;
+}
+
+.defense-sidebar:empty {
+    display: none;
+}
+
+/* When sidebar is empty/hidden, grid collapses to single column */
+.graph-layout:has(.defense-sidebar:empty) {
+    grid-template-columns: 1fr;
+}
+
+.defense-sidebar .defense-sidebar-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #1e1e34;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 14px;
+}
+
+.defense-sidebar .defense-sidebar-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.defense-sidebar .defense-sidebar-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.defense-sidebar .defense-sidebar-summary {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.defense-sidebar-filter {
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(100, 181, 246, 0.1);
+    border: 1px solid rgba(100, 181, 246, 0.25);
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.defense-filter-clear {
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.6;
+    margin-left: 8px;
+}
+
+.defense-filter-clear:hover {
+    opacity: 1;
+}
+
+/* ── Sidebar Check-in Items ── */
+.defense-checkin-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 11.5px;
+    color: #9ca3af;
+    transition: background 0.15s, color 0.15s;
+    border-left: 3px solid transparent;
+}
+
+.defense-checkin-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #e5e7eb;
+}
+
+.defense-checkin-item.active {
+    background: rgba(100, 181, 246, 0.08);
+    border-left-color: var(--accent);
+    color: #e5e7eb;
+}
+
+.defense-checkin-item.checked {
+    color: #d1d5db;
+}
+
+/* Custom checkbox — large, round, elegant */
+.defense-check-btn {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.defense-check-btn input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 1;
+    margin: 0;
+}
+
+.defense-check-mark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #4b5563;
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.defense-check-mark::after {
+    content: '';
+    display: none;
+    width: 5px;
+    height: 10px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.defense-check-btn input:checked + .defense-check-mark {
+    background: #22c55e;
+    border-color: #16a34a;
+}
+
+.defense-check-btn input:checked + .defense-check-mark::after {
+    display: block;
+}
+
+.defense-check-btn:hover .defense-check-mark {
+    border-color: #22c55e;
+}
+
+/* Item content area (clickable for detail/scroll) */
+.defense-item-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.defense-item-label {
+    line-height: 1.35;
+}
+
+.defense-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.defense-item-cat {
+    font-size: 9px;
+    color: #6b7280;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.defense-impact-bar-wrap {
+    width: 32px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.defense-impact-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+}
+
+/* ── Item Wrapper (hover container for detail panel) ── */
+.defense-item-wrapper {
+    position: relative;
+}
+
+/* ── Inline Evidence Detail Panel ── */
+.defense-item-detail {
+    display: none;
+    padding: 6px 14px 10px 47px; /* align with content after checkbox */
+    font-size: 11px;
+    line-height: 1.5;
+    color: #9ca3af;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    animation: detail-slide 0.15s ease-out;
+}
+
+@keyframes detail-slide {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 200px; }
+}
+
+.defense-item-detail-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+.defense-item-detail-label {
+    color: #6b7280;
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+.defense-item-detail-value {
+    color: #d1d5db;
+}
+
+.defense-item-detail-targets {
+    margin-top: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.defense-item-target-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(100, 181, 246, 0.15);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ── Evidence Detail Popover ── */
+#defense-detail-popover {
+    position: fixed;
+    z-index: 1000;
+    display: none;
+    background: #1e1e34;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #9ca3af;
+    max-width: 320px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    animation: detail-slide 0.15s ease-out;
+}
+
+#defense-detail-popover .defense-item-detail-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+#defense-detail-popover .defense-item-detail-label {
+    color: #6b7280;
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+#defense-detail-popover .defense-item-detail-value {
+    color: #d1d5db;
+}
+
+#defense-detail-popover .defense-item-detail-targets {
+    margin-top: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+#defense-detail-popover .defense-item-target-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(100, 181, 246, 0.15);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ── Right-click Context Menu ── */
+#defense-context-menu {
+    position: fixed;
+    z-index: 1001;
+    display: none;
+    background: #1e1e34;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    padding: 4px 0;
+    min-width: 140px;
+}
+
+.defense-context-option {
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.defense-context-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f3f4f6;
+}
+
+/* ── Hidden Items Section ── */
+.defense-hidden-toggle {
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    transition: color 0.15s;
+}
+
+.defense-hidden-toggle:hover {
+    color: var(--text-secondary);
+}
+
+.defense-item-wrapper.defense-item-hidden {
+    opacity: 0.45;
 }
 
 #app > footer {
@@ -810,6 +1150,22 @@ footer {
     max-width: 800px;
     margin: 0 auto 12px;
     line-height: 1.5;
+}
+
+.footer-data-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.footer-data-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
 }
 
 .credits {
@@ -1426,6 +1782,29 @@ footer {
 /* ============================================
    Responsive Design
    ============================================ */
+@media (max-width: 900px) {
+    .graph-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .defense-sidebar {
+        position: static;
+        height: auto;
+        overflow-y: visible;
+        border-right: none;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        order: 1; /* below graph */
+        margin-top: 12px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .graph-layout .graph-main {
+        order: 0;
+    }
+}
+
 @media (max-width: 1024px) {
     .tab-content.active {
         flex-direction: column;
@@ -1813,36 +2192,7 @@ footer {
     border-color: #22c55e !important;
 }
 
-/* ── Daily Defense Check-in Panel ── */
-.defense-checkin-container {
-    background: var(--bg-card);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    width: 100%;
-    overflow: hidden;
-}
-
-.defense-checkin-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.defense-checkin-title {
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text-primary);
-    white-space: nowrap;
-}
-
-.defense-checkin-nav {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+/* ── Daily Defense Check-in (shared item styles) ── */
 
 .defense-date-btn {
     background: var(--bg-secondary);
@@ -1871,92 +2221,28 @@ footer {
 .defense-date-label {
     font-size: 12px;
     color: var(--text-secondary);
-    min-width: 80px;
+    min-width: 60px;
     text-align: center;
 }
 
-.defense-checkin-summary {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--accent);
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.defense-checkin-toggle {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 4px;
-}
-
-.defense-checkin-body {
-    padding: 12px 16px;
-    transition: max-height 0.3s ease, padding 0.3s ease;
-    max-height: 600px;
-    overflow: hidden;
-}
-
-.defense-checkin-body.collapsed {
-    max-height: 0;
-    padding: 0 16px;
-}
-
-.defense-checkin-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px 20px;
-}
-
-.defense-checkin-cat {
-    min-width: 0;
-}
-
-.defense-checkin-cat-name {
-    font-size: 10px;
-    font-weight: 600;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
-    padding-bottom: 2px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.defense-checkin-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 0;
-    cursor: pointer;
-    font-size: 11.5px;
-    color: #9ca3af;
-    transition: color 0.15s;
-}
-
-.defense-checkin-item:hover {
-    color: #e5e7eb;
-}
-
-.defense-checkin-item.checked {
-    color: #d1d5db;
-}
-
-.defense-checkin-item input[type="checkbox"] {
-    accent-color: #22c55e;
-    width: 14px;
-    height: 14px;
+.defense-item-score {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     flex-shrink: 0;
+    background: #4b5563;
 }
 
-.defense-item-label {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.defense-item-score.high {
+    background: #22c55e;
+}
+
+.defense-item-score.med {
+    background: #f59e0b;
+}
+
+.defense-item-score.low {
+    background: #4b5563;
 }
 
 .defense-item-streak {
@@ -2009,4 +2295,40 @@ footer {
     transform: translate(-50%, -50%);
     box-sizing: border-box;
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* ── Shield Badges (today's protection) ── */
+.shield-badge-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 51;
+}
+
+.shield-badge {
+    position: absolute;
+    pointer-events: auto;
+    cursor: default;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    padding: 0 3px;
+    border-radius: 4px;
+    background: rgb(34, 197, 94);
+    border: 1px solid rgb(22, 163, 74);
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    transition: transform 0.15s;
+}
+
+.shield-badge:hover {
+    transform: translate(-50%, -50%) scale(1.2);
+    background: rgb(74, 222, 128);
 }

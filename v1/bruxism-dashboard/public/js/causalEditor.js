@@ -681,14 +681,13 @@ const GRAPH_CONFIGS = [
 ];
 
 let currentGraphData = null;
-let isEditMode = false;
-let elkRegistered = false;
 let showInterventions = false; // Interventions hidden by default
 let showFeedbackEdges = true;  // Feedback edges visible by default
 let showProtectiveEdges = true; // Protective mechanism edges visible by default
 let showDefenseMode = false;   // Defense heatmap mode hidden by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
+let _checkinFilterNodeId = null;  // node ID to filter check-in panel by (null = show all)
 
 // Cytoscape instance tracking (container ID string → cy instance)
 const cyInstances = new Map();
@@ -701,12 +700,6 @@ let tooltipEl = null;
 // ═══════════════════════════════════════════════════════════
 
 export function initCausalEditor(interventions) {
-    // Register ELK extension with Cytoscape (once)
-    if (!elkRegistered && window.cytoscape && window.cytoscapeElk) {
-        window.cytoscape.use(window.cytoscapeElk);
-        elkRegistered = true;
-    }
-
     // Init tooltip element
     initTooltip();
 
@@ -722,7 +715,6 @@ export function initCausalEditor(interventions) {
     GRAPH_CONFIGS.forEach(config => {
         const container = document.getElementById(config.containerId);
         if (container) {
-            addEditControls(config.containerId);
             renderGraph(config);
         }
     });
@@ -850,6 +842,16 @@ function attachTooltipHandlers(cy, container) {
             }
             applyNeighborhoodHighlight(cy, node);
         }
+
+        // Filter check-in panel when in interventions mode
+        if (showInterventions) {
+            if (_checkinFilterNodeId === id) {
+                _checkinFilterNodeId = null;
+            } else {
+                _checkinFilterNodeId = id;
+            }
+            buildCheckinPanel(currentGraphData);
+        }
     });
 
     // Click empty canvas to unpin
@@ -860,6 +862,10 @@ function attachTooltipHandlers(cy, container) {
             cy.batch(() => {
                 cy.elements().removeClass('hover-dimmed hover-highlight hover-neighbor hover-neighbor-2 hover-highlight-2');
             });
+            if (showInterventions && _checkinFilterNodeId) {
+                _checkinFilterNodeId = null;
+                buildCheckinPanel(currentGraphData);
+            }
         }
     });
 
@@ -961,155 +967,10 @@ function addLegend(container, interventionsVisible) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// EDIT CONTROLS
-// ═══════════════════════════════════════════════════════════
-
-function addEditControls(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    if (container.querySelector('.graph-controls')) return;
-
-    const controls = document.createElement('div');
-    controls.className = 'graph-controls';
-    controls.dataset.forGraph = containerId;
-    controls.innerHTML = `
-        <button class="graph-edit-btn" title="Edit diagram">✏️ Edit</button>
-        <button class="graph-save-btn hidden" title="Save changes">✓ Save</button>
-        <button class="graph-cancel-btn hidden" title="Cancel">✗ Cancel</button>
-        <button class="graph-reset-btn hidden" title="Reset to default">↺ Reset</button>
-    `;
-    container.insertBefore(controls, container.firstChild);
-
-    controls.querySelector('.graph-edit-btn').addEventListener('click', () => enterEditMode(containerId));
-    controls.querySelector('.graph-save-btn').addEventListener('click', () => saveEdit(containerId));
-    controls.querySelector('.graph-cancel-btn').addEventListener('click', () => cancelEdit(containerId));
-    controls.querySelector('.graph-reset-btn').addEventListener('click', () => resetDiagram(containerId));
-}
-
-// ═══════════════════════════════════════════════════════════
-// EDIT MODE
-// ═══════════════════════════════════════════════════════════
-
-function enterEditMode(containerId) {
-    isEditMode = true;
-    const container = document.getElementById(containerId);
-    const config = GRAPH_CONFIGS.find(c => c.containerId === containerId);
-
-    const controls = container.querySelector('.graph-controls');
-    if (controls) {
-        controls.querySelector('.graph-edit-btn').classList.add('hidden');
-        controls.querySelector('.graph-save-btn').classList.remove('hidden');
-        controls.querySelector('.graph-cancel-btn').classList.remove('hidden');
-        controls.querySelector('.graph-reset-btn').classList.remove('hidden');
-    }
-
-    container.classList.add('edit-mode');
-
-    // Destroy Cytoscape instance
-    destroyCyInstance(config.cyContainerId);
-
-    const cyContainer = document.getElementById(config.cyContainerId);
-    const prettyJson = JSON.stringify(currentGraphData, null, 2);
-
-    cyContainer.innerHTML = `
-        <div class="graph-editor">
-            <textarea class="graph-textarea" spellcheck="false">${escapeHtml(prettyJson)}</textarea>
-            <div class="graph-preview" id="${config.cyContainerId}-preview"></div>
-        </div>
-    `;
-
-    const textarea = container.querySelector('.graph-textarea');
-    let previewTimeout = null;
-
-    textarea.addEventListener('input', () => {
-        clearTimeout(previewTimeout);
-        previewTimeout = setTimeout(() => {
-            renderPreview(textarea.value, `${config.cyContainerId}-preview`);
-        }, 600);
-    });
-
-    // Initial preview
-    renderPreview(prettyJson, `${config.cyContainerId}-preview`);
-}
-
-function renderPreview(jsonText, previewId) {
-    const previewEl = document.getElementById(previewId);
-    if (!previewEl) return;
-
-    // Destroy previous preview instance
-    destroyCyInstance(previewId);
-
-    try {
-        const graphData = JSON.parse(jsonText);
-        if (!graphData.nodes || !graphData.edges) throw new Error('Missing nodes or edges array');
-
-        createCyInstance(previewId, graphData, true);
-        previewEl.classList.remove('error');
-    } catch (error) {
-        previewEl.innerHTML = `<div class="preview-error">JSON error: ${error.message}</div>`;
-        previewEl.classList.add('error');
-    }
-}
-
-function saveEdit(containerId) {
-    const container = document.getElementById(containerId);
-    const textarea = container.querySelector('.graph-textarea');
-
-    if (textarea) {
-        try {
-            const parsed = JSON.parse(textarea.value);
-            if (parsed.nodes && parsed.edges) {
-                currentGraphData = parsed;
-                storage.saveDiagram({ graphData: currentGraphData });
-            }
-        } catch (e) {
-            // Invalid JSON — don't save
-        }
-    }
-
-    exitEditMode(containerId);
-    renderAllGraphs();
-}
-
-function cancelEdit(containerId) {
-    exitEditMode(containerId);
-    const config = GRAPH_CONFIGS.find(c => c.containerId === containerId);
-    if (config) renderGraph(config);
-}
-
-function exitEditMode(containerId) {
-    isEditMode = false;
-    const container = document.getElementById(containerId);
-    const controls = container.querySelector('.graph-controls');
-    if (controls) {
-        controls.querySelector('.graph-edit-btn').classList.remove('hidden');
-        controls.querySelector('.graph-save-btn').classList.add('hidden');
-        controls.querySelector('.graph-cancel-btn').classList.add('hidden');
-        controls.querySelector('.graph-reset-btn').classList.add('hidden');
-    }
-    container.classList.remove('edit-mode');
-}
-
-function resetDiagram(containerId) {
-    if (confirm('Reset to default diagram?')) {
-        currentGraphData = structuredClone(DEFAULT_GRAPH_DATA);
-        storage.clearDiagram();
-
-        const container = document.getElementById(containerId);
-        const textarea = container.querySelector('.graph-textarea');
-        if (textarea) {
-            textarea.value = JSON.stringify(currentGraphData, null, 2);
-            const config = GRAPH_CONFIGS.find(c => c.containerId === containerId);
-            if (config) renderPreview(textarea.value, `${config.cyContainerId}-preview`);
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
 // CYTOSCAPE INSTANCE MANAGEMENT
 // ═══════════════════════════════════════════════════════════
 
-function createCyInstance(containerId, graphData, isPreview = false) {
+function createCyInstance(containerId, graphData) {
     const container = document.getElementById(containerId);
     if (!container) return null;
 
@@ -1157,11 +1018,11 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     const elements = [
         ...filteredNodes.map(n => ({ group: 'nodes', data: { ...n.data } })),
         ...filteredEdges.map(e => ({ group: 'edges', data: { ...e.data } })),
-        // Inject tier label nodes for main (non-preview) graphs
-        ...(!isPreview ? Object.entries(TIER_LABELS).map(([tier, label]) => ({
+        // Inject tier label nodes
+        ...Object.entries(TIER_LABELS).map(([tier, label]) => ({
             group: 'nodes',
             data: { id: `_tier_${tier}`, label, styleClass: 'groupLabel', tier: parseInt(tier) },
-        })) : []),
+        })),
     ];
 
     const cy = window.cytoscape({
@@ -1180,12 +1041,14 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     cy.scratch('dormantIds', dormantIds);
     cy.scratch('dormantEdges', dormantEdges);
 
-    // Layout: tiered columns for main graphs, ELK for edit-mode preview
-    if (isPreview) {
-        runElkLayout(cy);
-    } else {
-        runTieredLayout(cy, container);
+    // Build check-in panel BEFORE layout so the sidebar is populated
+    // and the grid container has its final width for layout calculations
+    if (containerId === 'causal-graph-cy') {
+        buildCheckinPanel(graphData);
     }
+
+    // Layout: tiered columns
+    runTieredLayout(cy, container);
 
     // Attach custom wheel handler, zoom controls, tooltips, legend
     attachWheelHandler(container, cy);
@@ -1194,22 +1057,17 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     addLegend(container, showInterventions);
 
     // If interventions mode is active, show sidebar + badges
-    if (showInterventions && !isPreview) {
+    if (showInterventions) {
         const maps = buildInterventionMaps(graphData);
         cy.scratch('interventionMaps', maps);
-        buildInterventionSidebar(container, cy, maps);
         addInterventionBadges(container, cy, maps);
     }
 
-    // If defense mode is active, apply heatmap + defense badges
-    if (showDefenseMode && !isPreview) {
+    // If defense mode is active, apply heatmap + defense badges + shield badges
+    if (showDefenseMode) {
         applyDefenseHeatmap(cy, graphData);
         addDefenseBadges(container, cy, graphData);
-    }
-
-    // Always build the check-in panel on the interventions tab graph
-    if (containerId === 'causal-graph-cy' && !isPreview) {
-        buildCheckinPanel(graphData);
+        addShieldBadges(container, cy, graphData);
     }
 
     return cy;
@@ -1233,6 +1091,7 @@ function destroyCyInstance(containerId) {
         if (sidebar) sidebar.remove();
         removeInterventionBadges(container);
         removeDefenseBadges(container);
+        removeShieldBadges(container);
         const popover = container.querySelector('.tx-popover');
         if (popover) popover.remove();
         const legend = container.parentElement?.querySelector('.graph-legend');
@@ -1467,39 +1326,6 @@ function runTieredLayout(cy, container) {
         x: -bb.x1 * zoomForWidth + PAD,
         y: -bb.y1 * zoomForWidth + PAD,
     });
-}
-
-// ═══════════════════════════════════════════════════════════
-// ELK LAYOUT (used for edit-mode preview only)
-// ═══════════════════════════════════════════════════════════
-
-function runElkLayout(cy) {
-    try {
-        const layout = cy.layout({
-            name: 'elk',
-            nodeDimensionsIncludeLabels: true,
-            fit: true,
-            padding: 30,
-            animate: false,
-            elk: {
-                'algorithm': 'layered',
-                'elk.direction': 'RIGHT',
-                'elk.spacing.nodeNode': 20,
-                'elk.spacing.edgeNode': 12,
-                'elk.spacing.edgeEdge': 8,
-                'elk.layered.spacing.nodeNodeBetweenLayers': 50,
-                'elk.layered.spacing.edgeNodeBetweenLayers': 15,
-                'elk.layered.edgeRouting': 'ORTHOGONAL',
-                'elk.layered.cycleBreaking.strategy': 'GREEDY',
-                'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-                'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-            }
-        });
-        layout.run();
-    } catch (e) {
-        console.warn('ELK layout failed, using grid fallback:', e);
-        cy.layout({ name: 'grid', fit: true, padding: 30 }).run();
-    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1767,6 +1593,13 @@ function addInterventionBadges(container, cy, maps) {
             badge.addEventListener('click', e => {
                 e.stopPropagation();
                 showNodePopover(container, cy, nodeId, maps);
+                // Filter check-in panel to this node's interventions
+                if (_checkinFilterNodeId === nodeId) {
+                    _checkinFilterNodeId = null;
+                } else {
+                    _checkinFilterNodeId = nodeId;
+                }
+                buildCheckinPanel(currentGraphData);
             });
 
             overlay.appendChild(badge);
@@ -1893,11 +1726,14 @@ function formatDateLabel(key) {
 
 let checkinDateOffset = 0; // 0 = today, -1 = yesterday, etc.
 
+let _activeCheckinTxId = null; // currently expanded/highlighted intervention
+
 function buildCheckinPanel(graphData) {
     const panel = document.getElementById('defense-checkin');
     if (!panel) return;
 
     const maps = buildInterventionMaps(graphData);
+    const impact = computeNetworkImpact(graphData);
     const dateKey = dateOffsetKey(checkinDateOffset);
     const checkIns = storage.getCheckIns(dateKey);
     const checkInSet = new Set(checkIns);
@@ -1910,53 +1746,179 @@ function buildCheckinPanel(graphData) {
         return count;
     }
 
-    const totalInterventions = maps.interventionNodeMap.size;
-    const checkedToday = checkInSet.size;
-
-    let html = `
-        <div class="defense-checkin-container">
-            <div class="defense-checkin-header">
-                <span class="defense-checkin-title">Daily Defense Check-in</span>
-                <div class="defense-checkin-nav">
-                    <button class="defense-date-btn" data-dir="-1">&larr;</button>
-                    <span class="defense-date-label">${formatDateLabel(dateKey)}</span>
-                    <button class="defense-date-btn" data-dir="1" ${checkinDateOffset >= 0 ? 'disabled' : ''}>&rarr;</button>
-                </div>
-                <span class="defense-checkin-summary">${checkedToday}/${totalInterventions} active</span>
-                <button class="defense-checkin-toggle" title="Collapse">&#x25BC;</button>
-            </div>
-            <div class="defense-checkin-body">
-                <div class="defense-checkin-grid">`;
-
+    // Build reverse lookup: intervention id → category name
+    const catLookup = new Map();
     INTERVENTION_CATEGORIES.forEach(cat => {
-        html += `<div class="defense-checkin-cat">`;
-        html += `<div class="defense-checkin-cat-name">${cat.name}</div>`;
-        cat.items.forEach(id => {
-            const node = maps.interventionNodeMap.get(id);
-            if (!node) return;
-            const label = node.label.replace(/\n/g, ' ');
-            const s = streak(id);
-            const checked = checkInSet.has(id);
-            html += `<label class="defense-checkin-item${checked ? ' checked' : ''}">
-                <input type="checkbox" data-tx-id="${id}" ${checked ? 'checked' : ''}>
-                <span class="defense-item-label">${label}</span>
-                <span class="defense-item-streak ${s >= 5 ? 'high' : s >= 3 ? 'med' : 'low'}">${s}/7</span>
-            </label>`;
-        });
-        html += `</div>`;
+        cat.items.forEach(id => catLookup.set(id, cat.name));
     });
 
-    html += `</div></div></div>`;
+    // Sort all interventions by impact score descending
+    const allTxIds = [...maps.interventionNodeMap.keys()];
+    allTxIds.sort((a, b) => {
+        const sa = (impact.get(a) || { score: 0 }).score;
+        const sb = (impact.get(b) || { score: 0 }).score;
+        return sb - sa;
+    });
+
+    // Filter out hidden interventions
+    const hiddenSet = new Set(storage.getHiddenInterventions());
+    const visibleTxIds = allTxIds.filter(id => !hiddenSet.has(id));
+    const hiddenTxIds = allTxIds.filter(id => hiddenSet.has(id));
+
+    // Apply node filter when in interventions mode
+    let filteredTxIds = visibleTxIds;
+    let filterNodeLabel = null;
+    if (showInterventions && _checkinFilterNodeId) {
+        const targetTxIds = new Set(maps.targetInterventions.get(_checkinFilterNodeId) || []);
+        filteredTxIds = visibleTxIds.filter(id => targetTxIds.has(id));
+        const filterNode = graphData.nodes.find(n => n.data.id === _checkinFilterNodeId);
+        filterNodeLabel = filterNode ? filterNode.data.label.split('\n')[0] : _checkinFilterNodeId;
+    }
+
+    const maxScore = allTxIds.length > 0
+        ? (impact.get(allTxIds[0]) || { score: 1 }).score
+        : 1;
+
+    // Helper: render a single intervention item
+    function renderItem(id, dimmed) {
+        const node = maps.interventionNodeMap.get(id);
+        if (!node) return '';
+        const label = node.label.replace(/\n/g, ' ');
+        const s = streak(id);
+        const checked = checkInSet.has(id);
+        const cat = catLookup.get(id) || '';
+        const score = (impact.get(id) || { score: 0 }).score;
+        const barPct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+        const isActive = _activeCheckinTxId === id;
+        const scoreClass = barPct >= 66 ? 'high' : barPct >= 33 ? 'med' : 'low';
+        const dimClass = dimmed ? ' defense-item-hidden' : '';
+
+        let h = `<div class="defense-item-wrapper${dimClass}">`;
+        h += `<div class="defense-checkin-item${checked ? ' checked' : ''}${isActive ? ' active' : ''}" data-tx-id="${id}">`;
+        h += `<div class="defense-check-btn">`;
+        h += `<input type="checkbox" data-tx-id="${id}" ${checked ? 'checked' : ''}>`;
+        h += `<span class="defense-check-mark"></span>`;
+        h += `</div>`;
+        h += `<div class="defense-item-content">`;
+        h += `<span class="defense-item-label">${label}</span>`;
+        h += `<div class="defense-item-meta">`;
+        h += `<span class="defense-item-cat">${cat}</span>`;
+        h += `<span class="defense-impact-bar-wrap"><span class="defense-impact-bar" style="width:${barPct}%"></span></span>`;
+        h += `<span class="defense-item-score ${scoreClass}"></span>`;
+        h += `<span class="defense-item-streak ${s >= 5 ? 'high' : s >= 3 ? 'med' : 'low'}">${s}/7</span>`;
+        h += `</div>`;
+        h += `</div>`;
+        h += `</div>`;
+
+        // Inline evidence detail (shown on hover via popover)
+        const tooltip = node.tooltip || {};
+        const targets = maps.interventionTargets.get(id) || [];
+        h += `<div class="defense-item-detail">`;
+        if (tooltip.mechanism) {
+            h += `<div class="defense-item-detail-row">`;
+            h += `<span class="defense-item-detail-value">${tooltip.mechanism}</span>`;
+            h += `</div>`;
+        }
+        if (tooltip.evidence) {
+            h += `<div class="defense-item-detail-row">`;
+            h += `<span class="defense-item-detail-label">Evidence:</span>`;
+            h += `<span class="defense-item-detail-value">${tooltip.evidence}</span>`;
+            h += `</div>`;
+        }
+        if (tooltip.stat) {
+            h += `<div class="defense-item-detail-row">`;
+            h += `<span class="defense-item-detail-label">Stat:</span>`;
+            h += `<span class="defense-item-detail-value">${tooltip.stat}</span>`;
+            h += `</div>`;
+        }
+        if (tooltip.citation) {
+            h += `<div class="defense-item-detail-row">`;
+            h += `<span class="defense-item-detail-label">Citation:</span>`;
+            h += `<span class="defense-item-detail-value">${tooltip.citation}</span>`;
+            h += `</div>`;
+        }
+        if (targets.length > 0) {
+            h += `<div class="defense-item-detail-targets">`;
+            targets.forEach(t => {
+                const targetNode = graphData.nodes.find(n => n.data.id === t.target);
+                const targetLabel = targetNode ? targetNode.data.label.split('\n')[0] : t.target;
+                h += `<span class="defense-item-target-tag">${targetLabel}</span>`;
+            });
+            h += `</div>`;
+        }
+        h += `</div>`;
+        h += `</div>`; // close defense-item-wrapper
+        return h;
+    }
+
+    const checkedFiltered = filteredTxIds.filter(id => checkInSet.has(id)).length;
+
+    let html = `<div class="defense-sidebar-header">`;
+    html += `<div class="defense-sidebar-title">Daily Defense Check-in</div>`;
+    if (filterNodeLabel) {
+        html += `<div class="defense-sidebar-filter">Filtering: ${filterNodeLabel} <span class="defense-filter-clear" data-action="clear-filter">&times;</span></div>`;
+    }
+    html += `<div class="defense-sidebar-nav">`;
+    html += `<button class="defense-date-btn" data-dir="-1">&larr;</button>`;
+    html += `<span class="defense-date-label">${formatDateLabel(dateKey)}</span>`;
+    html += `<button class="defense-date-btn" data-dir="1" ${checkinDateOffset >= 0 ? 'disabled' : ''}>&rarr;</button>`;
+    html += `</div>`;
+    html += `<div class="defense-sidebar-summary">${checkedFiltered}/${filteredTxIds.length} active</div>`;
+    html += `</div>`;
+
+    filteredTxIds.forEach(id => { html += renderItem(id, false); });
+
+    // "Show N hidden" toggle
+    if (hiddenTxIds.length > 0) {
+        html += `<div class="defense-hidden-toggle" data-action="toggle-hidden">Show ${hiddenTxIds.length} hidden</div>`;
+        html += `<div class="defense-hidden-section" style="display:none;">`;
+        hiddenTxIds.forEach(id => { html += renderItem(id, true); });
+        html += `</div>`;
+    }
+
     panel.innerHTML = html;
 
-    // Wire checkbox handlers
+    // Wire clear filter button
+    const clearFilterBtn = panel.querySelector('.defense-filter-clear');
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', () => {
+            _checkinFilterNodeId = null;
+            buildCheckinPanel(graphData);
+        });
+    }
+
+    // Wire checkbox handlers — stop propagation so row click doesn't fire
+    panel.querySelectorAll('.defense-check-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    });
     panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', () => {
             const txId = cb.dataset.txId;
             storage.toggleCheckIn(dateKey, txId);
             buildCheckinPanel(graphData);
-            // If defense mode is active, update the heatmap
             if (showDefenseMode) reRenderGraphs();
+        });
+    });
+
+    // Wire row click → scroll to target node + highlight + show detail
+    panel.querySelectorAll('.defense-checkin-item').forEach(row => {
+        row.addEventListener('click', (e) => {
+            // Don't trigger if clicking the checkbox area
+            if (e.target.closest('.defense-check-btn')) return;
+
+            const txId = row.dataset.txId;
+
+            // Toggle active state
+            if (_activeCheckinTxId === txId) {
+                _activeCheckinTxId = null;
+                clearCheckinHighlight();
+            } else {
+                _activeCheckinTxId = txId;
+                scrollToInterventionTargets(txId, maps, graphData);
+            }
+            buildCheckinPanel(graphData);
         });
     });
 
@@ -1970,15 +1932,224 @@ function buildCheckinPanel(graphData) {
         });
     });
 
-    // Wire collapse toggle
-    const collapseBtn = panel.querySelector('.defense-checkin-toggle');
-    const body = panel.querySelector('.defense-checkin-body');
-    if (collapseBtn && body) {
-        collapseBtn.addEventListener('click', () => {
-            body.classList.toggle('collapsed');
-            collapseBtn.textContent = body.classList.contains('collapsed') ? '\u25B6' : '\u25BC';
+    // Wire hover popover for evidence detail
+    let popover = document.getElementById('defense-detail-popover');
+    if (!popover) {
+        popover = document.createElement('div');
+        popover.id = 'defense-detail-popover';
+        document.body.appendChild(popover);
+        popover.addEventListener('mouseenter', () => {
+            clearTimeout(popover._hideTimeout);
+        });
+        popover.addEventListener('mouseleave', () => {
+            popover.style.display = 'none';
         });
     }
+    popover.style.display = 'none';
+
+    panel.querySelectorAll('.defense-item-wrapper').forEach(wrapper => {
+        wrapper.addEventListener('mouseenter', () => {
+            clearTimeout(popover._hideTimeout);
+            const detail = wrapper.querySelector('.defense-item-detail');
+            if (!detail || !detail.innerHTML.trim()) return;
+            popover.innerHTML = detail.innerHTML;
+            const rect = wrapper.getBoundingClientRect();
+            popover.style.top = rect.top + 'px';
+            popover.style.left = (rect.right + 8) + 'px';
+            popover.style.display = 'block';
+            // Clamp if overflowing viewport bottom
+            const popRect = popover.getBoundingClientRect();
+            if (popRect.bottom > window.innerHeight - 10) {
+                popover.style.top = Math.max(10, window.innerHeight - popRect.height - 10) + 'px';
+            }
+        });
+        wrapper.addEventListener('mouseleave', () => {
+            popover._hideTimeout = setTimeout(() => {
+                popover.style.display = 'none';
+            }, 150);
+        });
+    });
+
+    // Wire "Show N hidden" toggle
+    const hiddenToggle = panel.querySelector('.defense-hidden-toggle');
+    const hiddenSection = panel.querySelector('.defense-hidden-section');
+    if (hiddenToggle && hiddenSection) {
+        hiddenToggle.addEventListener('click', () => {
+            const isShown = hiddenSection.style.display !== 'none';
+            hiddenSection.style.display = isShown ? 'none' : 'block';
+            hiddenToggle.textContent = isShown
+                ? `Show ${hiddenTxIds.length} hidden`
+                : `Hide ${hiddenTxIds.length} hidden`;
+        });
+    }
+
+    // Right-click context menu for hide/unhide
+    let ctxMenu = document.getElementById('defense-context-menu');
+    if (!ctxMenu) {
+        ctxMenu = document.createElement('div');
+        ctxMenu.id = 'defense-context-menu';
+        ctxMenu.innerHTML = `<div class="defense-context-option"></div>`;
+        document.body.appendChild(ctxMenu);
+    }
+    ctxMenu.style.display = 'none';
+
+    function dismissCtxMenu() { ctxMenu.style.display = 'none'; }
+
+    panel.querySelectorAll('.defense-checkin-item').forEach(row => {
+        row.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const txId = row.dataset.txId;
+            const isHidden = hiddenSet.has(txId);
+            const option = ctxMenu.querySelector('.defense-context-option');
+            option.textContent = isHidden ? 'Unhide' : 'Hide from list';
+            ctxMenu.style.left = e.clientX + 'px';
+            ctxMenu.style.top = e.clientY + 'px';
+            ctxMenu.style.display = 'block';
+
+            // Wire click (replace handler each time)
+            option.onclick = () => {
+                storage.toggleHiddenIntervention(txId);
+                dismissCtxMenu();
+                buildCheckinPanel(graphData);
+            };
+        });
+    });
+
+    // Dismiss context menu on click-outside or scroll
+    document.addEventListener('click', dismissCtxMenu, { once: true });
+    panel.addEventListener('scroll', dismissCtxMenu, { once: true });
+}
+
+function scrollToInterventionTargets(txId, maps, graphData) {
+    const cy = cyInstances.get('causal-graph-cy');
+    if (!cy) return;
+
+    const targets = maps.interventionTargets.get(txId) || [];
+    const targetIds = new Set(targets.map(t => t.target));
+    if (targetIds.size === 0) return;
+
+    // Collect target nodes in Cytoscape
+    const targetNodes = cy.collection();
+    targetIds.forEach(tId => {
+        const node = cy.getElementById(tId);
+        if (node.length) targetNodes.merge(node);
+    });
+    if (targetNodes.empty()) return;
+
+    // Highlight: dim everything, then highlight targets and their connecting edges
+    cy.batch(() => {
+        cy.elements().addClass('tx-deep-dimmed').removeClass('tx-dimmed tx-highlighted tx-target-highlighted');
+        cy.nodes('[styleClass="groupLabel"]').removeClass('tx-deep-dimmed');
+
+        targetNodes.removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+
+        // Also highlight edges between targets for context
+        cy.edges().forEach(e => {
+            if (targetIds.has(e.data('source')) && targetIds.has(e.data('target'))) {
+                e.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
+            }
+            // Highlight edges FROM targets (downstream)
+            if (targetIds.has(e.data('source'))) {
+                e.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
+                const tgtNode = cy.getElementById(e.data('target'));
+                if (tgtNode.length) tgtNode.removeClass('tx-deep-dimmed');
+            }
+        });
+    });
+
+    // Scroll the first target node into view
+    const primary = targetNodes.first();
+    const bb = primary.renderedBoundingBox();
+    const container = document.getElementById('causal-graph-cy');
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const nodeCenterY = containerRect.top + (bb.y1 + bb.y2) / 2 + window.scrollY;
+    const viewportMid = window.innerHeight / 2;
+
+    window.scrollTo({
+        top: Math.max(0, nodeCenterY - viewportMid),
+        behavior: 'smooth',
+    });
+}
+
+function clearCheckinHighlight() {
+    const cy = cyInstances.get('causal-graph-cy');
+    if (!cy) return;
+    cy.batch(() => {
+        cy.elements().removeClass('tx-deep-dimmed tx-dimmed tx-highlighted tx-target-highlighted');
+    });
+}
+
+// ── Network Impact Scoring (for sidebar ranking) ──
+
+function computeNetworkImpact(graphData) {
+    const maps = buildInterventionMaps(graphData);
+
+    // Build forward adjacency (exclude feedback/protective/intervention edges)
+    const adjacency = new Map();
+    graphData.edges.forEach(e => {
+        const src = e.data.source;
+        const tgt = e.data.target;
+        if (e.data.edgeType === 'feedback' || e.data.edgeType === 'protective') return;
+        if (maps.interventionNodeMap.has(src)) return;
+        if (!adjacency.has(src)) adjacency.set(src, []);
+        adjacency.get(src).push(tgt);
+    });
+
+    // Tier weight: nodes closer to symptoms are worth more
+    function tierWeight(nodeId) {
+        const t = NODE_TIERS[nodeId];
+        if (t === undefined) return 1.0;
+        if (t >= 8) return 1.5;
+        if (t >= 6) return 1.2;
+        return 1.0;
+    }
+
+    // Out-degree hub bonus
+    function hubBonus(nodeId) {
+        const children = adjacency.get(nodeId) || [];
+        return 1 + 0.1 * children.length;
+    }
+
+    const impact = new Map();
+
+    maps.interventionNodeMap.forEach((_, txId) => {
+        const targets = maps.interventionTargets.get(txId) || [];
+        const directTargetIds = targets.map(t => t.target);
+
+        // BFS forward from direct targets
+        let score = 0;
+        let reachableCount = 0;
+        const visited = new Set();
+        const queue = []; // { nodeId, decay }
+
+        directTargetIds.forEach(tId => {
+            if (!visited.has(tId)) {
+                visited.add(tId);
+                queue.push({ nodeId: tId, decay: 1.0 });
+            }
+        });
+
+        while (queue.length > 0) {
+            const { nodeId, decay } = queue.shift();
+            score += decay * tierWeight(nodeId) * hubBonus(nodeId);
+            reachableCount++;
+
+            const children = adjacency.get(nodeId) || [];
+            children.forEach(childId => {
+                if (visited.has(childId)) return;
+                const nextDecay = decay * CASCADE_DECAY;
+                if (nextDecay < 0.01) return;
+                visited.add(childId);
+                queue.push({ nodeId: childId, decay: nextDecay });
+            });
+        }
+
+        impact.set(txId, { score, reachableCount });
+    });
+
+    return impact;
 }
 
 // ── Defense Score Computation ──
@@ -2124,7 +2295,99 @@ function applyDefenseHeatmap(cy, graphData) {
 
 function addDefenseBadges(container, cy, graphData) {
     removeDefenseBadges(container);
+    if (!tooltipEl) initTooltip();
     const scores = computeDefenseScores(graphData);
+
+    // Pre-compute per-node intervention breakdown for hover popover
+    const maps = buildInterventionMaps(graphData);
+    const rangeData = storage.getCheckInsRange(7);
+    const ratings = storage.getAllRatings();
+    const ratingMap = {};
+    ratings.forEach(r => { ratingMap[r.interventionId] = r.effectiveness; });
+
+    function interventionStrengthDetail(txId) {
+        const eff = ratingMap[txId] || 'untested';
+        const weight = EFFECTIVENESS_WEIGHTS[eff] || 0.5;
+        let daysActive = 0;
+        Object.values(rangeData).forEach(ids => { if (ids.includes(txId)) daysActive++; });
+        const strength = weight * (daysActive / 7);
+        return { eff, weight, daysActive, strength };
+    }
+
+    // Node label helper
+    function nodeLabel(id) {
+        const n = graphData.nodes.find(n => n.data.id === id);
+        return n ? n.data.label.split('\n')[0] : id;
+    }
+
+    // Build direct breakdown: nodeId → [{ label, eff, daysActive, strength }]
+    const directBreakdowns = new Map();
+    maps.targetInterventions.forEach((txIds, nodeId) => {
+        const items = txIds.map(txId => {
+            const txNode = maps.interventionNodeMap.get(txId);
+            const label = txNode ? txNode.label.replace(/\n/g, ' ') : txId;
+            const detail = interventionStrengthDetail(txId);
+            return { label, ...detail };
+        });
+        items.sort((a, b) => b.strength - a.strength);
+        directBreakdowns.set(nodeId, items);
+    });
+
+    // Build adjacency (same as computeDefenseScores)
+    const adjacency = new Map();
+    graphData.edges.forEach(e => {
+        const src = e.data.source;
+        const tgt = e.data.target;
+        if (e.data.edgeType === 'feedback' || e.data.edgeType === 'protective') return;
+        if (maps.interventionNodeMap.has(src)) return;
+        if (!adjacency.has(src)) adjacency.set(src, []);
+        adjacency.get(src).push(tgt);
+    });
+
+    // BFS to track cascade contributions: nodeId → [{ sourceNodeId, contribution, hops }]
+    const cascadeContribs = new Map();
+    graphData.nodes.forEach(n => {
+        if (n.data.styleClass !== 'intervention') cascadeContribs.set(n.data.id, []);
+    });
+
+    // Compute direct scores (mirroring computeDefenseScores)
+    const directScores = new Map();
+    maps.targetInterventions.forEach((txIds, nId) => {
+        let total = 0;
+        txIds.forEach(txId => { total += interventionStrengthDetail(txId).strength; });
+        directScores.set(nId, Math.min(1, total));
+    });
+
+    const queue = [];
+    directScores.forEach((score, nId) => {
+        if (score > 0) queue.push({ nodeId: nId, strength: score, depth: 0, sourceNodeId: nId });
+    });
+    const visited = new Set();
+    while (queue.length > 0) {
+        const { nodeId: nId, strength, depth, sourceNodeId } = queue.shift();
+        const children = adjacency.get(nId) || [];
+        children.forEach(childId => {
+            const cascaded = strength * CASCADE_DECAY;
+            if (cascaded < 0.01) return;
+            const contribs = cascadeContribs.get(childId);
+            if (!contribs) return;
+            // Record this cascade contribution
+            const existing = contribs.find(c => c.sourceNodeId === sourceNodeId);
+            if (existing) {
+                if (cascaded > existing.contribution) {
+                    existing.contribution = cascaded;
+                    existing.hops = depth + 1;
+                }
+            } else {
+                contribs.push({ sourceNodeId, contribution: cascaded, hops: depth + 1 });
+            }
+            const key = `${childId}-${sourceNodeId}-${depth}`;
+            if (!visited.has(key)) {
+                visited.add(key);
+                queue.push({ nodeId: childId, strength: cascaded, depth: depth + 1, sourceNodeId });
+            }
+        });
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'defense-badge-overlay';
@@ -2133,7 +2396,7 @@ function addDefenseBadges(container, cy, graphData) {
     function updatePositions() {
         overlay.innerHTML = '';
         scores.forEach((entry, nodeId) => {
-            if (entry.score === 0 && !entry.isDirect) return; // skip nodes with no defense and no direct intervention
+            if (entry.score === 0 && !entry.isDirect) return;
             const node = cy.getElementById(nodeId);
             if (!node.length || node.removed()) return;
             const sc = node.data('styleClass');
@@ -2150,6 +2413,72 @@ function addDefenseBadges(container, cy, graphData) {
             badge.style.top = `${bb.y1 - 2}px`;
             badge.style.background = color;
             badge.style.borderColor = color;
+            badge.style.pointerEvents = 'auto';
+            badge.style.cursor = 'default';
+
+            const nLabel = node.data('label').split('\n')[0];
+            badge.addEventListener('mouseenter', () => {
+                let html = `<div class="cy-tooltip-title">${pct} — ${nLabel}</div>`;
+
+                // Direct interventions
+                const directItems = directBreakdowns.get(nodeId);
+                if (directItems && directItems.length > 0) {
+                    html += `<div style="margin-bottom:4px;color:#9ca3af;font-size:11px;">Direct:</div>`;
+                    directItems.forEach(it => {
+                        const pctStr = Math.round(it.strength * 100) + '%';
+                        const effLabel = it.eff.replace('_', ' ');
+                        html += `<div class="cy-tooltip-row" style="display:flex;justify-content:space-between;gap:8px;">`;
+                        html += `<span>${it.label}</span>`;
+                        html += `<span style="color:#9ca3af;white-space:nowrap;">${it.daysActive}/7d · ${effLabel} · ${pctStr}</span>`;
+                        html += `</div>`;
+                    });
+                }
+
+                // Cascade contributions
+                const contribs = (cascadeContribs.get(nodeId) || [])
+                    .filter(c => c.contribution >= 0.01)
+                    .sort((a, b) => b.contribution - a.contribution);
+                if (contribs.length > 0) {
+                    if (directItems && directItems.length > 0) {
+                        html += `<div style="margin-top:6px;margin-bottom:4px;color:#9ca3af;font-size:11px;">Cascaded:</div>`;
+                    }
+                    contribs.forEach(c => {
+                        const srcLabel = nodeLabel(c.sourceNodeId);
+                        const cPct = Math.round(c.contribution * 100) + '%';
+                        // Show which interventions defend the source node
+                        const srcItems = directBreakdowns.get(c.sourceNodeId) || [];
+                        const txNames = srcItems.map(it => it.label).join(', ');
+                        html += `<div class="cy-tooltip-row" style="margin-bottom:3px;">`;
+                        html += `<div style="display:flex;justify-content:space-between;gap:8px;">`;
+                        html += `<span>via ${srcLabel}</span>`;
+                        html += `<span style="color:#9ca3af;white-space:nowrap;">${c.hops} hop${c.hops > 1 ? 's' : ''} · ${cPct}</span>`;
+                        html += `</div>`;
+                        if (txNames) {
+                            html += `<div style="color:#6b7280;font-size:10px;margin-top:1px;">${txNames}</div>`;
+                        }
+                        html += `</div>`;
+                    });
+                }
+
+                tooltipEl.innerHTML = html;
+                tooltipEl.style.display = 'block';
+                const r = badge.getBoundingClientRect();
+                tooltipEl.style.left = (r.right + 8) + 'px';
+                tooltipEl.style.top = r.top + 'px';
+                requestAnimationFrame(() => {
+                    const tr = tooltipEl.getBoundingClientRect();
+                    if (tr.bottom > window.innerHeight - 10) {
+                        tooltipEl.style.top = Math.max(10, window.innerHeight - tr.height - 10) + 'px';
+                    }
+                    if (tr.right > window.innerWidth - 10) {
+                        tooltipEl.style.left = (r.left - tr.width - 8) + 'px';
+                    }
+                });
+            });
+            badge.addEventListener('mouseleave', () => {
+                tooltipEl.style.display = 'none';
+            });
+
             overlay.appendChild(badge);
         });
     }
@@ -2170,9 +2499,82 @@ function removeDefenseBadges(container) {
     }
 }
 
+function addShieldBadges(container, cy, graphData) {
+    removeShieldBadges(container);
+    if (!tooltipEl) initTooltip();
+
+    const maps = buildInterventionMaps(graphData);
+    const dateKey = dateOffsetKey(checkinDateOffset);
+    const todaysCheckIns = new Set(storage.getCheckIns(dateKey));
+
+    // Build: nodeId → [checked intervention labels]
+    const shieldedNodes = new Map();
+    maps.targetInterventions.forEach((txIds, nodeId) => {
+        const activeTx = txIds.filter(id => todaysCheckIns.has(id));
+        if (activeTx.length > 0) {
+            const labels = activeTx.map(id => {
+                const node = maps.interventionNodeMap.get(id);
+                return node ? node.label.replace(/\n/g, ' ') : id;
+            });
+            shieldedNodes.set(nodeId, labels);
+        }
+    });
+
+    if (shieldedNodes.size === 0) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'shield-badge-overlay';
+    container.appendChild(overlay);
+
+    function updatePositions() {
+        overlay.innerHTML = '';
+        shieldedNodes.forEach((labels, nodeId) => {
+            const node = cy.getElementById(nodeId);
+            if (!node.length || node.removed()) return;
+            if (node.data('styleClass') === 'groupLabel') return;
+
+            const bb = node.renderedBoundingBox();
+            const badge = document.createElement('div');
+            badge.className = 'shield-badge';
+            badge.textContent = labels.length > 1 ? `🛡️${labels.length}` : '🛡️';
+            badge.style.left = `${bb.x1 + 2}px`;
+            badge.style.top = `${bb.y1 - 2}px`;
+
+            badge.addEventListener('mouseenter', () => {
+                tooltipEl.innerHTML = `<div class="cy-tooltip-title">🛡️ Protected today</div>`
+                    + labels.map(l => `<div class="cy-tooltip-row">${l}</div>`).join('');
+                tooltipEl.style.display = 'block';
+                const r = badge.getBoundingClientRect();
+                tooltipEl.style.left = (r.right + 8) + 'px';
+                tooltipEl.style.top = r.top + 'px';
+            });
+            badge.addEventListener('mouseleave', () => {
+                tooltipEl.style.display = 'none';
+            });
+
+            overlay.appendChild(badge);
+        });
+    }
+
+    updatePositions();
+    cy.on('pan zoom', updatePositions);
+    cy.one('layoutstop', updatePositions);
+    container._shieldBadgeHandler = updatePositions;
+}
+
+function removeShieldBadges(container) {
+    const overlay = container.querySelector('.shield-badge-overlay');
+    if (overlay) overlay.remove();
+    const cy = cyInstances.get(container.id);
+    if (cy && container._shieldBadgeHandler) {
+        cy.off('pan zoom', container._shieldBadgeHandler);
+        container._shieldBadgeHandler = null;
+    }
+}
+
 function toggleInterventions() {
     showInterventions = !showInterventions;
-    if (!showInterventions) pinnedInterventions.clear();
+    if (!showInterventions) { pinnedInterventions.clear(); _checkinFilterNodeId = null; }
     if (showInterventions && showDefenseMode) showDefenseMode = false; // mutually exclusive
     reRenderGraphs();
 }

@@ -29,22 +29,15 @@
 
     <!-- Main App -->
     <div id="app" class="hidden">
-        <header class="header-minimal">
-            <h1>Bruxism Causal Map</h1>
-            <div class="header-actions">
-                <button id="data-management-btn" class="header-btn" title="Export/Import Data">
-                    Data
-                </button>
+        <!-- Sidebar + Graph Grid -->
+        <div id="graph-layout" class="graph-layout">
+            <div id="defense-checkin" class="defense-sidebar"></div>
+            <div class="graph-main">
+                <div id="causal-graph" class="causal-graph-container">
+                    <div class="causal-graph-cy" id="causal-graph-cy"></div>
+                </div>
             </div>
-        </header>
-
-        <!-- Causal Graph -->
-        <div id="causal-graph" class="causal-graph-container">
-            <div class="causal-graph-cy" id="causal-graph-cy"></div>
         </div>
-
-        <!-- Daily Defense Check-in -->
-        <div id="defense-checkin"></div>
 
         <!-- Data Management Modal -->
         <div id="data-modal" class="modal hidden">
@@ -76,6 +69,7 @@
 
         <footer>
             <p class="disclaimer" id="disclaimer"></p>
+            <button id="data-management-btn" class="footer-data-btn" title="Export/Import Data">Data</button>
         </footer>
     </div>
 
