@@ -1600,6 +1600,12 @@ footer {
     border-color: #ef4444 !important;
 }
 
+.panzoom-btn-protective.active {
+    background: #1d4ed8 !important;
+    color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+}
+
 /* Legend hint for intervention mode */
 .legend-hint {
     margin-top: 6px;

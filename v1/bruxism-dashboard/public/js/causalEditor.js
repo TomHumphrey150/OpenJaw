@@ -18,6 +18,7 @@ const STYLE_CLASS_COLORS = {
     intervention: '#065f46',
 };
 const FEEDBACK_COLOR = '#ef4444';
+const PROTECTIVE_COLOR = '#3b82f6';
 
 // ═══════════════════════════════════════════════════════════
 // DEFAULT GRAPH DATA — Evidence-based bruxism causal network
@@ -291,8 +292,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'RMMA triggers salivation via periodontal mechanoreceptor reflex' } },
         { data: { source: 'RMMA', target: 'CS', edgeType: 'dashed', edgeColor: '#1b4332',
             tooltip: 'Chronic RMMA may contribute to central sensitization (preliminary)' } },
-        { data: { source: 'SALIVA', target: 'GERD', label: 'acid clearance', edgeType: 'feedback', edgeColor: '#ef4444',
-            tooltip: 'Increased salivation aids esophageal acid clearance' } },
+        { data: { source: 'SALIVA', target: 'GERD', label: 'acid clearance', edgeType: 'protective', edgeColor: '#3b82f6',
+            tooltip: 'Increased salivation aids esophageal acid clearance (protective mechanism)' } },
         { data: { source: 'SALIVA', target: 'NECK_TIGHTNESS', label: 'repeated swallowing', edgeType: 'dashed', edgeColor: '#374151',
             tooltip: 'Nocturnal salivary clearance may cause repeated swallowing, fatiguing neck/throat muscles (hypothesised)' } },
         { data: { source: 'GRINDING', target: 'TOOTH', edgeType: 'forward', edgeColor: '#1e3a5f',
@@ -601,6 +602,17 @@ const CYTOSCAPE_STYLES = [
             'opacity': 0.8,
         }
     },
+    // Protective mechanism edges (blue dashed) — body's defense
+    {
+        selector: 'edge[edgeType="protective"]',
+        style: {
+            'line-style': 'dashed',
+            'line-color': '#3b82f6',
+            'target-arrow-color': '#3b82f6',
+            'width': 1.5,
+            'opacity': 0.8,
+        }
+    },
     // ── Node/edge hover highlight ──
     {
         selector: 'node.hover-highlight',
@@ -662,6 +674,7 @@ let isEditMode = false;
 let elkRegistered = false;
 let showInterventions = false; // Interventions hidden by default
 let showFeedbackEdges = true;  // Feedback edges visible by default
+let showProtectiveEdges = true; // Protective mechanism edges visible by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
 
@@ -927,6 +940,7 @@ function addLegend(container, interventionsVisible) {
             <div class="legend-row"><span class="legend-line" style="background:#b45309"></span> Source-colored</div>
             <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#6b21a8"></span> Dashed (prelim)</div>
             <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#ef4444"></span> Feedback (red)</div>
+            <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#3b82f6"></span> Protective (blue)</div>
         </div>
         ${interventionsVisible ? '<div class="legend-section"><div class="legend-hint">Hover intervention to highlight &middot; Click to pin</div></div>' : ''}
     `;
@@ -1120,6 +1134,9 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         if (!showFeedbackEdges && e.data.edgeType === 'feedback') {
             return false;
         }
+        if (!showProtectiveEdges && e.data.edgeType === 'protective') {
+            return false;
+        }
         if (dormantIds.has(e.data.source) || dormantIds.has(e.data.target)) {
             return false;
         }
@@ -1206,14 +1223,14 @@ function destroyCyInstance(containerId) {
 
 // Column assignment for every non-intervention node (1-10, left to right)
 const NODE_TIERS = {
-    // Col 1: Root Triggers
-    HEALTH_ANXIETY: 1, OSA: 1,
-    // Col 2: Primary Conditions
-    STRESS: 2, SLEEP_DEP: 2, VIT_D: 2, FHP: 2,
-    GENETICS: 2, SSRI: 2, CAFFEINE: 2, ALCOHOL: 2, SMOKING: 2,
-    MG_DEF: 2, AIRWAY_OBS: 2,
-    // Col 3: Stress Mediators / Disease States
+    // Col 1: Root Triggers & Background Factors
+    HEALTH_ANXIETY: 1, OSA: 1, GENETICS: 1, SSRI: 1,
+    // Col 2: Modifiable Inputs & Lifestyle
+    STRESS: 2, SLEEP_DEP: 2,
+    CAFFEINE: 2, ALCOHOL: 2, SMOKING: 2, AIRWAY_OBS: 2,
+    // Col 3: Mediators / Disease States / Deficiencies
     CORTISOL: 3, CATECHOL: 3, GERD: 3, NEG_PRESSURE: 3,
+    MG_DEF: 3, VIT_D: 3,
     // Col 4: Autonomic / Reflux Mechanisms
     SYMPATHETIC: 4, ACID: 4, PEPSIN: 4,
     TLESR: 4, GABA_DEF: 4, DOPAMINE: 4,
@@ -1223,8 +1240,8 @@ const NODE_TIERS = {
     MICRO: 6,
     // Col 7: Central Motor Event
     RMMA: 7,
-    // Col 8: Primary Effects
-    GRINDING: 8, TMD: 8, SALIVA: 8,
+    // Col 8: Primary Effects & Structural
+    GRINDING: 8, TMD: 8, SALIVA: 8, FHP: 8,
     // Col 9: Secondary Consequences
     CERVICAL: 9, HYOID: 9, CS: 9, TOOTH: 9, HEADACHES: 9, EAR: 9,
     // Col 10: Tertiary Consequences
@@ -1241,22 +1258,22 @@ const NUM_TIERS = 10;
 // Intervention column assignments (half-column positions between main columns)
 const INTERVENTION_COLUMNS = {
     // Col 0.5 (before root triggers)
-    OSA_TX: 0.5,
+    OSA_TX: 0.5, SSRI_TX: 0.5,
     // Col 1.5 (targeting col 2 inputs)
     CBT_TX: 1.5, MINDFULNESS_TX: 1.5, NATURE_TX: 1.5,
-    EXERCISE_TX: 1.5, VIT_D_TX: 1.5, SCREENS_TX: 1.5,
-    CIRCADIAN_TX: 1.5, SLEEP_HYG_TX: 1.5, SSRI_TX: 1.5,
-    POSTURE_TX: 1.5, TONGUE_TX: 1.5, MULTI_TX: 1.5,
-    // Col 2.5 (targeting col 3 disease states)
+    EXERCISE_TX: 1.5, SCREENS_TX: 1.5,
+    CIRCADIAN_TX: 1.5, SLEEP_HYG_TX: 1.5, TONGUE_TX: 1.5,
+    // Col 2.5 (targeting col 3 disease states & deficiencies)
     MORNING_FAST_TX: 2.5, REFLUX_DIET_TX: 2.5, MEAL_TIMING_TX: 2.5,
     BED_ELEV_TX: 2.5, PPI_TX: 2.5, BREATHING_TX: 2.5, YOGA_TX: 2.5,
+    VIT_D_TX: 2.5, MULTI_TX: 2.5,
     // Col 3.5 (targeting col 4 mechanisms)
     WARM_SHOWER_TX: 3.5, HYDRATION: 3.5, NEUROSYM_TX: 3.5,
     MG_SUPP: 3.5, THEANINE_TX: 3.5, GLYCINE_TX: 3.5,
     // Col 6.5 (targeting RMMA)
     BIOFEEDBACK_TX: 6.5, JAW_RELAX_TX: 6.5, BOTOX_TX: 6.5,
-    // Col 7.5 (targeting col 8 effects)
-    PHYSIO_TX: 7.5, MASSAGE_TX: 7.5, HEAT_TX: 7.5,
+    // Col 7.5 (targeting col 8 effects & FHP)
+    PHYSIO_TX: 7.5, MASSAGE_TX: 7.5, HEAT_TX: 7.5, POSTURE_TX: 7.5,
     // Col 8.5 (targeting col 9 consequences)
     SPLINT: 8.5,
 };
@@ -1469,6 +1486,7 @@ function addZoomControls(container, cy) {
         <button class="panzoom-btn" title="Fullscreen" data-action="fullscreen">&#x26F6;</button>
         <button class="panzoom-btn panzoom-btn-toggle ${showInterventions ? 'active' : ''}" title="${showInterventions ? 'Hide interventions' : 'Show interventions'}" data-action="toggleTx">Tx</button>
         <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-fb ${showFeedbackEdges ? 'active' : ''}" title="${showFeedbackEdges ? 'Hide feedback loops' : 'Show feedback loops'}" data-action="toggleFb">Fb</button>
+        <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-protective ${showProtectiveEdges ? 'active' : ''}" title="${showProtectiveEdges ? 'Hide protective mechanisms' : 'Show protective mechanisms'}" data-action="toggleProtective">Pr</button>
     `;
 
     const center = () => ({ x: container.offsetWidth / 2, y: container.offsetHeight / 2 });
@@ -1490,6 +1508,9 @@ function addZoomControls(container, cy) {
     });
     controls.querySelector('[data-action="toggleFb"]').addEventListener('click', () => {
         toggleFeedbackEdges();
+    });
+    controls.querySelector('[data-action="toggleProtective"]').addEventListener('click', () => {
+        toggleProtectiveEdges();
     });
 
     controls.addEventListener('mousedown', (e) => e.stopPropagation());
@@ -1601,6 +1622,16 @@ function toggleInterventions() {
 
 function toggleFeedbackEdges() {
     showFeedbackEdges = !showFeedbackEdges;
+    if (_fullscreenContainer) {
+        const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
+        if (config) renderGraph(config);
+    } else {
+        renderAllGraphs();
+    }
+}
+
+function toggleProtectiveEdges() {
+    showProtectiveEdges = !showProtectiveEdges;
     if (_fullscreenContainer) {
         const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
         if (config) renderGraph(config);
