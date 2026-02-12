@@ -97,56 +97,34 @@ async function screenshotGraph(page, containerId, filename) {
 
 const STATES = {
     async base(page) {
-        log('State: base (default interventions tab)');
-        await switchToTab(page, 'interventions');
+        log('State: base (default view)');
         await waitForGraph(page, 'causal-graph-cy');
         return screenshotGraph(page, 'causal-graph', 'graph-base.png');
     },
 
     async interventions(page) {
         log('State: interventions (Tx ON)');
-        await switchToTab(page, 'interventions');
         await waitForGraph(page, 'causal-graph-cy');
-        // Toggle Tx — button is inside #causal-graph (parent of cy container)
         await page.click('#causal-graph .panzoom-controls button[data-action="toggleTx"]');
-        // renderAllGraphs rebuilds the graph
         await waitForGraph(page, 'causal-graph-cy');
         return screenshotGraph(page, 'causal-graph', 'graph-interventions.png');
     },
 
     async 'no-feedback'(page) {
         log('State: no-feedback (Fb OFF)');
-        await switchToTab(page, 'interventions');
         await waitForGraph(page, 'causal-graph-cy');
         await page.click('#causal-graph .panzoom-controls button[data-action="toggleFb"]');
         await waitForGraph(page, 'causal-graph-cy');
         return screenshotGraph(page, 'causal-graph', 'graph-no-feedback.png');
     },
 
-    async research(page) {
-        log('State: research tab');
-        await switchToTab(page, 'research');
-        await waitForGraph(page, 'causal-graph-research-cy');
-        return screenshotGraph(page, 'causal-graph-research', 'graph-research.png');
-    },
-
-    async experiments(page) {
-        log('State: experiments tab');
-        await switchToTab(page, 'experiments');
-        await waitForGraph(page, 'causal-graph-experiments-cy');
-        return screenshotGraph(page, 'causal-graph-experiments', 'graph-experiments.png');
-    },
-
     async defense(page) {
         log('State: defense mode (Df ON, with some check-ins)');
-        await switchToTab(page, 'interventions');
         await waitForGraph(page, 'causal-graph-cy');
-        // Simulate some daily check-ins via localStorage
+        // Simulate daily check-ins via localStorage
         await page.evaluate(() => {
-            const today = new Date().toISOString().split('T')[0];
             const data = JSON.parse(localStorage.getItem('bruxism_personal_data') || '{}');
             if (!data.dailyCheckIns) data.dailyCheckIns = {};
-            // Check in ~15 interventions for today and a few past days
             const active = ['PPI_TX', 'REFLUX_DIET_TX', 'MEAL_TIMING_TX', 'BED_ELEV_TX', 'HYDRATION',
                 'SCREENS_TX', 'CIRCADIAN_TX', 'SLEEP_HYG_TX', 'MINDFULNESS_TX', 'EXERCISE_TX',
                 'BREATHING_TX', 'MG_SUPP', 'YOGA_TX', 'PHYSIO_TX', 'SPLINT'];
@@ -157,7 +135,6 @@ const STATES = {
                 const k = d.toISOString().split('T')[0];
                 data.dailyCheckIns[k] = i === 0 ? active : (i < 3 ? active : partial);
             }
-            // Add some effectiveness ratings
             if (!data.interventionRatings) data.interventionRatings = [];
             const ratings = [
                 { interventionId: 'PPI_TX', effectiveness: 'highly_effective' },
@@ -174,13 +151,10 @@ const STATES = {
             });
             localStorage.setItem('bruxism_personal_data', JSON.stringify(data));
         });
-        // Toggle Df mode
         await page.click('#causal-graph .panzoom-controls button[data-action="toggleDf"]');
         await waitForGraph(page, 'causal-graph-cy');
-        // Screenshot the graph container
         await screenshotGraph(page, 'causal-graph', 'graph-defense.png');
-        // Also screenshot full tab with check-in panel
-        return screenshotGraph(page, 'interventions-tab', 'graph-defense-full.png');
+        return screenshotGraph(page, 'app', 'graph-defense-full.png');
     },
 };
 

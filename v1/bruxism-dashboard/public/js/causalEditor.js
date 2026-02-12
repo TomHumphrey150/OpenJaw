@@ -678,8 +678,6 @@ const CYTOSCAPE_STYLES = [
 
 const GRAPH_CONFIGS = [
     { containerId: 'causal-graph', cyContainerId: 'causal-graph-cy' },
-    { containerId: 'causal-graph-research', cyContainerId: 'causal-graph-research-cy' },
-    { containerId: 'causal-graph-experiments', cyContainerId: 'causal-graph-experiments-cy' },
 ];
 
 let currentGraphData = null;
@@ -702,7 +700,7 @@ let tooltipEl = null;
 // INIT
 // ═══════════════════════════════════════════════════════════
 
-export function initCausalEditor(interventions, onFilter) {
+export function initCausalEditor(interventions) {
     // Register ELK extension with Cytoscape (once)
     if (!elkRegistered && window.cytoscape && window.cytoscapeElk) {
         window.cytoscape.use(window.cytoscapeElk);

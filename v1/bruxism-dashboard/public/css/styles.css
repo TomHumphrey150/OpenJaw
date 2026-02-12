@@ -213,7 +213,47 @@ header h1 {
 }
 
 /* ============================================
-   Main Layout
+   Minimal Header (single-page layout)
+   ============================================ */
+.header-minimal {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-minimal h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ============================================
+   Single-page App Layout
+   ============================================ */
+#app {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 12px 24px;
+}
+
+#app > .causal-graph-container {
+    margin-top: 12px;
+}
+
+#app > #defense-checkin {
+    margin-top: 12px;
+}
+
+#app > footer {
+    margin-top: 24px;
+    text-align: center;
+}
+
+/* ============================================
+   Main Layout (legacy tab support)
    ============================================ */
 .tab-content {
     display: none;
