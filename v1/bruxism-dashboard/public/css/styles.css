@@ -1600,6 +1600,12 @@ footer {
     border-color: #ef4444 !important;
 }
 
+.panzoom-btn-protective.active {
+    background: #1d4ed8 !important;
+    color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+}
+
 /* Legend hint for intervention mode */
 .legend-hint {
     margin-top: 6px;
@@ -1608,4 +1614,357 @@ footer {
     font-size: 10px;
     color: #94a3b8;
     font-style: italic;
+}
+
+/* ── Intervention Sidebar ── */
+.tx-sidebar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 230px;
+    background: rgba(17, 24, 39, 0.95);
+    border-left: 1px solid #374151;
+    overflow-y: auto;
+    z-index: 100;
+    font-size: 12px;
+    color: #d1d5db;
+}
+
+.tx-sidebar-header {
+    padding: 10px 14px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f3f4f6;
+    border-bottom: 1px solid #374151;
+    position: sticky;
+    top: 0;
+    background: rgba(17, 24, 39, 0.98);
+    z-index: 1;
+}
+
+.tx-sidebar-category {
+    border-bottom: 1px solid #1f2937;
+}
+
+.tx-sidebar-cat-header {
+    padding: 8px 14px 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tx-sidebar-item {
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+}
+
+.tx-sidebar-item:hover {
+    background: rgba(55, 65, 81, 0.5);
+    border-left-color: #38bdf8;
+}
+
+.tx-sidebar-item.pinned {
+    background: rgba(245, 158, 11, 0.15);
+    border-left-color: #f59e0b;
+}
+
+.tx-sidebar-item-label {
+    display: block;
+    color: #e5e7eb;
+    font-size: 11.5px;
+    line-height: 1.3;
+}
+
+.tx-sidebar-item-evidence {
+    display: block;
+    color: #6b7280;
+    font-size: 9.5px;
+    margin-top: 1px;
+}
+
+/* ── Intervention Badges ── */
+.tx-badge-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.tx-badge {
+    position: absolute;
+    pointer-events: auto;
+    cursor: pointer;
+    background: #065f46;
+    color: #ecfdf5;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 9px;
+    padding: 0 4px;
+    border: 1.5px solid #047857;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s;
+    box-sizing: border-box;
+}
+
+.tx-badge:hover {
+    transform: translate(-50%, -50%) scale(1.25);
+    background: #047857;
+}
+
+/* ── Node Popover ── */
+.tx-popover {
+    position: absolute;
+    background: rgba(17, 24, 39, 0.98);
+    border: 1px solid #374151;
+    border-radius: 6px;
+    padding: 6px 0;
+    min-width: 190px;
+    max-width: 260px;
+    z-index: 200;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-size: 12px;
+}
+
+.tx-popover-header {
+    padding: 4px 12px 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #9ca3af;
+    border-bottom: 1px solid #1f2937;
+}
+
+.tx-popover-item {
+    padding: 4px 12px;
+    cursor: pointer;
+    color: #d1d5db;
+    transition: background 0.15s;
+    font-size: 11.5px;
+}
+
+.tx-popover-item:hover {
+    background: rgba(55, 65, 81, 0.5);
+    color: #f3f4f6;
+}
+
+.tx-popover-item.pinned {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fcd34d;
+}
+
+/* ── Defense Mode Toggle Button ── */
+.panzoom-btn-defense.active {
+    background: #15803d !important;
+    color: #dcfce7 !important;
+    border-color: #22c55e !important;
+}
+
+/* ── Daily Defense Check-in Panel ── */
+.defense-checkin-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    overflow: hidden;
+}
+
+.defense-checkin-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.defense-checkin-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.defense-checkin-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.defense-date-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.defense-date-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #000;
+}
+
+.defense-date-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.defense-date-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 80px;
+    text-align: center;
+}
+
+.defense-checkin-summary {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.defense-checkin-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px;
+}
+
+.defense-checkin-body {
+    padding: 12px 16px;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 600px;
+    overflow: hidden;
+}
+
+.defense-checkin-body.collapsed {
+    max-height: 0;
+    padding: 0 16px;
+}
+
+.defense-checkin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px 20px;
+}
+
+.defense-checkin-cat {
+    min-width: 0;
+}
+
+.defense-checkin-cat-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.defense-checkin-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    cursor: pointer;
+    font-size: 11.5px;
+    color: #9ca3af;
+    transition: color 0.15s;
+}
+
+.defense-checkin-item:hover {
+    color: #e5e7eb;
+}
+
+.defense-checkin-item.checked {
+    color: #d1d5db;
+}
+
+.defense-checkin-item input[type="checkbox"] {
+    accent-color: #22c55e;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.defense-item-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.defense-item-streak {
+    font-size: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.defense-item-streak.high {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.defense-item-streak.med {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.defense-item-streak.low {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Defense Badges ── */
+.defense-badge-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.defense-badge {
+    position: absolute;
+    pointer-events: none;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 28px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0 4px;
+    color: #fff;
+    border: 1.5px solid;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }

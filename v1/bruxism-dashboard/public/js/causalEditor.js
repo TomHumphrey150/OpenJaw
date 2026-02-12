@@ -18,6 +18,7 @@ const STYLE_CLASS_COLORS = {
     intervention: '#065f46',
 };
 const FEEDBACK_COLOR = '#ef4444';
+const PROTECTIVE_COLOR = '#3b82f6';
 
 // ═══════════════════════════════════════════════════════════
 // DEFAULT GRAPH DATA — Evidence-based bruxism causal network
@@ -243,6 +244,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'Vagal afferent firing triggers brainstem-mediated microarousals' } },
         { data: { source: 'STRESS', target: 'GERD', label: 'visceral hypersens.', edgeType: 'forward', edgeColor: '#b45309',
             tooltip: 'Stress increases visceral hypersensitivity to acid exposure' } },
+        { data: { source: 'STRESS', target: 'SLEEP_DEP', label: 'hyperarousal', edgeType: 'forward', edgeColor: '#b45309',
+            tooltip: 'Stress-induced hyperarousal is the primary driver of insomnia and sleep fragmentation' } },
 
         // ── Other upstream → Arousal ──
         { data: { source: 'GENETICS', target: 'MICRO', edgeType: 'forward', edgeColor: '#b45309',
@@ -255,10 +258,16 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'SSRIs suppress dopaminergic inhibition of motor patterns (~24% bruxism risk)' } },
         { data: { source: 'CAFFEINE', target: 'MICRO', edgeType: 'forward', edgeColor: '#6b21a8',
             tooltip: 'Caffeine antagonizes adenosine receptors, increasing arousal (1.5x odds)' } },
+        { data: { source: 'CAFFEINE', target: 'GERD', edgeType: 'dashed', edgeColor: '#6b21a8',
+            tooltip: 'Caffeine stimulates gastric acid secretion and may relax the lower esophageal sphincter' } },
         { data: { source: 'ALCOHOL', target: 'MICRO', edgeType: 'forward', edgeColor: '#6b21a8',
             tooltip: 'Alcohol causes rebound sympathetic activation during metabolism (2x odds)' } },
+        { data: { source: 'ALCOHOL', target: 'GERD', edgeType: 'forward', edgeColor: '#6b21a8',
+            tooltip: 'Alcohol directly relaxes the LES and stimulates gastric acid production' } },
         { data: { source: 'SMOKING', target: 'MICRO', edgeType: 'forward', edgeColor: '#6b21a8',
             tooltip: 'Smoking increases sympathetic activation and arousal frequency (>2x odds)' } },
+        { data: { source: 'SMOKING', target: 'GERD', edgeType: 'dashed', edgeColor: '#6b21a8',
+            tooltip: 'Nicotine reduces lower esophageal sphincter pressure and impairs mucosal defense' } },
 
         // ── Neurochemistry → RMMA ──
         { data: { source: 'GABA_DEF', target: 'RMMA', edgeType: 'forward', edgeColor: '#6b21a8',
@@ -283,8 +292,8 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'RMMA triggers salivation via periodontal mechanoreceptor reflex' } },
         { data: { source: 'RMMA', target: 'CS', edgeType: 'dashed', edgeColor: '#1b4332',
             tooltip: 'Chronic RMMA may contribute to central sensitization (preliminary)' } },
-        { data: { source: 'SALIVA', target: 'GERD', label: 'acid clearance', edgeType: 'feedback', edgeColor: '#ef4444',
-            tooltip: 'Increased salivation aids esophageal acid clearance' } },
+        { data: { source: 'SALIVA', target: 'GERD', label: 'acid clearance', edgeType: 'protective', edgeColor: '#3b82f6',
+            tooltip: 'Increased salivation aids esophageal acid clearance (protective mechanism)' } },
         { data: { source: 'SALIVA', target: 'NECK_TIGHTNESS', label: 'repeated swallowing', edgeType: 'dashed', edgeColor: '#374151',
             tooltip: 'Nocturnal salivary clearance may cause repeated swallowing, fatiguing neck/throat muscles (hypothesised)' } },
         { data: { source: 'GRINDING', target: 'TOOTH', edgeType: 'forward', edgeColor: '#1e3a5f',
@@ -303,12 +312,16 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'TMD alters suprahyoid muscle function and hyoid position' } },
         { data: { source: 'TMD', target: 'CS', edgeType: 'forward', edgeColor: '#1b4332',
             tooltip: 'Chronic TMD pain drives trigeminocervical sensitization' } },
+        { data: { source: 'TMD', target: 'HEADACHES', edgeType: 'forward', edgeColor: '#1b4332',
+            tooltip: 'TMD causes tension-type headaches via temporalis/masseteric muscle strain and TMJ dysfunction' } },
         { data: { source: 'FHP', target: 'TMD', label: 'EMG F=13.7', edgeType: 'forward', edgeColor: '#b45309',
             tooltip: 'Forward head posture increases masseter EMG and TMJ loading (F=13.7)' } },
         { data: { source: 'FHP', target: 'HYOID', edgeType: 'forward', edgeColor: '#b45309',
             tooltip: 'FHP displaces hyoid bone anteroinferiorly' } },
         { data: { source: 'CERVICAL', target: 'CS', label: 'TCC convergence', edgeType: 'forward', edgeColor: '#b45309',
             tooltip: 'Cervical afferents converge at trigeminocervical complex (TCC)' } },
+        { data: { source: 'CERVICAL', target: 'HEADACHES', label: 'cervicogenic', edgeType: 'forward', edgeColor: '#b45309',
+            tooltip: 'Cervical dysfunction causes cervicogenic headaches via C1-C3 afferent convergence on trigeminal nucleus caudalis (IHS recognised)' } },
         { data: { source: 'CERVICAL', target: 'FHP', edgeType: 'dashed', edgeColor: '#b45309',
             tooltip: 'Cervical dysfunction may promote compensatory forward head posture' } },
         { data: { source: 'HYOID', target: 'GLOBUS', edgeType: 'dashed', edgeColor: '#6b21a8',
@@ -317,6 +330,8 @@ const DEFAULT_GRAPH_DATA = {
         // ── Sensitization → Symptoms ──
         { data: { source: 'CS', target: 'WINDUP', edgeType: 'forward', edgeColor: '#1b4332',
             tooltip: 'Central sensitization enables temporal summation (wind-up)' } },
+        { data: { source: 'CS', target: 'HEADACHES', edgeType: 'forward', edgeColor: '#1b4332',
+            tooltip: 'Central sensitization amplifies headache pain (OPPERA: 28/36 pain measures elevated, Greenspan 2011)' } },
         { data: { source: 'CS', target: 'NECK_TIGHTNESS', label: 'SMD -1.10', edgeType: 'forward', edgeColor: '#1b4332',
             tooltip: 'Central sensitization amplifies pain perception (SMD -1.10)' } },
         { data: { source: 'CS', target: 'GLOBUS', edgeType: 'forward', edgeColor: '#1b4332',
@@ -337,6 +352,10 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'TMD pain and dysfunction increase stress and anxiety (vicious cycle)' } },
         { data: { source: 'HEADACHES', target: 'STRESS', edgeType: 'feedback', edgeColor: '#ef4444',
             tooltip: 'Morning headaches contribute to stress and worry (vicious cycle)' } },
+        { data: { source: 'HEADACHES', target: 'SLEEP_DEP', edgeType: 'feedback', edgeColor: '#ef4444',
+            tooltip: 'Morning headaches disrupt sleep quality and continuity (vicious cycle)' } },
+        { data: { source: 'EAR', target: 'STRESS', label: 'health anxiety', edgeType: 'feedback', edgeColor: '#ef4444',
+            tooltip: 'Ear fullness and tinnitus drive health anxiety and stress (vicious cycle)' } },
         { data: { source: 'GLOBUS', target: 'STRESS', label: 'health anxiety', edgeType: 'feedback', edgeColor: '#ef4444',
             tooltip: 'Globus sensation triggers health anxiety (vicious cycle)' } },
         { data: { source: 'SLEEP_DEP', target: 'OSA', edgeType: 'feedback', edgeColor: '#ef4444',
@@ -583,6 +602,17 @@ const CYTOSCAPE_STYLES = [
             'opacity': 0.8,
         }
     },
+    // Protective mechanism edges (blue dashed) — body's defense
+    {
+        selector: 'edge[edgeType="protective"]',
+        style: {
+            'line-style': 'dashed',
+            'line-color': '#3b82f6',
+            'target-arrow-color': '#3b82f6',
+            'width': 1.5,
+            'opacity': 0.8,
+        }
+    },
     // ── Node/edge hover highlight ──
     {
         selector: 'node.hover-highlight',
@@ -627,6 +657,19 @@ const CYTOSCAPE_STYLES = [
     { selector: 'node.tx-target-highlighted', style: { opacity: 1, 'border-width': 2, 'border-color': '#38bdf8', 'z-index': 998 } },
     // Pinned intervention node (amber border)
     { selector: 'node.tx-pinned', style: { 'border-width': 3, 'border-color': '#f59e0b', 'z-index': 999 } },
+
+    // ── Defense heatmap ──
+    { selector: 'node.defense-node', style: {
+        'border-color': 'data(defenseColor)',
+        'border-width': 3,
+        'background-opacity': 'data(defenseOpacity)',
+    }},
+    { selector: 'edge.defense-edge', style: {
+        'line-color': 'data(defenseColor)',
+        'target-arrow-color': 'data(defenseColor)',
+        'width': 'data(defenseWidth)',
+        'opacity': 'data(defenseOpacity)',
+    }},
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -644,6 +687,8 @@ let isEditMode = false;
 let elkRegistered = false;
 let showInterventions = false; // Interventions hidden by default
 let showFeedbackEdges = true;  // Feedback edges visible by default
+let showProtectiveEdges = true; // Protective mechanism edges visible by default
+let showDefenseMode = false;   // Defense heatmap mode hidden by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
 
@@ -909,8 +954,9 @@ function addLegend(container, interventionsVisible) {
             <div class="legend-row"><span class="legend-line" style="background:#b45309"></span> Source-colored</div>
             <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#6b21a8"></span> Dashed (prelim)</div>
             <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#ef4444"></span> Feedback (red)</div>
+            <div class="legend-row"><span class="legend-line legend-line-dashed" style="border-color:#3b82f6"></span> Protective (blue)</div>
         </div>
-        ${interventionsVisible ? '<div class="legend-section"><div class="legend-hint">Hover intervention to highlight &middot; Click to pin</div></div>' : ''}
+        ${interventionsVisible ? '<div class="legend-section"><div class="legend-hint">Sidebar: hover to highlight, click to pin &middot; Badges: click for details</div></div>' : ''}
     `;
 
     parent.appendChild(legend);
@@ -1072,12 +1118,12 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     // Destroy previous instance
     destroyCyInstance(containerId);
 
-    // Build node set, filtering interventions if hidden
+    // Always exclude intervention nodes from the graph (shown via sidebar instead)
     const interventionIds = new Set();
     const filteredNodes = graphData.nodes.filter(n => {
         if (n.data.styleClass === 'intervention') {
             interventionIds.add(n.data.id);
-            return showInterventions;
+            return false; // Never render intervention nodes on graph
         }
         return true;
     });
@@ -1092,14 +1138,15 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         dormantIds.has(e.data.source) || dormantIds.has(e.data.target)
     );
 
-    // Filter edges: remove hidden interventions, feedback toggles, and dormant node edges
+    // Filter edges: always exclude intervention edges, plus feedback/protective/dormant toggles
     const filteredEdges = graphData.edges.filter(e => {
-        if (!showInterventions) {
-            if (interventionIds.has(e.data.source) || interventionIds.has(e.data.target)) {
-                return false;
-            }
+        if (interventionIds.has(e.data.source) || interventionIds.has(e.data.target)) {
+            return false;
         }
         if (!showFeedbackEdges && e.data.edgeType === 'feedback') {
+            return false;
+        }
+        if (!showProtectiveEdges && e.data.edgeType === 'protective') {
             return false;
         }
         if (dormantIds.has(e.data.source) || dormantIds.has(e.data.target)) {
@@ -1108,16 +1155,10 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         return true;
     });
 
-    // Build Cytoscape elements, tagging intervention edges
+    // Build Cytoscape elements (clean mechanism graph, no intervention nodes)
     const elements = [
         ...filteredNodes.map(n => ({ group: 'nodes', data: { ...n.data } })),
-        ...filteredEdges.map(e => {
-            const edgeData = { ...e.data };
-            if (interventionIds.has(edgeData.source) || interventionIds.has(edgeData.target)) {
-                edgeData.isInterventionEdge = true;
-            }
-            return { group: 'edges', data: edgeData };
-        }),
+        ...filteredEdges.map(e => ({ group: 'edges', data: { ...e.data } })),
         // Inject tier label nodes for main (non-preview) graphs
         ...(!isPreview ? Object.entries(TIER_LABELS).map(([tier, label]) => ({
             group: 'nodes',
@@ -1154,10 +1195,23 @@ function createCyInstance(containerId, graphData, isPreview = false) {
     attachTooltipHandlers(cy, container);
     addLegend(container, showInterventions);
 
-    // If interventions are visible, apply dimming and hover/click handlers
-    if (showInterventions) {
-        applyInterventionDimming(cy);
-        attachInterventionHandlers(cy);
+    // If interventions mode is active, show sidebar + badges
+    if (showInterventions && !isPreview) {
+        const maps = buildInterventionMaps(graphData);
+        cy.scratch('interventionMaps', maps);
+        buildInterventionSidebar(container, cy, maps);
+        addInterventionBadges(container, cy, maps);
+    }
+
+    // If defense mode is active, apply heatmap + defense badges
+    if (showDefenseMode && !isPreview) {
+        applyDefenseHeatmap(cy, graphData);
+        addDefenseBadges(container, cy, graphData);
+    }
+
+    // Always build the check-in panel on the interventions tab graph
+    if (containerId === 'causal-graph-cy' && !isPreview) {
+        buildCheckinPanel(graphData);
     }
 
     return cy;
@@ -1177,6 +1231,12 @@ function destroyCyInstance(containerId) {
         }
         const controls = container.querySelector('.panzoom-controls');
         if (controls) controls.remove();
+        const sidebar = container.querySelector('.tx-sidebar');
+        if (sidebar) sidebar.remove();
+        removeInterventionBadges(container);
+        removeDefenseBadges(container);
+        const popover = container.querySelector('.tx-popover');
+        if (popover) popover.remove();
         const legend = container.parentElement?.querySelector('.graph-legend');
         if (legend) legend.remove();
     }
@@ -1188,14 +1248,14 @@ function destroyCyInstance(containerId) {
 
 // Column assignment for every non-intervention node (1-10, left to right)
 const NODE_TIERS = {
-    // Col 1: Root Triggers
-    HEALTH_ANXIETY: 1, OSA: 1,
-    // Col 2: Primary Conditions
-    STRESS: 2, SLEEP_DEP: 2, VIT_D: 2, FHP: 2,
-    GENETICS: 2, SSRI: 2, CAFFEINE: 2, ALCOHOL: 2, SMOKING: 2,
-    MG_DEF: 2, AIRWAY_OBS: 2,
-    // Col 3: Stress Mediators / Disease States
+    // Col 1: Root Triggers & Background Factors
+    HEALTH_ANXIETY: 1, OSA: 1, GENETICS: 1, SSRI: 1,
+    // Col 2: Modifiable Inputs & Lifestyle
+    STRESS: 2, SLEEP_DEP: 2,
+    CAFFEINE: 2, ALCOHOL: 2, SMOKING: 2, AIRWAY_OBS: 2,
+    // Col 3: Mediators / Disease States / Deficiencies
     CORTISOL: 3, CATECHOL: 3, GERD: 3, NEG_PRESSURE: 3,
+    MG_DEF: 3, VIT_D: 3,
     // Col 4: Autonomic / Reflux Mechanisms
     SYMPATHETIC: 4, ACID: 4, PEPSIN: 4,
     TLESR: 4, GABA_DEF: 4, DOPAMINE: 4,
@@ -1205,8 +1265,8 @@ const NODE_TIERS = {
     MICRO: 6,
     // Col 7: Central Motor Event
     RMMA: 7,
-    // Col 8: Primary Effects
-    GRINDING: 8, TMD: 8, SALIVA: 8,
+    // Col 8: Primary Effects & Structural
+    GRINDING: 8, TMD: 8, SALIVA: 8, FHP: 8,
     // Col 9: Secondary Consequences
     CERVICAL: 9, HYOID: 9, CS: 9, TOOTH: 9, HEADACHES: 9, EAR: 9,
     // Col 10: Tertiary Consequences
@@ -1223,25 +1283,37 @@ const NUM_TIERS = 10;
 // Intervention column assignments (half-column positions between main columns)
 const INTERVENTION_COLUMNS = {
     // Col 0.5 (before root triggers)
-    OSA_TX: 0.5,
+    OSA_TX: 0.5, SSRI_TX: 0.5,
     // Col 1.5 (targeting col 2 inputs)
     CBT_TX: 1.5, MINDFULNESS_TX: 1.5, NATURE_TX: 1.5,
-    EXERCISE_TX: 1.5, VIT_D_TX: 1.5, SCREENS_TX: 1.5,
-    CIRCADIAN_TX: 1.5, SLEEP_HYG_TX: 1.5, SSRI_TX: 1.5,
-    POSTURE_TX: 1.5, TONGUE_TX: 1.5, MULTI_TX: 1.5,
-    // Col 2.5 (targeting col 3 disease states)
+    EXERCISE_TX: 1.5, SCREENS_TX: 1.5,
+    CIRCADIAN_TX: 1.5, SLEEP_HYG_TX: 1.5, TONGUE_TX: 1.5,
+    // Col 2.5 (targeting col 3 disease states & deficiencies)
     MORNING_FAST_TX: 2.5, REFLUX_DIET_TX: 2.5, MEAL_TIMING_TX: 2.5,
     BED_ELEV_TX: 2.5, PPI_TX: 2.5, BREATHING_TX: 2.5, YOGA_TX: 2.5,
+    VIT_D_TX: 2.5, MULTI_TX: 2.5,
     // Col 3.5 (targeting col 4 mechanisms)
     WARM_SHOWER_TX: 3.5, HYDRATION: 3.5, NEUROSYM_TX: 3.5,
     MG_SUPP: 3.5, THEANINE_TX: 3.5, GLYCINE_TX: 3.5,
     // Col 6.5 (targeting RMMA)
     BIOFEEDBACK_TX: 6.5, JAW_RELAX_TX: 6.5, BOTOX_TX: 6.5,
-    // Col 7.5 (targeting col 8 effects)
-    PHYSIO_TX: 7.5, MASSAGE_TX: 7.5, HEAT_TX: 7.5,
+    // Col 7.5 (targeting col 8 effects & FHP)
+    PHYSIO_TX: 7.5, MASSAGE_TX: 7.5, HEAT_TX: 7.5, POSTURE_TX: 7.5,
     // Col 8.5 (targeting col 9 consequences)
     SPLINT: 8.5,
 };
+
+// Intervention categories for the sidebar panel
+const INTERVENTION_CATEGORIES = [
+    { name: 'Reflux', items: ['PPI_TX', 'MORNING_FAST_TX', 'REFLUX_DIET_TX', 'MEAL_TIMING_TX', 'BED_ELEV_TX', 'HYDRATION'] },
+    { name: 'Sleep', items: ['SCREENS_TX', 'CIRCADIAN_TX', 'SLEEP_HYG_TX', 'WARM_SHOWER_TX'] },
+    { name: 'Stress', items: ['CBT_TX', 'MINDFULNESS_TX', 'NATURE_TX', 'EXERCISE_TX', 'BREATHING_TX'] },
+    { name: 'Neurochemistry', items: ['MG_SUPP', 'THEANINE_TX', 'GLYCINE_TX', 'YOGA_TX', 'MULTI_TX', 'VIT_D_TX'] },
+    { name: 'Neuromodulation', items: ['NEUROSYM_TX', 'BIOFEEDBACK_TX'] },
+    { name: 'Motor / Jaw', items: ['JAW_RELAX_TX', 'BOTOX_TX'] },
+    { name: 'Physical Therapy', items: ['PHYSIO_TX', 'MASSAGE_TX', 'HEAT_TX', 'POSTURE_TX'] },
+    { name: 'Dental / Airway', items: ['SPLINT', 'OSA_TX', 'SSRI_TX', 'TONGUE_TX'] },
+];
 
 function computeTieredPositions(cy, width, height) {
     const padX = 80;
@@ -1450,7 +1522,9 @@ function addZoomControls(container, cy) {
         <button class="panzoom-btn" title="Fit to view" data-action="fit">&#x21BA;</button>
         <button class="panzoom-btn" title="Fullscreen" data-action="fullscreen">&#x26F6;</button>
         <button class="panzoom-btn panzoom-btn-toggle ${showInterventions ? 'active' : ''}" title="${showInterventions ? 'Hide interventions' : 'Show interventions'}" data-action="toggleTx">Tx</button>
+        <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-defense ${showDefenseMode ? 'active' : ''}" title="${showDefenseMode ? 'Hide defense heatmap' : 'Show defense heatmap'}" data-action="toggleDf">Df</button>
         <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-fb ${showFeedbackEdges ? 'active' : ''}" title="${showFeedbackEdges ? 'Hide feedback loops' : 'Show feedback loops'}" data-action="toggleFb">Fb</button>
+        <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-protective ${showProtectiveEdges ? 'active' : ''}" title="${showProtectiveEdges ? 'Hide protective mechanisms' : 'Show protective mechanisms'}" data-action="toggleProtective">Pr</button>
     `;
 
     const center = () => ({ x: container.offsetWidth / 2, y: container.offsetHeight / 2 });
@@ -1470,8 +1544,14 @@ function addZoomControls(container, cy) {
     controls.querySelector('[data-action="toggleTx"]').addEventListener('click', () => {
         toggleInterventions();
     });
+    controls.querySelector('[data-action="toggleDf"]').addEventListener('click', () => {
+        toggleDefenseMode();
+    });
     controls.querySelector('[data-action="toggleFb"]').addEventListener('click', () => {
         toggleFeedbackEdges();
+    });
+    controls.querySelector('[data-action="toggleProtective"]').addEventListener('click', () => {
+        toggleProtectiveEdges();
     });
 
     controls.addEventListener('mousedown', (e) => e.stopPropagation());
@@ -1481,98 +1561,592 @@ function addZoomControls(container, cy) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// INTERVENTION HIGHLIGHT SYSTEM (hover-to-highlight + click-to-pin)
+// INTERVENTION SIDEBAR + BADGE + POPOVER SYSTEM
 // ═══════════════════════════════════════════════════════════
 
-function applyInterventionDimming(cy) {
-    cy.batch(() => {
-        // Dim all non-intervention, non-group, non-label nodes
-        cy.nodes().filter(n => n.data('styleClass') !== 'intervention' && n.data('styleClass') !== 'groupLabel' && !n.isParent()).addClass('tx-dimmed');
-        // Dim all non-intervention edges
-        cy.edges().filter(e => !e.data('isInterventionEdge')).addClass('tx-dimmed');
+function buildInterventionMaps(graphData) {
+    const interventionNodeMap = new Map();
+    graphData.nodes.forEach(n => {
+        if (n.data.styleClass === 'intervention') {
+            interventionNodeMap.set(n.data.id, n.data);
+        }
     });
+
+    const interventionTargets = new Map();
+    const targetInterventions = new Map();
+
+    graphData.edges.forEach(e => {
+        const src = e.data.source;
+        const tgt = e.data.target;
+        if (interventionNodeMap.has(src)) {
+            if (!interventionTargets.has(src)) interventionTargets.set(src, []);
+            interventionTargets.get(src).push({ target: tgt, label: e.data.label, tooltip: e.data.tooltip });
+            if (!targetInterventions.has(tgt)) targetInterventions.set(tgt, []);
+            if (!targetInterventions.get(tgt).includes(src)) {
+                targetInterventions.get(tgt).push(src);
+            }
+        }
+    });
+
+    return { interventionNodeMap, interventionTargets, targetInterventions };
 }
 
-function highlightIntervention(cy, nodeId) {
-    cy.batch(() => {
-        // Deep-dim everything first
-        cy.elements().addClass('tx-deep-dimmed').removeClass('tx-dimmed tx-highlighted tx-target-highlighted');
+function buildInterventionSidebar(container, cy, maps) {
+    const existing = container.querySelector('.tx-sidebar');
+    if (existing) existing.remove();
 
-        // Keep parent/group nodes and group labels somewhat visible
-        cy.nodes(':parent').removeClass('tx-deep-dimmed').addClass('tx-dimmed');
+    const sidebar = document.createElement('div');
+    sidebar.className = 'tx-sidebar';
+
+    let html = '<div class="tx-sidebar-header">Interventions</div>';
+    INTERVENTION_CATEGORIES.forEach(cat => {
+        html += '<div class="tx-sidebar-category">';
+        html += `<div class="tx-sidebar-cat-header">${cat.name}</div>`;
+        cat.items.forEach(id => {
+            const node = maps.interventionNodeMap.get(id);
+            if (!node) return;
+            const label = node.label.replace(/\n/g, ' ');
+            const evidence = node.tooltip?.evidence || '';
+            const pinned = pinnedInterventions.has(id);
+            html += `<div class="tx-sidebar-item${pinned ? ' pinned' : ''}" data-tx-id="${id}">`;
+            html += `<span class="tx-sidebar-item-label">${label}</span>`;
+            html += `<span class="tx-sidebar-item-evidence">${evidence}</span>`;
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+
+    sidebar.innerHTML = html;
+
+    sidebar.querySelectorAll('.tx-sidebar-item').forEach(item => {
+        const txId = item.dataset.txId;
+
+        item.addEventListener('mouseenter', () => {
+            highlightInterventionTargets(cy, txId, maps);
+        });
+        item.addEventListener('mouseleave', () => {
+            restoreFromSidebarHighlight(cy, maps);
+        });
+        item.addEventListener('click', () => {
+            if (pinnedInterventions.has(txId)) {
+                pinnedInterventions.delete(txId);
+                item.classList.remove('pinned');
+            } else {
+                pinnedInterventions.add(txId);
+                item.classList.add('pinned');
+            }
+            restoreFromSidebarHighlight(cy, maps);
+        });
+    });
+
+    sidebar.addEventListener('mousedown', e => e.stopPropagation());
+    sidebar.addEventListener('touchstart', e => e.stopPropagation());
+    sidebar.addEventListener('wheel', e => e.stopPropagation());
+
+    container.appendChild(sidebar);
+}
+
+function highlightInterventionTargets(cy, txId, maps) {
+    const targets = maps.interventionTargets.get(txId) || [];
+    const targetIds = new Set(targets.map(t => t.target));
+
+    // Also include pinned intervention targets
+    pinnedInterventions.forEach(pinnedId => {
+        const pts = maps.interventionTargets.get(pinnedId) || [];
+        pts.forEach(t => targetIds.add(t.target));
+    });
+
+    cy.batch(() => {
+        cy.elements().addClass('tx-deep-dimmed').removeClass('tx-dimmed tx-highlighted tx-target-highlighted');
         cy.nodes('[styleClass="groupLabel"]').removeClass('tx-deep-dimmed');
 
-        // Highlight the hovered intervention node
-        const node = cy.getElementById(nodeId);
-        node.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
+        targetIds.forEach(tId => {
+            const node = cy.getElementById(tId);
+            if (node.length) node.removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+        });
 
-        // Highlight its outgoing edges and target nodes
-        const edges = node.outgoers('edge');
-        edges.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
-        edges.targets().removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
-
-        // Also highlight any pinned interventions
-        pinnedInterventions.forEach(pinnedId => {
-            const pNode = cy.getElementById(pinnedId);
-            if (pNode.length) {
-                pNode.removeClass('tx-deep-dimmed').addClass('tx-pinned tx-highlighted');
-                const pEdges = pNode.outgoers('edge');
-                pEdges.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
-                pEdges.targets().removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+        // Show edges between highlighted targets for context
+        cy.edges().forEach(e => {
+            if (targetIds.has(e.data('source')) && targetIds.has(e.data('target'))) {
+                e.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
             }
         });
     });
 }
 
-function restorePinnedState(cy) {
+function restoreFromSidebarHighlight(cy, maps) {
     cy.batch(() => {
-        cy.elements().removeClass('tx-deep-dimmed tx-highlighted tx-target-highlighted tx-pinned');
+        cy.elements().removeClass('tx-deep-dimmed tx-dimmed tx-highlighted tx-target-highlighted');
 
         if (pinnedInterventions.size > 0) {
-            // Deep-dim everything, then highlight pinned
             cy.elements().addClass('tx-deep-dimmed');
-            cy.nodes(':parent').removeClass('tx-deep-dimmed').addClass('tx-dimmed');
             cy.nodes('[styleClass="groupLabel"]').removeClass('tx-deep-dimmed');
 
+            const highlightedIds = new Set();
             pinnedInterventions.forEach(pinnedId => {
-                const node = cy.getElementById(pinnedId);
-                if (node.length) {
-                    node.removeClass('tx-deep-dimmed').addClass('tx-pinned tx-highlighted');
-                    const edges = node.outgoers('edge');
-                    edges.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
-                    edges.targets().removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+                const targets = maps.interventionTargets.get(pinnedId) || [];
+                targets.forEach(t => {
+                    const node = cy.getElementById(t.target);
+                    if (node.length) {
+                        node.removeClass('tx-deep-dimmed').addClass('tx-target-highlighted');
+                        highlightedIds.add(t.target);
+                    }
+                });
+            });
+
+            cy.edges().forEach(e => {
+                if (highlightedIds.has(e.data('source')) && highlightedIds.has(e.data('target'))) {
+                    e.removeClass('tx-deep-dimmed').addClass('tx-highlighted');
                 }
             });
-        } else {
-            // No pins — restore baseline dimming
-            applyInterventionDimming(cy);
         }
     });
 }
 
-function attachInterventionHandlers(cy) {
-    cy.on('mouseover', 'node[styleClass="intervention"]', (evt) => {
-        highlightIntervention(cy, evt.target.id());
+function addInterventionBadges(container, cy, maps) {
+    removeInterventionBadges(container);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'tx-badge-overlay';
+    container.appendChild(overlay);
+
+    function updatePositions() {
+        overlay.innerHTML = '';
+        maps.targetInterventions.forEach((txIds, nodeId) => {
+            const node = cy.getElementById(nodeId);
+            if (!node.length || node.removed()) return;
+            const bb = node.renderedBoundingBox();
+
+            const badge = document.createElement('div');
+            badge.className = 'tx-badge';
+            badge.textContent = txIds.length;
+            badge.dataset.nodeId = nodeId;
+            badge.style.left = `${bb.x2 - 2}px`;
+            badge.style.top = `${bb.y1 - 2}px`;
+
+            badge.addEventListener('click', e => {
+                e.stopPropagation();
+                showNodePopover(container, cy, nodeId, maps);
+            });
+
+            overlay.appendChild(badge);
+        });
+    }
+
+    updatePositions();
+    cy.on('pan zoom', updatePositions);
+    cy.one('layoutstop', updatePositions);
+    container._badgeHandler = updatePositions;
+}
+
+function removeInterventionBadges(container) {
+    const overlay = container.querySelector('.tx-badge-overlay');
+    if (overlay) overlay.remove();
+
+    const cy = cyInstances.get(container.id);
+    if (cy && container._badgeHandler) {
+        cy.off('pan zoom', container._badgeHandler);
+        container._badgeHandler = null;
+    }
+}
+
+function showNodePopover(container, cy, nodeId, maps) {
+    const existing = container.querySelector('.tx-popover');
+    if (existing) {
+        if (existing.dataset.nodeId === nodeId) { existing.remove(); return; }
+        existing.remove();
+    }
+
+    const txIds = maps.targetInterventions.get(nodeId) || [];
+    if (txIds.length === 0) return;
+
+    const node = cy.getElementById(nodeId);
+    if (!node.length) return;
+
+    const bb = node.renderedBoundingBox();
+    const popover = document.createElement('div');
+    popover.className = 'tx-popover';
+    popover.dataset.nodeId = nodeId;
+    popover.style.left = `${(bb.x1 + bb.x2) / 2}px`;
+    popover.style.top = `${bb.y2 + 8}px`;
+
+    const nodeLabel = node.data('label').split('\n')[0];
+    let html = `<div class="tx-popover-header">${txIds.length} intervention${txIds.length > 1 ? 's' : ''} targeting ${nodeLabel}</div>`;
+    txIds.forEach(txId => {
+        const txNode = maps.interventionNodeMap.get(txId);
+        if (!txNode) return;
+        const label = txNode.label.replace(/\n/g, ' ');
+        const pinned = pinnedInterventions.has(txId);
+        html += `<div class="tx-popover-item${pinned ? ' pinned' : ''}" data-tx-id="${txId}">${label}</div>`;
+    });
+    popover.innerHTML = html;
+
+    popover.querySelectorAll('.tx-popover-item').forEach(item => {
+        const txId = item.dataset.txId;
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            if (pinnedInterventions.has(txId)) {
+                pinnedInterventions.delete(txId);
+                item.classList.remove('pinned');
+            } else {
+                pinnedInterventions.add(txId);
+                item.classList.add('pinned');
+            }
+            const sidebarItem = container.querySelector(`.tx-sidebar-item[data-tx-id="${txId}"]`);
+            if (sidebarItem) sidebarItem.classList.toggle('pinned', pinnedInterventions.has(txId));
+            restoreFromSidebarHighlight(cy, maps);
+        });
+        item.addEventListener('mouseenter', () => {
+            highlightInterventionTargets(cy, txId, maps);
+        });
+        item.addEventListener('mouseleave', () => {
+            restoreFromSidebarHighlight(cy, maps);
+        });
     });
 
-    cy.on('mouseout', 'node[styleClass="intervention"]', () => {
-        restorePinnedState(cy);
-    });
+    popover.addEventListener('mousedown', e => e.stopPropagation());
+    container.appendChild(popover);
 
-    cy.on('tap', 'node[styleClass="intervention"]', (evt) => {
-        const id = evt.target.id();
-        if (pinnedInterventions.has(id)) {
-            pinnedInterventions.delete(id);
-        } else {
-            pinnedInterventions.add(id);
+    const closeHandler = e => {
+        if (!popover.contains(e.target) && !e.target.classList.contains('tx-badge')) {
+            popover.remove();
+            document.removeEventListener('click', closeHandler);
         }
-        restorePinnedState(cy);
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 100);
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEFENSE MODE: CHECK-IN PANEL + HEATMAP ENGINE
+// ═══════════════════════════════════════════════════════════
+
+const EFFECTIVENESS_WEIGHTS = {
+    untested: 0.5,
+    ineffective: 0.1,
+    modest: 0.4,
+    effective: 0.75,
+    highly_effective: 1.0,
+};
+
+const CASCADE_DECAY = 0.5; // each hop reduces inherited defense by 50%
+
+function todayKey() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function dateOffsetKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().split('T')[0];
+}
+
+function formatDateLabel(key) {
+    const today = todayKey();
+    if (key === today) return 'Today';
+    const yesterday = dateOffsetKey(-1);
+    if (key === yesterday) return 'Yesterday';
+    const d = new Date(key + 'T12:00:00');
+    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+// ── Check-in Panel ──
+
+let checkinDateOffset = 0; // 0 = today, -1 = yesterday, etc.
+
+function buildCheckinPanel(graphData) {
+    const panel = document.getElementById('defense-checkin');
+    if (!panel) return;
+
+    const maps = buildInterventionMaps(graphData);
+    const dateKey = dateOffsetKey(checkinDateOffset);
+    const checkIns = storage.getCheckIns(dateKey);
+    const checkInSet = new Set(checkIns);
+
+    // Compute streaks for all interventions
+    const rangeData = storage.getCheckInsRange(7);
+    function streak(id) {
+        let count = 0;
+        Object.values(rangeData).forEach(ids => { if (ids.includes(id)) count++; });
+        return count;
+    }
+
+    const totalInterventions = maps.interventionNodeMap.size;
+    const checkedToday = checkInSet.size;
+
+    let html = `
+        <div class="defense-checkin-container">
+            <div class="defense-checkin-header">
+                <span class="defense-checkin-title">Daily Defense Check-in</span>
+                <div class="defense-checkin-nav">
+                    <button class="defense-date-btn" data-dir="-1">&larr;</button>
+                    <span class="defense-date-label">${formatDateLabel(dateKey)}</span>
+                    <button class="defense-date-btn" data-dir="1" ${checkinDateOffset >= 0 ? 'disabled' : ''}>&rarr;</button>
+                </div>
+                <span class="defense-checkin-summary">${checkedToday}/${totalInterventions} active</span>
+                <button class="defense-checkin-toggle" title="Collapse">&#x25BC;</button>
+            </div>
+            <div class="defense-checkin-body">
+                <div class="defense-checkin-grid">`;
+
+    INTERVENTION_CATEGORIES.forEach(cat => {
+        html += `<div class="defense-checkin-cat">`;
+        html += `<div class="defense-checkin-cat-name">${cat.name}</div>`;
+        cat.items.forEach(id => {
+            const node = maps.interventionNodeMap.get(id);
+            if (!node) return;
+            const label = node.label.replace(/\n/g, ' ');
+            const s = streak(id);
+            const checked = checkInSet.has(id);
+            html += `<label class="defense-checkin-item${checked ? ' checked' : ''}">
+                <input type="checkbox" data-tx-id="${id}" ${checked ? 'checked' : ''}>
+                <span class="defense-item-label">${label}</span>
+                <span class="defense-item-streak ${s >= 5 ? 'high' : s >= 3 ? 'med' : 'low'}">${s}/7</span>
+            </label>`;
+        });
+        html += `</div>`;
     });
+
+    html += `</div></div></div>`;
+    panel.innerHTML = html;
+
+    // Wire checkbox handlers
+    panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const txId = cb.dataset.txId;
+            storage.toggleCheckIn(dateKey, txId);
+            buildCheckinPanel(graphData);
+            // If defense mode is active, update the heatmap
+            if (showDefenseMode) reRenderGraphs();
+        });
+    });
+
+    // Wire date navigation
+    panel.querySelectorAll('.defense-date-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const dir = parseInt(btn.dataset.dir);
+            checkinDateOffset += dir;
+            if (checkinDateOffset > 0) checkinDateOffset = 0;
+            buildCheckinPanel(graphData);
+        });
+    });
+
+    // Wire collapse toggle
+    const collapseBtn = panel.querySelector('.defense-checkin-toggle');
+    const body = panel.querySelector('.defense-checkin-body');
+    if (collapseBtn && body) {
+        collapseBtn.addEventListener('click', () => {
+            body.classList.toggle('collapsed');
+            collapseBtn.textContent = body.classList.contains('collapsed') ? '\u25B6' : '\u25BC';
+        });
+    }
+}
+
+// ── Defense Score Computation ──
+
+function computeDefenseScores(graphData) {
+    const maps = buildInterventionMaps(graphData);
+    const rangeData = storage.getCheckInsRange(7);
+    const ratings = storage.getAllRatings();
+    const ratingMap = {};
+    ratings.forEach(r => { ratingMap[r.interventionId] = r.effectiveness; });
+
+    // For each intervention, compute: weight * (days_active / 7)
+    function interventionStrength(txId) {
+        const eff = ratingMap[txId] || 'untested';
+        const weight = EFFECTIVENESS_WEIGHTS[eff] || 0.5;
+        let daysActive = 0;
+        Object.values(rangeData).forEach(ids => { if (ids.includes(txId)) daysActive++; });
+        return weight * (daysActive / 7);
+    }
+
+    // Compute direct defense for each target node
+    const directScores = new Map(); // nodeId → score (0..1)
+    maps.targetInterventions.forEach((txIds, nodeId) => {
+        let total = 0;
+        txIds.forEach(txId => { total += interventionStrength(txId); });
+        directScores.set(nodeId, Math.min(1, total));
+    });
+
+    // Build adjacency from graph edges (forward direction only)
+    const adjacency = new Map(); // source → [target]
+    graphData.edges.forEach(e => {
+        const src = e.data.source;
+        const tgt = e.data.target;
+        if (e.data.edgeType === 'feedback' || e.data.edgeType === 'protective') return;
+        if (maps.interventionNodeMap.has(src)) return; // skip intervention edges
+        if (!adjacency.has(src)) adjacency.set(src, []);
+        adjacency.get(src).push(tgt);
+    });
+
+    // Cascade: BFS from directly defended nodes downstream
+    const allScores = new Map(); // nodeId → { score, isDirect }
+
+    // Initialize all mechanism nodes with 0
+    graphData.nodes.forEach(n => {
+        if (n.data.styleClass !== 'intervention') {
+            allScores.set(n.data.id, { score: 0, isDirect: false });
+        }
+    });
+
+    // Set direct scores
+    directScores.forEach((score, nodeId) => {
+        allScores.set(nodeId, { score, isDirect: true });
+    });
+
+    // BFS cascade: propagate defense downstream with decay
+    const queue = [];
+    directScores.forEach((score, nodeId) => {
+        if (score > 0) queue.push({ nodeId, strength: score, depth: 0 });
+    });
+
+    const visited = new Set();
+    while (queue.length > 0) {
+        const { nodeId, strength, depth } = queue.shift();
+        const children = adjacency.get(nodeId) || [];
+        children.forEach(childId => {
+            const cascaded = strength * CASCADE_DECAY;
+            if (cascaded < 0.01) return; // too small to matter
+            const existing = allScores.get(childId);
+            if (!existing) return;
+            // Only add cascaded defense, don't overwrite direct
+            const newScore = Math.min(1, existing.score + cascaded);
+            if (newScore > existing.score) {
+                allScores.set(childId, {
+                    score: newScore,
+                    isDirect: existing.isDirect,
+                });
+                const key = `${childId}-${depth}`;
+                if (!visited.has(key)) {
+                    visited.add(key);
+                    queue.push({ nodeId: childId, strength: cascaded, depth: depth + 1 });
+                }
+            }
+        });
+    }
+
+    return allScores;
+}
+
+function scoreToColor(score, isDirect) {
+    const opacity = isDirect ? 1.0 : 0.7;
+    if (score >= 0.6) return { color: '#22c55e', border: '#16a34a', opacity }; // green
+    if (score >= 0.3) return { color: '#f59e0b', border: '#d97706', opacity }; // amber
+    return { color: '#ef4444', border: '#dc2626', opacity }; // red
+}
+
+function scoreToLabel(score) {
+    return Math.round(score * 100) + '%';
+}
+
+// ── Heatmap Application ──
+
+function applyDefenseHeatmap(cy, graphData) {
+    const scores = computeDefenseScores(graphData);
+
+    cy.batch(() => {
+        cy.nodes().forEach(node => {
+            const sc = node.data('styleClass');
+            if (sc === 'groupLabel') return;
+            const entry = scores.get(node.id());
+            if (!entry) return;
+
+            const { color, border, opacity } = scoreToColor(entry.score, entry.isDirect);
+            node.data('defenseColor', border);
+            node.data('defenseBg', color);
+            node.data('defenseOpacity', opacity);
+            node.data('defenseScore', entry.score);
+            node.addClass('defense-node');
+        });
+
+        // Edge coloring: based on how defended the source and target are
+        cy.edges().forEach(edge => {
+            const srcEntry = scores.get(edge.data('source'));
+            const tgtEntry = scores.get(edge.data('target'));
+            if (!srcEntry && !tgtEntry) return;
+
+            // Edge defense = min of source and target (weakest link)
+            const edgeScore = Math.min(
+                srcEntry ? srcEntry.score : 0,
+                tgtEntry ? tgtEntry.score : 0
+            );
+            const { color } = scoreToColor(edgeScore, false);
+            // Undefended edges stay prominent; defended edges fade
+            const edgeWidth = edgeScore > 0.5 ? 0.8 : (edgeScore > 0.2 ? 1.2 : 2.0);
+            const edgeOp = edgeScore > 0.5 ? 0.35 : (edgeScore > 0.2 ? 0.55 : 0.85);
+
+            edge.data('defenseColor', color);
+            edge.data('defenseWidth', edgeWidth);
+            edge.data('defenseOpacity', edgeOp);
+            edge.addClass('defense-edge');
+        });
+    });
+}
+
+function addDefenseBadges(container, cy, graphData) {
+    removeDefenseBadges(container);
+    const scores = computeDefenseScores(graphData);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'defense-badge-overlay';
+    container.appendChild(overlay);
+
+    function updatePositions() {
+        overlay.innerHTML = '';
+        scores.forEach((entry, nodeId) => {
+            if (entry.score === 0 && !entry.isDirect) return; // skip nodes with no defense and no direct intervention
+            const node = cy.getElementById(nodeId);
+            if (!node.length || node.removed()) return;
+            const sc = node.data('styleClass');
+            if (sc === 'groupLabel') return;
+
+            const bb = node.renderedBoundingBox();
+            const { color } = scoreToColor(entry.score, entry.isDirect);
+            const pct = scoreToLabel(entry.score);
+
+            const badge = document.createElement('div');
+            badge.className = 'defense-badge';
+            badge.textContent = pct;
+            badge.style.left = `${bb.x2 - 2}px`;
+            badge.style.top = `${bb.y1 - 2}px`;
+            badge.style.background = color;
+            badge.style.borderColor = color;
+            overlay.appendChild(badge);
+        });
+    }
+
+    updatePositions();
+    cy.on('pan zoom', updatePositions);
+    cy.one('layoutstop', updatePositions);
+    container._defenseBadgeHandler = updatePositions;
+}
+
+function removeDefenseBadges(container) {
+    const overlay = container.querySelector('.defense-badge-overlay');
+    if (overlay) overlay.remove();
+    const cy = cyInstances.get(container.id);
+    if (cy && container._defenseBadgeHandler) {
+        cy.off('pan zoom', container._defenseBadgeHandler);
+        container._defenseBadgeHandler = null;
+    }
 }
 
 function toggleInterventions() {
     showInterventions = !showInterventions;
     if (!showInterventions) pinnedInterventions.clear();
+    if (showInterventions && showDefenseMode) showDefenseMode = false; // mutually exclusive
+    reRenderGraphs();
+}
+
+function toggleDefenseMode() {
+    showDefenseMode = !showDefenseMode;
+    if (showDefenseMode && showInterventions) {
+        showInterventions = false;
+        pinnedInterventions.clear();
+    }
+    reRenderGraphs();
+}
+
+function reRenderGraphs() {
     if (_fullscreenContainer) {
         const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
         if (config) renderGraph(config);
@@ -1583,12 +2157,12 @@ function toggleInterventions() {
 
 function toggleFeedbackEdges() {
     showFeedbackEdges = !showFeedbackEdges;
-    if (_fullscreenContainer) {
-        const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
-        if (config) renderGraph(config);
-    } else {
-        renderAllGraphs();
-    }
+    reRenderGraphs();
+}
+
+function toggleProtectiveEdges() {
+    showProtectiveEdges = !showProtectiveEdges;
+    reRenderGraphs();
 }
 
 // ═══════════════════════════════════════════════════════════
