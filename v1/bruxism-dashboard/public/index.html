@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bruxism Interventions Dashboard</title>
+    <title>Bruxism Causal Map</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/research.css">
     <!-- Cytoscape.js + ELK for causal graph diagrams (local vendor copies, CDN fallback) -->
     <script src="/js/vendor/cytoscape.min.js"></script>
     <script src="/js/vendor/elk.bundled.js"></script>
@@ -25,266 +24,27 @@
     <!-- Loading State -->
     <div id="loading" class="hidden">
         <div class="loading-spinner"></div>
-        <p>Loading interventions...</p>
+        <p>Loading...</p>
     </div>
 
-    <!-- Main App (hidden when server down) -->
+    <!-- Main App -->
     <div id="app" class="hidden">
-        <header>
-            <div class="header-content">
-                <h1>Bruxism Interventions</h1>
-                <p class="subtitle">Evidence-based strategies for managing sleep bruxism</p>
-            </div>
-            <nav class="tab-nav">
-                <button data-tab="info" class="tab-button active">
-                    <span class="tab-icon">📚</span>
-                    Bruxism Info
-                </button>
-                <button data-tab="research" class="tab-button">
-                    <span class="tab-icon">🔬</span>
-                    Research
-                </button>
-                <button data-tab="interventions" class="tab-button">
-                    <span class="tab-icon">💊</span>
-                    Interventions
-                </button>
-                <button data-tab="experiments" class="tab-button">
-                    <span class="tab-icon">🧪</span>
-                    My Experiments
-                </button>
-            </nav>
+        <header class="header-minimal">
+            <h1>Bruxism Causal Map</h1>
             <div class="header-actions">
                 <button id="data-management-btn" class="header-btn" title="Export/Import Data">
-                    💾 Data
+                    Data
                 </button>
             </div>
         </header>
 
-        <!-- Interventions Tab -->
-        <div id="interventions-tab" class="tab-content">
-            <!-- Causal Graph Diagram -->
-            <div id="causal-graph" class="causal-graph-container">
-                <div class="causal-graph-cy" id="causal-graph-cy"></div>
-            </div>
-
-            <!-- Daily Defense Check-in (populated by causalEditor.js) -->
-            <div id="defense-checkin"></div>
-
-            <!-- View Toggle -->
-            <div id="view-toggle" class="view-toggle">
-                <button id="list-view-btn" class="view-btn active">📋 List</button>
-                <button id="scatter-view-btn" class="view-btn">📊 Scatter Plot</button>
-            </div>
-
-            <!-- Filter Panel -->
-            <aside id="filters">
-                <div class="filter-header">
-                    <h3>Filters</h3>
-                    <button id="clear-filters" class="clear-btn">Clear All</button>
-                </div>
-
-                <div class="filter-group">
-                    <label for="search">Search</label>
-                    <input type="search" id="search" placeholder="Search interventions...">
-                </div>
-
-                <div class="filter-group">
-                    <label for="filter-timeOfDay">Time of Day</label>
-                    <select id="filter-timeOfDay">
-                        <option value="">All times</option>
-                        <option value="morning">Morning</option>
-                        <option value="afternoon">Afternoon</option>
-                        <option value="evening">Evening</option>
-                        <option value="preBed">Pre-Bed</option>
-                        <option value="anytime">Anytime</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filter-evidenceLevel">Evidence Level</label>
-                    <select id="filter-evidenceLevel">
-                        <option value="">All levels</option>
-                        <option value="Moderate-High">Moderate-High</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Low-Moderate">Low-Moderate</option>
-                        <option value="Low">Low</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filter-roiTier">ROI Tier</label>
-                    <select id="filter-roiTier">
-                        <option value="">All tiers</option>
-                        <option value="A">A - Highest ROI</option>
-                        <option value="B">B - High ROI</option>
-                        <option value="C">C - Medium ROI</option>
-                        <option value="D">D - Lower ROI</option>
-                        <option value="E">E - Lowest ROI</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filter-tier">Priority Tier</label>
-                    <select id="filter-tier">
-                        <option value="">All priorities</option>
-                        <option value="1">Tier 1 - Essential</option>
-                        <option value="2">Tier 2 - Recommended</option>
-                        <option value="3">Tier 3 - Optional</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filter-condition">Target Condition</label>
-                    <select id="filter-condition">
-                        <option value="">All conditions</option>
-                        <option value="bruxism">Bruxism</option>
-                        <option value="reflux">Reflux</option>
-                        <option value="both">Both</option>
-                        <option value="general">General</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filter-pathway">Causal Pathway</label>
-                    <select id="filter-pathway">
-                        <option value="">All pathways</option>
-                        <option value="upstream">Upstream</option>
-                        <option value="midstream">Midstream</option>
-                        <option value="downstream">Downstream</option>
-                    </select>
-                </div>
-
-                <div class="filter-stats">
-                    <span id="filter-count">Showing all interventions</span>
-                </div>
-            </aside>
-
-            <!-- Interventions Grid -->
-            <main id="interventions-content">
-                <div id="interventions-grid" class="interventions-grid"></div>
-                <div id="scatter-plot" class="scatter-plot hidden">
-                    <div class="scatter-container">
-                        <div class="scatter-y-axis">
-                            <span class="axis-label">Evidence</span>
-                            <span class="axis-tick" data-value="4">High</span>
-                            <span class="axis-tick" data-value="3">Mod</span>
-                            <span class="axis-tick" data-value="2">Low-Mod</span>
-                            <span class="axis-tick" data-value="1">Low</span>
-                        </div>
-                        <div class="scatter-chart" id="scatter-chart"></div>
-                        <div class="scatter-x-axis">
-                            <span class="axis-label">Time (minutes)</span>
-                        </div>
-                    </div>
-                    <div class="scatter-legend">
-                        <div class="legend-item"><span class="legend-dot bruxism"></span> Bruxism</div>
-                        <div class="legend-item"><span class="legend-dot reflux"></span> Reflux</div>
-                        <div class="legend-item"><span class="legend-dot both"></span> Both</div>
-                        <div class="legend-item"><span class="legend-dot general"></span> General</div>
-                    </div>
-                </div>
-            </main>
+        <!-- Causal Graph -->
+        <div id="causal-graph" class="causal-graph-container">
+            <div class="causal-graph-cy" id="causal-graph-cy"></div>
         </div>
 
-        <!-- Research Tab -->
-        <div id="research-tab" class="tab-content">
-            <!-- Causal Graph Diagram (educational view) -->
-            <div id="causal-graph-research" class="causal-graph-container">
-                <div class="causal-graph-cy" id="causal-graph-research-cy"></div>
-            </div>
-
-            <div class="research-header">
-                <div class="research-title">
-                    <h2>Evidence Review</h2>
-                    <p class="research-subtitle">Deep dive into the science behind interventions</p>
-                </div>
-                <button id="add-study-btn" class="btn-primary">+ Add Personal Study</button>
-            </div>
-
-            <div class="research-filters">
-                <div class="filter-group">
-                    <label for="research-search">Search</label>
-                    <input type="search" id="research-search" placeholder="Search citations...">
-                </div>
-                <div class="filter-group">
-                    <label for="filter-causality">Causality</label>
-                    <select id="filter-causality">
-                        <option value="">All types</option>
-                        <option value="causal">🎯 Causal</option>
-                        <option value="correlational">📊 Correlational</option>
-                        <option value="mechanistic">⚙️ Mechanistic</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="filter-replication">Replication</label>
-                    <select id="filter-replication">
-                        <option value="">All status</option>
-                        <option value="replicated">✓ Replicated</option>
-                        <option value="single_study">⚠️ Single Study</option>
-                        <option value="conflicting">✗ Conflicting</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="filter-study-type">Study Type</label>
-                    <select id="filter-study-type">
-                        <option value="">All types</option>
-                        <option value="cochrane">Cochrane</option>
-                        <option value="metaAnalysis">Meta-Analysis</option>
-                        <option value="systematicReview">Systematic Review</option>
-                        <option value="rct">RCT</option>
-                        <option value="review">Review</option>
-                        <option value="guideline">Guideline</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="citations-list" class="citations-list"></div>
-
-            <div id="personal-studies-section" class="personal-studies-section">
-                <h3>My Personal Studies</h3>
-                <div id="personal-studies-list" class="personal-studies-list"></div>
-            </div>
-        </div>
-
-        <!-- Experiments Tab -->
-        <div id="experiments-tab" class="tab-content">
-            <!-- Causal Graph Diagram (reference view) -->
-            <div id="causal-graph-experiments" class="causal-graph-container compact">
-                <div class="causal-graph-cy" id="causal-graph-experiments-cy"></div>
-            </div>
-
-            <div class="experiments-header">
-                <div class="experiments-title">
-                    <h2>My Experiments</h2>
-                    <p class="experiments-subtitle">Track what works for you</p>
-                </div>
-                <button id="start-experiment-btn" class="btn-primary">+ Start New Experiment</button>
-            </div>
-
-            <div class="experiments-grid">
-                <section class="experiments-section">
-                    <h3>🔬 Active Experiments</h3>
-                    <div id="active-experiments" class="experiments-list"></div>
-                </section>
-
-                <section class="experiments-section">
-                    <h3>✓ Completed Experiments</h3>
-                    <div id="completed-experiments" class="experiments-list"></div>
-                </section>
-            </div>
-
-            <section class="effectiveness-section">
-                <h3>📊 My Intervention Ratings</h3>
-                <div id="effectiveness-grid" class="effectiveness-grid"></div>
-            </section>
-        </div>
-
-        <!-- Info Tab (default) -->
-        <div id="info-tab" class="tab-content active">
-            <main id="info-content">
-                <div id="info-sections"></div>
-            </main>
-        </div>
+        <!-- Daily Defense Check-in -->
+        <div id="defense-checkin"></div>
 
         <!-- Data Management Modal -->
         <div id="data-modal" class="modal hidden">
@@ -296,155 +56,26 @@
                 <div class="modal-body">
                     <div class="data-action">
                         <h4>Export Personal Data</h4>
-                        <p>Download all your notes, experiments, and ratings as a JSON file.</p>
-                        <button id="export-data-btn" class="btn-secondary">📥 Export Data</button>
+                        <p>Download all your check-ins, ratings, and diagram edits as JSON.</p>
+                        <button id="export-data-btn" class="btn-secondary">Export Data</button>
                     </div>
                     <div class="data-action">
                         <h4>Import Personal Data</h4>
                         <p>Restore your data from a previously exported JSON file.</p>
                         <input type="file" id="import-file" accept=".json" hidden>
-                        <button id="import-data-btn" class="btn-secondary">📤 Import Data</button>
+                        <button id="import-data-btn" class="btn-secondary">Import Data</button>
                     </div>
                     <div class="data-action danger">
                         <h4>Clear All Data</h4>
                         <p>Permanently delete all personal data. This cannot be undone.</p>
-                        <button id="clear-data-btn" class="btn-danger">🗑️ Clear All Data</button>
+                        <button id="clear-data-btn" class="btn-danger">Clear All Data</button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Study Modal -->
-        <div id="add-study-modal" class="modal hidden">
-            <div class="modal-content modal-large">
-                <div class="modal-header">
-                    <h3>Add Personal Study</h3>
-                    <button class="modal-close close-add-study">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="add-study-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="study-title">Title *</label>
-                                <input type="text" id="study-title" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="study-source">Source/Journal</label>
-                                <input type="text" id="study-source">
-                            </div>
-                            <div class="form-group">
-                                <label for="study-year">Year</label>
-                                <input type="number" id="study-year" min="1900" max="2030">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="study-url">URL</label>
-                                <input type="url" id="study-url">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="study-sample-size">Sample Size</label>
-                                <input type="number" id="study-sample-size" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label for="study-causality">Causality Type</label>
-                                <select id="study-causality">
-                                    <option value="">Unknown</option>
-                                    <option value="causal">Causal</option>
-                                    <option value="correlational">Correlational</option>
-                                    <option value="mechanistic">Mechanistic</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="study-findings">Key Findings</label>
-                                <textarea id="study-findings" rows="3"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="study-notes">Personal Notes</label>
-                                <textarea id="study-notes" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary close-add-study">Cancel</button>
-                            <button type="submit" class="btn-primary">Add Study</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Start Experiment Modal -->
-        <div id="start-experiment-modal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Start New Experiment</h3>
-                    <button class="modal-close close-experiment">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="start-experiment-form">
-                        <div class="form-group">
-                            <label for="experiment-intervention">Select Intervention *</label>
-                            <select id="experiment-intervention" required>
-                                <option value="">Choose an intervention...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="experiment-notes">Initial Notes</label>
-                            <textarea id="experiment-notes" rows="2" placeholder="Why are you trying this? Any expectations?"></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary close-experiment">Cancel</button>
-                            <button type="submit" class="btn-primary">Start Experiment</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Observation Modal -->
-        <div id="add-observation-modal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Add Observation</h3>
-                    <button class="modal-close close-observation">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="add-observation-form">
-                        <input type="hidden" id="observation-experiment-id">
-                        <div class="form-group">
-                            <label>Rating</label>
-                            <div class="star-rating" id="observation-rating">
-                                <span data-value="1">⭐</span>
-                                <span data-value="2">⭐</span>
-                                <span data-value="3">⭐</span>
-                                <span data-value="4">⭐</span>
-                                <span data-value="5">⭐</span>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="observation-note">Observation *</label>
-                            <textarea id="observation-note" rows="3" required placeholder="What did you notice?"></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary close-observation">Cancel</button>
-                            <button type="submit" class="btn-primary">Add Observation</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
 
         <footer>
             <p class="disclaimer" id="disclaimer"></p>
-            <p class="credits">Built with data from OpenJaw</p>
         </footer>
     </div>
 
