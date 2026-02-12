@@ -1316,7 +1316,7 @@ const INTERVENTION_CATEGORIES = [
 function computeTieredPositions(cy, width, height) {
     const padX = 60;
     const padY = 80;
-    const labelWidth = 30;
+    const labelWidth = 55;
 
     // Row position helper: maps tier 1..10 (inc. half-steps) to y-coordinate
     function rowY(tier) {
@@ -1414,9 +1414,9 @@ function computeTieredPositions(cy, width, height) {
         });
     });
 
-    // Place tier label nodes at the left of each row
+    // Place tier label nodes at the far left margin of each row
     for (let t = 1; t <= NUM_TIERS; t++) {
-        positions[`_tier_${t}`] = { x: padX + 10, y: rowY(t) };
+        positions[`_tier_${t}`] = { x: 18, y: rowY(t) };
     }
 
     return positions;

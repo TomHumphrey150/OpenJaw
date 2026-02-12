@@ -4,7 +4,7 @@
  *
  * Boots the Express server, opens the dashboard in headless Chromium via
  * Playwright, and captures PNG screenshots of the causal graph in various
- * states (tabs, interventions on/off, feedback loops on/off).
+ * states (toggle combinations).
  *
  * Usage:
  *   node snapshot-graph.mjs                 # all states → ./snapshots/
@@ -12,14 +12,14 @@
  *   node snapshot-graph.mjs --out /tmp/snaps
  *
  * States captured:
- *   base           – Interventions tab, default view (no interventions, feedback on)
- *   interventions  – Interventions tab, Tx toggle ON
- *   no-feedback    – Interventions tab, feedback loops OFF
- *   research       – Research tab graph
- *   experiments    – Experiments tab graph
+ *   base           – Default view (no interventions, feedback on)
+ *   interventions  – Tx toggle ON
+ *   no-feedback    – Feedback loops OFF
+ *   protective     – Protective mechanisms ON
+ *   defense        – Defense mode with simulated check-in data
  */
 
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import { spawn } from 'child_process';
 import { mkdirSync } from 'fs';
 import { resolve, join } from 'path';
@@ -65,14 +65,8 @@ function startServer() {
     });
 }
 
-async function switchToTab(page, tabName) {
-    await page.click(`button[data-tab="${tabName}"]`);
-    // refreshPanZoom fires after 100ms; Cytoscape init takes more time
-    await page.waitForTimeout(500);
-}
-
 async function waitForGraph(page, cyContainerId) {
-    // Wait for Cytoscape canvas to appear (created lazily on tab visibility)
+    // Wait for Cytoscape canvas to appear
     await page.waitForFunction(
         (id) => {
             const el = document.getElementById(id);
@@ -116,6 +110,14 @@ const STATES = {
         await page.click('#causal-graph .panzoom-controls button[data-action="toggleFb"]');
         await waitForGraph(page, 'causal-graph-cy');
         return screenshotGraph(page, 'causal-graph', 'graph-no-feedback.png');
+    },
+
+    async protective(page) {
+        log('State: protective mechanisms (Pr ON)');
+        await waitForGraph(page, 'causal-graph-cy');
+        await page.click('#causal-graph .panzoom-controls button[data-action="toggleProtective"]');
+        await waitForGraph(page, 'causal-graph-cy');
+        return screenshotGraph(page, 'causal-graph', 'graph-protective.png');
     },
 
     async defense(page) {
@@ -172,7 +174,6 @@ async function main() {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--single-process',
     ];
 
     const statesToRun = REQUESTED_STATE ? [REQUESTED_STATE] : Object.keys(STATES);
@@ -184,12 +185,11 @@ async function main() {
             continue;
         }
 
-        // Fresh browser per state to avoid --single-process crashes
         let browser;
         try {
             browser = await chromium.launch({ headless: true, args: BROWSER_ARGS });
             const context = await browser.newContext({
-                viewport: { width: 1600, height: 1000 },
+                viewport: { width: 1400, height: 2000 },
                 deviceScaleFactor: 2,
             });
             const page = await context.newPage();
