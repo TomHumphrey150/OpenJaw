@@ -283,12 +283,16 @@ const DEFAULT_GRAPH_DATA = {
             tooltip: 'RMMA triggers salivation via periodontal mechanoreceptor reflex' } },
         { data: { source: 'RMMA', target: 'CS', edgeType: 'dashed', edgeColor: '#1b4332',
             tooltip: 'Chronic RMMA may contribute to central sensitization (preliminary)' } },
-        { data: { source: 'SALIVA', target: 'GERD', label: 'acid clearance', edgeType: 'forward', edgeColor: '#374151',
+        { data: { source: 'SALIVA', target: 'GERD', label: 'acid clearance', edgeType: 'feedback', edgeColor: '#ef4444',
             tooltip: 'Increased salivation aids esophageal acid clearance' } },
+        { data: { source: 'SALIVA', target: 'NECK_TIGHTNESS', label: 'repeated swallowing', edgeType: 'dashed', edgeColor: '#374151',
+            tooltip: 'Nocturnal salivary clearance may cause repeated swallowing, fatiguing neck/throat muscles (hypothesised)' } },
         { data: { source: 'GRINDING', target: 'TOOTH', edgeType: 'forward', edgeColor: '#1e3a5f',
             tooltip: 'Grinding forces cause progressive tooth enamel wear and fractures' } },
         { data: { source: 'GRINDING', target: 'HEADACHES', edgeType: 'forward', edgeColor: '#1e3a5f',
             tooltip: 'Nocturnal muscle contraction causes morning tension headaches' } },
+        { data: { source: 'GRINDING', target: 'NECK_TIGHTNESS', edgeType: 'dashed', edgeColor: '#1e3a5f',
+            tooltip: 'Sustained clenching may lock up jaw/neck musculature, contributing to daytime spasm (hypothesised)' } },
 
         // ── Structural damage cascade ──
         { data: { source: 'TMD', target: 'CERVICAL', edgeType: 'forward', edgeColor: '#1b4332',
@@ -1182,66 +1186,61 @@ function destroyCyInstance(containerId) {
 // TIERED COLUMN LAYOUT (preset positions)
 // ═══════════════════════════════════════════════════════════
 
-// Tier assignment for every non-intervention node
+// Column assignment for every non-intervention node (1-10, left to right)
 const NODE_TIERS = {
-    // Tier 0: INPUTS (leftmost column)
-    STRESS: 0, HEALTH_ANXIETY: 0, GERD: 0, FHP: 0, VIT_D: 0, SLEEP_DEP: 0,
-    OSA: 0, GENETICS: 0, SSRI: 0, CAFFEINE: 0, ALCOHOL: 0, SMOKING: 0,
-
-    // Tier 1: IMMEDIATE MECHANISMS
-    CORTISOL: 1, CATECHOL: 1, SYMPATHETIC: 1,
-    AIRWAY_OBS: 1, MG_DEF: 1,
-
-    // Tier 2: INTERMEDIATE MECHANISMS / PATHWAYS
-    NEG_PRESSURE: 2, TLESR: 2, ACID: 2,
-    GABA_DEF: 2, DOPAMINE: 2, VAGAL: 2, PEPSIN: 2,
-
-    // Tier 3: CENTRAL EVENTS
-    MICRO: 3, RMMA: 3,
-
-    // Tier 4: CONSEQUENCES & DOWNSTREAM (rightmost column)
-    GRINDING: 4, TOOTH: 4, TMD: 4, HEADACHES: 4,
-    EAR: 4, NECK_TIGHTNESS: 4, GLOBUS: 4,
-    SALIVA: 4, CERVICAL: 4, CS: 4, WINDUP: 4, HYOID: 4,
+    // Col 1: Root Triggers
+    HEALTH_ANXIETY: 1, OSA: 1,
+    // Col 2: Primary Conditions
+    STRESS: 2, SLEEP_DEP: 2, VIT_D: 2, FHP: 2,
+    GENETICS: 2, SSRI: 2, CAFFEINE: 2, ALCOHOL: 2, SMOKING: 2,
+    MG_DEF: 2, AIRWAY_OBS: 2,
+    // Col 3: Stress Mediators / Disease States
+    CORTISOL: 3, CATECHOL: 3, GERD: 3, NEG_PRESSURE: 3,
+    // Col 4: Autonomic / Reflux Mechanisms
+    SYMPATHETIC: 4, ACID: 4, PEPSIN: 4,
+    TLESR: 4, GABA_DEF: 4, DOPAMINE: 4,
+    // Col 5: Vagal Signaling
+    VAGAL: 5,
+    // Col 6: Arousal Convergence
+    MICRO: 6,
+    // Col 7: Central Motor Event
+    RMMA: 7,
+    // Col 8: Primary Effects
+    GRINDING: 8, TMD: 8, SALIVA: 8,
+    // Col 9: Secondary Consequences
+    CERVICAL: 9, HYOID: 9, CS: 9, TOOTH: 9, HEADACHES: 9, EAR: 9,
+    // Col 10: Tertiary Consequences
+    WINDUP: 10, NECK_TIGHTNESS: 10, GLOBUS: 10,
 };
 
 const TIER_LABELS = {
-    0: 'INPUTS',
-    1: 'MECHANISMS',
-    2: 'PATHWAYS',
-    3: 'CENTRAL',
-    4: 'CONSEQUENCES',
+    1: '1', 2: '2', 3: '3', 4: '4', 5: '5',
+    6: '6', 7: '7', 8: '8', 9: '9', 10: '10',
 };
 
-const NUM_TIERS = 5;
+const NUM_TIERS = 10;
 
-// Intervention column assignments (half-tier positions between tier columns)
-// Column 0.5 = between INPUTS and MECHANISMS
-// Column 1.5 = between MECHANISMS and PATHWAYS
-// Column 2.5 = between PATHWAYS and CENTRAL
-// Column 3.5 = between CENTRAL and CONSEQUENCES
+// Intervention column assignments (half-column positions between main columns)
 const INTERVENTION_COLUMNS = {
-    // Targeting Tier 0 (inputs)
-    OSA_TX: 0.5, CBT_TX: 0.5, VIT_D_TX: 0.5, SCREENS_TX: 0.5,
-    SSRI_TX: 0.5, MORNING_FAST_TX: 0.5,
-    // Targeting Tier 0 + Tier 1
-    MINDFULNESS_TX: 0.5, NATURE_TX: 0.5, EXERCISE_TX: 0.5, PPI_TX: 0.5,
-    // Targeting Tier 0 + wider spans
-    REFLUX_DIET_TX: 0.5, BED_ELEV_TX: 0.5, MEAL_TIMING_TX: 0.5,
-    CIRCADIAN_TX: 0.5, SLEEP_HYG_TX: 0.5,
-    PHYSIO_TX: 0.5, POSTURE_TX: 0.5,
-    // Targeting Tier 1 only
-    BREATHING_TX: 0.5, WARM_SHOWER_TX: 0.5, MULTI_TX: 0.5,
-    TONGUE_TX: 0.5,
-    // Targeting Tier 1-2 or Tier 2 only
-    NEUROSYM_TX: 1.5,
-    YOGA_TX: 1.5, MG_SUPP: 1.5, THEANINE_TX: 1.5, GLYCINE_TX: 1.5,
-    HYDRATION: 1.5,
-    // Targeting Tier 3
-    BIOFEEDBACK_TX: 2.5, JAW_RELAX_TX: 2.5,
-    // Targeting Tier 3-4 or Tier 4 only
-    BOTOX_TX: 3.5,
-    MASSAGE_TX: 3.5, HEAT_TX: 3.5, SPLINT: 3.5,
+    // Col 0.5 (before root triggers)
+    OSA_TX: 0.5,
+    // Col 1.5 (targeting col 2 inputs)
+    CBT_TX: 1.5, MINDFULNESS_TX: 1.5, NATURE_TX: 1.5,
+    EXERCISE_TX: 1.5, VIT_D_TX: 1.5, SCREENS_TX: 1.5,
+    CIRCADIAN_TX: 1.5, SLEEP_HYG_TX: 1.5, SSRI_TX: 1.5,
+    POSTURE_TX: 1.5, TONGUE_TX: 1.5, MULTI_TX: 1.5,
+    // Col 2.5 (targeting col 3 disease states)
+    MORNING_FAST_TX: 2.5, REFLUX_DIET_TX: 2.5, MEAL_TIMING_TX: 2.5,
+    BED_ELEV_TX: 2.5, PPI_TX: 2.5, BREATHING_TX: 2.5, YOGA_TX: 2.5,
+    // Col 3.5 (targeting col 4 mechanisms)
+    WARM_SHOWER_TX: 3.5, HYDRATION: 3.5, NEUROSYM_TX: 3.5,
+    MG_SUPP: 3.5, THEANINE_TX: 3.5, GLYCINE_TX: 3.5,
+    // Col 6.5 (targeting RMMA)
+    BIOFEEDBACK_TX: 6.5, JAW_RELAX_TX: 6.5, BOTOX_TX: 6.5,
+    // Col 7.5 (targeting col 8 effects)
+    PHYSIO_TX: 7.5, MASSAGE_TX: 7.5, HEAT_TX: 7.5,
+    // Col 8.5 (targeting col 9 consequences)
+    SPLINT: 8.5,
 };
 
 function computeTieredPositions(cy, width, height) {
@@ -1249,14 +1248,14 @@ function computeTieredPositions(cy, width, height) {
     const padY = 60;
     const labelHeight = 30;
 
-    // Column position helper: maps column 0..4 (inc. half-steps) to x-coordinate
+    // Column position helper: maps column 1..10 (inc. half-steps) to x-coordinate
     function columnX(col) {
-        return padX + (col / 4) * (width - 2 * padX);
+        return padX + ((col - 1) / (NUM_TIERS - 1)) * (width - 2 * padX);
     }
 
     // Group non-intervention, non-label nodes by tier
     const tierBuckets = {};
-    for (let t = 0; t < NUM_TIERS; t++) tierBuckets[t] = [];
+    for (let t = 1; t <= NUM_TIERS; t++) tierBuckets[t] = [];
     const interventionNodes = [];
 
     cy.nodes().forEach(n => {
@@ -1274,8 +1273,8 @@ function computeTieredPositions(cy, width, height) {
 
     const positions = {};
 
-    // Place mechanism/evidence nodes in their tier columns
-    for (let t = 0; t < NUM_TIERS; t++) {
+    // Place mechanism/evidence nodes in their column
+    for (let t = 1; t <= NUM_TIERS; t++) {
         const ids = tierBuckets[t];
         if (ids.length === 0) continue;
 
@@ -1306,7 +1305,7 @@ function computeTieredPositions(cy, width, height) {
             } else {
                 const minT = Math.min(...tiers);
                 col = minT + 0.5;
-                col = Math.max(0.5, Math.min(3.5, col));
+                col = Math.max(0.5, Math.min(NUM_TIERS - 0.5, col));
             }
         }
 
@@ -1346,7 +1345,7 @@ function computeTieredPositions(cy, width, height) {
     });
 
     // Place tier label nodes at the top of each column
-    for (let t = 0; t < NUM_TIERS; t++) {
+    for (let t = 1; t <= NUM_TIERS; t++) {
         positions[`_tier_${t}`] = { x: columnX(t), y: padY };
     }
 
