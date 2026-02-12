@@ -657,6 +657,19 @@ const CYTOSCAPE_STYLES = [
     { selector: 'node.tx-target-highlighted', style: { opacity: 1, 'border-width': 2, 'border-color': '#38bdf8', 'z-index': 998 } },
     // Pinned intervention node (amber border)
     { selector: 'node.tx-pinned', style: { 'border-width': 3, 'border-color': '#f59e0b', 'z-index': 999 } },
+
+    // ── Defense heatmap ──
+    { selector: 'node.defense-node', style: {
+        'border-color': 'data(defenseColor)',
+        'border-width': 3,
+        'background-opacity': 'data(defenseOpacity)',
+    }},
+    { selector: 'edge.defense-edge', style: {
+        'line-color': 'data(defenseColor)',
+        'target-arrow-color': 'data(defenseColor)',
+        'width': 'data(defenseWidth)',
+        'opacity': 'data(defenseOpacity)',
+    }},
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -675,6 +688,7 @@ let elkRegistered = false;
 let showInterventions = false; // Interventions hidden by default
 let showFeedbackEdges = true;  // Feedback edges visible by default
 let showProtectiveEdges = true; // Protective mechanism edges visible by default
+let showDefenseMode = false;   // Defense heatmap mode hidden by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
 
@@ -1189,6 +1203,17 @@ function createCyInstance(containerId, graphData, isPreview = false) {
         addInterventionBadges(container, cy, maps);
     }
 
+    // If defense mode is active, apply heatmap + defense badges
+    if (showDefenseMode && !isPreview) {
+        applyDefenseHeatmap(cy, graphData);
+        addDefenseBadges(container, cy, graphData);
+    }
+
+    // Always build the check-in panel on the interventions tab graph
+    if (containerId === 'causal-graph-cy' && !isPreview) {
+        buildCheckinPanel(graphData);
+    }
+
     return cy;
 }
 
@@ -1209,6 +1234,7 @@ function destroyCyInstance(containerId) {
         const sidebar = container.querySelector('.tx-sidebar');
         if (sidebar) sidebar.remove();
         removeInterventionBadges(container);
+        removeDefenseBadges(container);
         const popover = container.querySelector('.tx-popover');
         if (popover) popover.remove();
         const legend = container.parentElement?.querySelector('.graph-legend');
@@ -1496,6 +1522,7 @@ function addZoomControls(container, cy) {
         <button class="panzoom-btn" title="Fit to view" data-action="fit">&#x21BA;</button>
         <button class="panzoom-btn" title="Fullscreen" data-action="fullscreen">&#x26F6;</button>
         <button class="panzoom-btn panzoom-btn-toggle ${showInterventions ? 'active' : ''}" title="${showInterventions ? 'Hide interventions' : 'Show interventions'}" data-action="toggleTx">Tx</button>
+        <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-defense ${showDefenseMode ? 'active' : ''}" title="${showDefenseMode ? 'Hide defense heatmap' : 'Show defense heatmap'}" data-action="toggleDf">Df</button>
         <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-fb ${showFeedbackEdges ? 'active' : ''}" title="${showFeedbackEdges ? 'Hide feedback loops' : 'Show feedback loops'}" data-action="toggleFb">Fb</button>
         <button class="panzoom-btn panzoom-btn-toggle panzoom-btn-protective ${showProtectiveEdges ? 'active' : ''}" title="${showProtectiveEdges ? 'Hide protective mechanisms' : 'Show protective mechanisms'}" data-action="toggleProtective">Pr</button>
     `;
@@ -1516,6 +1543,9 @@ function addZoomControls(container, cy) {
     });
     controls.querySelector('[data-action="toggleTx"]').addEventListener('click', () => {
         toggleInterventions();
+    });
+    controls.querySelector('[data-action="toggleDf"]').addEventListener('click', () => {
+        toggleDefenseMode();
     });
     controls.querySelector('[data-action="toggleFb"]').addEventListener('click', () => {
         toggleFeedbackEdges();
@@ -1786,9 +1816,337 @@ function showNodePopover(container, cy, nodeId, maps) {
     setTimeout(() => document.addEventListener('click', closeHandler), 100);
 }
 
+// ═══════════════════════════════════════════════════════════
+// DEFENSE MODE: CHECK-IN PANEL + HEATMAP ENGINE
+// ═══════════════════════════════════════════════════════════
+
+const EFFECTIVENESS_WEIGHTS = {
+    untested: 0.5,
+    ineffective: 0.1,
+    modest: 0.4,
+    effective: 0.75,
+    highly_effective: 1.0,
+};
+
+const CASCADE_DECAY = 0.5; // each hop reduces inherited defense by 50%
+
+function todayKey() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function dateOffsetKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().split('T')[0];
+}
+
+function formatDateLabel(key) {
+    const today = todayKey();
+    if (key === today) return 'Today';
+    const yesterday = dateOffsetKey(-1);
+    if (key === yesterday) return 'Yesterday';
+    const d = new Date(key + 'T12:00:00');
+    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+// ── Check-in Panel ──
+
+let checkinDateOffset = 0; // 0 = today, -1 = yesterday, etc.
+
+function buildCheckinPanel(graphData) {
+    const panel = document.getElementById('defense-checkin');
+    if (!panel) return;
+
+    const maps = buildInterventionMaps(graphData);
+    const dateKey = dateOffsetKey(checkinDateOffset);
+    const checkIns = storage.getCheckIns(dateKey);
+    const checkInSet = new Set(checkIns);
+
+    // Compute streaks for all interventions
+    const rangeData = storage.getCheckInsRange(7);
+    function streak(id) {
+        let count = 0;
+        Object.values(rangeData).forEach(ids => { if (ids.includes(id)) count++; });
+        return count;
+    }
+
+    const totalInterventions = maps.interventionNodeMap.size;
+    const checkedToday = checkInSet.size;
+
+    let html = `
+        <div class="defense-checkin-container">
+            <div class="defense-checkin-header">
+                <span class="defense-checkin-title">Daily Defense Check-in</span>
+                <div class="defense-checkin-nav">
+                    <button class="defense-date-btn" data-dir="-1">&larr;</button>
+                    <span class="defense-date-label">${formatDateLabel(dateKey)}</span>
+                    <button class="defense-date-btn" data-dir="1" ${checkinDateOffset >= 0 ? 'disabled' : ''}>&rarr;</button>
+                </div>
+                <span class="defense-checkin-summary">${checkedToday}/${totalInterventions} active</span>
+                <button class="defense-checkin-toggle" title="Collapse">&#x25BC;</button>
+            </div>
+            <div class="defense-checkin-body">
+                <div class="defense-checkin-grid">`;
+
+    INTERVENTION_CATEGORIES.forEach(cat => {
+        html += `<div class="defense-checkin-cat">`;
+        html += `<div class="defense-checkin-cat-name">${cat.name}</div>`;
+        cat.items.forEach(id => {
+            const node = maps.interventionNodeMap.get(id);
+            if (!node) return;
+            const label = node.label.replace(/\n/g, ' ');
+            const s = streak(id);
+            const checked = checkInSet.has(id);
+            html += `<label class="defense-checkin-item${checked ? ' checked' : ''}">
+                <input type="checkbox" data-tx-id="${id}" ${checked ? 'checked' : ''}>
+                <span class="defense-item-label">${label}</span>
+                <span class="defense-item-streak ${s >= 5 ? 'high' : s >= 3 ? 'med' : 'low'}">${s}/7</span>
+            </label>`;
+        });
+        html += `</div>`;
+    });
+
+    html += `</div></div></div>`;
+    panel.innerHTML = html;
+
+    // Wire checkbox handlers
+    panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const txId = cb.dataset.txId;
+            storage.toggleCheckIn(dateKey, txId);
+            buildCheckinPanel(graphData);
+            // If defense mode is active, update the heatmap
+            if (showDefenseMode) reRenderGraphs();
+        });
+    });
+
+    // Wire date navigation
+    panel.querySelectorAll('.defense-date-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const dir = parseInt(btn.dataset.dir);
+            checkinDateOffset += dir;
+            if (checkinDateOffset > 0) checkinDateOffset = 0;
+            buildCheckinPanel(graphData);
+        });
+    });
+
+    // Wire collapse toggle
+    const collapseBtn = panel.querySelector('.defense-checkin-toggle');
+    const body = panel.querySelector('.defense-checkin-body');
+    if (collapseBtn && body) {
+        collapseBtn.addEventListener('click', () => {
+            body.classList.toggle('collapsed');
+            collapseBtn.textContent = body.classList.contains('collapsed') ? '\u25B6' : '\u25BC';
+        });
+    }
+}
+
+// ── Defense Score Computation ──
+
+function computeDefenseScores(graphData) {
+    const maps = buildInterventionMaps(graphData);
+    const rangeData = storage.getCheckInsRange(7);
+    const ratings = storage.getAllRatings();
+    const ratingMap = {};
+    ratings.forEach(r => { ratingMap[r.interventionId] = r.effectiveness; });
+
+    // For each intervention, compute: weight * (days_active / 7)
+    function interventionStrength(txId) {
+        const eff = ratingMap[txId] || 'untested';
+        const weight = EFFECTIVENESS_WEIGHTS[eff] || 0.5;
+        let daysActive = 0;
+        Object.values(rangeData).forEach(ids => { if (ids.includes(txId)) daysActive++; });
+        return weight * (daysActive / 7);
+    }
+
+    // Compute direct defense for each target node
+    const directScores = new Map(); // nodeId → score (0..1)
+    maps.targetInterventions.forEach((txIds, nodeId) => {
+        let total = 0;
+        txIds.forEach(txId => { total += interventionStrength(txId); });
+        directScores.set(nodeId, Math.min(1, total));
+    });
+
+    // Build adjacency from graph edges (forward direction only)
+    const adjacency = new Map(); // source → [target]
+    graphData.edges.forEach(e => {
+        const src = e.data.source;
+        const tgt = e.data.target;
+        if (e.data.edgeType === 'feedback' || e.data.edgeType === 'protective') return;
+        if (maps.interventionNodeMap.has(src)) return; // skip intervention edges
+        if (!adjacency.has(src)) adjacency.set(src, []);
+        adjacency.get(src).push(tgt);
+    });
+
+    // Cascade: BFS from directly defended nodes downstream
+    const allScores = new Map(); // nodeId → { score, isDirect }
+
+    // Initialize all mechanism nodes with 0
+    graphData.nodes.forEach(n => {
+        if (n.data.styleClass !== 'intervention') {
+            allScores.set(n.data.id, { score: 0, isDirect: false });
+        }
+    });
+
+    // Set direct scores
+    directScores.forEach((score, nodeId) => {
+        allScores.set(nodeId, { score, isDirect: true });
+    });
+
+    // BFS cascade: propagate defense downstream with decay
+    const queue = [];
+    directScores.forEach((score, nodeId) => {
+        if (score > 0) queue.push({ nodeId, strength: score, depth: 0 });
+    });
+
+    const visited = new Set();
+    while (queue.length > 0) {
+        const { nodeId, strength, depth } = queue.shift();
+        const children = adjacency.get(nodeId) || [];
+        children.forEach(childId => {
+            const cascaded = strength * CASCADE_DECAY;
+            if (cascaded < 0.01) return; // too small to matter
+            const existing = allScores.get(childId);
+            if (!existing) return;
+            // Only add cascaded defense, don't overwrite direct
+            const newScore = Math.min(1, existing.score + cascaded);
+            if (newScore > existing.score) {
+                allScores.set(childId, {
+                    score: newScore,
+                    isDirect: existing.isDirect,
+                });
+                const key = `${childId}-${depth}`;
+                if (!visited.has(key)) {
+                    visited.add(key);
+                    queue.push({ nodeId: childId, strength: cascaded, depth: depth + 1 });
+                }
+            }
+        });
+    }
+
+    return allScores;
+}
+
+function scoreToColor(score, isDirect) {
+    const opacity = isDirect ? 1.0 : 0.7;
+    if (score >= 0.6) return { color: '#22c55e', border: '#16a34a', opacity }; // green
+    if (score >= 0.3) return { color: '#f59e0b', border: '#d97706', opacity }; // amber
+    return { color: '#ef4444', border: '#dc2626', opacity }; // red
+}
+
+function scoreToLabel(score) {
+    return Math.round(score * 100) + '%';
+}
+
+// ── Heatmap Application ──
+
+function applyDefenseHeatmap(cy, graphData) {
+    const scores = computeDefenseScores(graphData);
+
+    cy.batch(() => {
+        cy.nodes().forEach(node => {
+            const sc = node.data('styleClass');
+            if (sc === 'groupLabel') return;
+            const entry = scores.get(node.id());
+            if (!entry) return;
+
+            const { color, border, opacity } = scoreToColor(entry.score, entry.isDirect);
+            node.data('defenseColor', border);
+            node.data('defenseBg', color);
+            node.data('defenseOpacity', opacity);
+            node.data('defenseScore', entry.score);
+            node.addClass('defense-node');
+        });
+
+        // Edge coloring: based on how defended the source and target are
+        cy.edges().forEach(edge => {
+            const srcEntry = scores.get(edge.data('source'));
+            const tgtEntry = scores.get(edge.data('target'));
+            if (!srcEntry && !tgtEntry) return;
+
+            // Edge defense = min of source and target (weakest link)
+            const edgeScore = Math.min(
+                srcEntry ? srcEntry.score : 0,
+                tgtEntry ? tgtEntry.score : 0
+            );
+            const { color } = scoreToColor(edgeScore, false);
+            // Undefended edges stay prominent; defended edges fade
+            const edgeWidth = edgeScore > 0.5 ? 0.8 : (edgeScore > 0.2 ? 1.2 : 2.0);
+            const edgeOp = edgeScore > 0.5 ? 0.35 : (edgeScore > 0.2 ? 0.55 : 0.85);
+
+            edge.data('defenseColor', color);
+            edge.data('defenseWidth', edgeWidth);
+            edge.data('defenseOpacity', edgeOp);
+            edge.addClass('defense-edge');
+        });
+    });
+}
+
+function addDefenseBadges(container, cy, graphData) {
+    removeDefenseBadges(container);
+    const scores = computeDefenseScores(graphData);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'defense-badge-overlay';
+    container.appendChild(overlay);
+
+    function updatePositions() {
+        overlay.innerHTML = '';
+        scores.forEach((entry, nodeId) => {
+            if (entry.score === 0 && !entry.isDirect) return; // skip nodes with no defense and no direct intervention
+            const node = cy.getElementById(nodeId);
+            if (!node.length || node.removed()) return;
+            const sc = node.data('styleClass');
+            if (sc === 'groupLabel') return;
+
+            const bb = node.renderedBoundingBox();
+            const { color } = scoreToColor(entry.score, entry.isDirect);
+            const pct = scoreToLabel(entry.score);
+
+            const badge = document.createElement('div');
+            badge.className = 'defense-badge';
+            badge.textContent = pct;
+            badge.style.left = `${bb.x2 - 2}px`;
+            badge.style.top = `${bb.y1 - 2}px`;
+            badge.style.background = color;
+            badge.style.borderColor = color;
+            overlay.appendChild(badge);
+        });
+    }
+
+    updatePositions();
+    cy.on('pan zoom', updatePositions);
+    cy.one('layoutstop', updatePositions);
+    container._defenseBadgeHandler = updatePositions;
+}
+
+function removeDefenseBadges(container) {
+    const overlay = container.querySelector('.defense-badge-overlay');
+    if (overlay) overlay.remove();
+    const cy = cyInstances.get(container.id);
+    if (cy && container._defenseBadgeHandler) {
+        cy.off('pan zoom', container._defenseBadgeHandler);
+        container._defenseBadgeHandler = null;
+    }
+}
+
 function toggleInterventions() {
     showInterventions = !showInterventions;
     if (!showInterventions) pinnedInterventions.clear();
+    if (showInterventions && showDefenseMode) showDefenseMode = false; // mutually exclusive
+    reRenderGraphs();
+}
+
+function toggleDefenseMode() {
+    showDefenseMode = !showDefenseMode;
+    if (showDefenseMode && showInterventions) {
+        showInterventions = false;
+        pinnedInterventions.clear();
+    }
+    reRenderGraphs();
+}
+
+function reRenderGraphs() {
     if (_fullscreenContainer) {
         const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
         if (config) renderGraph(config);
@@ -1799,22 +2157,12 @@ function toggleInterventions() {
 
 function toggleFeedbackEdges() {
     showFeedbackEdges = !showFeedbackEdges;
-    if (_fullscreenContainer) {
-        const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
-        if (config) renderGraph(config);
-    } else {
-        renderAllGraphs();
-    }
+    reRenderGraphs();
 }
 
 function toggleProtectiveEdges() {
     showProtectiveEdges = !showProtectiveEdges;
-    if (_fullscreenContainer) {
-        const config = GRAPH_CONFIGS.find(c => c.cyContainerId === _fullscreenContainer.id);
-        if (config) renderGraph(config);
-    } else {
-        renderAllGraphs();
-    }
+    reRenderGraphs();
 }
 
 // ═══════════════════════════════════════════════════════════

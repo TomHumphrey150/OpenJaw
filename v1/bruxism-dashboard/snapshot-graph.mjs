@@ -136,6 +136,52 @@ const STATES = {
         await waitForGraph(page, 'causal-graph-experiments-cy');
         return screenshotGraph(page, 'causal-graph-experiments', 'graph-experiments.png');
     },
+
+    async defense(page) {
+        log('State: defense mode (Df ON, with some check-ins)');
+        await switchToTab(page, 'interventions');
+        await waitForGraph(page, 'causal-graph-cy');
+        // Simulate some daily check-ins via localStorage
+        await page.evaluate(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const data = JSON.parse(localStorage.getItem('bruxism_personal_data') || '{}');
+            if (!data.dailyCheckIns) data.dailyCheckIns = {};
+            // Check in ~15 interventions for today and a few past days
+            const active = ['PPI_TX', 'REFLUX_DIET_TX', 'MEAL_TIMING_TX', 'BED_ELEV_TX', 'HYDRATION',
+                'SCREENS_TX', 'CIRCADIAN_TX', 'SLEEP_HYG_TX', 'MINDFULNESS_TX', 'EXERCISE_TX',
+                'BREATHING_TX', 'MG_SUPP', 'YOGA_TX', 'PHYSIO_TX', 'SPLINT'];
+            const partial = ['PPI_TX', 'MEAL_TIMING_TX', 'BED_ELEV_TX', 'SCREENS_TX', 'MG_SUPP',
+                'BREATHING_TX', 'SPLINT', 'PHYSIO_TX', 'HYDRATION', 'EXERCISE_TX'];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const k = d.toISOString().split('T')[0];
+                data.dailyCheckIns[k] = i === 0 ? active : (i < 3 ? active : partial);
+            }
+            // Add some effectiveness ratings
+            if (!data.interventionRatings) data.interventionRatings = [];
+            const ratings = [
+                { interventionId: 'PPI_TX', effectiveness: 'highly_effective' },
+                { interventionId: 'BED_ELEV_TX', effectiveness: 'effective' },
+                { interventionId: 'MG_SUPP', effectiveness: 'effective' },
+                { interventionId: 'SPLINT', effectiveness: 'highly_effective' },
+                { interventionId: 'BREATHING_TX', effectiveness: 'modest' },
+                { interventionId: 'SCREENS_TX', effectiveness: 'modest' },
+            ];
+            ratings.forEach(r => {
+                const idx = data.interventionRatings.findIndex(x => x.interventionId === r.interventionId);
+                if (idx >= 0) data.interventionRatings[idx] = { ...r, lastUpdated: new Date().toISOString() };
+                else data.interventionRatings.push({ ...r, lastUpdated: new Date().toISOString() });
+            });
+            localStorage.setItem('bruxism_personal_data', JSON.stringify(data));
+        });
+        // Toggle Df mode
+        await page.click('#causal-graph .panzoom-controls button[data-action="toggleDf"]');
+        await waitForGraph(page, 'causal-graph-cy');
+        // Screenshot the graph container
+        await screenshotGraph(page, 'causal-graph', 'graph-defense.png');
+        // Also screenshot full tab with check-in panel
+        return screenshotGraph(page, 'interventions-tab', 'graph-defense-full.png');
+    },
 };
 
 // ── Main ──

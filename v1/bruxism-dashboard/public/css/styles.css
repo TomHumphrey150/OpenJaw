@@ -1763,3 +1763,208 @@ footer {
     background: rgba(245, 158, 11, 0.15);
     color: #fcd34d;
 }
+
+/* ── Defense Mode Toggle Button ── */
+.panzoom-btn-defense.active {
+    background: #15803d !important;
+    color: #dcfce7 !important;
+    border-color: #22c55e !important;
+}
+
+/* ── Daily Defense Check-in Panel ── */
+.defense-checkin-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    overflow: hidden;
+}
+
+.defense-checkin-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.defense-checkin-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.defense-checkin-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.defense-date-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.defense-date-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #000;
+}
+
+.defense-date-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.defense-date-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 80px;
+    text-align: center;
+}
+
+.defense-checkin-summary {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.defense-checkin-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px;
+}
+
+.defense-checkin-body {
+    padding: 12px 16px;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 600px;
+    overflow: hidden;
+}
+
+.defense-checkin-body.collapsed {
+    max-height: 0;
+    padding: 0 16px;
+}
+
+.defense-checkin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px 20px;
+}
+
+.defense-checkin-cat {
+    min-width: 0;
+}
+
+.defense-checkin-cat-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.defense-checkin-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    cursor: pointer;
+    font-size: 11.5px;
+    color: #9ca3af;
+    transition: color 0.15s;
+}
+
+.defense-checkin-item:hover {
+    color: #e5e7eb;
+}
+
+.defense-checkin-item.checked {
+    color: #d1d5db;
+}
+
+.defense-checkin-item input[type="checkbox"] {
+    accent-color: #22c55e;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.defense-item-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.defense-item-streak {
+    font-size: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.defense-item-streak.high {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.defense-item-streak.med {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.defense-item-streak.low {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Defense Badges ── */
+.defense-badge-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.defense-badge {
+    position: absolute;
+    pointer-events: none;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 28px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0 4px;
+    color: #fff;
+    border: 1.5px solid;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
