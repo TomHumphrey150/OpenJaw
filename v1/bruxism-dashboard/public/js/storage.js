@@ -1,459 +1,90 @@
 /**
  * Personal Data Storage Service
- * Stores all user data in localStorage with export/import support
+ * Split into focused domain modules; this file preserves the existing API.
  */
 
-const STORAGE_KEY = 'bruxism_personal_data';
-const STORAGE_VERSION = 1;
+export { loadData, saveData, clearData } from './storage/core.js';
 
-// Generate unique ID
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
+export {
+    addStudy,
+    updateStudy,
+    deleteStudy,
+    getPersonalStudies,
+} from './storage/studies.js';
 
-// Get current timestamp
-function now() {
-    return new Date().toISOString();
-}
+export {
+    addNote,
+    updateNote,
+    deleteNote,
+    getNotesFor,
+    getAllNotes,
+} from './storage/notes.js';
 
-// Empty store template
-const EMPTY_STORE = {
-    version: STORAGE_VERSION,
-    personalStudies: [],
-    notes: [],
-    experiments: [],
-    interventionRatings: [],
-    dailyCheckIns: {},          // { 'YYYY-MM-DD': ['INTERVENTION_ID', ...] }
-    hiddenInterventions: [],     // IDs of interventions hidden from check-in list
-    unlockedAchievements: [],   // Achievement IDs that have been earned
-    customCausalDiagram: undefined
-};
+export {
+    startExperiment,
+    addObservation,
+    completeExperiment,
+    abandonExperiment,
+    getActiveExperiments,
+    getCompletedExperiments,
+    getAllExperiments,
+    getExperimentForIntervention,
+} from './storage/experiments.js';
 
-/**
- * Load personal data from localStorage
- */
-export function loadData() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { ...EMPTY_STORE };
+export {
+    setRating,
+    getRating,
+    getAllRatings,
+} from './storage/ratings.js';
 
-        const data = JSON.parse(raw);
+export {
+    toggleCheckIn,
+    getCheckIns,
+    getCheckInsRange,
+    getStreakCount,
+} from './storage/checkIns.js';
 
-        // Version migration if needed
-        if (data.version !== STORAGE_VERSION) {
-            return migrateData(data);
-        }
+export {
+    toggleHiddenIntervention,
+    getHiddenInterventions,
+} from './storage/hiddenInterventions.js';
 
-        return data;
-    } catch (error) {
-        console.error('Failed to load personal data:', error);
-        return { ...EMPTY_STORE };
-    }
-}
+export {
+    saveDiagram,
+    getDiagram,
+    clearDiagram,
+} from './storage/diagram.js';
 
-/**
- * Save personal data to localStorage
- */
-export function saveData(data) {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        return true;
-    } catch (error) {
-        console.error('Failed to save personal data:', error);
-        return false;
-    }
-}
+export {
+    unlockAchievement,
+    getUnlockedAchievements,
+} from './storage/achievements.js';
 
-/**
- * Clear all personal data
- */
-export function clearData() {
-    localStorage.removeItem(STORAGE_KEY);
-    return { ...EMPTY_STORE };
-}
+export {
+    exportData,
+    importData,
+    downloadExport,
+} from './storage/io.js';
 
-/**
- * Migrate data from older versions
- */
-function migrateData(data) {
-    // Future: handle version migrations
-    return { ...EMPTY_STORE, ...data, version: STORAGE_VERSION };
-}
-
-// ===========================================
-// Personal Studies
-// ===========================================
-
-export function addStudy(study) {
-    const data = loadData();
-    const newStudy = {
-        ...study,
-        id: study.id || generateId(),
-        isPersonal: true,
-        addedAt: now()
-    };
-    data.personalStudies.push(newStudy);
-    saveData(data);
-    return newStudy;
-}
-
-export function updateStudy(id, updates) {
-    const data = loadData();
-    const index = data.personalStudies.findIndex(s => s.id === id);
-    if (index >= 0) {
-        data.personalStudies[index] = { ...data.personalStudies[index], ...updates };
-        saveData(data);
-        return data.personalStudies[index];
-    }
-    return null;
-}
-
-export function deleteStudy(id) {
-    const data = loadData();
-    data.personalStudies = data.personalStudies.filter(s => s.id !== id);
-    saveData(data);
-}
-
-export function getPersonalStudies() {
-    return loadData().personalStudies;
-}
-
-// ===========================================
-// Notes
-// ===========================================
-
-export function addNote(targetType, targetId, content) {
-    const data = loadData();
-    const note = {
-        id: generateId(),
-        targetType,
-        targetId,
-        content,
-        createdAt: now(),
-        updatedAt: now()
-    };
-    data.notes.push(note);
-    saveData(data);
-    return note;
-}
-
-export function updateNote(id, content) {
-    const data = loadData();
-    const index = data.notes.findIndex(n => n.id === id);
-    if (index >= 0) {
-        data.notes[index].content = content;
-        data.notes[index].updatedAt = now();
-        saveData(data);
-        return data.notes[index];
-    }
-    return null;
-}
-
-export function deleteNote(id) {
-    const data = loadData();
-    data.notes = data.notes.filter(n => n.id !== id);
-    saveData(data);
-}
-
-export function getNotesFor(targetType, targetId) {
-    const data = loadData();
-    return data.notes.filter(n => n.targetType === targetType && n.targetId === targetId);
-}
-
-export function getAllNotes() {
-    return loadData().notes;
-}
-
-// ===========================================
-// Experiments
-// ===========================================
-
-export function startExperiment(interventionId, interventionName) {
-    const data = loadData();
-    const experiment = {
-        id: generateId(),
-        interventionId,
-        interventionName,
-        startDate: now(),
-        status: 'active',
-        observations: [],
-        effectiveness: 'untested'
-    };
-    data.experiments.push(experiment);
-    saveData(data);
-    return experiment;
-}
-
-export function addObservation(experimentId, note, rating = null) {
-    const data = loadData();
-    const experiment = data.experiments.find(e => e.id === experimentId);
-    if (experiment) {
-        const observation = {
-            id: generateId(),
-            date: now(),
-            note,
-            rating
-        };
-        experiment.observations.push(observation);
-        saveData(data);
-        return observation;
-    }
-    return null;
-}
-
-export function completeExperiment(experimentId, effectiveness, summary = '') {
-    const data = loadData();
-    const experiment = data.experiments.find(e => e.id === experimentId);
-    if (experiment) {
-        experiment.status = 'completed';
-        experiment.endDate = now();
-        experiment.effectiveness = effectiveness;
-        experiment.summary = summary;
-        saveData(data);
-
-        // Also update the intervention rating
-        setRating(experiment.interventionId, effectiveness, summary);
-
-        return experiment;
-    }
-    return null;
-}
-
-export function abandonExperiment(experimentId) {
-    const data = loadData();
-    const experiment = data.experiments.find(e => e.id === experimentId);
-    if (experiment) {
-        experiment.status = 'abandoned';
-        experiment.endDate = now();
-        saveData(data);
-        return experiment;
-    }
-    return null;
-}
-
-export function getActiveExperiments() {
-    return loadData().experiments.filter(e => e.status === 'active');
-}
-
-export function getCompletedExperiments() {
-    return loadData().experiments.filter(e => e.status === 'completed');
-}
-
-export function getAllExperiments() {
-    return loadData().experiments;
-}
-
-export function getExperimentForIntervention(interventionId) {
-    const data = loadData();
-    return data.experiments.find(e => e.interventionId === interventionId && e.status === 'active');
-}
-
-// ===========================================
-// Intervention Ratings
-// ===========================================
-
-export function setRating(interventionId, effectiveness, notes = '') {
-    const data = loadData();
-    const existing = data.interventionRatings.findIndex(r => r.interventionId === interventionId);
-
-    const rating = {
-        interventionId,
-        effectiveness,
-        notes,
-        lastUpdated: now()
-    };
-
-    if (existing >= 0) {
-        data.interventionRatings[existing] = rating;
-    } else {
-        data.interventionRatings.push(rating);
-    }
-
-    saveData(data);
-    return rating;
-}
-
-export function getRating(interventionId) {
-    const data = loadData();
-    return data.interventionRatings.find(r => r.interventionId === interventionId);
-}
-
-export function getAllRatings() {
-    return loadData().interventionRatings;
-}
-
-// ===========================================
-// Daily Check-ins (defense tracking)
-// ===========================================
-
-function dateKey(date) {
-    if (typeof date === 'string') return date;
-    return date.toISOString().split('T')[0];
-}
-
-export function toggleCheckIn(date, interventionId) {
-    const data = loadData();
-    if (!data.dailyCheckIns) data.dailyCheckIns = {};
-    const key = dateKey(date);
-    if (!data.dailyCheckIns[key]) data.dailyCheckIns[key] = [];
-    const idx = data.dailyCheckIns[key].indexOf(interventionId);
-    if (idx >= 0) {
-        data.dailyCheckIns[key].splice(idx, 1);
-    } else {
-        data.dailyCheckIns[key].push(interventionId);
-    }
-    saveData(data);
-    return data.dailyCheckIns[key];
-}
-
-export function getCheckIns(date) {
-    const data = loadData();
-    if (!data.dailyCheckIns) return [];
-    return data.dailyCheckIns[dateKey(date)] || [];
-}
-
-export function getCheckInsRange(days = 7) {
-    const data = loadData();
-    if (!data.dailyCheckIns) return {};
-    const result = {};
-    const today = new Date();
-    for (let i = 0; i < days; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        const key = dateKey(d);
-        result[key] = data.dailyCheckIns[key] || [];
-    }
-    return result;
-}
-
-export function getStreakCount(interventionId, days = 7) {
-    const range = getCheckInsRange(days);
-    let count = 0;
-    Object.values(range).forEach(ids => {
-        if (ids.includes(interventionId)) count++;
-    });
-    return count;
-}
-
-// ===========================================
-// Hidden Interventions
-// ===========================================
-
-export function toggleHiddenIntervention(interventionId) {
-    const data = loadData();
-    if (!data.hiddenInterventions) data.hiddenInterventions = [];
-    const idx = data.hiddenInterventions.indexOf(interventionId);
-    if (idx >= 0) {
-        data.hiddenInterventions.splice(idx, 1);
-    } else {
-        data.hiddenInterventions.push(interventionId);
-    }
-    saveData(data);
-    return data.hiddenInterventions;
-}
-
-export function getHiddenInterventions() {
-    const data = loadData();
-    return data.hiddenInterventions || [];
-}
-
-// ===========================================
-// Causal Diagram
-// ===========================================
-
-export function saveDiagram(diagram) {
-    const data = loadData();
-    data.customCausalDiagram = {
-        ...diagram,
-        lastModified: now()
-    };
-    saveData(data);
-    return data.customCausalDiagram;
-}
-
-export function getDiagram() {
-    return loadData().customCausalDiagram;
-}
-
-export function clearDiagram() {
-    const data = loadData();
-    data.customCausalDiagram = undefined;
-    saveData(data);
-}
-
-// ===========================================
-// Achievements
-// ===========================================
-
-export function unlockAchievement(id) {
-    const data = loadData();
-    if (!data.unlockedAchievements) data.unlockedAchievements = [];
-    if (!data.unlockedAchievements.includes(id)) {
-        data.unlockedAchievements.push(id);
-        saveData(data);
-        return true; // newly unlocked
-    }
-    return false; // already had it
-}
-
-export function getUnlockedAchievements() {
-    const data = loadData();
-    return data.unlockedAchievements || [];
-}
-
-// ===========================================
-// Export / Import
-// ===========================================
-
-export function exportData() {
-    const data = loadData();
-    data.lastExport = now();
-    saveData(data);
-
-    return JSON.stringify(data, null, 2);
-}
-
-export function importData(jsonString) {
-    try {
-        const data = JSON.parse(jsonString);
-
-        // Validate structure
-        if (typeof data !== 'object' || data === null) {
-            return { success: false, errors: ['Invalid JSON structure'] };
-        }
-
-        // Ensure required arrays exist
-        const validated = {
-            version: STORAGE_VERSION,
-            personalStudies: Array.isArray(data.personalStudies) ? data.personalStudies : [],
-            notes: Array.isArray(data.notes) ? data.notes : [],
-            experiments: Array.isArray(data.experiments) ? data.experiments : [],
-            interventionRatings: Array.isArray(data.interventionRatings) ? data.interventionRatings : [],
-            dailyCheckIns: (data.dailyCheckIns && typeof data.dailyCheckIns === 'object') ? data.dailyCheckIns : {},
-            hiddenInterventions: Array.isArray(data.hiddenInterventions) ? data.hiddenInterventions : [],
-            unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
-            customCausalDiagram: data.customCausalDiagram || undefined
-        };
-
-        saveData(validated);
-        return { success: true };
-    } catch (error) {
-        return { success: false, errors: [error.message] };
-    }
-}
-
-export function downloadExport() {
-    const json = exportData();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bruxism-personal-data-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
+import { loadData, saveData, clearData } from './storage/core.js';
+import { addStudy, updateStudy, deleteStudy, getPersonalStudies } from './storage/studies.js';
+import { addNote, updateNote, deleteNote, getNotesFor, getAllNotes } from './storage/notes.js';
+import {
+    startExperiment,
+    addObservation,
+    completeExperiment,
+    abandonExperiment,
+    getActiveExperiments,
+    getCompletedExperiments,
+    getAllExperiments,
+    getExperimentForIntervention,
+} from './storage/experiments.js';
+import { setRating, getRating, getAllRatings } from './storage/ratings.js';
+import { toggleCheckIn, getCheckIns, getCheckInsRange, getStreakCount } from './storage/checkIns.js';
+import { toggleHiddenIntervention, getHiddenInterventions } from './storage/hiddenInterventions.js';
+import { saveDiagram, getDiagram, clearDiagram } from './storage/diagram.js';
+import { unlockAchievement, getUnlockedAchievements } from './storage/achievements.js';
+import { exportData, importData, downloadExport } from './storage/io.js';
 
 // Default export for convenience
 export default {
@@ -493,5 +124,5 @@ export default {
     clearDiagram,
     exportData,
     importData,
-    downloadExport
+    downloadExport,
 };
