@@ -17,6 +17,23 @@ export const EMPTY_STORE = {
     customCausalDiagram: undefined,
 };
 
+/**
+ * Create a fresh empty store instance with isolated nested structures.
+ */
+export function createEmptyStore() {
+    return {
+        version: STORAGE_VERSION,
+        personalStudies: [],
+        notes: [],
+        experiments: [],
+        interventionRatings: [],
+        dailyCheckIns: {},
+        hiddenInterventions: [],
+        unlockedAchievements: [],
+        customCausalDiagram: undefined,
+    };
+}
+
 // Generate unique ID
 export function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -39,7 +56,7 @@ export function dateKey(date) {
 export function loadData() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { ...EMPTY_STORE };
+        if (!raw) return createEmptyStore();
 
         const data = JSON.parse(raw);
 
@@ -51,7 +68,7 @@ export function loadData() {
         return data;
     } catch (error) {
         console.error('Failed to load personal data:', error);
-        return { ...EMPTY_STORE };
+        return createEmptyStore();
     }
 }
 
@@ -73,7 +90,7 @@ export function saveData(data) {
  */
 export function clearData() {
     localStorage.removeItem(STORAGE_KEY);
-    return { ...EMPTY_STORE };
+    return createEmptyStore();
 }
 
 /**
@@ -81,5 +98,5 @@ export function clearData() {
  */
 function migrateData(data) {
     // Future: handle version migrations
-    return { ...EMPTY_STORE, ...data, version: STORAGE_VERSION };
+    return { ...createEmptyStore(), ...data, version: STORAGE_VERSION };
 }

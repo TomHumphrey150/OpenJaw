@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts"
+    "dev": "ts-node src/server.ts",
+    "test:defense-scoring": "node --experimental-default-type=module --test test/defenseScoring.test.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",

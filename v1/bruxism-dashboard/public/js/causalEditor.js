@@ -1135,6 +1135,17 @@ function buildCheckinPanel(graphData) {
         cat.items.forEach(id => catLookup.set(id, cat.name));
     });
 
+    function quantile(sortedVals, q) {
+        if (!sortedVals || sortedVals.length === 0) return 0;
+        if (q <= 0) return sortedVals[0];
+        if (q >= 1) return sortedVals[sortedVals.length - 1];
+        const idx = (sortedVals.length - 1) * q;
+        const lo = Math.floor(idx);
+        const hi = Math.ceil(idx);
+        if (lo === hi) return sortedVals[lo];
+        return sortedVals[lo] + (sortedVals[hi] - sortedVals[lo]) * (idx - lo);
+    }
+
     // Sort all interventions by impact score descending
     const allTxIds = [...maps.interventionNodeMap.keys()];
     allTxIds.sort((a, b) => {
@@ -1142,6 +1153,12 @@ function buildCheckinPanel(graphData) {
         const sb = (impact.get(b) || { score: 0 }).score;
         return sb - sa;
     });
+
+    const allImpactScoresAsc = allTxIds
+        .map(id => (impact.get(id) || { score: 0 }).score)
+        .sort((a, b) => a - b);
+    const impactMedThreshold = quantile(allImpactScoresAsc, 1 / 3);
+    const impactHighThreshold = quantile(allImpactScoresAsc, 2 / 3);
 
     // Filter out hidden interventions
     const hiddenSet = new Set(storage.getHiddenInterventions());
@@ -1206,7 +1223,11 @@ function buildCheckinPanel(graphData) {
         const score = (impact.get(id) || { score: 0 }).score;
         const barPct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
         const isActive = _activeCheckinTxId === id;
-        const scoreClass = barPct >= 66 ? 'high' : barPct >= 33 ? 'med' : 'low';
+        const scoreClass = score >= impactHighThreshold
+            ? 'high'
+            : score >= impactMedThreshold
+                ? 'med'
+                : 'low';
         const dimClass = dimmed ? ' defense-item-hidden' : '';
 
         // Streak tier class
