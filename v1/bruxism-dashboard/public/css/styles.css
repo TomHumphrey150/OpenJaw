@@ -224,7 +224,7 @@ header h1 {
 /* ── Graph + Sidebar Grid Layout ── */
 .graph-layout {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 280px 1fr 260px;
     gap: 0;
 }
 
@@ -252,8 +252,16 @@ header h1 {
     display: none;
 }
 
-/* When sidebar is empty/hidden, grid collapses to single column */
+/* When sidebar is empty/hidden, grid collapses — activity stays */
 .graph-layout:has(.defense-sidebar:empty) {
+    grid-template-columns: 1fr 260px;
+}
+
+.activity-sidebar:empty {
+    display: none;
+}
+
+.graph-layout:has(.defense-sidebar:empty):has(.activity-sidebar:empty) {
     grid-template-columns: 1fr;
 }
 
@@ -1800,6 +1808,19 @@ footer {
         overflow-y: auto;
     }
 
+    .activity-sidebar {
+        position: static;
+        height: auto;
+        overflow-y: visible;
+        border-left: none;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        order: 2; /* below defense sidebar */
+        margin-top: 12px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
     .graph-layout .graph-main {
         order: 0;
     }
@@ -2332,3 +2353,268 @@ footer {
     transform: translate(-50%, -50%) scale(1.2);
     background: rgb(74, 222, 128);
 }
+
+/* ============================================
+   Tower Defense Gamification
+   ============================================ */
+
+/* ── Shield Rating Ring ── */
+.shield-rating-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0 2px;
+}
+
+.shield-ring-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.shield-ring-svg {
+    width: 64px;
+    height: 64px;
+    transform: rotate(-90deg);
+}
+
+.shield-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 5;
+}
+
+.shield-ring-fill {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease, stroke 0.4s ease;
+}
+
+.shield-ring-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.shield-rating-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.shield-tier-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.shield-tier-label.tier-exposed { color: #ef4444; }
+.shield-tier-label.tier-guarded { color: #f59e0b; }
+.shield-tier-label.tier-protected { color: #22c55e; }
+.shield-tier-label.tier-fortified { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+.shield-tier-label.tier-impervious { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); animation: shimmer-text 2s ease-in-out infinite; }
+
+@keyframes shimmer-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; text-shadow: 0 0 16px rgba(251, 191, 36, 0.8); }
+}
+
+.shield-active-count {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* ── Streak Visual Tiers ── */
+.defense-item-streak.fortified {
+    color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.15) !important;
+    animation: streak-shimmer 2s ease-in-out infinite;
+}
+
+.defense-item-streak.strong {
+    color: #22c55e !important;
+    background: rgba(34, 197, 94, 0.1) !important;
+    animation: streak-pulse 3s ease-in-out infinite;
+}
+
+@keyframes streak-shimmer {
+    0%, 100% { box-shadow: 0 0 4px rgba(251, 191, 36, 0.3); }
+    50% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); }
+}
+
+@keyframes streak-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+}
+
+/* ── Check-in Flash Animation ── */
+@keyframes check-flash {
+    0% { background-color: rgba(34, 197, 94, 0.15); }
+    100% { background-color: transparent; }
+}
+
+.defense-checkin-item.flash {
+    animation: check-flash 0.3s ease-out;
+}
+
+/* ── Activity Feed (right column) ── */
+.activity-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    align-self: start;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border-color);
+    border-radius: 0 12px 12px 0;
+    padding: 0 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.activity-feed-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bg-card);
+    padding: 12px 4px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.activity-feed-count {
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(99, 102, 241, 0.7);
+    color: #fff;
+    padding: 1px 7px;
+    border-radius: 10px;
+}
+
+.activity-feed-empty {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 16px 4px;
+    font-style: italic;
+}
+
+.activity-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px 10px;
+    animation: activity-card-in 0.3s ease-out;
+}
+
+@keyframes activity-card-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.activity-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.activity-card-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.activity-card-time {
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+.activity-card-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.activity-card-diff {
+    font-weight: 700;
+    font-size: 11px;
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.activity-card-node {
+    flex: 1;
+    color: var(--text-secondary);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.activity-card-score {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* ── Toast Notifications ── */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(15, 15, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+    animation: toast-in 0.3s ease-out;
+}
+
+.toast.toast-out {
+    animation: toast-out 0.3s ease-in forwards;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(40px); }
+}
+
+.toast-level-up {
+    border-color: #22c55e;
+}
+
+

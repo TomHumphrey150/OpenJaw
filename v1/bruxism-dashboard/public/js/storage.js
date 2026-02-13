@@ -25,6 +25,7 @@ const EMPTY_STORE = {
     interventionRatings: [],
     dailyCheckIns: {},          // { 'YYYY-MM-DD': ['INTERVENTION_ID', ...] }
     hiddenInterventions: [],     // IDs of interventions hidden from check-in list
+    unlockedAchievements: [],   // Achievement IDs that have been earned
     customCausalDiagram: undefined
 };
 
@@ -381,6 +382,26 @@ export function clearDiagram() {
 }
 
 // ===========================================
+// Achievements
+// ===========================================
+
+export function unlockAchievement(id) {
+    const data = loadData();
+    if (!data.unlockedAchievements) data.unlockedAchievements = [];
+    if (!data.unlockedAchievements.includes(id)) {
+        data.unlockedAchievements.push(id);
+        saveData(data);
+        return true; // newly unlocked
+    }
+    return false; // already had it
+}
+
+export function getUnlockedAchievements() {
+    const data = loadData();
+    return data.unlockedAchievements || [];
+}
+
+// ===========================================
 // Export / Import
 // ===========================================
 
@@ -410,6 +431,7 @@ export function importData(jsonString) {
             interventionRatings: Array.isArray(data.interventionRatings) ? data.interventionRatings : [],
             dailyCheckIns: (data.dailyCheckIns && typeof data.dailyCheckIns === 'object') ? data.dailyCheckIns : {},
             hiddenInterventions: Array.isArray(data.hiddenInterventions) ? data.hiddenInterventions : [],
+            unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
             customCausalDiagram: data.customCausalDiagram || undefined
         };
 
@@ -464,6 +486,8 @@ export default {
     getStreakCount,
     toggleHiddenIntervention,
     getHiddenInterventions,
+    unlockAchievement,
+    getUnlockedAchievements,
     saveDiagram,
     getDiagram,
     clearDiagram,

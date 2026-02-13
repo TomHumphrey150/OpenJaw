@@ -670,6 +670,31 @@ const CYTOSCAPE_STYLES = [
         'width': 'data(defenseWidth)',
         'opacity': 'data(defenseOpacity)',
     }},
+    // ── Defense state classes with underlay glow ──
+    { selector: 'node.defense-fortified', style: {
+        'border-width': 4,
+        'border-color': '#22c55e',
+        'border-style': 'solid',
+        'underlay-color': '#22c55e',
+        'underlay-padding': 6,
+        'underlay-opacity': 0.12,
+    }},
+    { selector: 'node.defense-contested', style: {
+        'border-width': 3,
+        'border-color': '#f59e0b',
+        'border-style': 'dashed',
+        'underlay-color': '#f59e0b',
+        'underlay-padding': 5,
+        'underlay-opacity': 0.08,
+    }},
+    { selector: 'node.defense-exposed', style: {
+        'border-width': 2,
+        'border-color': '#ef4444',
+        'border-style': 'solid',
+        'underlay-color': '#ef4444',
+        'underlay-padding': 5,
+        'underlay-opacity': 0.10,
+    }},
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -682,9 +707,9 @@ const GRAPH_CONFIGS = [
 
 let currentGraphData = null;
 let showInterventions = false; // Interventions hidden by default
-let showFeedbackEdges = true;  // Feedback edges visible by default
-let showProtectiveEdges = true; // Protective mechanism edges visible by default
-let showDefenseMode = false;   // Defense heatmap mode hidden by default
+let showFeedbackEdges = false;  // Feedback edges hidden by default
+let showProtectiveEdges = false; // Protective mechanism edges hidden by default
+let showDefenseMode = true;    // Defense heatmap mode active by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
 let _checkinFilterNodeId = null;  // node ID to filter check-in panel by (null = show all)
@@ -694,6 +719,52 @@ const cyInstances = new Map();
 
 // Tooltip element (shared singleton)
 let tooltipEl = null;
+
+// Threat edge marching ants interval
+let _threatEdgeInterval = null;
+
+// Previous shield tier (for level-up detection)
+let _prevShieldTier = null;
+
+// Activity feed entries (persists across sidebar re-renders)
+const _activityFeed = [];
+
+// ═══════════════════════════════════════════════════════════
+// GAMIFICATION CONSTANTS
+// ═══════════════════════════════════════════════════════════
+
+const SHIELD_TIERS = [
+    { min: 90, label: 'Impervious', css: 'tier-impervious', color: '#fbbf24' },
+    { min: 75, label: 'Fortified',  css: 'tier-fortified',  color: '#4ade80' },
+    { min: 50, label: 'Protected',  css: 'tier-protected',  color: '#22c55e' },
+    { min: 25, label: 'Guarded',    css: 'tier-guarded',    color: '#f59e0b' },
+    { min: 0,  label: 'Exposed',    css: 'tier-exposed',    color: '#ef4444' },
+];
+
+function getShieldTier(rating) {
+    return SHIELD_TIERS.find(t => rating >= t.min) || SHIELD_TIERS[SHIELD_TIERS.length - 1];
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+
+function showToastNotification(message, cssClass = '', { html = false, duration = 2500 } = {}) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast' + (cssClass ? ' ' + cssClass : '');
+    if (html) {
+        toast.innerHTML = message;
+    } else {
+        toast.textContent = message;
+    }
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
 
 // ═══════════════════════════════════════════════════════════
 // INIT
@@ -1078,6 +1149,11 @@ function destroyCyInstance(containerId) {
     if (cy) {
         cy.destroy();
         cyInstances.delete(containerId);
+    }
+    // Clean up threat edge marching ants interval
+    if (_threatEdgeInterval) {
+        clearInterval(_threatEdgeInterval);
+        _threatEdgeInterval = null;
     }
     const container = document.getElementById(containerId);
     if (container) {
@@ -1728,6 +1804,89 @@ let checkinDateOffset = 0; // 0 = today, -1 = yesterday, etc.
 
 let _activeCheckinTxId = null; // currently expanded/highlighted intervention
 
+// ── Activity Feed (right column) ──
+function buildActivityCardHtml(entry) {
+    let html = `<div class="activity-card" data-tx-id="${entry.txId}">`;
+    html += `<div class="activity-card-header">`;
+    html += `<span class="activity-card-label">${entry.label}</span>`;
+    html += `<span class="activity-card-time">${entry.timeAgo}</span>`;
+    html += `</div>`;
+    entry.changes.forEach(c => {
+        const sign = c.diff > 0 ? '+' : '';
+        const diffPct = sign + Math.round(c.diff * 100) + '%';
+        const color = c.diff > 0 ? '#22c55e' : '#ef4444';
+        html += `<div class="activity-card-row">`;
+        html += `<span class="activity-card-diff" style="color:${color}">${diffPct}</span>`;
+        html += `<span class="activity-card-node">${c.nodeLabel}</span>`;
+        html += `<span class="activity-card-score">${Math.round(c.after * 100)}%</span>`;
+        html += `</div>`;
+    });
+    html += `</div>`;
+    return html;
+}
+
+function renderActivityFeed() {
+    const panel = document.getElementById('activity-feed-panel');
+    if (!panel) return;
+
+    // Skip full rebuild if panel already has cards (incremental updates handle it)
+    if (panel.querySelector('.activity-card') && _activityFeed.length > 0) return;
+
+    if (_activityFeed.length === 0) {
+        panel.innerHTML = `<div class="activity-feed-header">Activity</div>
+            <div class="activity-feed-empty">Check off defenses to see score changes</div>`;
+        return;
+    }
+
+    // Full rebuild (called on initial render only)
+    let html = `<div class="activity-feed-header">Activity <span class="activity-feed-count">${_activityFeed.length}</span></div>`;
+    _activityFeed.forEach(entry => { html += buildActivityCardHtml(entry); });
+    panel.innerHTML = html;
+}
+
+// Incremental insert: prepend a single new card without re-rendering existing ones
+function insertActivityCard(entry) {
+    const panel = document.getElementById('activity-feed-panel');
+    if (!panel) return;
+
+    // Ensure header exists and remove empty placeholder
+    let header = panel.querySelector('.activity-feed-header');
+    const empty = panel.querySelector('.activity-feed-empty');
+    if (empty) empty.remove();
+    if (!header) {
+        header = document.createElement('div');
+        header.className = 'activity-feed-header';
+        panel.prepend(header);
+    }
+    header.innerHTML = `Activity <span class="activity-feed-count">${_activityFeed.length}</span>`;
+
+    // Insert new card right after the header
+    const temp = document.createElement('div');
+    temp.innerHTML = buildActivityCardHtml(entry);
+    const card = temp.firstElementChild;
+    header.insertAdjacentElement('afterend', card);
+}
+
+// Incremental remove: remove a single card by txId without re-rendering
+function removeActivityCard(txId) {
+    const panel = document.getElementById('activity-feed-panel');
+    if (!panel) return;
+
+    const card = panel.querySelector(`.activity-card[data-tx-id="${txId}"]`);
+    if (card) card.remove();
+
+    // Update count badge
+    const header = panel.querySelector('.activity-feed-header');
+    if (header) {
+        if (_activityFeed.length === 0) {
+            panel.innerHTML = `<div class="activity-feed-header">Activity</div>
+                <div class="activity-feed-empty">Check off defenses to see score changes</div>`;
+        } else {
+            header.innerHTML = `Activity <span class="activity-feed-count">${_activityFeed.length}</span>`;
+        }
+    }
+}
+
 function buildCheckinPanel(graphData) {
     const panel = document.getElementById('defense-checkin');
     if (!panel) return;
@@ -1779,6 +1938,39 @@ function buildCheckinPanel(graphData) {
         ? (impact.get(allTxIds[0]) || { score: 1 }).score
         : 1;
 
+    // ── Category Synergy Computation ──
+    const activeCats = new Set();
+    INTERVENTION_CATEGORIES.forEach(cat => {
+        if (cat.items.some(id => checkInSet.has(id))) {
+            activeCats.add(cat.name);
+        }
+    });
+    const totalCats = INTERVENTION_CATEGORIES.length;
+    const synergyMultiplier = activeCats.size <= 1
+        ? 1.0
+        : 1 + 0.5 * ((activeCats.size - 1) / (totalCats - 1));
+
+    // ── Shield Rating Computation ──
+    const defenseScores = computeDefenseScores(graphData);
+    let weightedSum = 0;
+    let weightTotal = 0;
+    defenseScores.forEach((entry, nodeId) => {
+        const tier = NODE_TIERS[nodeId];
+        if (tier === undefined) return;
+        const w = tier >= 8 ? 3 : tier >= 6 ? 2 : 1;
+        weightedSum += entry.score * w;
+        weightTotal += w;
+    });
+    const rawRating = weightTotal > 0 ? (weightedSum / weightTotal) * 100 : 0;
+    const shieldRating = Math.min(100, Math.round(rawRating * synergyMultiplier));
+    const shieldTier = getShieldTier(shieldRating);
+
+    // Level-up toast detection
+    if (_prevShieldTier !== null && _prevShieldTier !== shieldTier.label) {
+        showToastNotification(`Level Up! \u2192 ${shieldTier.label}`, 'toast-level-up');
+    }
+    _prevShieldTier = shieldTier.label;
+
     // Helper: render a single intervention item
     function renderItem(id, dimmed) {
         const node = maps.interventionNodeMap.get(id);
@@ -1793,6 +1985,14 @@ function buildCheckinPanel(graphData) {
         const scoreClass = barPct >= 66 ? 'high' : barPct >= 33 ? 'med' : 'low';
         const dimClass = dimmed ? ' defense-item-hidden' : '';
 
+        // Streak tier class
+        let streakClass;
+        if (s >= 7) streakClass = 'fortified';
+        else if (s >= 5) streakClass = 'strong';
+        else if (s >= 3) streakClass = 'med';
+        else streakClass = 'low';
+        const streakLabel = s >= 7 ? `7/7 \u2605` : `${s}/7`;
+
         let h = `<div class="defense-item-wrapper${dimClass}">`;
         h += `<div class="defense-checkin-item${checked ? ' checked' : ''}${isActive ? ' active' : ''}" data-tx-id="${id}">`;
         h += `<div class="defense-check-btn">`;
@@ -1805,7 +2005,7 @@ function buildCheckinPanel(graphData) {
         h += `<span class="defense-item-cat">${cat}</span>`;
         h += `<span class="defense-impact-bar-wrap"><span class="defense-impact-bar" style="width:${barPct}%"></span></span>`;
         h += `<span class="defense-item-score ${scoreClass}"></span>`;
-        h += `<span class="defense-item-streak ${s >= 5 ? 'high' : s >= 3 ? 'med' : 'low'}">${s}/7</span>`;
+        h += `<span class="defense-item-streak ${streakClass}">${streakLabel}</span>`;
         h += `</div>`;
         h += `</div>`;
         h += `</div>`;
@@ -1853,8 +2053,28 @@ function buildCheckinPanel(graphData) {
 
     const checkedFiltered = filteredTxIds.filter(id => checkInSet.has(id)).length;
 
-    let html = `<div class="defense-sidebar-header">`;
+    // ── Build Header HTML ──
+    let html = '';
+    html += `<div class="defense-sidebar-header">`;
     html += `<div class="defense-sidebar-title">Daily Defense Check-in</div>`;
+
+    // Shield Rating Ring
+    const circumference = 2 * Math.PI * 27; // r=27
+    const dashLen = (shieldRating / 100) * circumference;
+    html += `<div class="shield-rating-container">`;
+    html += `<div class="shield-ring-wrap">`;
+    html += `<svg class="shield-ring-svg" viewBox="0 0 64 64">`;
+    html += `<circle class="shield-ring-bg" cx="32" cy="32" r="27"/>`;
+    html += `<circle class="shield-ring-fill" cx="32" cy="32" r="27" stroke="${shieldTier.color}" stroke-dasharray="${dashLen} ${circumference}"/>`;
+    html += `</svg>`;
+    html += `<span class="shield-ring-value">${shieldRating}</span>`;
+    html += `</div>`;
+    html += `<div class="shield-rating-info">`;
+    html += `<span class="shield-tier-label ${shieldTier.css}">${shieldTier.label}</span>`;
+    html += `<span class="shield-active-count">${checkedFiltered}/${filteredTxIds.length} active today</span>`;
+    html += `</div>`;
+    html += `</div>`;
+
     if (filterNodeLabel) {
         html += `<div class="defense-sidebar-filter">Filtering: ${filterNodeLabel} <span class="defense-filter-clear" data-action="clear-filter">&times;</span></div>`;
     }
@@ -1863,8 +2083,7 @@ function buildCheckinPanel(graphData) {
     html += `<span class="defense-date-label">${formatDateLabel(dateKey)}</span>`;
     html += `<button class="defense-date-btn" data-dir="1" ${checkinDateOffset >= 0 ? 'disabled' : ''}>&rarr;</button>`;
     html += `</div>`;
-    html += `<div class="defense-sidebar-summary">${checkedFiltered}/${filteredTxIds.length} active</div>`;
-    html += `</div>`;
+    html += `</div>`; // close defense-sidebar-header
 
     filteredTxIds.forEach(id => { html += renderItem(id, false); });
 
@@ -1877,6 +2096,8 @@ function buildCheckinPanel(graphData) {
     }
 
     panel.innerHTML = html;
+
+    // ── Wire Event Handlers ──
 
     // Wire clear filter button
     const clearFilterBtn = panel.querySelector('.defense-filter-clear');
@@ -1896,9 +2117,61 @@ function buildCheckinPanel(graphData) {
     panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', () => {
             const txId = cb.dataset.txId;
+            const wasChecked = cb.checked;
+            // Flash animation on the row
+            const row = cb.closest('.defense-checkin-item');
+            if (row && wasChecked) {
+                row.classList.add('flash');
+                setTimeout(() => row.classList.remove('flash'), 300);
+            }
+            // Snapshot defense scores before toggle
+            const scoresBefore = computeDefenseScores(graphData);
             storage.toggleCheckIn(dateKey, txId);
-            buildCheckinPanel(graphData);
-            if (showDefenseMode) reRenderGraphs();
+            // Snapshot defense scores after toggle
+            const scoresAfter = computeDefenseScores(graphData);
+            if (wasChecked) {
+                // Checked on: compute score diff and add feed entry
+                const changes = [];
+                scoresAfter.forEach(({ score: after }, nodeId) => {
+                    const before = scoresBefore.get(nodeId);
+                    if (!before) return;
+                    const diff = after - before.score;
+                    if (Math.abs(diff) >= 0.005) {
+                        const n = graphData.nodes.find(n => n.data.id === nodeId);
+                        const nodeLabel = n ? n.data.label.split('\n')[0] : nodeId;
+                        changes.push({ nodeLabel, diff, after });
+                    }
+                });
+                if (changes.length > 0) {
+                    changes.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+                    const txNode = maps.interventionNodeMap.get(txId);
+                    const txLabel = txNode ? txNode.label.replace(/\n/g, ' ') : txId;
+                    const entry = {
+                        txId,
+                        label: '+ ' + txLabel,
+                        timeAgo: 'just now',
+                        changes,
+                    };
+                    _activityFeed.unshift(entry);
+                    insertActivityCard(entry);
+                }
+            } else {
+                // Unchecked: remove the feed entry for this txId
+                for (let i = 0; i < _activityFeed.length; i++) {
+                    if (_activityFeed[i].txId === txId) {
+                        _activityFeed.splice(i, 1);
+                        break;
+                    }
+                }
+                removeActivityCard(txId);
+            }
+            // Scroll to the intervention's target node on graph
+            scrollToInterventionTargets(txId, maps, graphData);
+            // Delay rebuild slightly so flash is visible
+            setTimeout(() => {
+                buildCheckinPanel(graphData);
+                if (showDefenseMode) reRenderGraphs();
+            }, wasChecked ? 150 : 0);
         });
     });
 
@@ -2018,6 +2291,9 @@ function buildCheckinPanel(graphData) {
     // Dismiss context menu on click-outside or scroll
     document.addEventListener('click', dismissCtxMenu, { once: true });
     panel.addEventListener('scroll', dismissCtxMenu, { once: true });
+
+    // Render the activity feed in the right column
+    renderActivityFeed();
 }
 
 function scrollToInterventionTargets(txId, maps, graphData) {
@@ -2254,6 +2530,10 @@ function scoreToLabel(score) {
 function applyDefenseHeatmap(cy, graphData) {
     const scores = computeDefenseScores(graphData);
 
+    // Track threat edges with direction info for marching ants
+    const forwardThreatIds = [];
+    const feedbackThreatIds = [];
+
     cy.batch(() => {
         cy.nodes().forEach(node => {
             const sc = node.data('styleClass');
@@ -2267,6 +2547,16 @@ function applyDefenseHeatmap(cy, graphData) {
             node.data('defenseOpacity', opacity);
             node.data('defenseScore', entry.score);
             node.addClass('defense-node');
+
+            // Semantic defense state classes with underlay glow
+            node.removeClass('defense-fortified defense-contested defense-exposed');
+            if (entry.score >= 0.6) {
+                node.addClass('defense-fortified');
+            } else if (entry.score >= 0.3) {
+                node.addClass('defense-contested');
+            } else {
+                node.addClass('defense-exposed');
+            }
         });
 
         // Edge coloring: based on how defended the source and target are
@@ -2289,8 +2579,58 @@ function applyDefenseHeatmap(cy, graphData) {
             edge.data('defenseWidth', edgeWidth);
             edge.data('defenseOpacity', edgeOp);
             edge.addClass('defense-edge');
+
+            // Track threat edges for marching ants (separate by direction)
+            if (edgeScore < 0.2) {
+                if (edge.data('edgeType') === 'feedback') {
+                    feedbackThreatIds.push(edge.id());
+                } else {
+                    forwardThreatIds.push(edge.id());
+                }
+            }
         });
     });
+
+    // Marching ants animation on threat edges
+    // Forward edges: ants march upward (against causal flow)
+    // Feedback edges: ants march upward (along edge direction, which goes up)
+    if (_threatEdgeInterval) {
+        clearInterval(_threatEdgeInterval);
+        _threatEdgeInterval = null;
+    }
+    const allThreatIds = [...forwardThreatIds, ...feedbackThreatIds];
+    if (allThreatIds.length > 0) {
+        let fwdOffset = 0;
+        let fbOffset = 0;
+        _threatEdgeInterval = setInterval(() => {
+            // Decrement moves ants target→source (upward for forward edges)
+            fwdOffset = (fwdOffset - 0.4 + 10) % 10;
+            // Increment moves ants source→target (upward for feedback edges)
+            fbOffset = (fbOffset + 0.4) % 10;
+            cy.batch(() => {
+                forwardThreatIds.forEach(edgeId => {
+                    const edge = cy.getElementById(edgeId);
+                    if (edge.nonempty()) {
+                        edge.style({
+                            'line-style': 'dashed',
+                            'line-dash-pattern': [6, 4],
+                            'line-dash-offset': fwdOffset,
+                        });
+                    }
+                });
+                feedbackThreatIds.forEach(edgeId => {
+                    const edge = cy.getElementById(edgeId);
+                    if (edge.nonempty()) {
+                        edge.style({
+                            'line-style': 'dashed',
+                            'line-dash-pattern': [6, 4],
+                            'line-dash-offset': fbOffset,
+                        });
+                    }
+                });
+            });
+        }, 50);
+    }
 }
 
 function addDefenseBadges(container, cy, graphData) {
