@@ -17,7 +17,7 @@ test('vercel.json explicitly routes static public files and api functions', asyn
 
     const apiRoute = config.routes.find((r) => r.src === '/api/(.*)');
     const rootRoute = config.routes.find((r) => r.src === '/');
-    assert.equal(apiRoute?.dest, '/api/$1');
+    assert.equal(apiRoute?.dest, '/api/$1.ts');
     assert.equal(rootRoute?.dest, '/public/index.html');
 });
 
