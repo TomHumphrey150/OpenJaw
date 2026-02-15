@@ -1,7 +1,7 @@
 import { checkServerHealth, showServerError, showLoading, showApp } from './serverCheck.js';
 import { initCausalEditor } from './causalEditor.js';
 import * as storage from './storage.js';
-import { initSupabase, checkAuthAndRedirect, signOut } from './auth.js';
+import { initSupabase, checkAuthAndRedirect, signOut, getCurrentUser, getSupabase } from './auth.js';
 
 const runtimeDocument = typeof document !== 'undefined' ? document : null;
 const runtimeWindow = typeof window !== 'undefined' ? window : null;
@@ -15,6 +15,8 @@ const defaultDeps = {
     storageApi: storage,
     initSupabaseFn: initSupabase,
     checkAuthAndRedirectFn: checkAuthAndRedirect,
+    getCurrentUserFn: getCurrentUser,
+    getSupabaseFn: getSupabase,
     signOutFn: signOut,
     fetchFn: (...args) => fetch(...args),
     alertFn: (message) => alert(message),
@@ -32,6 +34,15 @@ export async function init(overrides = {}) {
         deps.initSupabaseFn();
         const isAuthed = await deps.checkAuthAndRedirectFn();
         if (!isAuthed) return; // Will redirect to login
+
+        // Hydrate local storage cache from Supabase for this authenticated user.
+        if (typeof deps.storageApi.initStorageForUser === 'function') {
+            const user = await deps.getCurrentUserFn();
+            await deps.storageApi.initStorageForUser({
+                supabaseClient: deps.getSupabaseFn(),
+                userId: user?.id || null,
+            });
+        }
 
         const serverOk = await deps.checkServerHealthFn();
         if (!serverOk) {
@@ -100,6 +111,9 @@ export function setupDataManagement(overrides = {}) {
             const text = await file.text();
             const result = deps.storageApi.importData(text);
             if (result.success) {
+                if (typeof deps.storageApi.flushRemoteSync === 'function') {
+                    await deps.storageApi.flushRemoteSync();
+                }
                 deps.alertFn('Data imported successfully! Reloading...');
                 deps.reloadFn();
             } else {
@@ -112,9 +126,12 @@ export function setupDataManagement(overrides = {}) {
         modal.classList.add('hidden');
     });
 
-    clearBtn.addEventListener('click', () => {
+    clearBtn.addEventListener('click', async () => {
         if (deps.confirmFn('Are you sure you want to clear all personal data? This cannot be undone.')) {
             deps.storageApi.clearData();
+            if (typeof deps.storageApi.flushRemoteSync === 'function') {
+                await deps.storageApi.flushRemoteSync();
+            }
             deps.alertFn('All personal data has been cleared.');
             modal.classList.add('hidden');
             deps.reloadFn();

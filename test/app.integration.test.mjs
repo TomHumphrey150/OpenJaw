@@ -71,3 +71,54 @@ test('setupSignOut handles failed sign-out attempts without throwing', async () 
 
     assert.equal(alertMessage, 'Unable to sign out right now. Please try again.');
 });
+
+test('init hydrates storage for the authenticated user before rendering', async () => {
+    const documentObj = createMockDocument([
+        'disclaimer',
+        'data-management-btn',
+        'data-modal',
+        'close-modal-btn',
+        'export-data-btn',
+        'import-data-btn',
+        'import-file',
+        'clear-data-btn',
+        'sign-out-btn',
+    ]);
+
+    let storageHydrated = 0;
+    let graphInitialized = 0;
+
+    await init({
+        documentObj,
+        showLoadingFn: () => {},
+        showServerErrorFn: () => {},
+        showAppFn: () => {},
+        initSupabaseFn: () => {},
+        checkAuthAndRedirectFn: async () => true,
+        getCurrentUserFn: async () => ({ id: 'user-42' }),
+        getSupabaseFn: () => ({ fake: true }),
+        checkServerHealthFn: async () => true,
+        fetchFn: async (url) => {
+            if (url.includes('/api/interventions')) {
+                return { ok: true, async json() { return { interventions: [] }; } };
+            }
+            return { ok: true, async json() { return { disclaimer: 'ok' }; } };
+        },
+        initCausalEditorFn: () => { graphInitialized += 1; },
+        storageApi: {
+            initStorageForUser: async (args) => {
+                storageHydrated += 1;
+                assert.equal(args.userId, 'user-42');
+                assert.deepEqual(args.supabaseClient, { fake: true });
+            },
+            downloadExport: () => {},
+            importData: () => ({ success: true }),
+            clearData: () => {},
+            flushRemoteSync: async () => {},
+        },
+        confirmFn: () => false,
+    });
+
+    assert.equal(storageHydrated, 1);
+    assert.equal(graphInitialized, 1);
+});

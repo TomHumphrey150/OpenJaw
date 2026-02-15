@@ -3,7 +3,7 @@
  * Split into focused domain modules; this file preserves the existing API.
  */
 
-export { loadData, saveData, clearData } from './storage/core.js';
+export { loadData, saveData, clearData, initStorageForUser, flushRemoteSync } from './storage/core.js';
 
 export {
     addStudy,
@@ -66,7 +66,7 @@ export {
     downloadExport,
 } from './storage/io.js';
 
-import { loadData, saveData, clearData } from './storage/core.js';
+import { loadData, saveData, clearData, initStorageForUser, flushRemoteSync } from './storage/core.js';
 import { addStudy, updateStudy, deleteStudy, getPersonalStudies } from './storage/studies.js';
 import { addNote, updateNote, deleteNote, getNotesFor, getAllNotes } from './storage/notes.js';
 import {
@@ -91,6 +91,8 @@ export default {
     loadData,
     saveData,
     clearData,
+    initStorageForUser,
+    flushRemoteSync,
     addStudy,
     updateStudy,
     deleteStudy,

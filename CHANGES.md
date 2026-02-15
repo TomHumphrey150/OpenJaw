@@ -147,6 +147,21 @@ Covers the exact failure modes fixed in this migration:
 
 ---
 
+## 11. Moved Personal Data Storage to Supabase (Per User)
+
+### Changes:
+- Reworked `public/js/storage/core.js` to support:
+  - in-memory store cache for synchronous UI access
+  - per-user local storage keys
+  - background sync to Supabase `public.user_data`
+  - startup hydration from Supabase for the signed-in user
+  - legacy localStorage migration seeding for first-time cloud sync
+- Added `initStorageForUser()` and `flushRemoteSync()` exports in `public/js/storage.js`
+- Updated `public/js/app.js` to hydrate storage after auth and flush sync before reload-triggering import/clear actions
+- Added SQL bootstrap file: `supabase/user_data.sql` (table + RLS policies)
+
+---
+
 ## Architecture Summary
 
 ### Before (Local Express Server)

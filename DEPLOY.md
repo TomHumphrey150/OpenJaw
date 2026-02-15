@@ -50,6 +50,12 @@ window.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_xxx';
 window.SUPABASE_ANON_KEY = window.SUPABASE_PUBLISHABLE_KEY;
 ```
 
+## Step 4b: Enable Per-User Cloud Data Sync
+
+Run `/supabase/user_data.sql` in Supabase SQL Editor to create the `public.user_data` table and RLS policies.
+
+This enables sync of personal dashboard data (check-ins, ratings, notes, experiments, hidden interventions, achievements, and custom diagram) per authenticated user.
+
 ## Step 5: Deploy to Vercel
 
 ### Option A: Via CLI
@@ -125,9 +131,9 @@ This runs the Vercel dev server locally at http://localhost:3000.
 
 ## Optional: Add Database Storage
 
-Currently data is stored in browser localStorage. To sync across devices:
+Cloud sync is now built in via `public.user_data`.
 
-1. In Supabase, go to **Table Editor**
-2. Create tables for your data (user_settings, check_ins, etc.)
-3. Set up Row Level Security (RLS) so users only see their own data
-4. Update the storage.js module to use Supabase client instead of localStorage
+To inspect synced data:
+1. In Supabase, go to **Table Editor** > `user_data`
+2. Confirm each row key (`user_id`) matches the authenticated user
+3. Keep RLS policies enabled so users only access their own row
