@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Bruxism Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3"></script>
+    <script src="/js/config.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 32px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.25);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #64b5f6;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .auth-btn.primary {
+            background: #64b5f6;
+            color: #0d1321;
+        }
+
+        .auth-btn.secondary {
+            background: rgba(255, 255, 255, 0.12);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        .auth-btn:disabled,
+        .auth-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            background: rgba(255, 100, 100, 0.1);
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .status-message {
+            background: rgba(100, 181, 246, 0.1);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            color: #90caf9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #888;
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🦷</div>
+        <h1>Bruxism Dashboard</h1>
+        <p class="subtitle">Sign in with email and password</p>
+
+        <div class="auth-form">
+            <input
+                id="email-input"
+                class="auth-input"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+            >
+            <input
+                id="password-input"
+                class="auth-input"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Password"
+            >
+            <div class="btn-row">
+                <button id="sign-in-btn" class="auth-btn primary">Sign In</button>
+                <button id="create-account-btn" class="auth-btn secondary">Create Account</button>
+            </div>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="status-message" id="status-message"></div>
+        <div class="loading" id="loading"></div>
+
+        <p class="footer">Your data is stored locally in your browser</p>
+    </div>
+
+    <script type="module">
+        import { initLoginPage } from '/js/login.js';
+
+        initLoginPage();
+    </script>
+</body>
+</html>

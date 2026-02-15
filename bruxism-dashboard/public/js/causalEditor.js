@@ -27,6 +27,9 @@ import {
 // STATE
 // ═══════════════════════════════════════════════════════════
 
+const runtimeDocument = typeof document !== 'undefined' ? document : null;
+const runtimeWindow = typeof window !== 'undefined' ? window : null;
+
 const GRAPH_CONFIGS = [
     { containerId: 'causal-graph', cyContainerId: 'causal-graph-cy' },
 ];
@@ -2087,30 +2090,34 @@ function exitFullscreen(container, cy) {
 }
 
 // Global Escape key handler
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && _fullscreenContainer) {
-        const cy = cyInstances.get(_fullscreenContainer.id);
-        if (cy) exitFullscreen(_fullscreenContainer, cy);
-    }
-});
+if (runtimeDocument) {
+    runtimeDocument.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && _fullscreenContainer) {
+            const cy = cyInstances.get(_fullscreenContainer.id);
+            if (cy) exitFullscreen(_fullscreenContainer, cy);
+        }
+    });
+}
 
 // ═══════════════════════════════════════════════════════════
 // RESIZE HANDLER
 // ═══════════════════════════════════════════════════════════
 
 let _resizeTimeout = null;
-window.addEventListener('resize', () => {
-    clearTimeout(_resizeTimeout);
-    _resizeTimeout = setTimeout(() => {
-        cyInstances.forEach((cy, containerId) => {
-            const container = document.getElementById(containerId);
-            if (container && (container.offsetParent !== null || container.classList.contains('fullscreen'))) {
-                cy.resize();
-                runTieredLayout(cy, container);
-            }
-        });
-    }, 250);
-});
+if (runtimeWindow) {
+    runtimeWindow.addEventListener('resize', () => {
+        clearTimeout(_resizeTimeout);
+        _resizeTimeout = setTimeout(() => {
+            cyInstances.forEach((cy, containerId) => {
+                const container = runtimeDocument?.getElementById(containerId);
+                if (container && (container.offsetParent !== null || container.classList.contains('fullscreen'))) {
+                    cy.resize();
+                    runTieredLayout(cy, container);
+                }
+            });
+        }, 250);
+    });
+}
 
 // ═══════════════════════════════════════════════════════════
 // RENDER

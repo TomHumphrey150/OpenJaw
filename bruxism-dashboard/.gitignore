@@ -26,3 +26,4 @@ Thumbs.db
 
 # Optional: lock file (some teams commit it, some don't)
 # package-lock.json
+.vercel

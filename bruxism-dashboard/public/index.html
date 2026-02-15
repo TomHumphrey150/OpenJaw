@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bruxism Causal Map</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <!-- Supabase Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3"></script>
+    <script src="/js/config.js"></script>
     <!-- Cytoscape.js + ELK for causal graph diagrams (local vendor copies, CDN fallback) -->
     <script src="/js/vendor/cytoscape.min.js"></script>
     <script src="/js/vendor/elk.bundled.js"></script>
@@ -14,10 +17,9 @@
     <!-- Server Status Banner (hidden when connected) -->
     <div id="server-error-banner" class="hidden">
         <div class="error-content">
-            <h2>Server Not Running</h2>
-            <p>The bruxism dashboard server is not running. Start it with:</p>
-            <code>cd v1/bruxism-dashboard && ./run.sh</code>
-            <p class="retry-message">Checking for server... <span id="retry-countdown"></span></p>
+            <h2>Connection Issue</h2>
+            <p>Unable to connect to the server.</p>
+            <p class="retry-message">Retrying... <span id="retry-countdown"></span></p>
         </div>
     </div>
 
@@ -70,7 +72,10 @@
 
         <footer>
             <p class="disclaimer" id="disclaimer"></p>
-            <button id="data-management-btn" class="footer-data-btn" title="Export/Import Data">Data</button>
+            <div class="footer-buttons">
+                <button id="data-management-btn" class="footer-data-btn" title="Export/Import Data">Data</button>
+                <button id="sign-out-btn" class="footer-data-btn" title="Sign Out">Sign Out</button>
+            </div>
         </footer>
     </div>
 

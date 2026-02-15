@@ -1,20 +1,47 @@
 import { checkServerHealth, showServerError, showLoading, showApp } from './serverCheck.js';
 import { initCausalEditor } from './causalEditor.js';
 import * as storage from './storage.js';
+import { initSupabase, checkAuthAndRedirect, signOut } from './auth.js';
 
-async function init() {
-    showLoading();
+const runtimeDocument = typeof document !== 'undefined' ? document : null;
+const runtimeWindow = typeof window !== 'undefined' ? window : null;
 
-    const serverOk = await checkServerHealth();
-    if (!serverOk) {
-        showServerError();
-        return;
-    }
+const defaultDeps = {
+    checkServerHealthFn: checkServerHealth,
+    showServerErrorFn: showServerError,
+    showLoadingFn: showLoading,
+    showAppFn: showApp,
+    initCausalEditorFn: initCausalEditor,
+    storageApi: storage,
+    initSupabaseFn: initSupabase,
+    checkAuthAndRedirectFn: checkAuthAndRedirect,
+    signOutFn: signOut,
+    fetchFn: (...args) => fetch(...args),
+    alertFn: (message) => alert(message),
+    confirmFn: (message) => confirm(message),
+    reloadFn: () => runtimeWindow?.location?.reload?.(),
+    documentObj: runtimeDocument,
+};
+
+export async function init(overrides = {}) {
+    const deps = { ...defaultDeps, ...overrides };
+    deps.showLoadingFn();
 
     try {
+        // Initialize Supabase and check auth
+        deps.initSupabaseFn();
+        const isAuthed = await deps.checkAuthAndRedirectFn();
+        if (!isAuthed) return; // Will redirect to login
+
+        const serverOk = await deps.checkServerHealthFn();
+        if (!serverOk) {
+            deps.showServerErrorFn();
+            return;
+        }
+
         const [interventionsRes, infoRes] = await Promise.all([
-            fetch('/api/interventions'),
-            fetch('/api/bruxism-info')
+            deps.fetchFn('/api/interventions'),
+            deps.fetchFn('/api/bruxism-info')
         ]);
 
         if (!interventionsRes.ok || !infoRes.ok) {
@@ -24,34 +51,38 @@ async function init() {
         const interventionsData = await interventionsRes.json();
         const bruxismInfoData = await infoRes.json();
 
-        showApp();
+        deps.showAppFn();
 
         // Set disclaimer
-        const disclaimerEl = document.getElementById('disclaimer');
+        const disclaimerEl = deps.documentObj.getElementById('disclaimer');
         if (disclaimerEl && bruxismInfoData.disclaimer) {
             disclaimerEl.textContent = bruxismInfoData.disclaimer;
         }
 
         // Initialize causal graph + defense check-in
-        initCausalEditor(interventionsData.interventions);
+        deps.initCausalEditorFn(interventionsData.interventions);
 
         // Data management modal
-        setupDataManagement();
+        setupDataManagement(deps);
+
+        // Sign out button
+        setupSignOut(deps);
 
     } catch (error) {
         console.error('Failed to load data:', error);
-        showServerError();
+        deps.showServerErrorFn();
     }
 }
 
-function setupDataManagement() {
-    const dataBtn = document.getElementById('data-management-btn');
-    const modal = document.getElementById('data-modal');
-    const closeBtn = document.getElementById('close-modal-btn');
-    const exportBtn = document.getElementById('export-data-btn');
-    const importBtn = document.getElementById('import-data-btn');
-    const importInput = document.getElementById('import-file');
-    const clearBtn = document.getElementById('clear-data-btn');
+export function setupDataManagement(overrides = {}) {
+    const deps = { ...defaultDeps, ...overrides };
+    const dataBtn = deps.documentObj.getElementById('data-management-btn');
+    const modal = deps.documentObj.getElementById('data-modal');
+    const closeBtn = deps.documentObj.getElementById('close-modal-btn');
+    const exportBtn = deps.documentObj.getElementById('export-data-btn');
+    const importBtn = deps.documentObj.getElementById('import-data-btn');
+    const importInput = deps.documentObj.getElementById('import-file');
+    const clearBtn = deps.documentObj.getElementById('clear-data-btn');
 
     dataBtn.addEventListener('click', () => modal.classList.remove('hidden'));
     closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
@@ -59,7 +90,7 @@ function setupDataManagement() {
         if (e.target === modal) modal.classList.add('hidden');
     });
 
-    exportBtn.addEventListener('click', () => storage.downloadExport());
+    exportBtn.addEventListener('click', () => deps.storageApi.downloadExport());
 
     importBtn.addEventListener('click', () => importInput.click());
     importInput.addEventListener('change', async (e) => {
@@ -67,28 +98,49 @@ function setupDataManagement() {
         if (!file) return;
         try {
             const text = await file.text();
-            const result = storage.importData(text);
+            const result = deps.storageApi.importData(text);
             if (result.success) {
-                alert('Data imported successfully! Reloading...');
-                window.location.reload();
+                deps.alertFn('Data imported successfully! Reloading...');
+                deps.reloadFn();
             } else {
-                alert('Invalid data format: ' + (result.errors ? result.errors.join(', ') : 'Unknown error'));
+                deps.alertFn('Invalid data format: ' + (result.errors ? result.errors.join(', ') : 'Unknown error'));
             }
         } catch (err) {
-            alert('Error reading file: ' + err.message);
+            deps.alertFn('Error reading file: ' + err.message);
         }
         importInput.value = '';
         modal.classList.add('hidden');
     });
 
     clearBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear all personal data? This cannot be undone.')) {
-            storage.clearData();
-            alert('All personal data has been cleared.');
+        if (deps.confirmFn('Are you sure you want to clear all personal data? This cannot be undone.')) {
+            deps.storageApi.clearData();
+            deps.alertFn('All personal data has been cleared.');
             modal.classList.add('hidden');
-            window.location.reload();
+            deps.reloadFn();
         }
     });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+export function setupSignOut(overrides = {}) {
+    const deps = { ...defaultDeps, ...overrides };
+    const signOutBtn = deps.documentObj.getElementById('sign-out-btn');
+    if (signOutBtn) {
+        signOutBtn.addEventListener('click', async () => {
+            if (deps.confirmFn('Sign out?')) {
+                try {
+                    await deps.signOutFn();
+                } catch (error) {
+                    console.error('Sign-out failed:', error);
+                    deps.alertFn('Unable to sign out right now. Please try again.');
+                }
+            }
+        });
+    }
+}
+
+if (runtimeDocument) {
+    runtimeDocument.addEventListener('DOMContentLoaded', () => {
+        void init();
+    });
+}

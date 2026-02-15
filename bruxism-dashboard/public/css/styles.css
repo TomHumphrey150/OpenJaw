@@ -1160,6 +1160,13 @@ footer {
     line-height: 1.5;
 }
 
+.footer-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .footer-data-btn {
     background: transparent;
     border: 1px solid var(--border-color);
@@ -2616,5 +2623,4 @@ footer {
 .toast-level-up {
     border-color: #22c55e;
 }
-
 
