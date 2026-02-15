@@ -1,2 +1,0 @@
-# This file ensures the data/models directory is tracked in git.
-# Actual model files (*.pt) are gitignored.

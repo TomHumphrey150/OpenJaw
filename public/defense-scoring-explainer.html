@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defense Scoring Biology Explainer</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --panel: #ffffff;
+            --ink: #12263a;
+            --muted: #4b5f73;
+            --line: #d9e3ee;
+            --ok: #1f9d55;
+            --bad: #c0392b;
+            --accent: #0b7285;
+            --accent-soft: #e6f6f8;
+            --intervention: #0f766e;
+            --mechanism: #334155;
+            --forward: #475569;
+            --feedback: #dc2626;
+            --protective: #2563eb;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background: linear-gradient(160deg, #eef4fb 0%, #f7fafc 45%, #e9f5f7 100%);
+            line-height: 1.45;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 18px 48px;
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 2.8vw, 2.3rem);
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin: 0 0 10px;
+            color: var(--muted);
+        }
+
+        code {
+            background: #edf3f9;
+            border: 1px solid #dbe7f3;
+            padding: 0 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .hero,
+        .theory,
+        .scenario-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(29, 56, 88, 0.07);
+        }
+
+        .hero {
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .hero-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .pill {
+            background: var(--accent-soft);
+            color: #0f5161;
+            border: 1px solid #bee7ef;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .theory {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .theory ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+        }
+
+        .theory li { margin-bottom: 8px; }
+
+        .scenario-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .scenario-card {
+            padding: 16px;
+        }
+
+        .scenario-header {
+            margin-bottom: 10px;
+        }
+
+        .scenario-title {
+            font-size: 1.08rem;
+            margin-bottom: 6px;
+        }
+
+        .scenario-sub {
+            font-size: 0.95rem;
+        }
+
+        .scenario-body {
+            display: grid;
+            grid-template-columns: minmax(280px, 1.7fr) minmax(260px, 1fr);
+            gap: 14px;
+        }
+
+        .graph-wrap {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fbfdff;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            min-width: 520px;
+            height: auto;
+        }
+
+        .edge {
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .edge.forward { stroke: var(--forward); }
+        .edge.feedback {
+            stroke: var(--feedback);
+            stroke-dasharray: 6 4;
+        }
+        .edge.protective {
+            stroke: var(--protective);
+            stroke-dasharray: 6 4;
+        }
+
+        .node.mechanism {
+            fill: #ffffff;
+            stroke: #64748b;
+            stroke-width: 1.6;
+        }
+
+        .node.intervention {
+            fill: var(--intervention);
+            stroke: #115e59;
+            stroke-width: 1.6;
+        }
+
+        .node-label {
+            fill: #1e293b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .node-label.intervention {
+            fill: #ffffff;
+        }
+
+        .node-score {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .node-score.current { fill: #0f766e; }
+        .node-score.legacy { fill: #b45309; }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .line {
+            width: 16px;
+            height: 0;
+            border-top: 2px solid var(--forward);
+            display: inline-block;
+        }
+
+        .line.feedback { border-top-color: var(--feedback); border-top-style: dashed; }
+        .line.protective { border-top-color: var(--protective); border-top-style: dashed; }
+
+        .checks,
+        .numbers {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fcfeff;
+            padding: 10px;
+        }
+
+        .checks ul,
+        .numbers ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .checks li,
+        .numbers li {
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+
+        .pass { color: var(--ok); }
+        .fail { color: var(--bad); }
+
+        .footer-note {
+            margin-top: 18px;
+            background: #f8fbff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        @media (max-width: 900px) {
+            .scenario-body {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="hero">
+        <h1>Defense Cascade Explainer</h1>
+        <p>
+            This page visualizes the exact scenarios used in the defense-scoring tests. It runs the same
+            <code>computeDefenseScores</code> implementation used by the dashboard and compares it to the prior
+            additive model to show why the updated mechanics better match biology.
+        </p>
+        <div class="hero-meta">
+            <div class="pill">Mechanics under test: source-aware cascade + noisy-OR merge</div>
+            <div class="pill">Decay per hop: <span id="decay-pill">0.8</span></div>
+            <div class="pill">Goal: no single-source amplification through split/rejoin topology</div>
+        </div>
+    </section>
+
+    <section class="theory">
+        <div>
+            <h2>Biological Basis</h2>
+            <ul>
+                <li>A defense signal from one upstream cause should not grow just because the causal graph branches and re-merges.</li>
+                <li>Converging independent causes can increase protection, but with diminishing returns rather than linear addition.</li>
+                <li>Feedback/protective annotation edges are not part of the forward defense-cascade transport in this model.</li>
+            </ul>
+        </div>
+        <div>
+            <h2>Model Choices</h2>
+            <ul>
+                <li><strong>Per-source max-path rule:</strong> each source contributes its strongest path to each node (prevents topology-induced double counting).</li>
+                <li><strong>Noisy-OR merge:</strong> independent source contributions combine as <code>1 - Π(1 - p)</code>.</li>
+                <li><strong>Hop decay:</strong> each forward hop multiplies by <code>CASCADE_DECAY</code> to represent attenuation across causal distance.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2 style="margin-bottom:10px;">Test Scenarios</h2>
+        <div id="scenario-grid" class="scenario-grid"></div>
+    </section>
+
+    <section class="footer-note">
+        <strong>Verification guidance:</strong> For each scenario, compare <em>Current model</em> and <em>Legacy additive model</em> node scores.
+        In split/rejoin cases, the current model should stay bounded by upstream source strength, while the legacy model inflates.
+    </section>
+</main>
+
+<script>
+(() => {
+    if (window.location.protocol === 'file:') {
+        const launchUrl = 'http://localhost:3000/defense-scoring-explainer.html';
+        document.body.innerHTML = `
+            <main style="max-width:780px;margin:32px auto;padding:0 16px;font-family:'IBM Plex Sans','Avenir Next','Segoe UI',sans-serif;color:#12263a;">
+                <h1 style="margin:0 0 12px;">Open This Explainer Through the Dashboard Server</h1>
+                <p style="margin:0 0 10px;color:#4b5f73;">
+                    This page uses ES modules, which browsers block under <code>file://</code>.
+                </p>
+                <p style="margin:0 0 12px;color:#4b5f73;">
+                    Start the server and open:
+                </p>
+                <p style="margin:0 0 16px;">
+                    <a href="${launchUrl}">${launchUrl}</a>
+                </p>
+                <p style="margin:0;color:#4b5f73;">
+                    Command: <code>./run.sh</code>
+                </p>
+            </main>
+        `;
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = '/js/defenseScoringExplainer.js';
+    document.body.appendChild(script);
+})();
+</script>
+</body>
+</html>
