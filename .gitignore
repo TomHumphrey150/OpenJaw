@@ -27,3 +27,6 @@ Thumbs.db
 # Optional: lock file (some teams commit it, some don't)
 # package-lock.json
 .vercel
+
+# Supabase CLI local state (do not commit)
+supabase/.temp/
