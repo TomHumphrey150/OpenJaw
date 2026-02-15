@@ -1,1 +1,377 @@
-../../Skywalker/Skywalker/Resources/bruxism-info.json
+{
+  "sections": [
+    {
+      "id": "what_is_bruxism",
+      "title": "What is Bruxism?",
+      "icon": "questionmark.circle.fill",
+      "color": "blue",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Bruxism is the involuntary grinding, gnashing, or clenching of teeth. Sleep bruxism occurs during sleep and is classified as a sleep-related movement disorder.",
+          "citationIds": [
+            "nhs_bruxism"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Adult prevalence is estimated around 8-13%, with higher rates in children. Most people are unaware they grind their teeth until a partner notices or a dentist spots wear patterns.",
+          "citationIds": [
+            "cochrane_splints"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "how_bruxism_happens",
+      "title": "How Sleep Bruxism Happens",
+      "icon": "waveform.path.ecg",
+      "color": "teal",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Sleep bruxism is an arousal-motor coupling disorder. Brief microarousals during sleep trigger rhythmic masticatory muscle activity (RMMA).",
+          "citationIds": []
+        },
+        {
+          "type": "bulletList",
+          "items": [
+            "Autonomic activation builds minutes before an episode",
+            "EEG arousal occurs seconds before",
+            "A brief heart-rate spike precedes jaw muscle activation",
+            "Grinding is the motor expression of that arousal"
+          ],
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Force is not the main danger; average sleep bite force is far below maximum waking clench. The risk comes from unregulated duration and reduced protective reflexes during sleep.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Because episodes are tied to arousal, the most effective strategy is reducing arousal triggers and interrupting episodes with biofeedback.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Sleep bruxism is typically managed rather than cured. Genetic arousal thresholds and long-term patterns mean the goal is fewer episodes, less pain, and protection of teeth.",
+          "citationIds": []
+        }
+      ]
+    },
+    {
+      "id": "symptoms",
+      "title": "Common Symptoms",
+      "icon": "list.bullet.clipboard.fill",
+      "color": "orange",
+      "content": [
+        {
+          "type": "bulletList",
+          "items": [
+            "Teeth grinding or clenching loud enough to wake your partner",
+            "Teeth that are flattened, fractured, chipped, or loose",
+            "Worn tooth enamel exposing deeper layers",
+            "Increased tooth sensitivity or pain",
+            "Tired or tight jaw muscles, especially upon waking",
+            "Jaw, neck, or face pain or soreness",
+            "Dull headache starting at the temples",
+            "Sleep disruption for you or your partner"
+          ],
+          "citationIds": [
+            "nhs_bruxism",
+            "ada_bruxism"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "causes",
+      "title": "Potential Causes",
+      "icon": "arrow.triangle.branch",
+      "color": "purple",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "The exact cause of bruxism isn't fully understood, but research has identified several risk factors:",
+          "citationIds": []
+        },
+        {
+          "type": "bulletList",
+          "items": [
+            "Stress, anxiety, or tension (most common trigger)",
+            "Sleep disorders like obstructive sleep apnea",
+            "Abnormal bite or missing/crooked teeth",
+            "Lifestyle factors: caffeine (~1.5x odds), alcohol (~2x odds), smoking (>2x odds)",
+            "Certain medications, especially SSRIs (responsible for ~74% of reported antidepressant-induced bruxism cases)",
+            "Genetic factors",
+            "GERD/LPR (acid reflux) - associated in case-control studies and can trigger episodes",
+            "Arousal dysregulation and frequent microarousals during sleep",
+            "Neurochemical factors (GABA, dopamine, serotonin, noradrenaline, glutamate)"
+          ],
+          "citationIds": [
+            "lifestyle_factors",
+            "ssri_bruxism"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bruxism_reflux",
+      "title": "Bruxism and Silent Reflux",
+      "icon": "flame.fill",
+      "color": "red",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Evidence indicates reflux can trigger sleep bruxism episodes. The relationship is bidirectional but reflux to bruxism is the dominant proven direction.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Treating reflux removes an upstream trigger: strict diet phase, meal timing, alginate therapy (Gaviscon Advance), head-of-bed elevation, and PPI timing for nocturnal suppression.",
+          "citationIds": [
+            "gerd_bruxism"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "treatments",
+      "title": "Treatment Approaches",
+      "icon": "cross.case.fill",
+      "color": "green",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "No single intervention cures bruxism, but a strategic combination of evidence-based approaches can effectively manage symptoms:",
+          "citationIds": []
+        },
+        {
+          "type": "treatmentList",
+          "items": [
+            {
+              "name": "Night Guards",
+              "description": "Custom-fitted hard acrylic splints protect teeth. Soft splints can worsen bruxism in many patients; hard stabilization splints are preferred.",
+              "citationIds": [
+                "cochrane_splints"
+              ]
+            },
+            {
+              "name": "Biofeedback",
+              "description": "EMG-based biofeedback with gentle alerts can interrupt grinding during the microarousal window. Trials show multi-week reductions, though habituation can occur.",
+              "citationIds": [
+                "biofeedback_review"
+              ]
+            },
+            {
+              "name": "Lifestyle Changes",
+              "description": "Reduce caffeine and alcohol, follow reflux-trigger elimination, and avoid late meals. Sleep hygiene and meal timing help reduce arousal triggers.",
+              "citationIds": [
+                "lifestyle_factors"
+              ]
+            },
+            {
+              "name": "Stress Management",
+              "description": "Mindfulness, slow breathing, and yoga reduce arousal and daytime clenching; useful alongside other treatments.",
+              "citationIds": []
+            },
+            {
+              "name": "Medication Review",
+              "description": "If bruxism started after beginning an SSRI, discuss with your doctor (never stop abruptly). Buspirone may help after 2-3 weeks.",
+              "citationIds": [
+                "ssri_bruxism"
+              ]
+            },
+            {
+              "name": "Botox (Severe Cases)",
+              "description": "Effective for pain and force reduction, but expensive and requires ongoing treatment.",
+              "citationIds": [
+                "botox_meta"
+              ]
+            },
+            {
+              "name": "Reflux Protocol (LPR)",
+              "description": "Treat reflux as an upstream trigger: strict 6-week trigger elimination, meal timing, Gaviscon Advance/alginate, head-of-bed elevation, and appropriate PPI timing.",
+              "citationIds": [
+                "gerd_bruxism"
+              ]
+            },
+            {
+              "name": "Sleep Hygiene & Wind-Down",
+              "description": "Consistent sleep/wake timing, cool dark room, screen-free hour before bed, and a structured wind-down reduce microarousals.",
+              "citationIds": []
+            },
+            {
+              "name": "Supplements (Magnesium, L-Theanine, Glycine)",
+              "description": "Magnesium glycinate (400-600mg), L-theanine (200mg), and glycine (3g) before bed can support inhibitory tone and sleep quality. Optional and best combined with upstream measures.",
+              "citationIds": []
+            }
+          ],
+          "citationIds": []
+        }
+      ]
+    },
+    {
+      "id": "daily_protocol",
+      "title": "Daily Protocol (At a Glance)",
+      "icon": "calendar",
+      "color": "blue",
+      "content": [
+        {
+          "type": "bulletList",
+          "items": [
+            "Morning: delay breakfast 1.5-2 hours, hydrate toward 3L/day, vitamin D + multivitamin, 5-10 min light exposure, 10-20 min mindfulness, check sleep/EMG data.",
+            "Meals: eat upright, no drinks with meals, water about 30 min after, remain upright 1 hour after, avoid trigger foods.",
+            "Afternoon: no caffeine after 2pm, moderate exercise (end at least 4 hours before bed), no alcohol.",
+            "Dinner/Evening: finish dinner 3+ hours before bed, light meal, no food after dinner, stay upright, dim lights, no screens 1 hour before bed.",
+            "Bedtime: warm bath, gentle stretching, optional taVNS, slow breathing, bedtime supplements, Gaviscon Advance, body scan, insert hard splint, activate EMG tracker, lights out.",
+            "Sleep environment: head-of-bed elevation 10-25 cm, 18-22C, dark/quiet room, 7-8 hours, consistent sleep/wake times.",
+            "Strict 6-week phase: avoid caffeine (including decaf), carbonation, alcohol, chocolate, spicy, acidic, fatty/fried, onions/garlic in large amounts, very salty/crispy foods; reintroduce one at a time afterward.",
+            "Weekly/ongoing: aerobic exercise 3-4x/week, review EMG/sleep trends, nature exposure.",
+            "Monthly/ongoing: blood tests (Mg, Zn, B6, Vitamin D) every 3-6 months while on PPI, reassess protocol monthly, ENT follow-up around March 2026."
+          ],
+          "citationIds": []
+        }
+      ]
+    },
+    {
+      "id": "how_openjaw_helps",
+      "title": "How OpenJaw Helps",
+      "icon": "waveform.path.ecg",
+      "color": "blue",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "OpenJaw uses EMG (electromyography) monitoring through a Muse headband to detect jaw muscle activity during sleep.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "When clenching is detected, your Apple Watch delivers a gentle haptic vibration to interrupt the grinding pattern without fully waking you.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Biofeedback targets the microarousal window and can reduce EMG activity over multiple weeks, though habituation can occur in some users.",
+          "citationIds": [
+            "biofeedback_review"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Beyond real-time biofeedback, OpenJaw provides a central place to track all your bruxism management habits, monitor your progress over time, and access evidence-based information to help you take control of your treatment.",
+          "citationIds": []
+        },
+        {
+          "type": "paragraph",
+          "text": "Best results come from combining biofeedback with upstream arousal reduction: reflux control, sleep hygiene, and stress management.",
+          "citationIds": []
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Learn More",
+      "icon": "book.fill",
+      "color": "indigo",
+      "content": [
+        {
+          "type": "resourceList",
+          "items": [
+            {
+              "title": "NHS - Teeth Grinding",
+              "subtitle": "Comprehensive overview from the UK National Health Service",
+              "url": "https://www.nhs.uk/symptoms/teeth-grinding/",
+              "isPrimary": true
+            },
+            {
+              "title": "American Dental Association",
+              "subtitle": "Bruxism overview and treatment options",
+              "url": "https://www.mouthhealthy.org/all-topics-a-z/teeth-grinding",
+              "isPrimary": false
+            },
+            {
+              "title": "Sleep Foundation",
+              "subtitle": "Sleep bruxism causes and symptoms",
+              "url": "https://www.sleepfoundation.org/bruxism",
+              "isPrimary": false
+            },
+            {
+              "title": "Cochrane Review (2007)",
+              "subtitle": "Evidence summary on occlusal splints (most recent Cochrane review)",
+              "url": "https://www.cochrane.org/evidence/CD005514_occlusal-splints-treating-sleep-bruxism-tooth-grinding",
+              "isPrimary": false
+            },
+            {
+              "title": "NIH - Sleep Bruxism Studies",
+              "subtitle": "Research and clinical studies",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=sleep+bruxism",
+              "isPrimary": false
+            }
+          ],
+          "citationIds": []
+        }
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cochrane_splints",
+      "title": "Occlusal splints for treating sleep bruxism (tooth grinding)",
+      "source": "Cochrane",
+      "year": 2007,
+      "url": "https://www.cochrane.org/evidence/CD005514_occlusal-splints-treating-sleep-bruxism-tooth-grinding",
+      "type": "cochrane"
+    },
+    {
+      "id": "biofeedback_review",
+      "title": "Efficacy of biofeedback therapy on sleep bruxism: A systematic review and meta-analysis",
+      "source": "J Oral Rehabil",
+      "year": 2018,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/29577362/",
+      "type": "systematicReview"
+    },
+    {
+      "id": "ssri_bruxism",
+      "title": "SSRI-associated bruxism: A systematic review of published case reports",
+      "source": "PMC",
+      "year": 2018,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5914744/",
+      "type": "systematicReview"
+    },
+    {
+      "id": "lifestyle_factors",
+      "title": "Association between sleep bruxism and alcohol, caffeine, tobacco, and drug abuse: A systematic review",
+      "source": "JADA",
+      "year": 2016,
+      "url": "https://jada.ada.org/article/s0002-8177(16)30541-4/abstract",
+      "type": "systematicReview"
+    },
+    {
+      "id": "botox_meta",
+      "title": "Efficacy of botulinum-A for nocturnal bruxism pain and the occurrence of bruxism events: a meta-analysis and systematic review",
+      "source": "Br J Oral Maxillofac Surg",
+      "year": 2022,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34955330/",
+      "type": "metaAnalysis"
+    },
+    {
+      "id": "nhs_bruxism",
+      "title": "Teeth grinding (bruxism)",
+      "source": "NHS",
+      "year": 2022,
+      "url": "https://www.nhs.uk/symptoms/teeth-grinding/",
+      "type": "guideline"
+    },
+    {
+      "id": "ada_bruxism",
+      "title": "Bruxism (teeth grinding or clenching)",
+      "source": "ADA",
+      "year": 2024,
+      "url": "https://www.mouthhealthy.org/all-topics-a-z/teeth-grinding",
+      "type": "guideline"
+    }
+  ],
+  "disclaimer": "This information is for educational purposes only and is not a substitute for professional medical advice. Please consult with a healthcare provider or dentist for diagnosis and treatment of bruxism."
+}

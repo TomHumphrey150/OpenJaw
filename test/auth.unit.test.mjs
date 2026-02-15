@@ -117,6 +117,29 @@ test('checkAuthAndRedirect handles auth API errors with explicit error redirect'
     assert.equal(windowObj.location.href, '/login.html?error=auth');
 });
 
+test('getCurrentUser treats AuthSessionMissingError as signed-out state', async () => {
+    setupWindow({
+        hostname: 'app.example.com',
+        supabaseUrl: 'https://project.supabase.co',
+        supabasePublishableKey: 'sb_publishable_example',
+        createClientImpl: () => ({
+            auth: {
+                async getUser() {
+                    return {
+                        data: { user: null },
+                        error: { name: 'AuthSessionMissingError', message: 'Auth session missing!' },
+                    };
+                },
+            },
+        }),
+    });
+    const auth = await importAuthFresh();
+    auth.initSupabase();
+
+    const user = await auth.getCurrentUser();
+    assert.equal(user, null);
+});
+
 test('signOut redirects to login even when provider signOut fails', async () => {
     const windowObj = setupWindow({
         hostname: 'app.example.com',

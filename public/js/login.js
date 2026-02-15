@@ -4,6 +4,29 @@ function isLocalDevHost(locationObj) {
     return locationObj.hostname === 'localhost' || locationObj.hostname === '127.0.0.1';
 }
 
+function getAuthErrorMessage(error, mode = 'sign-in') {
+    const rawMessage = String(error?.message || 'Authentication failed.');
+    const normalized = rawMessage.toLowerCase();
+
+    if (normalized.includes('invalid login credentials')) {
+        return 'Invalid email/password, or account does not exist yet. Click "Create Account" first.';
+    }
+
+    if (normalized.includes('email not confirmed')) {
+        return 'Email is not confirmed. Check your inbox, or disable Confirm email in Supabase Authentication > Providers > Email.';
+    }
+
+    if (normalized.includes('email logins are disabled')) {
+        return 'Email/password login is disabled in Supabase. Enable it under Authentication > Providers > Email.';
+    }
+
+    if (mode === 'sign-up' && (normalized.includes('signup') || normalized.includes('sign up'))) {
+        return 'Account creation is disabled in Supabase. Enable email signups under Authentication > Providers > Email.';
+    }
+
+    return rawMessage;
+}
+
 export async function initLoginPage(overrides = {}) {
     const defaultDocument = typeof document !== 'undefined' ? document : null;
     const defaultLocation = typeof window !== 'undefined'
@@ -98,6 +121,10 @@ export async function initLoginPage(overrides = {}) {
                 deps.locationObj.href = '/';
             }
         } catch (error) {
+            const message = String(error?.message || '').toLowerCase();
+            if (error?.name === 'AuthSessionMissingError' || message.includes('auth session missing')) {
+                return;
+            }
             console.error('Failed to check current user:', error);
             showError('Unable to verify login state. Please refresh and try again.');
         }
@@ -118,7 +145,7 @@ export async function initLoginPage(overrides = {}) {
         const { error: signInError } = await deps.signInWithPasswordFn(credentials.email, credentials.password);
         setBusy(false);
         if (signInError) {
-            showError(signInError.message);
+            showError(getAuthErrorMessage(signInError, 'sign-in'));
             return;
         }
 
@@ -137,7 +164,7 @@ export async function initLoginPage(overrides = {}) {
         const { data, error: signUpError } = await deps.signUpWithPasswordFn(credentials.email, credentials.password);
         setBusy(false);
         if (signUpError) {
-            showError(signUpError.message);
+            showError(getAuthErrorMessage(signUpError, 'sign-up'));
             return;
         }
 

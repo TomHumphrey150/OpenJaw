@@ -22,6 +22,13 @@
 
 Note: If you keep email confirmation enabled, users can still create accounts, but must verify email before login succeeds.
 
+## Step 2b: Create or Confirm a Test User
+
+Before using **Sign In**, make sure at least one valid user exists:
+
+1. Use **Create Account** on `/login.html`, or add a user under **Authentication** > **Users**
+2. If email confirmation is enabled, verify the user email first
+
 ## Step 3: Get Supabase Keys
 
 1. In Supabase dashboard, go to **Settings** > **API**
@@ -97,6 +104,16 @@ This runs the Vercel dev server locally at http://localhost:3000.
 ### "Invalid login credentials"
 - Confirm the email/password pair is correct
 - Ensure the user exists under Supabase **Authentication** > **Users**
+- If this is your first login, click **Create Account** in the app first (or add a user from Supabase **Authentication** > **Users**)
+
+### Supabase `/auth/v1/token?grant_type=password` returns 400
+- This is usually a configuration or credentials issue, not a localhost issue
+- Check **Authentication** > **Providers** > **Email**:
+  - Email provider enabled
+  - Password login enabled
+  - For easiest local testing, disable **Confirm email**
+- If **Confirm email** is enabled, complete email verification before signing in
+- Verify `public/js/config.js` uses the correct project URL + publishable key for the same Supabase project
 
 ### API returns 404
 - Ensure `api/` folder exists with `.ts` files

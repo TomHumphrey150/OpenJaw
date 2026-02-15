@@ -85,7 +85,7 @@ test('login page keeps localhost fallback when Supabase is missing', async () =>
     assert.equal(locationObj.href, '/');
 });
 
-test('login page shows sign-in errors and re-enables controls after failed password sign-in', async () => {
+test('login page shows actionable sign-in errors and re-enables controls after failed password sign-in', async () => {
     const { documentObj, emailInput, passwordInput, signInButton, createAccountButton, loadingEl, errorEl } = createLoginDom();
     const locationObj = createLocation();
 
@@ -107,7 +107,8 @@ test('login page shows sign-in errors and re-enables controls after failed passw
     assert.equal(createAccountButton.disabled, false);
     assert.equal(loadingEl.style.display, 'none');
     assert.equal(errorEl.style.display, 'block');
-    assert.equal(errorEl.textContent, 'Invalid login credentials');
+    assert.match(errorEl.textContent, /invalid email\/password/i);
+    assert.match(errorEl.textContent, /create account/i);
 });
 
 test('login page shows account-created status when sign-up succeeds without a session', async () => {
