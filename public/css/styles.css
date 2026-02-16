@@ -2666,6 +2666,16 @@ footer {
     gap: 6px;
 }
 
+.reality-feedback-host {
+    padding-top: 8px;
+}
+
+.activity-feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .activity-feed-header {
     position: sticky;
     top: 0;
