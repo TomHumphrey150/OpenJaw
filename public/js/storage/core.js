@@ -39,6 +39,11 @@ export const EMPTY_STORE = {
     experiments: [],
     interventionRatings: [],
     dailyCheckIns: {},          // { 'YYYY-MM-DD': ['INTERVENTION_ID', ...] }
+    nightExposures: [],         // [{ nightId, interventionId, enabled, intensity?, tags?, createdAt }]
+    nightOutcomes: [],          // [{ nightId, microArousalCount?, microArousalRatePerHour?, ... }]
+    morningStates: [],          // [{ nightId, globalSensation?, neckTightness?, ... }]
+    habitTrials: [],            // [{ id, interventionId, startNightId, ... }]
+    habitClassifications: [],   // [{ interventionId, status, nightsOn, nightsOff, ... }]
     hiddenInterventions: [],    // IDs of interventions hidden from check-in list
     unlockedAchievements: [],   // Achievement IDs that have been earned
     customCausalDiagram: undefined,
@@ -65,6 +70,11 @@ export function createEmptyStore() {
         experiments: [],
         interventionRatings: [],
         dailyCheckIns: {},
+        nightExposures: [],
+        nightOutcomes: [],
+        morningStates: [],
+        habitTrials: [],
+        habitClassifications: [],
         hiddenInterventions: [],
         unlockedAchievements: [],
         customCausalDiagram: undefined,
@@ -130,6 +140,11 @@ function normalizeData(data) {
         dailyCheckIns: data.dailyCheckIns && typeof data.dailyCheckIns === 'object' && !Array.isArray(data.dailyCheckIns)
             ? data.dailyCheckIns
             : {},
+        nightExposures: Array.isArray(data.nightExposures) ? data.nightExposures : [],
+        nightOutcomes: Array.isArray(data.nightOutcomes) ? data.nightOutcomes : [],
+        morningStates: Array.isArray(data.morningStates) ? data.morningStates : [],
+        habitTrials: Array.isArray(data.habitTrials) ? data.habitTrials : [],
+        habitClassifications: Array.isArray(data.habitClassifications) ? data.habitClassifications : [],
         hiddenInterventions: Array.isArray(data.hiddenInterventions) ? data.hiddenInterventions : [],
         unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
         customCausalDiagram: data.customCausalDiagram || undefined,
@@ -144,6 +159,11 @@ function hasMeaningfulData(store) {
         (store.notes && store.notes.length) ||
         (store.experiments && store.experiments.length) ||
         (store.interventionRatings && store.interventionRatings.length) ||
+        (store.nightExposures && store.nightExposures.length) ||
+        (store.nightOutcomes && store.nightOutcomes.length) ||
+        (store.morningStates && store.morningStates.length) ||
+        (store.habitTrials && store.habitTrials.length) ||
+        (store.habitClassifications && store.habitClassifications.length) ||
         (store.hiddenInterventions && store.hiddenInterventions.length) ||
         (store.unlockedAchievements && store.unlockedAchievements.length) ||
         (store.dailyCheckIns && Object.keys(store.dailyCheckIns).length) ||

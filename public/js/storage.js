@@ -45,6 +45,32 @@ export {
 } from './storage/checkIns.js';
 
 export {
+    upsertNightExposure,
+    deleteNightExposure,
+    getNightExposure,
+    getNightExposures,
+} from './storage/exposures.js';
+
+export {
+    upsertNightOutcome,
+    getNightOutcome,
+    getNightOutcomes,
+    upsertMorningState,
+    getMorningState,
+    getMorningStates,
+} from './storage/outcomes.js';
+
+export {
+    startHabitTrial,
+    completeHabitTrial,
+    abandonHabitTrial,
+    getHabitTrials,
+    upsertHabitClassification,
+    getHabitClassification,
+    getHabitClassifications,
+} from './storage/protocol.js';
+
+export {
     toggleHiddenIntervention,
     getHiddenInterventions,
 } from './storage/hiddenInterventions.js';
@@ -81,6 +107,24 @@ import {
 } from './storage/experiments.js';
 import { setRating, getRating, getAllRatings } from './storage/ratings.js';
 import { toggleCheckIn, getCheckIns, getCheckInsRange, getStreakCount } from './storage/checkIns.js';
+import { upsertNightExposure, deleteNightExposure, getNightExposure, getNightExposures } from './storage/exposures.js';
+import {
+    upsertNightOutcome,
+    getNightOutcome,
+    getNightOutcomes,
+    upsertMorningState,
+    getMorningState,
+    getMorningStates,
+} from './storage/outcomes.js';
+import {
+    startHabitTrial,
+    completeHabitTrial,
+    abandonHabitTrial,
+    getHabitTrials,
+    upsertHabitClassification,
+    getHabitClassification,
+    getHabitClassifications,
+} from './storage/protocol.js';
 import { toggleHiddenIntervention, getHiddenInterventions } from './storage/hiddenInterventions.js';
 import { saveDiagram, getDiagram, clearDiagram } from './storage/diagram.js';
 import { unlockAchievement, getUnlockedAchievements } from './storage/achievements.js';
@@ -117,6 +161,23 @@ export default {
     getCheckIns,
     getCheckInsRange,
     getStreakCount,
+    upsertNightExposure,
+    deleteNightExposure,
+    getNightExposure,
+    getNightExposures,
+    upsertNightOutcome,
+    getNightOutcome,
+    getNightOutcomes,
+    upsertMorningState,
+    getMorningState,
+    getMorningStates,
+    startHabitTrial,
+    completeHabitTrial,
+    abandonHabitTrial,
+    getHabitTrials,
+    upsertHabitClassification,
+    getHabitClassification,
+    getHabitClassifications,
     toggleHiddenIntervention,
     getHiddenInterventions,
     unlockAchievement,
