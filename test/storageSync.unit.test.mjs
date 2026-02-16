@@ -95,6 +95,11 @@ test('initStorageForUser hydrates local cache from remote Supabase row', async (
         experiments: [],
         interventionRatings: [],
         dailyCheckIns: { '2026-02-15': ['TX_REMOTE'] },
+        nightExposures: [{ nightId: '2026-02-15', interventionId: 'TX_REMOTE', enabled: true, createdAt: '2026-02-15T08:00:00.000Z' }],
+        nightOutcomes: [{ nightId: '2026-02-15', microArousalRatePerHour: 2.2, createdAt: '2026-02-15T08:00:00.000Z' }],
+        morningStates: [{ nightId: '2026-02-15', neckTightness: 4, createdAt: '2026-02-15T08:00:00.000Z' }],
+        habitTrials: [{ id: 'trial-1', interventionId: 'TX_REMOTE', startNightId: '2026-02-14', status: 'active' }],
+        habitClassifications: [{ interventionId: 'TX_REMOTE', status: 'neutral', nightsOn: 5, nightsOff: 5, updatedAt: '2026-02-16T08:00:00.000Z' }],
         hiddenInterventions: [],
         unlockedAchievements: [],
         customCausalDiagram: undefined,
@@ -109,6 +114,11 @@ test('initStorageForUser hydrates local cache from remote Supabase row', async (
 
     const loaded = core.loadData();
     assert.deepEqual(loaded.dailyCheckIns['2026-02-15'], ['TX_REMOTE']);
+    assert.equal(loaded.nightExposures.length, 1);
+    assert.equal(loaded.nightOutcomes.length, 1);
+    assert.equal(loaded.morningStates.length, 1);
+    assert.equal(loaded.habitTrials.length, 1);
+    assert.equal(loaded.habitClassifications.length, 1);
     assert.equal(supabase.calls.selects, 1);
 });
 
@@ -118,6 +128,12 @@ test('initStorageForUser seeds remote from legacy local store when remote is emp
 
     const legacy = core.createEmptyStore();
     legacy.hiddenInterventions.push('TX_LOCAL');
+    legacy.nightExposures.push({
+        nightId: '2026-02-14',
+        interventionId: 'TX_LOCAL',
+        enabled: true,
+        createdAt: '2026-02-14T08:00:00.000Z',
+    });
     globalThis.localStorage.setItem(core.STORAGE_KEY, JSON.stringify(legacy));
     globalThis.localStorage.setItem(`${core.STORAGE_KEY}__updated_at`, new Date().toISOString());
 
@@ -130,6 +146,7 @@ test('initStorageForUser seeds remote from legacy local store when remote is emp
     assert.equal(supabase.calls.upserts.length >= 1, true);
     assert.equal(supabase.calls.upserts.at(-1).user_id, 'user-abc');
     assert.deepEqual(core.loadData().hiddenInterventions, ['TX_LOCAL']);
+    assert.equal(supabase.calls.upserts.at(-1).data.nightExposures.length, 1);
 });
 
 test('clearData deletes remote row for signed-in users after flush', async () => {

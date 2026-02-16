@@ -30,3 +30,6 @@ Thumbs.db
 
 # Supabase CLI local state (do not commit)
 supabase/.temp/
+
+# Generated snapshot artifacts
+v1/bruxism-dashboard/snapshots/

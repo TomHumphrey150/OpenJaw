@@ -233,3 +233,70 @@ test('ratings are still used when no habit classification exists', () => {
     const scores = computeDefenseScores(graph);
     approxEqual(scores.get('A').score, 1.0, 'without classification, rating-based weight is used');
 });
+
+test('habit status weight mapping applies across helpful/neutral/unknown/harmful', () => {
+    const statuses = [
+        { tx: 'TX_HELPFUL', status: 'helpful', expected: 1.0 },
+        { tx: 'TX_NEUTRAL', status: 'neutral', expected: 0.6 },
+        { tx: 'TX_UNKNOWN', status: 'unknown', expected: 0.5 },
+        { tx: 'TX_HARMFUL', status: 'harmful', expected: 0.15 },
+    ];
+
+    statuses.forEach(({ tx, status }) => {
+        activateInterventionForLast7Days(tx, 'ineffective');
+        storage.upsertHabitClassification({
+            interventionId: tx,
+            status,
+            nightsOn: 7,
+            nightsOff: 7,
+        });
+    });
+
+    const graph = {
+        nodes: [
+            interventionNode('TX_HELPFUL'),
+            interventionNode('TX_NEUTRAL'),
+            interventionNode('TX_UNKNOWN'),
+            interventionNode('TX_HARMFUL'),
+            mechanismNode('A'),
+            mechanismNode('B'),
+            mechanismNode('C'),
+            mechanismNode('D'),
+        ],
+        edges: [
+            edge('TX_HELPFUL', 'A'),
+            edge('TX_NEUTRAL', 'B'),
+            edge('TX_UNKNOWN', 'C'),
+            edge('TX_HARMFUL', 'D'),
+        ],
+    };
+
+    const scores = computeDefenseScores(graph);
+    approxEqual(scores.get('A').score, 1.0, 'helpful should map to 1.0');
+    approxEqual(scores.get('B').score, 0.6, 'neutral should map to 0.6');
+    approxEqual(scores.get('C').score, 0.5, 'unknown should map to 0.5');
+    approxEqual(scores.get('D').score, 0.15, 'harmful should map to 0.15');
+});
+
+test('days active still scales strength under habit-status weighting', () => {
+    storage.setRating('TX_PARTIAL', 'highly_effective');
+    storage.upsertHabitClassification({
+        interventionId: 'TX_PARTIAL',
+        status: 'neutral',
+        nightsOn: 5,
+        nightsOff: 5,
+    });
+
+    // Active for 3 of last 7 days.
+    storage.toggleCheckIn(daysAgoKey(0), 'TX_PARTIAL');
+    storage.toggleCheckIn(daysAgoKey(2), 'TX_PARTIAL');
+    storage.toggleCheckIn(daysAgoKey(4), 'TX_PARTIAL');
+
+    const graph = {
+        nodes: [interventionNode('TX_PARTIAL'), mechanismNode('A')],
+        edges: [edge('TX_PARTIAL', 'A')],
+    };
+
+    const scores = computeDefenseScores(graph);
+    approxEqual(scores.get('A').score, 0.6 * (3 / 7), 'status weight should be scaled by active-day proportion');
+});
