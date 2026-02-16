@@ -71,6 +71,11 @@ export {
 } from './storage/protocol.js';
 
 export {
+    computeHabitClassifications,
+    recomputeHabitClassifications,
+} from './storage/personalization.js';
+
+export {
     toggleHiddenIntervention,
     getHiddenInterventions,
 } from './storage/hiddenInterventions.js';
@@ -125,6 +130,7 @@ import {
     getHabitClassification,
     getHabitClassifications,
 } from './storage/protocol.js';
+import { computeHabitClassifications, recomputeHabitClassifications } from './storage/personalization.js';
 import { toggleHiddenIntervention, getHiddenInterventions } from './storage/hiddenInterventions.js';
 import { saveDiagram, getDiagram, clearDiagram } from './storage/diagram.js';
 import { unlockAchievement, getUnlockedAchievements } from './storage/achievements.js';
@@ -178,6 +184,8 @@ export default {
     upsertHabitClassification,
     getHabitClassification,
     getHabitClassifications,
+    computeHabitClassifications,
+    recomputeHabitClassifications,
     toggleHiddenIntervention,
     getHiddenInterventions,
     unlockAchievement,
