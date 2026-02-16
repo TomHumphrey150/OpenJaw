@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenJaw Reality-Anchor Architecture Report</title>
+    <style>
+        :root {
+            --bg: #eef2f7;
+            --panel: #ffffff;
+            --ink: #132238;
+            --muted: #465f79;
+            --line: #d6e0ea;
+            --accent: #0f766e;
+            --accent-soft: #e6f6f3;
+            --warn: #b45309;
+            --warn-soft: #fff4e5;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --code-bg: #f4f7fb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background: radial-gradient(circle at top left, #e4eef8 0%, var(--bg) 42%, #e8f5f1 100%);
+            line-height: 1.45;
+        }
+
+        main {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 24px 28px 48px;
+        }
+
+        h1, h2, h3 {
+            margin: 0 0 8px;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(1.45rem, 3vw, 2.2rem);
+        }
+
+        h2 {
+            font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+            margin-top: 16px;
+        }
+
+        h3 {
+            font-size: 1rem;
+            margin-top: 12px;
+        }
+
+        p {
+            margin: 0 0 10px;
+            color: var(--muted);
+        }
+
+        ul {
+            margin: 0 0 10px;
+            padding-left: 18px;
+            color: var(--muted);
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        code {
+            background: var(--code-bg);
+            border: 1px solid #dfe8f2;
+            border-radius: 4px;
+            padding: 0 6px;
+            font-size: 0.92em;
+            color: #123250;
+        }
+
+        .hero,
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 10px 26px rgba(11, 37, 64, 0.08);
+        }
+
+        .hero {
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+
+        .hero-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .pill {
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.83rem;
+            text-align: center;
+            border: 1px solid #c3e8df;
+            color: #0d5f57;
+            background: var(--accent-soft);
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .grid.two {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .card {
+            padding: 14px;
+        }
+
+        .note,
+        .warning,
+        .danger {
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid;
+            margin: 8px 0;
+            font-size: 0.95rem;
+        }
+
+        .note {
+            border-color: #b9ddd6;
+            background: #f0fbf8;
+            color: #12544f;
+        }
+
+        .warning {
+            border-color: #f3cf9b;
+            background: var(--warn-soft);
+            color: #8c4f06;
+        }
+
+        .danger {
+            border-color: #f5b4b4;
+            background: var(--danger-soft);
+            color: #8f1818;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fbfdff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 680px;
+        }
+
+        th, td {
+            text-align: left;
+            vertical-align: top;
+            padding: 9px 10px;
+            border-bottom: 1px solid #e3ebf3;
+            color: var(--muted);
+        }
+
+        th {
+            color: #1b3652;
+            background: #f4f8fc;
+            font-size: 0.9rem;
+        }
+
+        .diagram {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fcfeff;
+            padding: 14px;
+            overflow-x: auto;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            min-width: 1640px;
+            height: auto;
+            overflow: visible;
+        }
+
+        .caption {
+            margin-top: 8px;
+            font-size: 0.86rem;
+            color: #5a7188;
+        }
+
+        .legend-row {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .legend-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            border: 1px solid #d2e1ef;
+            background: #f6fbff;
+            color: #31516f;
+            padding: 4px 9px;
+            font-size: 0.78rem;
+        }
+
+        .legend-chip.objective {
+            border-color: #b6e3d6;
+            background: #edfbf4;
+            color: #1a6057;
+        }
+
+        .legend-chip.subjective {
+            border-color: #ebd4c8;
+            background: #fff6f2;
+            color: #7a4930;
+        }
+
+        .legend-chip.context {
+            border-color: #d6d4ef;
+            background: #f5f4ff;
+            color: #47417a;
+        }
+
+        .mono-block {
+            background: #0f1c2b;
+            color: #dce7f4;
+            border-radius: 10px;
+            border: 1px solid #26384f;
+            padding: 12px;
+            overflow-x: auto;
+            font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+            font-size: 0.87rem;
+            line-height: 1.35;
+            white-space: pre;
+        }
+
+        .phase-list .card {
+            border-left: 4px solid var(--accent);
+        }
+
+        .small {
+            font-size: 0.9rem;
+            color: #60788f;
+        }
+
+        .level-title {
+            margin-top: 16px;
+            margin-bottom: 8px;
+            color: #1a3755;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .detail-block {
+            margin-top: 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fbfdff;
+            box-shadow: 0 8px 22px rgba(11, 37, 64, 0.06);
+        }
+
+        .detail-block > summary {
+            cursor: pointer;
+            padding: 12px 14px;
+            font-weight: 700;
+            color: #22415f;
+            list-style: none;
+        }
+
+        .detail-block > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .detail-block > summary::before {
+            content: ">";
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 0.8rem;
+            color: #4a6580;
+            transform: translateY(-1px);
+        }
+
+        .detail-block[open] > summary::before {
+            content: "v";
+        }
+
+        .detail-body {
+            padding: 0 14px 14px;
+        }
+
+        .detail-body .card {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 740px) {
+            main {
+                padding: 16px 10px 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="hero">
+        <h1>OpenJaw Reality-Anchor Architecture Report</h1>
+        <p>This report proposes how to move from literature-first assumptions to reality-anchored personalization, with micro-arousals as the primary objective signal and morning symptoms as human-grounding signals.</p>
+        <div class="hero-meta">
+            <div class="pill">Date: 2026-02-16</div>
+            <div class="pill">Primary objective: reduce micro-arousals</div>
+            <div class="pill">Secondary objective: reduce morning symptom burden</div>
+            <div class="pill">Scope: architecture + phased implementation snapshot</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Executive Summary</h2>
+        <ul>
+            <li>Use micro-arousals as the primary objective signal for whether nights are improving or worsening.</li>
+            <li>Bind objective data to morning symptoms and context so the model learns what actually happens to you, not only what literature predicts.</li>
+            <li>Use one-variable-at-a-time testing windows so each habit effect is interpretable.</li>
+            <li>Keep V1 scoring simple: classify habits as <code>Helpful</code>, <code>Neutral</code>, <code>Harmful</code>, or <code>Unknown</code> instead of continuous personal weights.</li>
+        </ul>
+        <p class="small">Reading order: high-level framing first, then diagrams (system-level), then expandable low-level implementation details.</p>
+    </section>
+
+    <section class="card">
+        <h2>Implementation Plan (Commit Sequence)</h2>
+        <ol>
+            <li>Phase 1: add shared protocol constants and types only.</li>
+            <li>Phase 2: add first-class storage records for exposures, outcomes, morning state, and trial metadata.</li>
+            <li>Phase 3: add passive one-variable classifier that outputs <code>Helpful</code>/<code>Neutral</code>/<code>Harmful</code>/<code>Unknown</code>.</li>
+            <li>Phase 4: feed habit status into ranking so harmful patterns are downranked.</li>
+            <li>Phase 5: refine report and diagrams for clarity, progressive disclosure, and implementation handoff.</li>
+        </ol>
+        <p class="small">Each section below references where it sits in this execution order.</p>
+    </section>
+
+    <div class="level-title">Level 1: High-level framing</div>
+    <section class="card">
+        <p>Plan tie-in: this level defines the operating rules that drive Phase 2 and Phase 3 implementation.</p>
+    </section>
+    <section class="grid two">
+        <article class="card">
+            <h2>Core Problem</h2>
+            <p>The current model is strong on causal priors and intervention evidence, but weak on daily lived feedback. That creates a mismatch when an intervention is directionally valid in studies but harmful in a specific context (for example, bed elevation improving reflux but worsening neck spasm load).</p>
+            <div class="danger">
+                Current risk: the engine can reward an intervention for being checked in even when the next-night objective signal worsens.
+            </div>
+        </article>
+
+        <article class="card">
+            <h2>Anchor Principle</h2>
+            <p>Use micro-arousals as the most reliable operational signal for overnight instability, then bind it to context and symptoms:</p>
+            <ul>
+                <li>Objective: micro-arousal count, density, event timing.</li>
+                <li>Subjective: global sensation, neck tightness, jaw soreness, ear fullness, anxiety load.</li>
+                <li>Context: stress proxy, sleep position, pillow/elevation state, meal timing.</li>
+            </ul>
+            <div class="note">When objective and subjective signals disagree, keep both and track confidence, rather than forcing one to overwrite the other.</div>
+        </article>
+    </section>
+    <section class="card">
+        <h2>Simple Experiment Rule</h2>
+        <ul>
+            <li>Change one habit at a time and keep the rest locked.</li>
+            <li>Measure each state in short blocks (for example, 5-7 nights).</li>
+            <li>Judge primarily on micro-arousal trend; morning state acts as safety/context validation.</li>
+        </ul>
+        <div class="note">If multiple habits changed in the same window, mark that window as confounded and exclude it from habit-effect decisions.</div>
+    </section>
+    <div class="level-title">Level 2: System design diagrams</div>
+    <section class="card">
+        <h2>Diagram Assumption</h2>
+        <p>All flows below assume a simple experimentation rule: one habit changes in a test window, everything else stays fixed, and micro-arousal trend is the primary comparison signal.</p>
+        <p class="small">Plan tie-in: these diagrams correspond directly to Phase 2 (data capture), Phase 3 (classification), and Phase 4 (ranking behavior).</p>
+    </section>
+    <section class="card">
+        <h2>Diagram A: Current vs Proposed Data Flow</h2>
+        <div class="diagram">
+            <svg viewBox="0 0 1420 450" aria-label="Refined current versus proposed data flow">
+                <defs>
+                    <marker id="arrowA" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                        <path d="M0,0 L10,4 L0,8 Z" fill="#35516d"></path>
+                    </marker>
+                </defs>
+
+                <rect x="20" y="24" width="492" height="386" rx="12" fill="#f7fbff" stroke="#cfe0ef"></rect>
+                <text x="40" y="52" font-size="18" font-weight="700" fill="#24415e">Current flow (today)</text>
+
+                <circle cx="60" cy="96" r="14" fill="#d9e8f6" stroke="#b8cee3"></circle>
+                <text x="55" y="101" font-size="12" font-weight="700" fill="#2e4c69">1</text>
+                <rect x="82" y="74" width="126" height="44" rx="8" fill="#ffffff" stroke="#ceddea"></rect>
+                <text x="98" y="101" font-size="13" fill="#2c4a67">Daily check-ins</text>
+
+                <circle cx="236" cy="96" r="14" fill="#d9e8f6" stroke="#b8cee3"></circle>
+                <text x="231" y="101" font-size="12" font-weight="700" fill="#2e4c69">2</text>
+                <rect x="258" y="74" width="126" height="44" rx="8" fill="#ffffff" stroke="#ceddea"></rect>
+                <text x="274" y="95" font-size="13" fill="#2c4a67">Static weights</text>
+                <text x="274" y="110" font-size="12" fill="#5b7691">(priors only)</text>
+
+                <circle cx="412" cy="96" r="14" fill="#d9e8f6" stroke="#b8cee3"></circle>
+                <text x="407" y="101" font-size="12" font-weight="700" fill="#2e4c69">3</text>
+                <rect x="434" y="74" width="66" height="44" rx="8" fill="#ffffff" stroke="#ceddea"></rect>
+                <text x="446" y="101" font-size="13" fill="#2c4a67">Score</text>
+
+                <line x1="208" y1="96" x2="258" y2="96" stroke="#35516d" stroke-width="2" marker-end="url(#arrowA)"></line>
+                <line x1="384" y1="96" x2="434" y2="96" stroke="#35516d" stroke-width="2" marker-end="url(#arrowA)"></line>
+
+                <rect x="182" y="138" width="178" height="44" rx="8" fill="#ffffff" stroke="#ceddea"></rect>
+                <text x="198" y="165" font-size="13" fill="#2c4a67">Recommendation list</text>
+                <line x1="468" y1="118" x2="360" y2="138" stroke="#35516d" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+
+                <rect x="44" y="206" width="444" height="180" rx="10" fill="#fff7ec" stroke="#f2d4a8"></rect>
+                <text x="60" y="232" font-size="14" font-weight="700" fill="#8a4f11">Missing feedback loop</text>
+                <text x="60" y="258" font-size="13" fill="#7c4a16">No measured night outcomes in score update</text>
+                <text x="60" y="282" font-size="13" fill="#7c4a16">No neck/stress/timing context in updates</text>
+                <text x="60" y="306" font-size="13" fill="#7c4a16">No automatic downrank after personal harm</text>
+                <text x="60" y="330" font-size="13" fill="#7c4a16">No direct micro-arousal tie to ranking</text>
+
+                <rect x="538" y="24" width="492" height="386" rx="12" fill="#f4fcf8" stroke="#c9e9dc"></rect>
+                <text x="558" y="52" font-size="18" font-weight="700" fill="#165e56">Proposed flow (reality-anchored)</text>
+
+                <circle cx="560" cy="96" r="14" fill="#d6f2e7" stroke="#b7dbc9"></circle>
+                <text x="555" y="101" font-size="12" font-weight="700" fill="#1b5e55">1</text>
+                <rect x="582" y="74" width="126" height="44" rx="8" fill="#ffffff" stroke="#c9e4d9"></rect>
+                <text x="600" y="101" font-size="13" fill="#1b5e55">Night exposures</text>
+
+                <rect x="722" y="74" width="146" height="44" rx="8" fill="#edfbf4" stroke="#a9dcc8" stroke-width="2"></rect>
+                <text x="742" y="95" font-size="13" fill="#1b5e55">Micro-arousals</text>
+                <text x="742" y="110" font-size="12" fill="#2a6f65">objective anchor</text>
+
+                <rect x="874" y="74" width="140" height="44" rx="8" fill="#fff7f2" stroke="#e6cfbf"></rect>
+                <text x="890" y="95" font-size="13" fill="#6c432d">Morning state</text>
+                <text x="890" y="110" font-size="12" fill="#7a5039">(neck/jaw/ear/global)</text>
+
+                <rect x="582" y="132" width="126" height="40" rx="8" fill="#f5f4ff" stroke="#d8d5f0"></rect>
+                <text x="607" y="157" font-size="13" fill="#4a447c">Context load</text>
+
+                <rect x="722" y="132" width="146" height="40" rx="8" fill="#f5f4ff" stroke="#d8d5f0"></rect>
+                <text x="734" y="157" font-size="13" fill="#4a447c">Signal quality flags</text>
+
+                <rect x="874" y="132" width="140" height="40" rx="8" fill="#f5f4ff" stroke="#d8d5f0"></rect>
+                <text x="890" y="157" font-size="13" fill="#4a447c">Timing metadata</text>
+
+                <circle cx="560" cy="204" r="14" fill="#d6f2e7" stroke="#b7dbc9"></circle>
+                <text x="555" y="209" font-size="12" font-weight="700" fill="#1b5e55">2</text>
+                <rect x="582" y="182" width="420" height="50" rx="9" fill="#ffffff" stroke="#c9e4d9"></rect>
+                <text x="602" y="203" font-size="13" fill="#1b5e55">Aligned night record</text>
+                <text x="602" y="219" font-size="12" fill="#2a6f65">row: exposure + objective + symptoms + context</text>
+
+                <line x1="645" y1="118" x2="645" y2="182" stroke="#1b5e55" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+                <line x1="795" y1="118" x2="795" y2="182" stroke="#1b5e55" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+                <line x1="948" y1="118" x2="948" y2="182" stroke="#1b5e55" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+                <line x1="645" y1="172" x2="645" y2="182" stroke="#4a447c" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+                <line x1="795" y1="172" x2="795" y2="182" stroke="#4a447c" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+                <line x1="948" y1="172" x2="948" y2="182" stroke="#4a447c" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+
+                <circle cx="560" cy="282" r="14" fill="#d6f2e7" stroke="#b7dbc9"></circle>
+                <text x="555" y="287" font-size="12" font-weight="700" fill="#1b5e55">3</text>
+                <rect x="582" y="258" width="188" height="52" rx="9" fill="#ffffff" stroke="#c9e4d9"></rect>
+                <text x="600" y="286" font-size="13" fill="#1b5e55">Personal effect learner</text>
+
+                <rect x="784" y="258" width="218" height="52" rx="9" fill="#ffffff" stroke="#c9e4d9"></rect>
+                <text x="802" y="279" font-size="13" fill="#1b5e55">Adaptive ranking + guardrails</text>
+                <text x="802" y="295" font-size="12" fill="#2a6f65">(can downrank harmful responses)</text>
+
+                <line x1="792" y1="232" x2="792" y2="258" stroke="#1b5e55" stroke-width="1.8" marker-end="url(#arrowA)"></line>
+                <line x1="770" y1="284" x2="784" y2="284" stroke="#1b5e55" stroke-width="2" marker-end="url(#arrowA)"></line>
+
+                <rect x="582" y="332" width="420" height="58" rx="10" fill="#ecfdf5" stroke="#bce7d6"></rect>
+                <text x="602" y="352" font-size="13" fill="#185d54">Recommendations follow measured outcomes.</text>
+                <text x="602" y="368" font-size="12" fill="#185d54">Literature priors are only initialization.</text>
+                <text x="602" y="383" font-size="12" fill="#185d54">Example: downrank bed elevation if micro-arousals worsen.</text>
+                <line x1="892" y1="310" x2="892" y2="332" stroke="#1b5e55" stroke-width="2" marker-end="url(#arrowA)"></line>
+            </svg>
+            <div class="legend-row">
+                <span class="legend-chip objective">Objective signal (primary): micro-arousals</span>
+                <span class="legend-chip subjective">Subjective signal: morning symptom state</span>
+                <span class="legend-chip context">Context signal: stress/load/timing quality</span>
+                <span class="legend-chip">Experiment rule: one habit change per test window</span>
+            </div>
+            <div class="caption">Interventions remain in the graph, but optimization shifts to measured effects on nightly outcomes.</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Diagram B: Night Timeline Alignment</h2>
+        <div class="diagram">
+            <svg viewBox="0 0 1420 350" aria-label="Refined timeline alignment diagram">
+                <defs>
+                    <marker id="arrowB" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                        <path d="M0,0 L10,4 L0,8 Z" fill="#475569"></path>
+                    </marker>
+                </defs>
+                <rect x="34" y="28" width="982" height="272" rx="12" fill="#f8fcff" stroke="#cfdfee"></rect>
+
+                <text x="54" y="56" font-size="14" font-weight="700" fill="#284663">Exposure lane</text>
+                <text x="54" y="136" font-size="14" font-weight="700" fill="#20584f">Objective lane (sensor)</text>
+                <text x="54" y="216" font-size="14" font-weight="700" fill="#6d452e">Morning lane (subjective)</text>
+
+                <line x1="180" y1="50" x2="970" y2="50" stroke="#8ca4bb" stroke-width="2" marker-end="url(#arrowB)"></line>
+                <line x1="180" y1="130" x2="970" y2="130" stroke="#84b5a5" stroke-width="2" marker-end="url(#arrowB)"></line>
+                <line x1="180" y1="210" x2="970" y2="210" stroke="#ca9f85" stroke-width="2" marker-end="url(#arrowB)"></line>
+
+                <line x1="250" y1="34" x2="250" y2="246" stroke="#d4dee8" stroke-width="1.5" stroke-dasharray="5 4"></line>
+                <line x1="560" y1="34" x2="560" y2="246" stroke="#d4dee8" stroke-width="1.5" stroke-dasharray="5 4"></line>
+                <line x1="828" y1="34" x2="828" y2="246" stroke="#d4dee8" stroke-width="1.5" stroke-dasharray="5 4"></line>
+
+                <text x="216" y="274" font-size="12" fill="#60778e">pre-sleep</text>
+                <text x="530" y="274" font-size="12" fill="#60778e">sleep window</text>
+                <text x="808" y="274" font-size="12" fill="#60778e">wake window</text>
+
+                <rect x="286" y="34" width="150" height="32" rx="7" fill="#ffffff" stroke="#c9d8e6"></rect>
+                <text x="304" y="54" font-size="12" fill="#2e4a67">Bed elevation + pillow setup</text>
+
+                <rect x="460" y="34" width="132" height="32" rx="7" fill="#ffffff" stroke="#c9d8e6"></rect>
+                <text x="482" y="54" font-size="12" fill="#2e4a67">Stress context high</text>
+
+                <rect x="606" y="34" width="162" height="32" rx="7" fill="#ffffff" stroke="#c9d8e6"></rect>
+                <text x="624" y="54" font-size="12" fill="#2e4a67">Exposure timing + intensity</text>
+
+                <rect x="314" y="114" width="126" height="32" rx="7" fill="#edfbf4" stroke="#a9dcc8" stroke-width="2"></rect>
+                <text x="332" y="135" font-size="12" fill="#1f655b">Micro-arousal rate</text>
+
+                <circle cx="486" cy="130" r="7" fill="#30a07f"></circle>
+                <circle cx="512" cy="124" r="7" fill="#30a07f"></circle>
+                <circle cx="538" cy="132" r="7" fill="#30a07f"></circle>
+                <circle cx="564" cy="122" r="7" fill="#30a07f"></circle>
+                <text x="472" y="152" font-size="12" fill="#1f655b">clustered events</text>
+
+                <rect x="612" y="114" width="170" height="32" rx="7" fill="#ffffff" stroke="#b8d8c9"></rect>
+                <text x="630" y="135" font-size="12" fill="#1f655b">Sleep-stage co-occurrence</text>
+
+                <rect x="846" y="194" width="154" height="34" rx="7" fill="#fff6f2" stroke="#e6cfbf"></rect>
+                <text x="864" y="215" font-size="12" fill="#6d452e">Neck/Jaw/Ear/Global</text>
+
+                <line x1="564" y1="130" x2="842" y2="206" stroke="#4b647d" stroke-width="1.8" marker-end="url(#arrowB)"></line>
+
+                <rect x="214" y="246" width="752" height="40" rx="9" fill="#edf9f4" stroke="#bfe5d4"></rect>
+                <text x="232" y="264" font-size="12" fill="#1f5f56">Aligned row: exposures + objective events + morning symptoms + context.</text>
+                <text x="232" y="278" font-size="12" fill="#1f5f56">Output unit: one trainable night sample.</text>
+            </svg>
+            <div class="legend-row">
+                <span class="legend-chip objective">Anchor metric: micro-arousal frequency and clustering</span>
+                <span class="legend-chip subjective">Symptom follow-up: neck/jaw/ear/global morning state</span>
+                <span class="legend-chip">Only compare windows where one habit changed</span>
+            </div>
+            <div class="caption">A single aligned night is the unit of learning.</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Diagram C: Personalization Update Loop</h2>
+        <div class="diagram">
+            <svg viewBox="0 0 1420 360" aria-label="Refined personalization loop with decision branches">
+                <defs>
+                    <marker id="arrowC" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                        <path d="M0,0 L10,4 L0,8 Z" fill="#2e4b67"></path>
+                    </marker>
+                </defs>
+
+                <rect x="34" y="26" width="1052" height="308" rx="12" fill="#f8fcff" stroke="#cfdfee"></rect>
+
+                <rect x="70" y="72" width="172" height="50" rx="9" fill="#ffffff" stroke="#cadcec"></rect>
+                <text x="90" y="94" font-size="13" fill="#24425f">Literature prior</text>
+                <text x="90" y="110" font-size="12" fill="#5e7690">(initial direction + scale)</text>
+
+                <rect x="280" y="72" width="246" height="50" rx="9" fill="#ffffff" stroke="#cadcec"></rect>
+                <text x="300" y="94" font-size="13" fill="#24425f">Aligned night evidence</text>
+                <text x="300" y="107" font-size="12" fill="#5e7690">(micro-arousal + symptoms)</text>
+                <text x="300" y="120" font-size="12" fill="#5e7690">(+ context and quality flags)</text>
+
+                <rect x="540" y="72" width="176" height="50" rx="9" fill="#ffffff" stroke="#cadcec"></rect>
+                <text x="560" y="94" font-size="13" fill="#24425f">Effect update step</text>
+                <text x="560" y="110" font-size="12" fill="#5e7690">(delta, confidence, trend)</text>
+
+                <rect x="754" y="72" width="214" height="50" rx="9" fill="#ffffff" stroke="#cadcec"></rect>
+                <text x="774" y="94" font-size="13" fill="#24425f">Confidence gate</text>
+                <text x="774" y="110" font-size="12" fill="#5e7690">uncertainty penalty</text>
+
+                <line x1="242" y1="97" x2="280" y2="97" stroke="#2e4b67" stroke-width="2" marker-end="url(#arrowC)"></line>
+                <line x1="526" y1="97" x2="540" y2="97" stroke="#2e4b67" stroke-width="2" marker-end="url(#arrowC)"></line>
+                <line x1="716" y1="97" x2="754" y2="97" stroke="#2e4b67" stroke-width="2" marker-end="url(#arrowC)"></line>
+
+                <rect x="770" y="146" width="188" height="46" rx="9" fill="#ecfdf5" stroke="#bce7d6"></rect>
+                <text x="788" y="174" font-size="13" fill="#166354">If net benefit: upweight</text>
+
+                <rect x="770" y="204" width="188" height="46" rx="9" fill="#fff3f3" stroke="#efc7c7"></rect>
+                <text x="788" y="232" font-size="13" fill="#8f1f1f">If net harm: downweight</text>
+
+                <line x1="860" y1="122" x2="860" y2="146" stroke="#2e4b67" stroke-width="1.8" marker-end="url(#arrowC)"></line>
+                <line x1="860" y1="122" x2="860" y2="204" stroke="#2e4b67" stroke-width="1.8" marker-end="url(#arrowC)"></line>
+
+                <rect x="530" y="258" width="214" height="44" rx="9" fill="#ffffff" stroke="#cadcec"></rect>
+                <text x="548" y="284" font-size="13" fill="#24425f">Updated intervention effect</text>
+
+                <rect x="770" y="258" width="230" height="44" rx="9" fill="#ffffff" stroke="#cadcec"></rect>
+                <text x="788" y="284" font-size="13" fill="#24425f">Next-day ranking output</text>
+
+                <line x1="770" y1="169" x2="744" y2="280" stroke="#2e4b67" stroke-width="1.8" marker-end="url(#arrowC)"></line>
+                <line x1="770" y1="227" x2="744" y2="280" stroke="#2e4b67" stroke-width="1.8" marker-end="url(#arrowC)"></line>
+                <line x1="744" y1="280" x2="770" y2="280" stroke="#2e4b67" stroke-width="2" marker-end="url(#arrowC)"></line>
+
+                <path d="M630 258 C500 240, 430 206, 390 122" fill="none" stroke="#2e4b67" stroke-width="1.8" marker-end="url(#arrowC)"></path>
+                <text x="314" y="238" font-size="12" fill="#4f6782">loop: next night -> recalibrate</text>
+            </svg>
+            <div class="legend-row">
+                <span class="legend-chip">Prior is initialization only</span>
+                <span class="legend-chip objective">Update driven by micro-arousal change</span>
+                <span class="legend-chip subjective">Symptoms adjust confidence and safety</span>
+                <span class="legend-chip">Keep decisions simple: Helpful/Neutral/Harmful/Unknown</span>
+            </div>
+            <div class="caption">Priors initialize. Night evidence updates habit status. Recommendations follow measured status, not static expectation.</div>
+        </div>
+    </section>
+
+    <div class="level-title">Level 3: Low-level implementation details</div>
+    <section class="card">
+        <p>Plan tie-in: this level maps implementation to concrete files and commit-sized phases, and marks what is complete vs pending.</p>
+    </section>
+    <details class="detail-block">
+        <summary>Expand low-level architecture, schema shape, and status</summary>
+        <div class="detail-body">
+            <section class="card">
+                <h2>Current Architecture Gaps (Mapped to Existing Files)</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Current behavior</th>
+                            <th>Gap vs reality anchoring</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/causalEditor/defaultGraphData.js</code></td>
+                            <td>Rich literature-driven causal nodes and interventions (including <code>MICRO</code>, reflux, stress, cervical links).</td>
+                            <td>No per-user reversal layer when an intervention behaves opposite to expected effect.</td>
+                        </tr>
+                        <tr>
+                            <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/causalEditor/defenseScoring.js</code></td>
+                            <td>Defense scores derive from 7-day check-ins + static effectiveness weights + graph decay.</td>
+                            <td>No outcome feedback in weight update loop; check-in can boost score even after a bad night.</td>
+                        </tr>
+                        <tr>
+                            <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/storage/checkIns.js</code></td>
+                            <td>Binary intervention completion by date.</td>
+                            <td>No dose/intensity/timing/context fields (for example, elevation level or neck overload state).</td>
+                        </tr>
+                        <tr>
+                            <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/storage/core.js</code></td>
+                            <td>Single synced JSON document in <code>public.user_data</code>.</td>
+                            <td>No first-class schema for sensor outcomes, symptom vectors, or adverse-response events.</td>
+                        </tr>
+                        <tr>
+                            <td><code>/Users/tomhumphrey/src/OpenJaw/supabase/migrations/20260215170532_create_user_data.sql</code></td>
+                            <td>Per-user JSONB row with RLS enabled.</td>
+                            <td>Good for extensibility; currently missing structured analytics slices for learning loops.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Target Design: Reality-Feedback Layer</h2>
+                <div class="grid two">
+                    <div>
+                        <h3>1) Make outcomes first-class entities</h3>
+                        <ul>
+                            <li><code>nightOutcomes[]</code>: micro-arousal metrics + sleep staging + summary quality flags.</li>
+                            <li><code>morningState[]</code>: global sensation, neck tightness, jaw soreness, ear fullness, anxiety.</li>
+                            <li><code>nightExposures[]</code>: intervention events with intensity and timing (not just checkbox).</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>2) Keep personalization logic simple in V1</h3>
+                        <ul>
+                            <li>Keep literature priors as initialization only.</li>
+                            <li>No continuous personal-weight engine in V1.</li>
+                            <li>Classify each habit as <code>Helpful</code>, <code>Neutral</code>, <code>Harmful</code>, or <code>Unknown</code>.</li>
+                            <li>Only classify from one-variable test windows.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="warning">
+                    Safety rule: if an intervention repeatedly worsens micro-arousals and neck symptom load, model confidence should move toward "harm for this user" and recommendations should downrank it.
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Simple Classification Protocol (One Variable at a Time)</h2>
+                <ul>
+                    <li>Lock all non-tested habits for each test block.</li>
+                    <li>Require minimum data before classification (for example, 5 nights with habit ON and 5 nights with habit OFF).</li>
+                    <li><code>Helpful</code>: micro-arousals improve by meaningful threshold (for example, >=10%) with no consistent morning worsening.</li>
+                    <li><code>Harmful</code>: micro-arousals worsen by meaningful threshold or morning symptoms repeatedly worsen.</li>
+                    <li><code>Neutral</code>: no clear directional difference.</li>
+                    <li><code>Unknown</code>: not enough clean data or confounded windows.</li>
+                </ul>
+                <div class="note">Confounded windows (more than one habit changed) should still be stored, but not used for habit classification.</div>
+            </section>
+
+            <section class="card">
+                <h2>Proposed Personal Data Additions (JSONB-compatible)</h2>
+                <p>This can live inside the existing <code>public.user_data.data</code> document, preserving current RLS and sync mechanics.</p>
+                <div class="mono-block">{
+  "nightExposures": [
+    {
+      "nightId": "2026-02-15",
+      "interventionId": "BED_ELEV_TX",
+      "intensity": { "cm": 15 },
+      "timing": { "start": "22:45", "end": "07:00" },
+      "tags": ["reflux_protocol", "neck_load_risk"]
+    }
+  ],
+  "nightOutcomes": [
+    {
+      "nightId": "2026-02-15",
+      "microArousals": { "count": 27, "perHour": 4.9, "confidence": 0.92 },
+      "sleep": { "totalMinutes": 404, "efficiency": 0.84 },
+      "sources": ["muse", "oura"]
+    }
+  ],
+  "morningState": [
+    {
+      "nightId": "2026-02-15",
+      "globalSensation": 4,
+      "neckTightness": 8,
+      "jawSoreness": 6,
+      "earFullness": 7,
+      "healthAnxiety": 8
+    }
+  ],
+  "interventionPersonalEffects": {
+    "BED_ELEV_TX": {
+      "status": "Harmful",
+      "nightsOn": 7,
+      "nightsOff": 7,
+      "microArousalDeltaPct": +18,
+      "morningStateDelta": +1.2,
+      "windowQuality": "clean_one_variable"
+    }
+  }
+}</div>
+                <p class="small">Positive deltas indicate worsening. Sign conventions should be explicit and consistent across metrics.</p>
+            </section>
+
+    <section class="card">
+        <h2>Adverse-Response Guardrail (Example: Bed Elevation + Neck Overload)</h2>
+        <div class="mono-block">if (
+  exposure.interventionId === "BED_ELEV_TX" &&
+  delta.microArousals > worseningThreshold &&
+  delta.neckTightness > worseningThreshold &&
+  repeatedNights >= 3
+) {
+  setPersonalStatus("BED_ELEV_TX", "likely_harmful_in_current_context");
+  reduceRecommendationRank("BED_ELEV_TX");
+  surfaceContextSuggestion("If using elevation, lower angle or modify neck support setup");
+}</div>
+        <p class="small">This is a product safety rule, not a medical diagnosis rule.</p>
+    </section>
+
+    <section class="card">
+        <h2>Implementation Mapping (Current Status)</h2>
+        <p class="small">Status snapshot (2026-02-16): Phases 1-4 are implemented in code. UI capture and richer context instrumentation remain next.</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Likely files</th>
+                    <th>Status summary</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Type definitions</td>
+                    <td><code>/Users/tomhumphrey/src/OpenJaw/src/types/personalData.ts</code></td>
+                    <td>Implemented: added interfaces for <code>NightExposure</code>, <code>NightOutcome</code>, <code>MorningState</code>, trial windows, and habit classifications.</td>
+                </tr>
+                <tr>
+                    <td>Store shape + migration</td>
+                    <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/storage/core.js</code></td>
+                    <td>Implemented: store and normalization now include exposure/outcome/morning/trial/classification slices.</td>
+                </tr>
+                <tr>
+                    <td>Write/read APIs</td>
+                    <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/storage/</code> (new module)</td>
+                    <td>Implemented: added <code>exposures.js</code>, <code>outcomes.js</code>, <code>protocol.js</code>, and passive classifier module.</td>
+                </tr>
+                <tr>
+                    <td>Scoring</td>
+                    <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/causalEditor/defenseScoring.js</code></td>
+                    <td>Implemented: defense ranking now prioritizes personal habit status over static rating priors.</td>
+                </tr>
+                <tr>
+                    <td>UI capture</td>
+                    <td><code>/Users/tomhumphrey/src/OpenJaw/public/js/causalEditor.js</code></td>
+                    <td>Pending: add morning quick-check and context tags alongside intervention check-ins.</td>
+                </tr>
+                <tr>
+                    <td>Sync contract</td>
+                    <td><code>/Users/tomhumphrey/src/OpenJaw/supabase/migrations/</code> (optional)</td>
+                    <td>No migration required so far; JSONB contract remains compatible for these fields.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="phase-list">
+        <h2>Phased Rollout Plan (Commit Order)</h2>
+        <div class="grid two">
+            <article class="card">
+                <h3>Phase 1: Protocol foundation</h3>
+                <ul>
+                    <li>Add protocol constants and shared types.</li>
+                    <li>No behavior changes in this step.</li>
+                    <li>Status: completed.</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h3>Phase 2: Storage domains</h3>
+                <ul>
+                    <li>Add night exposure/outcome/morning/trial/classification records.</li>
+                    <li>Add CRUD APIs and tests.</li>
+                    <li>Status: completed.</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h3>Phase 3: Passive classifier</h3>
+                <ul>
+                    <li>Add one-variable ON/OFF classification logic.</li>
+                    <li>Output <code>Helpful/Neutral/Harmful/Unknown</code> states.</li>
+                    <li>Status: completed.</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h3>Phase 4: Active ranking integration</h3>
+                <ul>
+                    <li>Feed habit status into defense scoring and downranking.</li>
+                    <li>Retain rating fallback when no personal status exists.</li>
+                    <li>Status: completed.</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h3>Phase 5: UI and capture polish</h3>
+                <ul>
+                    <li>Add quick morning questionnaire and context capture in UI.</li>
+                    <li>Trigger protocol recompute from capture flows.</li>
+                    <li>Status: next.</li>
+                </ul>
+            </article>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Success Metrics</h2>
+        <ul>
+            <li>Primary: rolling 14-day micro-arousal count and per-hour rate trend.</li>
+            <li>Secondary: morning neck/jaw/ear/global symptom composite trend.</li>
+            <li>Safety: adverse-night recurrence after recommendation should decline over time.</li>
+            <li>Learning quality: interventions with clear personal harm should converge to low recommendation priority.</li>
+        </ul>
+    </section>
+
+        </div>
+    </details>
+
+    <section class="card">
+        <h2>Bottom Line</h2>
+        <p>The current system is a strong causal map and behavior tracker. To make it match lived reality with minimal complexity, use a one-variable-at-a-time protocol, anchor on micro-arousals, and classify habits with simple status labels.</p>
+        <div class="note">Simple V1: one change at a time, objective-first outcome, clear habit status. Add more complexity only if this simple loop proves insufficient.</div>
+    </section>
+</main>
+</body>
+</html>
