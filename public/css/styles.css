@@ -288,6 +288,139 @@ header h1 {
     margin-bottom: 6px;
 }
 
+.defense-protocol-card {
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.defense-protocol-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #dbeafe;
+    margin-bottom: 4px;
+}
+
+.defense-protocol-hint {
+    font-size: 9px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.defense-protocol-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: #93c5fd;
+    margin: 6px 0 4px;
+}
+
+.defense-protocol-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.defense-protocol-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.defense-protocol-field span {
+    font-size: 9px;
+    color: #94a3b8;
+}
+
+.defense-protocol-field input {
+    width: 100%;
+    height: 26px;
+    border-radius: 5px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.6);
+    color: #e2e8f0;
+    font-size: 11px;
+    padding: 4px 6px;
+}
+
+.defense-protocol-field input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.defense-protocol-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.defense-protocol-btn {
+    flex: 1;
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    background: rgba(56, 189, 248, 0.2);
+    color: #dbeafe;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.defense-protocol-btn:hover {
+    background: rgba(56, 189, 248, 0.32);
+}
+
+.defense-protocol-btn.subtle {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+}
+
+.defense-protocol-btn.subtle:hover {
+    background: rgba(148, 163, 184, 0.2);
+}
+
+.defense-protocol-summary {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.defense-protocol-chip {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.defense-protocol-chip.helpful {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.35);
+}
+
+.defense-protocol-chip.neutral {
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.defense-protocol-chip.harmful {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+.defense-protocol-chip.unknown {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.15);
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
 .defense-sidebar .defense-sidebar-summary {
     font-size: 12px;
     color: var(--accent);
@@ -431,6 +564,39 @@ header h1 {
     flex-shrink: 0;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+}
+
+.defense-habit-status {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    flex-shrink: 0;
+}
+
+.defense-habit-status.helpful {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.32);
+}
+
+.defense-habit-status.neutral {
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.16);
+    border-color: rgba(245, 158, 11, 0.32);
+}
+
+.defense-habit-status.harmful {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.32);
+}
+
+.defense-habit-status.unknown {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.28);
 }
 
 .defense-impact-bar-wrap {
@@ -1815,6 +1981,10 @@ footer {
         overflow-y: auto;
     }
 
+    .defense-protocol-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .activity-sidebar {
         position: static;
         height: auto;
@@ -1899,6 +2069,14 @@ footer {
 
     .tab-content.active {
         padding: 16px;
+    }
+
+    .defense-protocol-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .defense-protocol-actions {
+        flex-direction: column;
     }
 
     #filters {
@@ -2623,4 +2801,3 @@ footer {
 .toast-level-up {
     border-color: #22c55e;
 }
-

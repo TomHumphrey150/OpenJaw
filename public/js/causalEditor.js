@@ -1025,6 +1025,33 @@ function formatDateLabel(key) {
     return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function parseOptionalNumber(raw, { min = -Infinity, max = Infinity, integer = false } = {}) {
+    if (raw === null || raw === undefined) return undefined;
+    const text = String(raw).trim();
+    if (!text) return undefined;
+    const parsed = Number(text);
+    if (!Number.isFinite(parsed)) return undefined;
+    const clamped = Math.max(min, Math.min(max, parsed));
+    return integer ? Math.round(clamped) : clamped;
+}
+
+function escapeHtmlAttr(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+}
+
+function habitStatusLabel(status) {
+    switch (status) {
+        case 'helpful': return 'Helpful';
+        case 'neutral': return 'Neutral';
+        case 'harmful': return 'Harmful';
+        default: return 'Unknown';
+    }
+}
+
 // ── Check-in Panel ──
 
 let checkinDateOffset = 0; // 0 = today, -1 = yesterday, etc.
@@ -1123,6 +1150,26 @@ function buildCheckinPanel(graphData) {
     const dateKey = dateOffsetKey(checkinDateOffset);
     const checkIns = storage.getCheckIns(dateKey);
     const checkInSet = new Set(checkIns);
+    const nightOutcome = storage.getNightOutcome(dateKey) || {};
+    const morningState = storage.getMorningState(dateKey) || {};
+    const habitClassifications = storage.getHabitClassifications();
+    const habitClassMap = new Map();
+    const habitStatusCounts = {
+        helpful: 0,
+        neutral: 0,
+        harmful: 0,
+        unknown: 0,
+    };
+    habitClassifications.forEach(record => {
+        if (!record || !record.interventionId) return;
+        const status = record.status || 'unknown';
+        habitClassMap.set(record.interventionId, record);
+        if (habitStatusCounts[status] !== undefined) {
+            habitStatusCounts[status] += 1;
+        } else {
+            habitStatusCounts.unknown += 1;
+        }
+    });
 
     // Compute streaks for all interventions
     const rangeData = storage.getCheckInsRange(7);
@@ -1223,6 +1270,8 @@ function buildCheckinPanel(graphData) {
         const s = streak(id);
         const checked = checkInSet.has(id);
         const cat = catLookup.get(id) || '';
+        const habitStatus = habitClassMap.get(id)?.status || 'unknown';
+        const habitStatusText = habitStatusLabel(habitStatus);
         const score = (impact.get(id) || { score: 0 }).score;
         const barPct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
         const isActive = _activeCheckinTxId === id;
@@ -1251,6 +1300,7 @@ function buildCheckinPanel(graphData) {
         h += `<span class="defense-item-label">${label}</span>`;
         h += `<div class="defense-item-meta">`;
         h += `<span class="defense-item-cat">${cat}</span>`;
+        h += `<span class="defense-habit-status ${habitStatus}" title="Personal status: ${habitStatusText}">${habitStatusText}</span>`;
         h += `<span class="defense-impact-bar-wrap"><span class="defense-impact-bar" style="width:${barPct}%"></span></span>`;
         h += `<span class="defense-item-score ${scoreClass}"></span>`;
         h += `<span class="defense-item-streak ${streakClass}">${streakLabel}</span>`;
@@ -1300,6 +1350,15 @@ function buildCheckinPanel(graphData) {
     }
 
     const checkedFiltered = filteredTxIds.filter(id => checkInSet.has(id)).length;
+    const objectiveRateValue = nightOutcome.microArousalRatePerHour ?? '';
+    const objectiveCountValue = nightOutcome.microArousalCount ?? '';
+    const objectiveConfidenceValue = nightOutcome.confidence ?? '';
+    const objectiveSourceValue = typeof nightOutcome.source === 'string' ? nightOutcome.source : '';
+    const morningGlobalValue = morningState.globalSensation ?? '';
+    const morningNeckValue = morningState.neckTightness ?? '';
+    const morningJawValue = morningState.jawSoreness ?? '';
+    const morningEarValue = morningState.earFullness ?? '';
+    const morningAnxietyValue = morningState.healthAnxiety ?? '';
 
     // ── Build Header HTML ──
     let html = '';
@@ -1331,6 +1390,35 @@ function buildCheckinPanel(graphData) {
     html += `<span class="defense-date-label">${formatDateLabel(dateKey)}</span>`;
     html += `<button class="defense-date-btn" data-dir="1" ${checkinDateOffset >= 0 ? 'disabled' : ''}>&rarr;</button>`;
     html += `</div>`;
+    html += `<div class="defense-protocol-card">`;
+    html += `<div class="defense-protocol-title">Reality Feedback (for ${formatDateLabel(dateKey)})</div>`;
+    html += `<div class="defense-protocol-hint">One-variable rule: change one habit at a time for cleaner evidence.</div>`;
+    html += `<div class="defense-protocol-section-title">Objective (night)</div>`;
+    html += `<div class="defense-protocol-grid">`;
+    html += `<label class="defense-protocol-field"><span>Micro/hr</span><input data-field="micro-rate" type="number" step="0.1" min="0" placeholder="e.g. 3.4" value="${escapeHtmlAttr(objectiveRateValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Micro count</span><input data-field="micro-count" type="number" step="1" min="0" placeholder="e.g. 24" value="${escapeHtmlAttr(objectiveCountValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Confidence (0-1)</span><input data-field="micro-confidence" type="number" step="0.01" min="0" max="1" placeholder="e.g. 0.92" value="${escapeHtmlAttr(objectiveConfidenceValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Source</span><input data-field="micro-source" type="text" placeholder="muse / oura / manual" value="${escapeHtmlAttr(objectiveSourceValue)}"></label>`;
+    html += `</div>`;
+    html += `<div class="defense-protocol-section-title">Morning state (0-10)</div>`;
+    html += `<div class="defense-protocol-grid">`;
+    html += `<label class="defense-protocol-field"><span>Global</span><input data-field="morning-global" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningGlobalValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Neck</span><input data-field="morning-neck" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningNeckValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Jaw</span><input data-field="morning-jaw" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningJawValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Ear</span><input data-field="morning-ear" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningEarValue)}"></label>`;
+    html += `<label class="defense-protocol-field"><span>Anxiety</span><input data-field="morning-anxiety" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningAnxietyValue)}"></label>`;
+    html += `</div>`;
+    html += `<div class="defense-protocol-actions">`;
+    html += `<button class="defense-protocol-btn" data-action="save-protocol">Save + Recompute</button>`;
+    html += `<button class="defense-protocol-btn subtle" data-action="recompute-only">Recompute only</button>`;
+    html += `</div>`;
+    html += `<div class="defense-protocol-summary">`;
+    html += `<span class="defense-protocol-chip helpful">${habitStatusCounts.helpful} helpful</span>`;
+    html += `<span class="defense-protocol-chip neutral">${habitStatusCounts.neutral} neutral</span>`;
+    html += `<span class="defense-protocol-chip harmful">${habitStatusCounts.harmful} harmful</span>`;
+    html += `<span class="defense-protocol-chip unknown">${habitStatusCounts.unknown} unknown</span>`;
+    html += `</div>`;
+    html += `</div>`;
     html += `</div>`; // close defense-sidebar-header
 
     filteredTxIds.forEach(id => { html += renderItem(id, false); });
@@ -1356,6 +1444,77 @@ function buildCheckinPanel(graphData) {
         });
     }
 
+    const saveProtocolBtn = panel.querySelector('[data-action="save-protocol"]');
+    if (saveProtocolBtn) {
+        saveProtocolBtn.addEventListener('click', () => {
+            const microRate = parseOptionalNumber(panel.querySelector('[data-field="micro-rate"]')?.value, { min: 0 });
+            const microCount = parseOptionalNumber(panel.querySelector('[data-field="micro-count"]')?.value, { min: 0, integer: true });
+            const microConfidence = parseOptionalNumber(panel.querySelector('[data-field="micro-confidence"]')?.value, { min: 0, max: 1 });
+            const source = (panel.querySelector('[data-field="micro-source"]')?.value || '').trim();
+
+            const globalSensation = parseOptionalNumber(panel.querySelector('[data-field="morning-global"]')?.value, { min: 0, max: 10, integer: true });
+            const neckTightness = parseOptionalNumber(panel.querySelector('[data-field="morning-neck"]')?.value, { min: 0, max: 10, integer: true });
+            const jawSoreness = parseOptionalNumber(panel.querySelector('[data-field="morning-jaw"]')?.value, { min: 0, max: 10, integer: true });
+            const earFullness = parseOptionalNumber(panel.querySelector('[data-field="morning-ear"]')?.value, { min: 0, max: 10, integer: true });
+            const healthAnxiety = parseOptionalNumber(panel.querySelector('[data-field="morning-anxiety"]')?.value, { min: 0, max: 10, integer: true });
+
+            const hasOutcomeData = (
+                microRate !== undefined ||
+                microCount !== undefined ||
+                microConfidence !== undefined ||
+                source.length > 0
+            );
+            if (hasOutcomeData) {
+                storage.upsertNightOutcome({
+                    nightId: dateKey,
+                    microArousalRatePerHour: microRate,
+                    microArousalCount: microCount,
+                    confidence: microConfidence,
+                    source: source || undefined,
+                });
+            }
+
+            const hasMorningData = (
+                globalSensation !== undefined ||
+                neckTightness !== undefined ||
+                jawSoreness !== undefined ||
+                earFullness !== undefined ||
+                healthAnxiety !== undefined
+            );
+            if (hasMorningData) {
+                storage.upsertMorningState({
+                    nightId: dateKey,
+                    globalSensation,
+                    neckTightness,
+                    jawSoreness,
+                    earFullness,
+                    healthAnxiety,
+                });
+            }
+
+            const classifications = storage.recomputeHabitClassifications();
+            const harmful = classifications.filter(c => c.status === 'harmful').length;
+            const helpful = classifications.filter(c => c.status === 'helpful').length;
+            showToastNotification(
+                `Saved ${formatDateLabel(dateKey)} · ${helpful} helpful / ${harmful} harmful`,
+                '',
+                { duration: 2200 }
+            );
+            buildCheckinPanel(graphData);
+            if (showDefenseMode) reRenderGraphs();
+        });
+    }
+
+    const recomputeOnlyBtn = panel.querySelector('[data-action="recompute-only"]');
+    if (recomputeOnlyBtn) {
+        recomputeOnlyBtn.addEventListener('click', () => {
+            const classifications = storage.recomputeHabitClassifications();
+            showToastNotification(`Recomputed ${classifications.length} habit statuses`, '', { duration: 1800 });
+            buildCheckinPanel(graphData);
+            if (showDefenseMode) reRenderGraphs();
+        });
+    }
+
     // Wire checkbox handlers — stop propagation so row click doesn't fire
     panel.querySelectorAll('.defense-check-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1375,6 +1534,13 @@ function buildCheckinPanel(graphData) {
             // Snapshot defense scores before toggle
             const scoresBefore = computeDefenseScores(graphData);
             storage.toggleCheckIn(dateKey, txId);
+            storage.upsertNightExposure({
+                nightId: dateKey,
+                interventionId: txId,
+                enabled: cb.checked,
+                tags: ['daily_checkin'],
+            });
+            storage.recomputeHabitClassifications();
             // Snapshot defense scores after toggle
             const scoresAfter = computeDefenseScores(graphData);
             if (wasChecked) {
