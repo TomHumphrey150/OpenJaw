@@ -84,6 +84,62 @@ export interface CustomCausalDiagram {
   lastModified: string;
 }
 
+// Simple one-variable experimentation status for a habit/intervention.
+export type HabitEffectStatus = "helpful" | "neutral" | "harmful" | "unknown";
+
+// A single nightly habit exposure record.
+export interface NightExposure {
+  nightId: string; // YYYY-MM-DD
+  interventionId: string;
+  enabled: boolean;
+  intensity?: number; // optional normalized intensity (0-1 or app-defined)
+  tags?: string[];
+  createdAt: string;
+}
+
+// Objective overnight outcomes, primarily anchored on micro-arousals.
+export interface NightOutcome {
+  nightId: string; // YYYY-MM-DD
+  microArousalCount?: number;
+  microArousalRatePerHour?: number;
+  confidence?: number; // 0-1
+  totalSleepMinutes?: number;
+  source?: string;
+  createdAt: string;
+}
+
+// Morning self-report state captured after a night.
+export interface MorningState {
+  nightId: string; // YYYY-MM-DD
+  globalSensation?: number; // 0-10
+  neckTightness?: number; // 0-10
+  jawSoreness?: number; // 0-10
+  earFullness?: number; // 0-10
+  healthAnxiety?: number; // 0-10
+  createdAt: string;
+}
+
+// Trial metadata for one-variable-at-a-time experimentation windows.
+export interface HabitTrialWindow {
+  id: string;
+  interventionId: string;
+  startNightId: string;
+  endNightId?: string;
+  status: "active" | "completed" | "abandoned";
+}
+
+// Derived simple classification record for an intervention.
+export interface HabitClassification {
+  interventionId: string;
+  status: HabitEffectStatus;
+  nightsOn: number;
+  nightsOff: number;
+  microArousalDeltaPct?: number;
+  morningStateDelta?: number;
+  windowQuality?: "clean_one_variable" | "confounded" | "insufficient_data";
+  updatedAt: string;
+}
+
 // Complete personal data store (saved to localStorage)
 export interface PersonalDataStore {
   version: number;
@@ -101,6 +157,13 @@ export interface PersonalDataStore {
   // Intervention ratings
   interventionRatings: PersonalInterventionRating[];
 
+  // Simple V1 protocol records
+  nightExposures?: NightExposure[];
+  nightOutcomes?: NightOutcome[];
+  morningStates?: MorningState[];
+  habitTrials?: HabitTrialWindow[];
+  habitClassifications?: HabitClassification[];
+
   // Custom causal diagram
   customCausalDiagram?: CustomCausalDiagram;
 }
@@ -112,5 +175,10 @@ export const EMPTY_PERSONAL_DATA_STORE: PersonalDataStore = {
   notes: [],
   experiments: [],
   interventionRatings: [],
+  nightExposures: [],
+  nightOutcomes: [],
+  morningStates: [],
+  habitTrials: [],
+  habitClassifications: [],
   customCausalDiagram: undefined
 };

@@ -9,6 +9,24 @@
 export const STORAGE_KEY = 'bruxism_personal_data';
 export const STORAGE_VERSION = 1;
 
+// Simple V1 experimentation protocol defaults.
+// Phase 1 only defines these constants; behavior wiring comes later phases.
+export const SIMPLE_EXPERIMENT_PROTOCOL = Object.freeze({
+    oneVariableAtATime: true,
+    minNightsOn: 5,
+    minNightsOff: 5,
+    helpfulThresholdPct: -10,
+    harmfulThresholdPct: 10,
+    morningWorseThreshold: 1,
+});
+
+export const HABIT_STATUS = Object.freeze({
+    HELPFUL: 'helpful',
+    NEUTRAL: 'neutral',
+    HARMFUL: 'harmful',
+    UNKNOWN: 'unknown',
+});
+
 const LEGACY_STORAGE_KEY = STORAGE_KEY;
 const LOCAL_UPDATED_SUFFIX = '__updated_at';
 const REMOTE_TABLE = 'user_data';
