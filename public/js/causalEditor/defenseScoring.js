@@ -4,6 +4,12 @@ import { EFFECTIVENESS_WEIGHTS, CASCADE_DECAY } from './defenseConstants.js';
 
 const MIN_PROPAGATION_STRENGTH = 0.01;
 const NUMERIC_EPSILON = 1e-9;
+const HABIT_STATUS_WEIGHTS = {
+    helpful: 1.0,
+    neutral: 0.6,
+    unknown: 0.5,
+    harmful: 0.15,
+};
 
 // Evidence confidence priors (label-based), then refined by stat/citation signal.
 const EVIDENCE_LABEL_MULTIPLIERS = {
@@ -355,13 +361,23 @@ export function computeDefenseScores(graphData) {
     const maps = buildInterventionMaps(graphData);
     const rangeData = storage.getCheckInsRange(7);
     const ratings = storage.getAllRatings();
+    const habitClassifications = storage.getHabitClassifications();
     const ratingMap = {};
     ratings.forEach(r => { ratingMap[r.interventionId] = r.effectiveness; });
+    const habitStatusMap = {};
+    habitClassifications.forEach(record => {
+        if (!record || !record.interventionId || !record.status) return;
+        habitStatusMap[record.interventionId] = record.status;
+    });
 
     // For each intervention, compute: weight * (days_active / 7)
     function interventionStrength(txId) {
+        const habitStatus = habitStatusMap[txId];
+        const hasStatusWeight = typeof habitStatus === 'string' && HABIT_STATUS_WEIGHTS[habitStatus] !== undefined;
         const eff = ratingMap[txId] || 'untested';
-        const weight = EFFECTIVENESS_WEIGHTS[eff] || 0.5;
+        const weight = hasStatusWeight
+            ? HABIT_STATUS_WEIGHTS[habitStatus]
+            : (EFFECTIVENESS_WEIGHTS[eff] || HABIT_STATUS_WEIGHTS.unknown);
         let daysActive = 0;
         Object.values(rangeData).forEach(ids => { if (ids.includes(txId)) daysActive++; });
         return weight * (daysActive / 7);

@@ -203,3 +203,33 @@ test('feedback and protective edges are excluded from defensive forward propagat
     approxEqual(scores.get('B').score, 0, 'feedback edge is ignored for forward defense cascade');
     approxEqual(scores.get('C').score, 0, 'protective edge is ignored for forward defense cascade');
 });
+
+test('habit classification overrides rating when scoring intervention strength', () => {
+    activateInterventionForLast7Days('TX_A', 'highly_effective');
+    storage.upsertHabitClassification({
+        interventionId: 'TX_A',
+        status: 'harmful',
+        nightsOn: 7,
+        nightsOff: 7,
+    });
+
+    const graph = {
+        nodes: [interventionNode('TX_A'), mechanismNode('A')],
+        edges: [edge('TX_A', 'A')],
+    };
+
+    const scores = computeDefenseScores(graph);
+    approxEqual(scores.get('A').score, 0.15, 'harmful status should downweight despite high rating');
+});
+
+test('ratings are still used when no habit classification exists', () => {
+    activateInterventionForLast7Days('TX_A', 'highly_effective');
+
+    const graph = {
+        nodes: [interventionNode('TX_A'), mechanismNode('A')],
+        edges: [edge('TX_A', 'A')],
+    };
+
+    const scores = computeDefenseScores(graph);
+    approxEqual(scores.get('A').score, 1.0, 'without classification, rating-based weight is used');
+});
