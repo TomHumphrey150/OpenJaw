@@ -1052,6 +1052,26 @@ function habitStatusLabel(status) {
     }
 }
 
+function normalizeMorningSlider(value) {
+    const parsed = parseOptionalNumber(value, { min: 0, max: 10, integer: true });
+    if (parsed === undefined) {
+        return { hasValue: false, sliderValue: 5, displayValue: 'Not set' };
+    }
+    return { hasValue: true, sliderValue: parsed, displayValue: String(parsed) };
+}
+
+function buildMorningSliderField({ field, label, hint, value }) {
+    const normalized = normalizeMorningSlider(value);
+    return `<label class="defense-protocol-slider-field">
+        <div class="defense-protocol-slider-head">
+            <span class="defense-protocol-slider-label">${label}</span>
+            <span class="defense-protocol-slider-value" data-value-for="${field}">${normalized.displayValue}</span>
+        </div>
+        <span class="defense-protocol-slider-hint">${hint}</span>
+        <input data-field="${field}" data-has-value="${normalized.hasValue ? '1' : '0'}" data-touched="0" type="range" min="0" max="10" step="1" value="${escapeHtmlAttr(normalized.sliderValue)}">
+    </label>`;
+}
+
 // ── Check-in Panel ──
 
 let checkinDateOffset = 0; // 0 = today, -1 = yesterday, etc.
@@ -1108,27 +1128,44 @@ function buildRealityFeedbackHtml({
     html += `</div>`;
     html += `<div class="defense-protocol-section-title">Morning state (0-10)</div>`;
     html += `<div class="defense-protocol-guidance">`;
-    html += `<div class="defense-protocol-guidance-title">How to score consistently</div>`;
+    html += `<div class="defense-protocol-guidance-title">Quick scoring rule</div>`;
     html += `<ul class="defense-protocol-guidance-list">`;
-    html += `<li>Score within 30 minutes of waking, before major activity/caffeine.</li>`;
-    html += `<li>Use the same anchor each day: 0 none, 2 mild, 4 noticeable, 6 intrusive, 8 severe, 10 worst plausible.</li>`;
-    html += `<li>Rate the peak intensity since waking (not your prediction for later today).</li>`;
-    html += `<li>Use whole numbers and keep the same interpretation day to day.</li>`;
+    html += `<li>Score once within 30 min of waking.</li>`;
+    html += `<li>Use fixed anchors daily: 0 none, 5 moderate, 10 worst plausible.</li>`;
+    html += `<li>Use whole numbers for what you feel now.</li>`;
     html += `</ul>`;
-    html += `<div class="defense-protocol-guidance-fields">`;
-    html += `<span><strong>Global</strong>: overall body alarm / unwell sensation.</span>`;
-    html += `<span><strong>Neck</strong>: neck tightness, stiffness, or spasm load.</span>`;
-    html += `<span><strong>Jaw</strong>: jaw ache, fatigue, or bite-clench soreness.</span>`;
-    html += `<span><strong>Ear</strong>: fullness, pressure, or blocked-ear sensation.</span>`;
-    html += `<span><strong>Anxiety</strong>: health-anxiety / threat level on waking.</span>`;
     html += `</div>`;
-    html += `</div>`;
-    html += `<div class="defense-protocol-grid">`;
-    html += `<label class="defense-protocol-field"><span>Global</span><input data-field="morning-global" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningGlobalValue)}"></label>`;
-    html += `<label class="defense-protocol-field"><span>Neck</span><input data-field="morning-neck" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningNeckValue)}"></label>`;
-    html += `<label class="defense-protocol-field"><span>Jaw</span><input data-field="morning-jaw" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningJawValue)}"></label>`;
-    html += `<label class="defense-protocol-field"><span>Ear</span><input data-field="morning-ear" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningEarValue)}"></label>`;
-    html += `<label class="defense-protocol-field"><span>Anxiety</span><input data-field="morning-anxiety" type="number" step="1" min="0" max="10" value="${escapeHtmlAttr(morningAnxietyValue)}"></label>`;
+    html += `<div class="defense-protocol-slider-grid">`;
+    html += buildMorningSliderField({
+        field: 'morning-global',
+        label: 'Global',
+        hint: 'Overall alarm / unwell load',
+        value: morningGlobalValue,
+    });
+    html += buildMorningSliderField({
+        field: 'morning-neck',
+        label: 'Neck',
+        hint: 'Tightness / stiffness / spasm load',
+        value: morningNeckValue,
+    });
+    html += buildMorningSliderField({
+        field: 'morning-jaw',
+        label: 'Jaw',
+        hint: 'Ache / clench fatigue',
+        value: morningJawValue,
+    });
+    html += buildMorningSliderField({
+        field: 'morning-ear',
+        label: 'Ear',
+        hint: 'Fullness / pressure',
+        value: morningEarValue,
+    });
+    html += buildMorningSliderField({
+        field: 'morning-anxiety',
+        label: 'Anxiety',
+        hint: 'Health-threat feeling on waking',
+        value: morningAnxietyValue,
+    });
     html += `</div>`;
     html += `<div class="defense-protocol-actions">`;
     html += `<button class="defense-protocol-btn" data-action="save-protocol">Save + Recompute</button>`;
@@ -1145,6 +1182,26 @@ function buildRealityFeedbackHtml({
 }
 
 function wireRealityFeedbackHandlers(host, { dateKey, graphData }) {
+    const morningSliderInputs = host.querySelectorAll('.defense-protocol-slider-grid input[type="range"][data-field]');
+    morningSliderInputs.forEach((slider) => {
+        const valueChip = host.querySelector(`[data-value-for="${slider.dataset.field}"]`);
+        const syncSlider = () => {
+            slider.dataset.touched = '1';
+            if (valueChip) valueChip.textContent = slider.value;
+        };
+        slider.addEventListener('input', syncSlider);
+        slider.addEventListener('change', syncSlider);
+    });
+
+    const readMorningSlider = (field) => {
+        const slider = host.querySelector(`[data-field="${field}"]`);
+        if (!slider) return undefined;
+        const touched = slider.dataset.touched === '1';
+        const hasValue = slider.dataset.hasValue === '1';
+        if (!touched && !hasValue) return undefined;
+        return parseOptionalNumber(slider.value, { min: 0, max: 10, integer: true });
+    };
+
     const saveProtocolBtn = host.querySelector('[data-action="save-protocol"]');
     if (saveProtocolBtn) {
         saveProtocolBtn.addEventListener('click', () => {
@@ -1153,11 +1210,11 @@ function wireRealityFeedbackHandlers(host, { dateKey, graphData }) {
             const microConfidence = parseOptionalNumber(host.querySelector('[data-field="micro-confidence"]')?.value, { min: 0, max: 1 });
             const source = (host.querySelector('[data-field="micro-source"]')?.value || '').trim();
 
-            const globalSensation = parseOptionalNumber(host.querySelector('[data-field="morning-global"]')?.value, { min: 0, max: 10, integer: true });
-            const neckTightness = parseOptionalNumber(host.querySelector('[data-field="morning-neck"]')?.value, { min: 0, max: 10, integer: true });
-            const jawSoreness = parseOptionalNumber(host.querySelector('[data-field="morning-jaw"]')?.value, { min: 0, max: 10, integer: true });
-            const earFullness = parseOptionalNumber(host.querySelector('[data-field="morning-ear"]')?.value, { min: 0, max: 10, integer: true });
-            const healthAnxiety = parseOptionalNumber(host.querySelector('[data-field="morning-anxiety"]')?.value, { min: 0, max: 10, integer: true });
+            const globalSensation = readMorningSlider('morning-global');
+            const neckTightness = readMorningSlider('morning-neck');
+            const jawSoreness = readMorningSlider('morning-jaw');
+            const earFullness = readMorningSlider('morning-ear');
+            const healthAnxiety = readMorningSlider('morning-anxiety');
 
             const hasOutcomeData = (
                 microRate !== undefined ||
