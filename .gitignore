@@ -33,3 +33,4 @@ supabase/.temp/
 
 # Generated snapshot artifacts
 v1/bruxism-dashboard/snapshots/
+.env*.local
