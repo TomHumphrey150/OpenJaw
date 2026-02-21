@@ -69,215 +69,350 @@ private struct ExploreOutcomesScreen: View {
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
     let onSaveMorningOutcomes: () -> Void
 
-    @State private var selectedRecord: OutcomeRecord?
+    @State private var navigationPath = NavigationPath()
+    @State private var isMorningCheckInExpanded = true
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    MorningOutcomeEditor(
-                        selection: morningOutcomeSelection,
-                        onSetValue: onSetMorningOutcomeValue,
-                        onSave: onSaveMorningOutcomes
-                    )
-
-                    Divider()
-
-                    Text("Explore Mode")
-                        .font(.headline)
-                    LabeledContent("Shield score", value: "\(outcomes.shieldScore)")
-                    LabeledContent("RMMA burden trend", value: "\(outcomes.burdenTrendPercent)%")
-                    LabeledContent("Top contributor", value: outcomes.topContributor)
-                    LabeledContent("Confidence", value: outcomes.confidence)
-
-                    Divider()
-
-                    Text("Night outcomes")
-                        .font(.headline)
-
-                    if outcomeRecords.isEmpty {
-                        Text("No night outcomes have been recorded yet.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(outcomeRecords) { record in
-                                Button {
-                                    selectedRecord = record
-                                } label: {
-                                    OutcomeRecordRow(record: record)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
+                VStack(spacing: TelocareTheme.Spacing.lg) {
+                    morningGreetingCard
+                    morningCheckInSection
+                    insightsSummaryCard
+                    nightRecordsSection
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, TelocareTheme.Spacing.md)
+                .padding(.vertical, TelocareTheme.Spacing.lg)
             }
-            .navigationTitle("Outcomes")
-            .sheet(item: $selectedRecord) { record in
-                OutcomeRecordDetailSheet(record: record, outcomesMetadata: outcomesMetadata)
+            .background(TelocareTheme.sand.ignoresSafeArea())
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: OutcomeRecord.self) { record in
+                OutcomeDetailView(record: record, outcomesMetadata: outcomesMetadata)
                     .accessibilityIdentifier(AccessibilityID.exploreOutcomeDetailSheet)
             }
         }
     }
-}
 
-private struct MorningOutcomeEditor: View {
-    let selection: MorningOutcomeSelection
-    let onSetValue: (Int?, MorningOutcomeField) -> Void
-    let onSave: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Morning check-in")
-                .font(.headline)
-            Text("Night \(selection.nightID)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            Text("Score once after waking. 0 is none, 5 is moderate, 10 is worst plausible.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-
-            ForEach(MorningOutcomeField.allCases) { field in
-                MorningOutcomePickerRow(
-                    title: field.title,
-                    value: selection.value(for: field),
-                    accessibilityIdentifier: field.accessibilityIdentifier,
-                    onSetValue: { value in
-                        onSetValue(value, field)
-                    }
-                )
-            }
-
-            Button("Save morning outcomes", action: onSave)
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier(AccessibilityID.exploreMorningSaveButton)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    private func showRecordDetail(_ record: OutcomeRecord) {
+        navigationPath.append(record)
     }
-}
 
-private struct MorningOutcomePickerRow: View {
-    let title: String
-    let value: Int?
-    let accessibilityIdentifier: String
-    let onSetValue: (Int?) -> Void
+    // MARK: - Morning Greeting Card
 
-    var body: some View {
-        HStack(alignment: .center) {
-            Text(title)
-            Spacer()
-            Picker(title, selection: selectionBinding) {
-                Text("Not set").tag(Optional<Int>.none)
-                ForEach(0...10, id: \.self) { score in
-                    Text(String(score)).tag(Optional<Int>.some(score))
+    @ViewBuilder
+    private var morningGreetingCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                Text(greetingText)
+                    .font(TelocareTheme.Typography.largeTitle)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                Text("How are you feeling this morning?")
+                    .font(TelocareTheme.Typography.body)
+                    .foregroundStyle(TelocareTheme.warmGray)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var greetingText: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:
+            return "Good morning"
+        case 12..<17:
+            return "Good afternoon"
+        default:
+            return "Good evening"
+        }
+    }
+
+    // MARK: - Morning Check-in Section
+
+    @ViewBuilder
+    private var morningCheckInSection: some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+            Button {
+                withAnimation(.spring(response: 0.3)) {
+                    isMorningCheckInExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    WarmSectionHeader(
+                        title: "Morning check-in",
+                        subtitle: "Night \(morningOutcomeSelection.nightID)"
+                    )
+                    Spacer()
+                    Image(systemName: isMorningCheckInExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(TelocareTheme.warmGray)
                 }
             }
-            .pickerStyle(.menu)
-            .accessibilityIdentifier(accessibilityIdentifier)
+            .buttonStyle(.plain)
+
+            if isMorningCheckInExpanded {
+                VStack(spacing: TelocareTheme.Spacing.md) {
+                    ForEach(MorningOutcomeField.allCases) { field in
+                        EmojiRatingPicker(
+                            field: field,
+                            value: bindingForField(field)
+                        )
+                        .accessibilityIdentifier(field.accessibilityIdentifier)
+                    }
+
+                    Button("Save check-in", action: onSaveMorningOutcomes)
+                        .buttonStyle(WarmPrimaryButtonStyle())
+                        .frame(maxWidth: .infinity)
+                        .accessibilityIdentifier(AccessibilityID.exploreMorningSaveButton)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
     }
 
-    private var selectionBinding: Binding<Int?> {
+    private func bindingForField(_ field: MorningOutcomeField) -> Binding<Int?> {
         Binding(
-            get: { value },
-            set: onSetValue
+            get: { morningOutcomeSelection.value(for: field) },
+            set: { onSetMorningOutcomeValue($0, field) }
         )
+    }
+
+    // MARK: - Insights Summary Card
+
+    @ViewBuilder
+    private var insightsSummaryCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                WarmSectionHeader(title: "Your progress")
+
+                HStack(spacing: TelocareTheme.Spacing.lg) {
+                    insightMetric(
+                        icon: "shield.fill",
+                        value: "\(outcomes.shieldScore)",
+                        label: "Shield score"
+                    )
+                    insightMetric(
+                        icon: "arrow.up.right",
+                        value: "\(outcomes.burdenTrendPercent)%",
+                        label: "Burden trend"
+                    )
+                }
+
+                Divider()
+                    .background(TelocareTheme.peach)
+
+                HStack {
+                    Image(systemName: "lightbulb.fill")
+                        .foregroundStyle(TelocareTheme.warmOrange)
+                    Text("Top contributor: \(outcomes.topContributor)")
+                        .font(TelocareTheme.Typography.body)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func insightMetric(icon: String, value: String, label: String) -> some View {
+        VStack(spacing: TelocareTheme.Spacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundStyle(TelocareTheme.coral)
+            Text(value)
+                .font(TelocareTheme.Typography.title)
+                .foregroundStyle(TelocareTheme.charcoal)
+            Text(label)
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.warmGray)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Night Records Section
+
+    @ViewBuilder
+    private var nightRecordsSection: some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+            WarmSectionHeader(
+                title: "Recent nights",
+                subtitle: outcomeRecords.isEmpty ? nil : "Tap to see details"
+            )
+
+            if outcomeRecords.isEmpty {
+                emptyNightsPlaceholder
+            } else {
+                ForEach(outcomeRecords.prefix(5)) { record in
+                    Button { showRecordDetail(record) } label: {
+                        NightRecordCard(record: record)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var emptyNightsPlaceholder: some View {
+        WarmCard {
+            HStack(spacing: TelocareTheme.Spacing.md) {
+                Image(systemName: "moon.zzz.fill")
+                    .font(.system(size: 32))
+                    .foregroundStyle(TelocareTheme.muted)
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    Text("No night data yet")
+                        .font(TelocareTheme.Typography.headline)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    Text("Your sleep outcomes will appear here as they're recorded.")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                }
+            }
+        }
     }
 }
 
-private struct OutcomeRecordRow: View {
+private struct NightRecordCard: View {
     let record: OutcomeRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(record.id)
-                .font(.subheadline.weight(.semibold))
-            LabeledContent("Microarousal rate", value: formatted(record.microArousalRatePerHour))
-            LabeledContent("Microarousal count", value: formatted(record.microArousalCount))
-            LabeledContent("Confidence", value: formatted(record.confidence))
-            LabeledContent("Source", value: record.source ?? "Unknown")
-            Text("Tap for details")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+        WarmCard(padding: TelocareTheme.Spacing.md) {
+            HStack {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    Text(record.id)
+                        .font(TelocareTheme.Typography.headline)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    if let rate = record.microArousalRatePerHour {
+                        Text("Arousal rate: \(String(format: "%.1f", rate))/hr")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(TelocareTheme.muted)
+            }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
-        )
-    }
-
-    private func formatted(_ value: Double?) -> String {
-        guard let value else { return "Not recorded" }
-        return String(format: "%.2f", value)
     }
 }
 
-private struct OutcomeRecordDetailSheet: View {
+
+private struct OutcomeDetailView: View {
     let record: OutcomeRecord
     let outcomesMetadata: OutcomesMetadata
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section("Measured values") {
-                    LabeledContent("Night", value: record.id)
-                    LabeledContent("Microarousal rate/hour", value: formatted(record.microArousalRatePerHour))
-                    LabeledContent("Microarousal count", value: formatted(record.microArousalCount))
-                    LabeledContent("Confidence", value: formatted(record.confidence))
-                    LabeledContent("Source", value: record.source ?? "Unknown")
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                Text("Night \(record.id)")
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(TelocareTheme.charcoal)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Section("How to read this") {
-                    if metricsForDisplay.isEmpty {
-                        Text("Outcome metadata is not available yet.")
-                    } else {
-                        ForEach(metricsForDisplay, id: \.id) { metric in
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(metric.label)
-                                    .font(.subheadline.weight(.semibold))
-                                Text(metric.description)
-                                    .foregroundStyle(.secondary)
-                                LabeledContent("Unit", value: metric.unit)
-                                LabeledContent("Direction", value: metric.direction.replacingOccurrences(of: "_", with: " "))
-                            }
-                        }
-                    }
-                }
+                measurementsCard
+                interpretationCard
 
                 if !outcomeNodeEvidence.isEmpty {
-                    Section("Outcome pathway evidence") {
-                        ForEach(outcomeNodeEvidence) { node in
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(node.label)
-                                    .font(.subheadline.weight(.semibold))
-                                if let evidence = node.evidence {
-                                    LabeledContent("Evidence", value: evidence)
-                                }
-                                if let stat = node.stat {
-                                    LabeledContent("Statistic", value: stat)
-                                }
-                                if let citation = node.citation {
-                                    LabeledContent("Citation", value: citation)
-                                }
-                                if let mechanism = node.mechanism {
-                                    LabeledContent("Mechanism", value: mechanism)
-                                }
+                    evidenceCard
+                }
+            }
+            .padding(TelocareTheme.Spacing.md)
+        }
+        .background(TelocareTheme.sand.ignoresSafeArea())
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Measurements Card
+
+    @ViewBuilder
+    private var measurementsCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Measurements")
+
+                DetailRow(label: "Night", value: record.id)
+                DetailRow(label: "Arousal rate/hour", value: formatted(record.microArousalRatePerHour))
+                DetailRow(label: "Arousal count", value: formatted(record.microArousalCount))
+                DetailRow(label: "Confidence", value: formatted(record.confidence))
+                DetailRow(label: "Source", value: record.source ?? "Unknown")
+            }
+        }
+    }
+
+    // MARK: - Interpretation Card
+
+    @ViewBuilder
+    private var interpretationCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "How to read this")
+
+                if metricsForDisplay.isEmpty {
+                    Text("Outcome metadata is not available yet.")
+                        .font(TelocareTheme.Typography.body)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                } else {
+                    ForEach(metricsForDisplay, id: \.id) { metric in
+                        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                            Text(metric.label)
+                                .font(TelocareTheme.Typography.headline)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                            Text(metric.description)
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.warmGray)
+
+                            HStack(spacing: TelocareTheme.Spacing.md) {
+                                WarmChip(text: metric.unit)
+                                WarmChip(text: metric.direction.replacingOccurrences(of: "_", with: " "))
                             }
+                        }
+                        .padding(.vertical, TelocareTheme.Spacing.xs)
+
+                        if metric.id != metricsForDisplay.last?.id {
+                            Divider()
+                                .background(TelocareTheme.peach)
                         }
                     }
                 }
             }
-            .navigationTitle("Outcome Details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
+        }
+    }
+
+    // MARK: - Evidence Card
+
+    @ViewBuilder
+    private var evidenceCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Outcome pathway evidence")
+
+                ForEach(outcomeNodeEvidence) { node in
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Text(node.label)
+                            .font(TelocareTheme.Typography.headline)
+                            .foregroundStyle(TelocareTheme.charcoal)
+
+                        if let evidence = node.evidence {
+                            DetailRow(label: "Evidence", value: evidence)
+                        }
+                        if let stat = node.stat {
+                            DetailRow(label: "Statistic", value: stat)
+                        }
+                        if let citation = node.citation {
+                            Text(citation)
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                                .italic()
+                        }
+                        if let mechanism = node.mechanism {
+                            Text(mechanism)
+                                .font(TelocareTheme.Typography.body)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                        }
+                    }
+                    .padding(.vertical, TelocareTheme.Spacing.xs)
+
+                    if node.id != outcomeNodeEvidence.last?.id {
+                        Divider()
+                            .background(TelocareTheme.peach)
                     }
                 }
             }
@@ -517,57 +652,201 @@ private struct SituationGraphDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                switch detail.detail {
-                case .node(let node):
-                    nodeSection(node)
-                case .edge(let edge):
-                    edgeSection(edge)
+            ScrollView {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                    switch detail.detail {
+                    case .node(let node):
+                        nodeContent(node)
+                    case .edge(let edge):
+                        edgeContent(edge)
+                    }
                 }
+                .padding(TelocareTheme.Spacing.md)
             }
-            .navigationTitle("Graph Details")
+            .background(TelocareTheme.sand.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
+                    .foregroundStyle(TelocareTheme.coral)
                 }
             }
         }
     }
 
+    // MARK: - Node Content
+
     @ViewBuilder
-    private func nodeSection(_ node: SituationNodeDetail) -> some View {
-        Section("Node") {
-            LabeledContent("Label", value: node.label)
-            LabeledContent("Node ID", value: node.id)
-            LabeledContent("Style", value: node.styleClass ?? "Not provided")
-            LabeledContent("Tier", value: node.tier.map(String.init) ?? "Not provided")
+    private func nodeContent(_ node: SituationNodeDetail) -> some View {
+        // Header with colored indicator
+        HStack(spacing: TelocareTheme.Spacing.sm) {
+            Circle()
+                .fill(accentColor(for: node.styleClass))
+                .frame(width: 12, height: 12)
+            Text(node.label)
+                .font(.title2.bold())
+                .foregroundStyle(TelocareTheme.charcoal)
+                .fixedSize(horizontal: false, vertical: true)
         }
 
-        Section("Evidence") {
-            LabeledContent("Evidence level", value: node.evidence ?? "Not provided")
-            LabeledContent("Statistic", value: node.statistic ?? "Not provided")
-            LabeledContent("Citation", value: node.citation ?? "Not provided")
-            LabeledContent("Mechanism", value: node.mechanism ?? "Not provided")
+        // Node info card
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Node Info")
+                DetailRow(label: "Type", value: displayName(for: node.styleClass))
+                if let tier = node.tier {
+                    DetailRow(label: "Tier", value: String(tier))
+                }
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous)
+                .stroke(accentColor(for: node.styleClass), lineWidth: 2)
+        )
+
+        // Evidence card
+        if node.evidence != nil || node.statistic != nil || node.citation != nil || node.mechanism != nil {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Evidence")
+                    if let evidence = node.evidence {
+                        DetailRow(label: "Level", value: evidence)
+                    }
+                    if let statistic = node.statistic {
+                        DetailRow(label: "Statistic", value: statistic)
+                    }
+                    if let citation = node.citation {
+                        DetailRow(label: "Citation", value: citation)
+                    }
+                    if let mechanism = node.mechanism {
+                        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                            Text("Mechanism")
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                            Text(mechanism)
+                                .font(TelocareTheme.Typography.body)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
         }
     }
 
+    // MARK: - Edge Content
+
     @ViewBuilder
-    private func edgeSection(_ edge: SituationEdgeDetail) -> some View {
-        Section("Link") {
-            LabeledContent("From", value: edge.sourceLabel)
-            LabeledContent("To", value: edge.targetLabel)
-            LabeledContent("Source ID", value: edge.sourceID)
-            LabeledContent("Target ID", value: edge.targetID)
-            LabeledContent("Label", value: edge.label ?? "Not provided")
-            LabeledContent("Type", value: edge.edgeType ?? "Not provided")
-            LabeledContent("Color", value: edge.edgeColor ?? "Not provided")
+    private func edgeContent(_ edge: SituationEdgeDetail) -> some View {
+        let edgeAccent = edgeAccentColor(for: edge.edgeType, color: edge.edgeColor)
+
+        // Header showing link direction
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(edgeAccent)
+                    .frame(width: 24, height: 4)
+                Text("Link")
+                    .font(.title2.bold())
+                    .foregroundStyle(TelocareTheme.charcoal)
+            }
+            Text("\(edge.sourceLabel) → \(edge.targetLabel)")
+                .font(TelocareTheme.Typography.body)
+                .foregroundStyle(TelocareTheme.warmGray)
+                .fixedSize(horizontal: false, vertical: true)
         }
 
-        Section("Explanation") {
-            Text(edge.tooltip ?? "No explanation is available for this link yet.")
+        // Link details card
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Details")
+                if let label = edge.label, !label.isEmpty {
+                    DetailRow(label: "Label", value: label)
+                }
+                if let edgeType = edge.edgeType {
+                    DetailRow(label: "Type", value: edgeType.capitalized)
+                }
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous)
+                .stroke(edgeAccent, lineWidth: 2)
+        )
+
+        // Explanation card
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Explanation")
+                Text(edge.tooltip ?? "No explanation is available for this link yet.")
+                    .font(TelocareTheme.Typography.body)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func accentColor(for styleClass: String?) -> Color {
+        switch styleClass?.lowercased() {
+        case "robust":
+            return Color(red: 0.52, green: 0.76, blue: 0.56) // #85C28F
+        case "moderate":
+            return Color(red: 1.0, green: 0.6, blue: 0.4)    // #FF9966
+        case "preliminary":
+            return Color(red: 0.83, green: 0.65, blue: 1.0)  // #D4A5FF
+        case "mechanism":
+            return Color(red: 0.49, green: 0.83, blue: 0.99) // #7DD3FC
+        case "symptom":
+            return TelocareTheme.coral                        // #FF7060
+        case "intervention":
+            return TelocareTheme.coral                        // #FF7060
+        default:
+            return TelocareTheme.warmGray
+        }
+    }
+
+    private func edgeAccentColor(for edgeType: String?, color: String?) -> Color {
+        // First check explicit color
+        if let color = color?.lowercased() {
+            if color.contains("green") || color.contains("protective") {
+                return Color(red: 0.52, green: 0.76, blue: 0.56)
+            }
+            if color.contains("red") || color.contains("harmful") {
+                return TelocareTheme.coral
+            }
+        }
+        // Then check edge type
+        switch edgeType?.lowercased() {
+        case "protective", "inhibits":
+            return Color(red: 0.52, green: 0.76, blue: 0.56)
+        case "causal", "causes", "triggers":
+            return TelocareTheme.coral
+        case "feedback":
+            return Color(red: 1.0, green: 0.6, blue: 0.4)
+        default:
+            return TelocareTheme.warmGray
+        }
+    }
+
+    private func displayName(for styleClass: String?) -> String {
+        switch styleClass?.lowercased() {
+        case "robust":
+            return "Robust Evidence"
+        case "moderate":
+            return "Moderate Evidence"
+        case "preliminary":
+            return "Preliminary Evidence"
+        case "mechanism":
+            return "Mechanism"
+        case "symptom":
+            return "Symptom"
+        case "intervention":
+            return "Intervention"
+        default:
+            return styleClass?.capitalized ?? "Unknown"
         }
     }
 }
@@ -586,13 +865,22 @@ private struct SituationOptionsSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Selection") {
+                Section {
                     Text(graphSelectionText)
+                        .foregroundStyle(TelocareTheme.charcoal)
                     LabeledContent("Focused node", value: situation.focusedNode)
+                        .foregroundStyle(TelocareTheme.charcoal)
                     LabeledContent("Visible hotspots", value: "\(situation.visibleHotspots)")
+                        .foregroundStyle(TelocareTheme.charcoal)
+                } header: {
+                    Text("Selection")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(TelocareTheme.coral)
+                        .textCase(nil)
                 }
 
-                Section("Display") {
+                Section {
                     Toggle(
                         "Show intervention nodes",
                         isOn: Binding(
@@ -600,6 +888,7 @@ private struct SituationOptionsSheet: View {
                             set: onShowInterventionsChanged
                         )
                     )
+                    .tint(TelocareTheme.coral)
                     .accessibilityIdentifier(AccessibilityID.exploreToggleInterventions)
 
                     Toggle(
@@ -609,6 +898,7 @@ private struct SituationOptionsSheet: View {
                             set: onShowFeedbackEdgesChanged
                         )
                     )
+                    .tint(TelocareTheme.coral)
                     .accessibilityIdentifier(AccessibilityID.exploreToggleFeedbackEdges)
 
                     Toggle(
@@ -618,18 +908,35 @@ private struct SituationOptionsSheet: View {
                             set: onShowProtectiveEdgesChanged
                         )
                     )
+                    .tint(TelocareTheme.coral)
                     .accessibilityIdentifier(AccessibilityID.exploreToggleProtectiveEdges)
+                } header: {
+                    Text("Display")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(TelocareTheme.coral)
+                        .textCase(nil)
                 }
 
-                Section("Actions") {
+                Section {
                     ForEach(ExploreContextAction.allCases) { action in
                         Button(action.title) {
                             onAction(action)
                         }
+                        .foregroundStyle(TelocareTheme.coral)
                         .accessibilityIdentifier(action.accessibilityIdentifier)
                     }
+                } header: {
+                    Text("Actions")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(TelocareTheme.coral)
+                        .textCase(nil)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(TelocareTheme.sand)
             .navigationTitle("Situation Options")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -637,6 +944,7 @@ private struct SituationOptionsSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .foregroundStyle(TelocareTheme.coral)
                 }
             }
         }
@@ -648,65 +956,134 @@ private struct ExploreInputsScreen: View {
     let graphData: CausalGraphData
     let onToggleCheckedToday: (String) -> Void
 
-    @State private var selectedInput: InputStatus?
+    @State private var navigationPath = NavigationPath()
+    @State private var filterMode: InputFilterMode = .all
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Inputs")
-                .sheet(item: $selectedInput) { input in
-                    InputDetailSheet(input: input, graphData: graphData)
-                        .accessibilityIdentifier(AccessibilityID.exploreInputDetailSheet)
-                }
+        NavigationStack(path: $navigationPath) {
+            VStack(spacing: 0) {
+                progressOverviewHeader
+                filterPillsSection
+                inputsContent
+            }
+            .background(TelocareTheme.sand.ignoresSafeArea())
+            .navigationTitle("Interventions")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: InputStatus.self) { input in
+                InputDetailView(input: input, graphData: graphData)
+                    .accessibilityIdentifier(AccessibilityID.exploreInputDetailSheet)
+            }
         }
     }
 
+    private func showInputDetail(_ input: InputStatus) {
+        navigationPath.append(input)
+    }
+
+    // MARK: - Progress Overview Header
+
     @ViewBuilder
-    private var content: some View {
-        if inputs.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("No intervention check-ins have been recorded yet.")
-                    .foregroundStyle(.secondary)
-                Text("As check-ins are saved, they will appear here.")
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        } else {
-            List {
-                if !visibleInputs.isEmpty {
-                    Section("Visible interventions") {
-                        ForEach(visibleInputs) { input in
-                            InputStatusRow(
-                                input: input,
-                                onToggleCheckedToday: {
-                                    onToggleCheckedToday(input.id)
-                                },
-                                onShowDetails: {
-                                    selectedInput = input
-                                }
-                            )
-                        }
+    private var progressOverviewHeader: some View {
+        WarmCard {
+            HStack(spacing: TelocareTheme.Spacing.lg) {
+                WarmProgressRing(progress: overallCompletion, size: 64, lineWidth: 8)
+
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    Text("Today's progress")
+                        .font(TelocareTheme.Typography.headline)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    Text("\(checkedTodayCount) of \(visibleInputs.count) completed")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+
+                    if checkedTodayCount == visibleInputs.count && !visibleInputs.isEmpty {
+                        Label("All done!", systemImage: "checkmark.circle.fill")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.success)
                     }
                 }
 
-                if !hiddenInputs.isEmpty {
-                    Section("Hidden interventions") {
-                        ForEach(hiddenInputs) { input in
-                            InputStatusRow(
-                                input: input,
-                                onToggleCheckedToday: {
-                                    onToggleCheckedToday(input.id)
-                                },
-                                onShowDetails: {
-                                    selectedInput = input
-                                }
-                            )
-                        }
-                    }
+                Spacer()
+            }
+        }
+        .padding(.horizontal, TelocareTheme.Spacing.md)
+        .padding(.top, TelocareTheme.Spacing.md)
+    }
+
+    private var checkedTodayCount: Int {
+        visibleInputs.filter(\.isCheckedToday).count
+    }
+
+    private var overallCompletion: Double {
+        guard !visibleInputs.isEmpty else { return 0 }
+        return Double(checkedTodayCount) / Double(visibleInputs.count)
+    }
+
+    // MARK: - Filter Pills
+
+    @ViewBuilder
+    private var filterPillsSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                ForEach(InputFilterMode.allCases, id: \.self) { mode in
+                    FilterPill(
+                        title: mode.title,
+                        count: countFor(mode),
+                        isSelected: filterMode == mode,
+                        action: { filterMode = mode }
+                    )
                 }
             }
-            .listStyle(.insetGrouped)
+            .padding(.horizontal, TelocareTheme.Spacing.md)
+            .padding(.vertical, TelocareTheme.Spacing.sm)
+        }
+    }
+
+    private func countFor(_ mode: InputFilterMode) -> Int {
+        switch mode {
+        case .all:
+            return inputs.filter { !$0.isHidden }.count
+        case .pending:
+            return inputs.filter { !$0.isHidden && !$0.isCheckedToday }.count
+        case .completed:
+            return inputs.filter { !$0.isHidden && $0.isCheckedToday }.count
+        case .hidden:
+            return inputs.filter(\.isHidden).count
+        }
+    }
+
+    // MARK: - Inputs Content
+
+    @ViewBuilder
+    private var inputsContent: some View {
+        if filteredInputs.isEmpty {
+            emptyStatePlaceholder
+        } else {
+            ScrollView {
+                LazyVStack(spacing: TelocareTheme.Spacing.sm) {
+                    ForEach(filteredInputs) { input in
+                        InputCard(
+                            input: input,
+                            onToggle: { onToggleCheckedToday(input.id) },
+                            onShowDetails: { showInputDetail(input) }
+                        )
+                    }
+                }
+                .padding(TelocareTheme.Spacing.md)
+            }
+        }
+    }
+
+    private var filteredInputs: [InputStatus] {
+        switch filterMode {
+        case .all:
+            return inputs.filter { !$0.isHidden }
+        case .pending:
+            return inputs.filter { !$0.isHidden && !$0.isCheckedToday }
+        case .completed:
+            return inputs.filter { !$0.isHidden && $0.isCheckedToday }
+        case .hidden:
+            return inputs.filter(\.isHidden)
         }
     }
 
@@ -714,109 +1091,326 @@ private struct ExploreInputsScreen: View {
         inputs.filter { !$0.isHidden }
     }
 
-    private var hiddenInputs: [InputStatus] {
-        inputs.filter { $0.isHidden }
+    @ViewBuilder
+    private var emptyStatePlaceholder: some View {
+        VStack(spacing: TelocareTheme.Spacing.md) {
+            Spacer()
+            Image(systemName: filterMode == .completed ? "checkmark.circle" : "list.bullet.clipboard")
+                .font(.system(size: 48))
+                .foregroundStyle(TelocareTheme.muted)
+            Text(emptyStateMessage)
+                .font(TelocareTheme.Typography.body)
+                .foregroundStyle(TelocareTheme.warmGray)
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+        .padding(TelocareTheme.Spacing.xl)
+    }
+
+    private var emptyStateMessage: String {
+        switch filterMode {
+        case .all, .pending:
+            return "No interventions to show.\nThey'll appear as you add them."
+        case .completed:
+            return "Nothing completed yet today.\nTap an intervention to check it off!"
+        case .hidden:
+            return "No hidden interventions."
+        }
     }
 }
 
-private struct InputStatusRow: View {
+// MARK: - Filter Mode
+
+private enum InputFilterMode: CaseIterable {
+    case all, pending, completed, hidden
+
+    var title: String {
+        switch self {
+        case .all:
+            return "All"
+        case .pending:
+            return "To do"
+        case .completed:
+            return "Done"
+        case .hidden:
+            return "Hidden"
+        }
+    }
+}
+
+// MARK: - Filter Pill
+
+private struct FilterPill: View {
+    let title: String
+    let count: Int
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: TelocareTheme.Spacing.xs) {
+                Text(title)
+                Text("\(count)")
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(isSelected ? Color.white.opacity(0.3) : TelocareTheme.muted.opacity(0.3))
+                    .clipShape(Capsule())
+            }
+            .font(TelocareTheme.Typography.caption)
+            .foregroundStyle(isSelected ? .white : TelocareTheme.charcoal)
+            .padding(.horizontal, TelocareTheme.Spacing.md)
+            .padding(.vertical, TelocareTheme.Spacing.sm)
+            .background(
+                Capsule()
+                    .fill(isSelected ? TelocareTheme.coral : TelocareTheme.cream)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Input Card
+
+private struct InputCard: View {
     let input: InputStatus
-    let onToggleCheckedToday: () -> Void
+    let onToggle: () -> Void
     let onShowDetails: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Button(action: onToggleCheckedToday) {
-                Image(systemName: input.isCheckedToday ? "checkmark.circle.fill" : "circle")
-                    .imageScale(.large)
+        WarmCard(padding: 0) {
+            HStack(spacing: 0) {
+                Button(action: onToggle) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                            .fill(input.isCheckedToday ? TelocareTheme.coral : TelocareTheme.peach)
+                        if input.isCheckedToday {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, TelocareTheme.Spacing.sm)
+                .padding(.vertical, TelocareTheme.Spacing.sm)
+                .accessibilityLabel(input.isCheckedToday ? "Uncheck \(input.name)" : "Check \(input.name)")
+
+                Button(action: onShowDetails) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(input.name)
+                                .font(TelocareTheme.Typography.headline)
+                                .foregroundStyle(input.isCheckedToday ? TelocareTheme.muted : TelocareTheme.charcoal)
+                                .strikethrough(input.isCheckedToday)
+
+                            HStack(spacing: TelocareTheme.Spacing.sm) {
+                                WeeklyProgressBar(completion: input.completion)
+
+                                if let evidence = input.evidenceLevel {
+                                    EvidenceBadge(level: evidence)
+                                }
+                            }
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12))
+                            .foregroundStyle(TelocareTheme.muted)
+                    }
+                    .padding(.horizontal, TelocareTheme.Spacing.sm)
+                    .padding(.vertical, TelocareTheme.Spacing.sm)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(input.isCheckedToday ? "Uncheck \(input.name)" : "Check \(input.name)")
-
-            VStack(alignment: .leading, spacing: 8) {
-                LabeledContent(input.name, value: input.statusText)
-
-                if let classification = input.classificationText {
-                    LabeledContent("Classification", value: classification)
-                }
-
-                if let evidenceLevel = input.evidenceLevel {
-                    LabeledContent("Evidence", value: evidenceLevel)
-                }
-
-                if input.isHidden {
-                    Text("Hidden on web")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                ProgressView(value: input.completion)
-            }
-
-            Spacer(minLength: 12)
-
-            Button("Details", action: onShowDetails)
-                .buttonStyle(.bordered)
         }
-        .padding(.vertical, 4)
     }
 }
 
-private struct InputDetailSheet: View {
+// MARK: - Weekly Progress Bar
+
+private struct WeeklyProgressBar: View {
+    let completion: Double
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<7, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(index < Int(completion * 7) ? TelocareTheme.coral : TelocareTheme.peach)
+                    .frame(width: 8, height: 8)
+            }
+        }
+    }
+}
+
+// MARK: - Evidence Badge
+
+private struct EvidenceBadge: View {
+    let level: String
+
+    var body: some View {
+        Text(level)
+            .font(TelocareTheme.Typography.small)
+            .foregroundStyle(badgeColor)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(badgeColor.opacity(0.15))
+            .clipShape(Capsule())
+    }
+
+    private var badgeColor: Color {
+        switch level.lowercased() {
+        case "strong", "high":
+            return TelocareTheme.success
+        case "moderate", "medium":
+            return TelocareTheme.warmOrange
+        default:
+            return TelocareTheme.muted
+        }
+    }
+}
+
+private struct InputDetailView: View {
     let input: InputStatus
     let graphData: CausalGraphData
 
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        NavigationStack {
-            List {
-                Section("Current status") {
-                    LabeledContent("Name", value: input.name)
-                    LabeledContent("Status", value: input.statusText)
-                    LabeledContent("7-day completion", value: "\(Int((input.completion * 100).rounded()))%")
-                    LabeledContent("Checked today", value: input.isCheckedToday ? "Yes" : "No")
-                    LabeledContent("Classification", value: input.classificationText ?? "Unknown")
-                    LabeledContent("Hidden on web", value: input.isHidden ? "Yes" : "No")
+        ScrollView {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                Text(input.name)
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(TelocareTheme.charcoal)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                statusCard
+                evidenceCard
+
+                if input.detailedDescription != nil {
+                    descriptionCard
                 }
 
-                Section("Graph metadata") {
-                    if let node = graphNodeData {
-                        LabeledContent("Node ID", value: node.id)
-                        LabeledContent("Style", value: node.styleClass)
-                        LabeledContent("Tier", value: node.tier.map(String.init) ?? "Not set")
-                        LabeledContent("Label", value: firstLine(node.label))
-                    } else {
-                        Text("No graph node metadata is available for this intervention.")
-                    }
-                }
-
-                Section("Evidence") {
-                    LabeledContent("Evidence", value: input.evidenceLevel ?? graphNodeData?.tooltip?.evidence ?? "Not provided")
-                    LabeledContent("Summary", value: input.evidenceSummary ?? graphNodeData?.tooltip?.mechanism ?? "Not provided")
-                    LabeledContent("Citation IDs", value: citationValue)
-                    LabeledContent("Citation", value: graphNodeData?.tooltip?.citation ?? "Not provided")
-                    LabeledContent("Statistic", value: graphNodeData?.tooltip?.stat ?? "Not provided")
-                }
-
-                if let detailedDescription = input.detailedDescription {
-                    Section("Detailed description") {
-                        Text(detailedDescription)
-                    }
-                }
-
-                if let externalLink = input.externalLink {
-                    Section("Reference link") {
-                        Text(externalLink)
-                    }
+                if input.externalLink != nil {
+                    linkCard
                 }
             }
-            .navigationTitle("Input Details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
+            .padding(TelocareTheme.Spacing.md)
+        }
+        .background(TelocareTheme.sand.ignoresSafeArea())
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Status Card
+
+    @ViewBuilder
+    private var statusCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Status")
+
+                DetailRow(label: "Status", value: input.statusText)
+                DetailRow(label: "7-day completion", value: "\(Int((input.completion * 100).rounded()))%")
+                DetailRow(label: "Checked today", value: input.isCheckedToday ? "Yes" : "No")
+
+                if let classification = input.classificationText {
+                    DetailRow(label: "Classification", value: classification)
+                }
+
+                if input.isHidden {
+                    HStack {
+                        Image(systemName: "eye.slash")
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Text("Hidden on web")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                    }
+                    .padding(.top, TelocareTheme.Spacing.xs)
+                }
+            }
+        }
+    }
+
+    // MARK: - Evidence Card
+
+    @ViewBuilder
+    private var evidenceCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(title: "Evidence")
+
+                if let level = input.evidenceLevel ?? graphNodeData?.tooltip?.evidence {
+                    HStack {
+                        Text("Level")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Spacer()
+                        EvidenceBadge(level: level)
+                    }
+                }
+
+                if let summary = input.evidenceSummary ?? graphNodeData?.tooltip?.mechanism {
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Text("Summary")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Text(summary)
+                            .font(TelocareTheme.Typography.body)
+                            .foregroundStyle(TelocareTheme.charcoal)
+                    }
+                }
+
+                if !input.citationIDs.isEmpty {
+                    DetailRow(label: "Citations", value: input.citationIDs.joined(separator: ", "))
+                }
+
+                if let stat = graphNodeData?.tooltip?.stat {
+                    DetailRow(label: "Statistic", value: stat)
+                }
+            }
+        }
+    }
+
+    // MARK: - Description Card
+
+    @ViewBuilder
+    private var descriptionCard: some View {
+        if let description = input.detailedDescription {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Description")
+                    Text(description)
+                        .font(TelocareTheme.Typography.body)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                }
+            }
+        }
+    }
+
+    // MARK: - Link Card
+
+    @ViewBuilder
+    private var linkCard: some View {
+        if let link = input.externalLink {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Reference")
+                    if let url = URL(string: link) {
+                        Link(destination: url) {
+                            HStack {
+                                Text(link)
+                                    .font(TelocareTheme.Typography.body)
+                                    .foregroundStyle(TelocareTheme.coral)
+                                    .lineLimit(2)
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .foregroundStyle(TelocareTheme.coral)
+                            }
+                        }
+                    } else {
+                        Text(link)
+                            .font(TelocareTheme.Typography.body)
+                            .foregroundStyle(TelocareTheme.charcoal)
                     }
                 }
             }
@@ -826,17 +1420,24 @@ private struct InputDetailSheet: View {
     private var graphNodeData: GraphNodeData? {
         graphData.nodes.first { $0.data.id == input.id }?.data
     }
+}
 
-    private func firstLine(_ text: String) -> String {
-        text.components(separatedBy: "\n").first ?? text
-    }
+// MARK: - Detail Row Helper
 
-    private var citationValue: String {
-        if !input.citationIDs.isEmpty {
-            return input.citationIDs.joined(separator: ", ")
+private struct DetailRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.warmGray)
+            Spacer()
+            Text(value)
+                .font(TelocareTheme.Typography.body)
+                .foregroundStyle(TelocareTheme.charcoal)
         }
-
-        return "Not provided"
     }
 }
 
@@ -845,23 +1446,176 @@ private struct ExploreChatScreen: View {
     let feedback: String
     let onSend: () -> Void
 
+    @State private var messages: [ChatMessage] = [
+        ChatMessage(
+            id: UUID(),
+            content: "Hi there! I'm your sleep wellness assistant. I can help you understand your sleep patterns, suggest interventions, and answer questions about TMD management. What would you like to explore today?",
+            isFromUser: false,
+            timestamp: Date()
+        )
+    ]
+    @FocusState private var isInputFocused: Bool
+
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 12) {
-                TextField("AI chat backend not connected yet", text: $draft, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier(AccessibilityID.exploreChatInput)
-                Button("Send (placeholder)", action: onSend)
-                    .buttonStyle(.borderedProminent)
-                    .accessibilityIdentifier(AccessibilityID.exploreChatSendButton)
-                Text(feedback)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier(AccessibilityID.exploreFeedbackText)
+            VStack(spacing: 0) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: TelocareTheme.Spacing.md) {
+                            ForEach(messages) { message in
+                                ChatBubble(message: message)
+                                    .id(message.id)
+                            }
+                        }
+                        .padding(TelocareTheme.Spacing.md)
+                    }
+                    .onChange(of: messages.count) { _, _ in
+                        withAnimation {
+                            proxy.scrollTo(messages.last?.id, anchor: .bottom)
+                        }
+                    }
+                }
+
+                if messages.count <= 2 {
+                    suggestedPromptsSection
+                }
+
+                chatInputBar
             }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(TelocareTheme.sand.ignoresSafeArea())
             .navigationTitle("Chat")
+            .navigationBarTitleDisplayMode(.inline)
         }
+    }
+
+    // MARK: - Suggested Prompts
+
+    @ViewBuilder
+    private var suggestedPromptsSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                ForEach(suggestedPrompts, id: \.self) { prompt in
+                    Button {
+                        sendMessage(prompt)
+                    } label: {
+                        Text(prompt)
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.coral)
+                            .padding(.horizontal, TelocareTheme.Spacing.md)
+                            .padding(.vertical, TelocareTheme.Spacing.sm)
+                            .background(TelocareTheme.peach)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, TelocareTheme.Spacing.md)
+            .padding(.bottom, TelocareTheme.Spacing.sm)
+        }
+    }
+
+    private var suggestedPrompts: [String] {
+        [
+            "Why is my jaw sore?",
+            "What can I try tonight?",
+            "Explain my progress",
+            "Best interventions for me"
+        ]
+    }
+
+    // MARK: - Input Bar
+
+    @ViewBuilder
+    private var chatInputBar: some View {
+        VStack(spacing: 0) {
+            Divider()
+                .background(TelocareTheme.peach)
+
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                TextField("Ask anything about your sleep...", text: $draft, axis: .vertical)
+                    .font(TelocareTheme.Typography.body)
+                    .padding(.horizontal, TelocareTheme.Spacing.md)
+                    .padding(.vertical, TelocareTheme.Spacing.sm)
+                    .background(TelocareTheme.cream)
+                    .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.large, style: .continuous))
+                    .focused($isInputFocused)
+                    .lineLimit(1...4)
+                    .accessibilityIdentifier(AccessibilityID.exploreChatInput)
+
+                Button {
+                    sendMessage(draft)
+                } label: {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 36))
+                        .foregroundStyle(draft.isEmpty ? TelocareTheme.muted : TelocareTheme.coral)
+                }
+                .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityIdentifier(AccessibilityID.exploreChatSendButton)
+            }
+            .padding(TelocareTheme.Spacing.md)
+            .background(TelocareTheme.sand)
+        }
+    }
+
+    private func sendMessage(_ content: String) {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        messages.append(ChatMessage(id: UUID(), content: trimmed, isFromUser: true, timestamp: Date()))
+        draft = ""
+        onSend()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            messages.append(ChatMessage(
+                id: UUID(),
+                content: "I appreciate your question! The AI backend isn't connected yet, but once it is, I'll be able to help analyze your sleep data and provide personalized recommendations.",
+                isFromUser: false,
+                timestamp: Date()
+            ))
+        }
+    }
+}
+
+// MARK: - Chat Message Model
+
+private struct ChatMessage: Identifiable, Equatable {
+    let id: UUID
+    let content: String
+    let isFromUser: Bool
+    let timestamp: Date
+}
+
+// MARK: - Chat Bubble
+
+private struct ChatBubble: View {
+    let message: ChatMessage
+
+    var body: some View {
+        HStack {
+            if message.isFromUser { Spacer(minLength: 60) }
+
+            VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: TelocareTheme.Spacing.xs) {
+                Text(message.content)
+                    .font(TelocareTheme.Typography.body)
+                    .foregroundStyle(message.isFromUser ? .white : TelocareTheme.charcoal)
+                    .padding(TelocareTheme.Spacing.md)
+                    .background(
+                        RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.large, style: .continuous)
+                            .fill(message.isFromUser ? TelocareTheme.coral : TelocareTheme.cream)
+                    )
+
+                Text(formattedTime)
+                    .font(TelocareTheme.Typography.small)
+                    .foregroundStyle(TelocareTheme.muted)
+            }
+
+            if !message.isFromUser { Spacer(minLength: 60) }
+        }
+    }
+
+    private var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: message.timestamp)
     }
 }

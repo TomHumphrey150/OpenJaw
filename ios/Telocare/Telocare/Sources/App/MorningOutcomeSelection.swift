@@ -145,4 +145,34 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return AccessibilityID.exploreMorningAnxietyPicker
         }
     }
+
+    var displayTitle: String {
+        switch self {
+        case .globalSensation:
+            return "Overall feeling"
+        case .neckTightness:
+            return "Neck tension"
+        case .jawSoreness:
+            return "Jaw soreness"
+        case .earFullness:
+            return "Ear fullness"
+        case .healthAnxiety:
+            return "Worry level"
+        }
+    }
+
+    var systemImageName: String {
+        switch self {
+        case .globalSensation:
+            return "figure.stand"
+        case .neckTightness:
+            return "person.bust"
+        case .jawSoreness:
+            return "mouth"
+        case .earFullness:
+            return "ear"
+        case .healthAnxiety:
+            return "brain.head.profile"
+        }
+    }
 }

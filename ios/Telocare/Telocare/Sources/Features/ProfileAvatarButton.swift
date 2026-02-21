@@ -10,7 +10,7 @@ struct ProfileAvatarButton: View {
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.teal))
+                .background(Circle().fill(TelocareTheme.coral))
         }
         .buttonStyle(.plain)
         .padding(.top, 12)

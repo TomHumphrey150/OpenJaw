@@ -16,7 +16,7 @@ struct OutcomeSummary: Equatable {
     let burdenProgress: Double
 }
 
-struct OutcomeRecord: Equatable, Identifiable {
+struct OutcomeRecord: Equatable, Identifiable, Hashable {
     let id: String
     let microArousalRatePerHour: Double?
     let microArousalCount: Double?
@@ -31,7 +31,7 @@ struct SituationSummary: Equatable {
     let topSource: String
 }
 
-struct InputStatus: Equatable, Identifiable {
+struct InputStatus: Equatable, Identifiable, Hashable {
     let id: String
     let name: String
     let statusText: String

@@ -111,22 +111,38 @@
     };
   }
 
+  function getCSSVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
   function cyStyles() {
+    const textColor = getCSSVar('--text-color') || '#403B38';
+    const nodeBg = getCSSVar('--node-bg') || '#FFFDF7';
+    const borderDefault = getCSSVar('--node-border-default') || '#BFB8B3';
+    const borderRobust = getCSSVar('--node-border-robust') || '#85C28F';
+    const borderModerate = getCSSVar('--node-border-moderate') || '#FF9966';
+    const borderPreliminary = getCSSVar('--node-border-preliminary') || '#D4A5FF';
+    const borderMechanism = getCSSVar('--node-border-mechanism') || '#7DD3FC';
+    const borderSymptom = getCSSVar('--node-border-symptom') || '#FF7060';
+    const borderIntervention = getCSSVar('--node-border-intervention') || '#FF7060';
+    const edgeTextBg = getCSSVar('--edge-text-bg') || '#FAF5EE';
+    const selectionOverlay = getCSSVar('--selection-overlay') || '#FF7060';
+
     return [
       {
         selector: 'node',
         style: {
           'shape': 'round-rectangle',
-          'background-color': '#111827',
+          'background-color': nodeBg,
           'border-width': BASE_VISUAL_STYLE.nodeBorderWidth,
-          'border-color': '#475569',
+          'border-color': borderDefault,
           'label': 'data(label)',
           'font-size': BASE_VISUAL_STYLE.nodeFontSize,
           'text-wrap': 'wrap',
           'text-max-width': BASE_VISUAL_STYLE.nodeTextMaxWidth,
           'text-valign': 'center',
           'text-halign': 'center',
-          'color': '#e2e8f0',
+          'color': textColor,
           'width': 'label',
           'height': 'label',
           'padding': BASE_VISUAL_STYLE.nodePadding,
@@ -137,31 +153,38 @@
       {
         selector: 'node[styleClass = "robust"]',
         style: {
-          'border-color': '#22c55e',
+          'border-color': borderRobust,
         },
       },
       {
         selector: 'node[styleClass = "moderate"]',
         style: {
-          'border-color': '#f59e0b',
+          'border-color': borderModerate,
         },
       },
       {
         selector: 'node[styleClass = "preliminary"]',
         style: {
-          'border-color': '#a855f7',
+          'border-color': borderPreliminary,
         },
       },
       {
         selector: 'node[styleClass = "mechanism"]',
         style: {
-          'border-color': '#38bdf8',
+          'border-color': borderMechanism,
         },
       },
       {
         selector: 'node[styleClass = "symptom"]',
         style: {
-          'border-color': '#ef4444',
+          'border-color': borderSymptom,
+        },
+      },
+      {
+        selector: 'node[styleClass = "intervention"]',
+        style: {
+          'border-color': borderIntervention,
+          'border-style': 'dashed',
         },
       },
       {
@@ -175,9 +198,9 @@
           'width': 2,
           'label': 'data(label)',
           'font-size': 9,
-          'color': '#cbd5e1',
-          'text-background-color': '#0f172a',
-          'text-background-opacity': 0.8,
+          'color': textColor,
+          'text-background-color': edgeTextBg,
+          'text-background-opacity': 0.9,
           'text-background-padding': 2,
         },
       },
@@ -197,8 +220,8 @@
       {
         selector: ':selected',
         style: {
-          'overlay-color': '#38bdf8',
-          'overlay-opacity': 0.14,
+          'overlay-color': selectionOverlay,
+          'overlay-opacity': 0.18,
         },
       },
     ];

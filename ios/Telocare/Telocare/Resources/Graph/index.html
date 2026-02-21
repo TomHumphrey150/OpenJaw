@@ -5,14 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Telocare Graph</title>
   <style>
+    :root {
+      --bg-color: #FAF5EE;
+      --text-color: #403B38;
+      --node-bg: #FFFDF7;
+      --node-border-default: #BFB8B3;
+      --node-border-robust: #85C28F;
+      --node-border-moderate: #FF9966;
+      --node-border-preliminary: #D4A5FF;
+      --node-border-mechanism: #7DD3FC;
+      --node-border-symptom: #FF7060;
+      --node-border-intervention: #FF7060;
+      --edge-text-bg: #FAF5EE;
+      --tooltip-bg: rgba(255, 253, 247, 0.97);
+      --tooltip-border: rgba(140, 133, 128, 0.4);
+      --selection-overlay: #FF7060;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #1a1a1a;
+        --text-color: #e2e8f0;
+        --node-bg: #2a2a2a;
+        --node-border-default: #4a4540;
+        --node-border-robust: #4ade80;
+        --node-border-moderate: #FF8C7D;
+        --node-border-preliminary: #c084fc;
+        --node-border-mechanism: #38bdf8;
+        --node-border-symptom: #f87171;
+        --node-border-intervention: #FF8C7D;
+        --edge-text-bg: #1a1a1a;
+        --tooltip-bg: rgba(26, 26, 26, 0.97);
+        --tooltip-border: rgba(74, 69, 64, 0.6);
+        --selection-overlay: #FF8C7D;
+      }
+    }
+
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #0f172a;
-      color: #e2e8f0;
+      background: var(--bg-color);
+      color: var(--text-color);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -25,16 +61,16 @@
       position: fixed;
       pointer-events: none;
       max-width: 280px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      border-radius: 8px;
-      padding: 8px 10px;
+      background: var(--tooltip-bg);
+      border: 1px solid var(--tooltip-border);
+      border-radius: 12px;
+      padding: 10px 12px;
       font-size: 12px;
-      line-height: 1.35;
-      color: #e2e8f0;
+      line-height: 1.4;
+      color: var(--text-color);
       display: none;
       z-index: 999;
-      box-shadow: 0 12px 24px rgba(2, 6, 23, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .tooltip-title {
