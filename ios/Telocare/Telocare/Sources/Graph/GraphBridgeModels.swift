@@ -3,6 +3,7 @@ import Foundation
 struct GraphDisplayFlags: Codable, Equatable {
     let showFeedbackEdges: Bool
     let showProtectiveEdges: Bool
+    let showInterventionNodes: Bool
 }
 
 enum GraphEvent: Equatable {

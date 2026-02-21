@@ -9,6 +9,8 @@
     "dev": "ts-node src/server.ts",
     "dev:vercel": "npx --yes vercel@latest dev",
     "debug:user-data": "node --env-file=.env.local scripts/debug-user-data.mjs",
+    "sync:ios-canonical-graph": "node --experimental-default-type=module scripts/sync-ios-canonical-graph.mjs",
+    "ios:explore-ui": "node scripts/ios-ui-explorer.mjs",
     "test": "node --experimental-default-type=module --test test/*.test.mjs",
     "test:all": "node --experimental-default-type=module --test test/*.test.mjs",
     "test:defense-scoring": "node --experimental-default-type=module --test test/defenseScoring.test.mjs",

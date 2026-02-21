@@ -130,3 +130,145 @@ test('init hydrates storage for the authenticated user before rendering', async 
     assert.equal(graphInitialized, 1);
     assert.equal(guidedFlowInitialized, 1);
 });
+
+test('init backfills canonical graph and rehydrates storage when custom graph is missing', async () => {
+    const documentObj = createMockDocument([
+        'disclaimer',
+        'data-management-btn',
+        'data-modal',
+        'close-modal-btn',
+        'export-data-btn',
+        'import-data-btn',
+        'import-file',
+        'clear-data-btn',
+        'sign-out-btn',
+    ]);
+
+    let storageHydrated = 0;
+    const rpcCalls = [];
+    const canonicalPayload = {
+        graphData: { nodes: [{ data: { id: 'RMMA' } }], edges: [] },
+        lastModified: '2026-02-21T18:00:00.000Z',
+    };
+
+    const supabaseClient = {
+        rpc: async (fn, params) => {
+            rpcCalls.push({ fn, params });
+            return { data: true, error: null };
+        },
+    };
+
+    const storageApi = {
+        initStorageForUser: async () => {
+            storageHydrated += 1;
+        },
+        loadData: () => ({ customCausalDiagram: undefined }),
+        hasValidCustomDiagram: () => false,
+        canonicalGraphPayload: () => canonicalPayload,
+        downloadExport: () => {},
+        importData: () => ({ success: true }),
+        clearData: () => {},
+        flushRemoteSync: async () => {},
+    };
+
+    await init({
+        documentObj,
+        showLoadingFn: () => {},
+        showServerErrorFn: () => {},
+        showAppFn: () => {},
+        initSupabaseFn: () => {},
+        checkAuthAndRedirectFn: async () => true,
+        getCurrentUserFn: async () => ({ id: 'user-42' }),
+        getSupabaseFn: () => supabaseClient,
+        checkServerHealthFn: async () => true,
+        fetchFn: async (url) => {
+            if (url.includes('/api/interventions')) {
+                return { ok: true, async json() { return { interventions: [] }; } };
+            }
+            return { ok: true, async json() { return { disclaimer: 'ok' }; } };
+        },
+        initCausalEditorFn: () => {},
+        initExperienceFlowFn: () => {},
+        storageApi,
+        confirmFn: () => false,
+    });
+
+    assert.equal(storageHydrated, 2);
+    assert.equal(rpcCalls.length, 1);
+    assert.equal(rpcCalls[0].fn, 'backfill_default_graph_if_missing');
+    assert.deepEqual(rpcCalls[0].params, {
+        graph_data: canonicalPayload.graphData,
+        last_modified: canonicalPayload.lastModified,
+    });
+});
+
+test('init skips canonical graph backfill when custom graph already exists locally', async () => {
+    const documentObj = createMockDocument([
+        'disclaimer',
+        'data-management-btn',
+        'data-modal',
+        'close-modal-btn',
+        'export-data-btn',
+        'import-data-btn',
+        'import-file',
+        'clear-data-btn',
+        'sign-out-btn',
+    ]);
+
+    let storageHydrated = 0;
+    let rpcCalls = 0;
+    const supabaseClient = {
+        rpc: async () => {
+            rpcCalls += 1;
+            return { data: true, error: null };
+        },
+    };
+
+    const storageApi = {
+        initStorageForUser: async () => {
+            storageHydrated += 1;
+        },
+        loadData: () => ({
+            customCausalDiagram: {
+                graphData: {
+                    nodes: [],
+                    edges: [],
+                },
+            },
+        }),
+        hasValidCustomDiagram: () => true,
+        canonicalGraphPayload: () => ({
+            graphData: { nodes: [], edges: [] },
+            lastModified: '2026-02-21T18:00:00.000Z',
+        }),
+        downloadExport: () => {},
+        importData: () => ({ success: true }),
+        clearData: () => {},
+        flushRemoteSync: async () => {},
+    };
+
+    await init({
+        documentObj,
+        showLoadingFn: () => {},
+        showServerErrorFn: () => {},
+        showAppFn: () => {},
+        initSupabaseFn: () => {},
+        checkAuthAndRedirectFn: async () => true,
+        getCurrentUserFn: async () => ({ id: 'user-42' }),
+        getSupabaseFn: () => supabaseClient,
+        checkServerHealthFn: async () => true,
+        fetchFn: async (url) => {
+            if (url.includes('/api/interventions')) {
+                return { ok: true, async json() { return { interventions: [] }; } };
+            }
+            return { ok: true, async json() { return { disclaimer: 'ok' }; } };
+        },
+        initCausalEditorFn: () => {},
+        initExperienceFlowFn: () => {},
+        storageApi,
+        confirmFn: () => false,
+    });
+
+    assert.equal(storageHydrated, 1);
+    assert.equal(rpcCalls, 0);
+});

@@ -18,6 +18,7 @@
   const displayFlags = {
     showFeedbackEdges: false,
     showProtectiveEdges: false,
+    showInterventionNodes: false,
   };
 
   const defaultGraphData = {
@@ -44,6 +45,7 @@
   let currentGraphData = defaultGraphData;
   let cy = null;
   let viewportThrottle = null;
+  let resizeThrottle = null;
 
   function postEvent(event, payload) {
     const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.graphBridge;
@@ -71,7 +73,7 @@
       if (!node || typeof node.id !== 'string') return false;
       if (node.styleClass === 'intervention') {
         interventionIDs.add(node.id);
-        return false;
+        return displayFlags.showInterventionNodes;
       }
       return true;
     });
@@ -86,7 +88,7 @@
     const filteredEdges = graphData.edges.filter((item) => {
       const edge = item && item.data ? item.data : null;
       if (!edge || typeof edge.source !== 'string' || typeof edge.target !== 'string') return false;
-      if (interventionIDs.has(edge.source) || interventionIDs.has(edge.target)) return false;
+      if (!displayFlags.showInterventionNodes && (interventionIDs.has(edge.source) || interventionIDs.has(edge.target))) return false;
       if (!displayFlags.showFeedbackEdges && edge.edgeType === 'feedback') return false;
       if (!displayFlags.showProtectiveEdges && edge.edgeType === 'protective') return false;
       if (dormantIDs.has(edge.source) || dormantIDs.has(edge.target)) return false;
@@ -353,6 +355,17 @@
     }
   }
 
+  function refreshLayoutForContainerSizeChange() {
+    if (resizeThrottle !== null) {
+      clearTimeout(resizeThrottle);
+    }
+
+    resizeThrottle = setTimeout(() => {
+      resizeThrottle = null;
+      renderGraph(currentGraphData);
+    }, 90);
+  }
+
   function focusNode(nodeID) {
     if (!cy || !nodeID) return;
     const node = cy.getElementById(nodeID);
@@ -385,6 +398,7 @@
       const payload = envelope.payload || {};
       displayFlags.showFeedbackEdges = Boolean(payload.showFeedbackEdges);
       displayFlags.showProtectiveEdges = Boolean(payload.showProtectiveEdges);
+      displayFlags.showInterventionNodes = Boolean(payload.showInterventionNodes);
       renderGraph(currentGraphData);
       return;
     }
@@ -407,6 +421,15 @@
   window.TelocareGraph = {
     receiveSwiftMessage,
   };
+
+  if (typeof ResizeObserver === 'function') {
+    const observer = new ResizeObserver(() => {
+      refreshLayoutForContainerSizeChange();
+    });
+    observer.observe(container);
+  }
+
+  window.addEventListener('resize', refreshLayoutForContainerSizeChange);
 
   renderGraph(currentGraphData);
 })();

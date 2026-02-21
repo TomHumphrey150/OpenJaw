@@ -55,8 +55,8 @@ extension UserDataDocument {
         customCausalDiagram: CustomCausalDiagram(graphData: .defaultGraph, lastModified: "2026-02-21T08:10:00.000Z"),
         experienceFlow: ExperienceFlow(
             hasCompletedInitialGuidedFlow: true,
-            lastGuidedEntryDate: "2026-02-21",
-            lastGuidedCompletedDate: "2026-02-21",
+            lastGuidedEntryDate: "2026-02-20",
+            lastGuidedCompletedDate: "2026-02-20",
             lastGuidedStatus: .completed
         )
     )

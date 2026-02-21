@@ -84,6 +84,8 @@ export {
     saveDiagram,
     getDiagram,
     clearDiagram,
+    hasValidCustomDiagram,
+    canonicalGraphPayload,
 } from './storage/diagram.js';
 
 export {
@@ -141,7 +143,13 @@ import {
 } from './storage/protocol.js';
 import { computeHabitClassifications, recomputeHabitClassifications } from './storage/personalization.js';
 import { toggleHiddenIntervention, getHiddenInterventions } from './storage/hiddenInterventions.js';
-import { saveDiagram, getDiagram, clearDiagram } from './storage/diagram.js';
+import {
+    saveDiagram,
+    getDiagram,
+    clearDiagram,
+    hasValidCustomDiagram,
+    canonicalGraphPayload,
+} from './storage/diagram.js';
 import { unlockAchievement, getUnlockedAchievements } from './storage/achievements.js';
 import { exportData, importData, downloadExport } from './storage/io.js';
 import {
@@ -210,6 +218,8 @@ export default {
     saveDiagram,
     getDiagram,
     clearDiagram,
+    hasValidCustomDiagram,
+    canonicalGraphPayload,
     EXPERIENCE_FLOW_STATUS,
     getExperienceFlow,
     shouldEnterGuidedFlow,

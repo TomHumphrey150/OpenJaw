@@ -354,7 +354,7 @@ enum HabitWindowQuality: String, Codable, Equatable {
     case insufficientData = "insufficient_data"
 }
 
-struct ExperienceFlow: Codable, Equatable {
+struct ExperienceFlow: Codable, Equatable, Sendable {
     let hasCompletedInitialGuidedFlow: Bool
     let lastGuidedEntryDate: String?
     let lastGuidedCompletedDate: String?
@@ -368,14 +368,14 @@ struct ExperienceFlow: Codable, Equatable {
     )
 }
 
-enum ExperienceFlowStatus: String, Codable, Equatable {
+enum ExperienceFlowStatus: String, Codable, Equatable, Sendable {
     case notStarted = "not_started"
     case inProgress = "in_progress"
     case completed
     case interrupted
 }
 
-struct CustomCausalDiagram: Codable, Equatable {
+struct CustomCausalDiagram: Codable, Equatable, Sendable {
     let graphData: CausalGraphData
     let lastModified: String?
 
@@ -422,16 +422,16 @@ struct CustomCausalDiagram: Codable, Equatable {
     }
 }
 
-struct CausalGraphData: Codable, Equatable {
+struct CausalGraphData: Codable, Equatable, Sendable {
     let nodes: [GraphNodeElement]
     let edges: [GraphEdgeElement]
 }
 
-struct GraphNodeElement: Codable, Equatable {
+struct GraphNodeElement: Codable, Equatable, Sendable {
     let data: GraphNodeData
 }
 
-struct GraphNodeData: Codable, Equatable {
+struct GraphNodeData: Codable, Equatable, Sendable {
     let id: String
     let label: String
     let styleClass: String
@@ -440,18 +440,18 @@ struct GraphNodeData: Codable, Equatable {
     let tooltip: GraphTooltip?
 }
 
-struct GraphTooltip: Codable, Equatable {
+struct GraphTooltip: Codable, Equatable, Sendable {
     let evidence: String?
     let stat: String?
     let citation: String?
     let mechanism: String?
 }
 
-struct GraphEdgeElement: Codable, Equatable {
+struct GraphEdgeElement: Codable, Equatable, Sendable {
     let data: GraphEdgeData
 }
 
-struct GraphEdgeData: Codable, Equatable {
+struct GraphEdgeData: Codable, Equatable, Sendable {
     let source: String
     let target: String
     let label: String?

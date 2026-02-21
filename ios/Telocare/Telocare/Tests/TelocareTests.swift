@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Telocare
 
@@ -8,6 +9,7 @@ struct AppViewModelTests {
         #expect(harness.viewModel.mode == .guided)
         #expect(harness.viewModel.guidedStep == .outcomes)
         #expect(harness.viewModel.snapshot.outcomes.shieldScore == 38)
+        #expect(harness.viewModel.snapshot.outcomeRecords.isEmpty == false)
     }
 
     @Test func guidedSequenceTransitionsIntoExploreMode() {
@@ -79,20 +81,69 @@ struct AppViewModelTests {
         #expect(harness.viewModel.snapshot.situation.focusedNode == "RMMA")
         #expect(harness.viewModel.graphSelectionText.contains("Selected node"))
     }
+
+    @Test func completedFlowTodayStartsInExploreMode() {
+        let harness = AppViewModelHarness(
+            initialExperienceFlow: ExperienceFlow(
+                hasCompletedInitialGuidedFlow: true,
+                lastGuidedEntryDate: "2026-02-21",
+                lastGuidedCompletedDate: "2026-02-21",
+                lastGuidedStatus: .completed
+            ),
+            nowProvider: {
+                let calendar = Calendar(identifier: .gregorian)
+                return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
+            }
+        )
+
+        #expect(harness.viewModel.mode == .explore)
+    }
+
+    @Test func guidedFlowPersistsEntryCompletionAndInterruption() {
+        let recorder = ExperienceFlowRecorder()
+        let harness = AppViewModelHarness(
+            initialExperienceFlow: .empty,
+            persistExperienceFlow: { recorder.append($0) },
+            nowProvider: {
+                let calendar = Calendar(identifier: .gregorian)
+                return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
+            }
+        )
+
+        #expect(recorder.values.count == 1)
+        #expect(recorder.values.first?.lastGuidedStatus == .inProgress)
+
+        harness.viewModel.handleAppMovedToBackground()
+        #expect(recorder.values.last?.lastGuidedStatus == .interrupted)
+
+        harness.viewModel.advanceFromOutcomes()
+        harness.viewModel.advanceFromSituation()
+        harness.viewModel.completeGuidedFlow()
+
+        #expect(recorder.values.last?.lastGuidedStatus == .completed)
+    }
 }
 
 private struct AppViewModelHarness {
     let viewModel: AppViewModel
     let recorder: AnnouncementRecorder
 
-    init() {
+    init(
+        initialExperienceFlow: ExperienceFlow = .empty,
+        persistExperienceFlow: @escaping (ExperienceFlow) -> Void = { _ in },
+        nowProvider: @escaping () -> Date = Date.init
+    ) {
         let recorder = AnnouncementRecorder()
         let announcer = AccessibilityAnnouncer { message in
             recorder.messages.append(message)
         }
         self.recorder = recorder
         viewModel = AppViewModel(
-            loadDashboardSnapshotUseCase: LoadDashboardSnapshotUseCase(repository: InMemoryDashboardRepository()),
+            snapshot: InMemoryDashboardRepository().loadDashboardSnapshot(),
+            graphData: CanonicalGraphLoader.loadGraphOrFallback(),
+            initialExperienceFlow: initialExperienceFlow,
+            persistExperienceFlow: persistExperienceFlow,
+            nowProvider: nowProvider,
             accessibilityAnnouncer: announcer
         )
     }
@@ -100,4 +151,12 @@ private struct AppViewModelHarness {
 
 private final class AnnouncementRecorder {
     var messages: [String] = []
+}
+
+private final class ExperienceFlowRecorder {
+    private(set) var values: [ExperienceFlow] = []
+
+    func append(_ value: ExperienceFlow) {
+        values.append(value)
+    }
 }

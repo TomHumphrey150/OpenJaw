@@ -1,0 +1,10 @@
+import Testing
+@testable import Telocare
+
+struct CanonicalGraphLoaderTests {
+    @Test func loadsFullCanonicalGraphFromBundledJSON() throws {
+        let graph = try CanonicalGraphLoader.loadGraph()
+        #expect(graph.nodes.count == 71)
+        #expect(graph.edges.count == 120)
+    }
+}

@@ -52,6 +52,7 @@ enum ExploreTab: String, CaseIterable, Identifiable, Equatable {
     case outcomes
     case situation
     case inputs
+    case chat
 
     var id: String {
         rawValue
@@ -65,6 +66,8 @@ enum ExploreTab: String, CaseIterable, Identifiable, Equatable {
             return "Situation"
         case .inputs:
             return "Inputs"
+        case .chat:
+            return "Chat"
         }
     }
 
@@ -76,6 +79,8 @@ enum ExploreTab: String, CaseIterable, Identifiable, Equatable {
             return "point.3.connected.trianglepath.dotted"
         case .inputs:
             return "checklist"
+        case .chat:
+            return "message"
         }
     }
 }

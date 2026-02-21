@@ -2,6 +2,7 @@ import Foundation
 
 struct DashboardSnapshot: Equatable {
     let outcomes: OutcomeSummary
+    let outcomeRecords: [OutcomeRecord]
     let situation: SituationSummary
     let inputs: [InputStatus]
 }
@@ -12,6 +13,14 @@ struct OutcomeSummary: Equatable {
     let topContributor: String
     let confidence: String
     let burdenProgress: Double
+}
+
+struct OutcomeRecord: Equatable, Identifiable {
+    let id: String
+    let microArousalRatePerHour: Double?
+    let microArousalCount: Double?
+    let confidence: Double?
+    let source: String?
 }
 
 struct SituationSummary: Equatable {
@@ -26,4 +35,7 @@ struct InputStatus: Equatable, Identifiable {
     let name: String
     let statusText: String
     let completion: Double
+    let isCheckedToday: Bool
+    let classificationText: String?
+    let isHidden: Bool
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardContentView: View {
     @ObservedObject var viewModel: AppViewModel
+    @Environment(\.scenePhase) private var scenePhase
     let accountDescription: String
     let onSignOut: () -> Void
 
@@ -24,6 +25,11 @@ struct DashboardContentView: View {
         }
         .animation(.easeInOut(duration: 0.28), value: viewModel.guidedStep)
         .animation(.easeInOut(duration: 0.28), value: viewModel.mode)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                viewModel.handleAppMovedToBackground()
+            }
+        }
     }
 
     @ViewBuilder

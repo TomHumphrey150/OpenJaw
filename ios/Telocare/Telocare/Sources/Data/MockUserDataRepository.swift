@@ -11,4 +11,15 @@ struct MockUserDataRepository: UserDataRepository {
         _ = userID
         return document
     }
+
+    func backfillDefaultGraphIfMissing(canonicalGraph: CausalGraphData, lastModified: String) async throws -> Bool {
+        _ = canonicalGraph
+        _ = lastModified
+        return false
+    }
+
+    func upsertUserDataPatch(_ patch: UserDataPatch) async throws -> Bool {
+        _ = patch
+        return false
+    }
 }

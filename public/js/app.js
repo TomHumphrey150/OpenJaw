@@ -28,6 +28,60 @@ const defaultDeps = {
     documentObj: runtimeDocument,
 };
 
+async function backfillCanonicalGraphIfMissing({
+    storageApi,
+    userId,
+    supabaseClient,
+}) {
+    if (!userId || !supabaseClient) {
+        return;
+    }
+
+    if (typeof supabaseClient.rpc !== 'function') {
+        return;
+    }
+
+    if (typeof storageApi.loadData !== 'function') {
+        return;
+    }
+
+    if (typeof storageApi.hasValidCustomDiagram !== 'function') {
+        return;
+    }
+
+    if (typeof storageApi.canonicalGraphPayload !== 'function') {
+        return;
+    }
+
+    const localStore = storageApi.loadData();
+    if (storageApi.hasValidCustomDiagram(localStore.customCausalDiagram)) {
+        return;
+    }
+
+    const canonical = storageApi.canonicalGraphPayload();
+    const { data, error } = await supabaseClient.rpc('backfill_default_graph_if_missing', {
+        graph_data: canonical.graphData,
+        last_modified: canonical.lastModified,
+    });
+
+    if (error) {
+        throw error;
+    }
+
+    if (data !== true) {
+        return;
+    }
+
+    if (typeof storageApi.initStorageForUser !== 'function') {
+        return;
+    }
+
+    await storageApi.initStorageForUser({
+        supabaseClient,
+        userId,
+    });
+}
+
 export async function init(overrides = {}) {
     const deps = { ...defaultDeps, ...overrides };
     deps.showLoadingFn();
@@ -39,13 +93,22 @@ export async function init(overrides = {}) {
         if (!isAuthed) return; // Will redirect to login
 
         // Hydrate local storage cache from Supabase for this authenticated user.
+        let currentUser = null;
+        let supabaseClient = null;
         if (typeof deps.storageApi.initStorageForUser === 'function') {
-            const user = await deps.getCurrentUserFn();
+            currentUser = await deps.getCurrentUserFn();
+            supabaseClient = deps.getSupabaseFn();
             await deps.storageApi.initStorageForUser({
-                supabaseClient: deps.getSupabaseFn(),
-                userId: user?.id || null,
+                supabaseClient,
+                userId: currentUser?.id || null,
             });
         }
+
+        await backfillCanonicalGraphIfMissing({
+            storageApi: deps.storageApi,
+            userId: currentUser?.id || null,
+            supabaseClient,
+        });
 
         const serverOk = await deps.checkServerHealthFn();
         if (!serverOk) {

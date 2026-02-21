@@ -145,12 +145,26 @@ final class RootViewModel: ObservableObject {
         authStatusMessage = nil
 
         do {
-            let document = try await userDataRepository.fetch(userID: session.userID)
+            let fetchedDocument = try await userDataRepository.fetch(userID: session.userID)
+            let document = withCanonicalGraphIfMissing(fetchedDocument)
+            backfillCanonicalGraphIfMissing(from: fetchedDocument, using: document)
+
             let snapshot = snapshotBuilder.build(from: document)
             let graphData = snapshotBuilder.graphData(from: document)
+            let repository = userDataRepository
             dashboardViewModel = AppViewModel(
                 snapshot: snapshot,
                 graphData: graphData,
+                initialExperienceFlow: document.experienceFlow,
+                persistExperienceFlow: { updatedFlow in
+                    Task.detached {
+                        let patch = UserDataPatch.experienceFlow(updatedFlow)
+                        do {
+                            _ = try await repository.upsertUserDataPatch(patch)
+                        } catch {
+                        }
+                    }
+                },
                 accessibilityAnnouncer: accessibilityAnnouncer
             )
             currentUserEmail = session.email
@@ -161,6 +175,46 @@ final class RootViewModel: ObservableObject {
             state = .fatal(message: "Failed to load user data from Supabase.")
             accessibilityAnnouncer.announce("Failed to load user data from Supabase.")
         }
+    }
+
+    private func withCanonicalGraphIfMissing(_ document: UserDataDocument) -> UserDataDocument {
+        guard document.customCausalDiagram == nil else {
+            return document
+        }
+
+        let canonicalGraph = CanonicalGraphLoader.loadGraphOrFallback()
+        let lastModified = Self.timestampNow()
+        let canonicalDiagram = CustomCausalDiagram(
+            graphData: canonicalGraph,
+            lastModified: lastModified
+        )
+
+        return document.withCustomCausalDiagram(canonicalDiagram)
+    }
+
+    private func backfillCanonicalGraphIfMissing(from fetched: UserDataDocument, using hydrated: UserDataDocument) {
+        guard fetched.customCausalDiagram == nil else {
+            return
+        }
+
+        guard let canonicalDiagram = hydrated.customCausalDiagram else {
+            return
+        }
+
+        let repository = userDataRepository
+        Task.detached {
+            do {
+                _ = try await repository.backfillDefaultGraphIfMissing(
+                    canonicalGraph: canonicalDiagram.graphData,
+                    lastModified: canonicalDiagram.lastModified ?? Self.timestampNow()
+                )
+            } catch {
+            }
+        }
+    }
+
+    nonisolated private static func timestampNow() -> String {
+        ISO8601DateFormatter().string(from: Date())
     }
 
     private func resetToAuthState() {
