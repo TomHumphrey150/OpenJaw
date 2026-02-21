@@ -26,3 +26,21 @@ These instructions apply to the entire repository rooted at `/Users/tomhumphrey/
 ## Data Sync Contract
 - Personal app data is stored per-user in Supabase table `public.user_data` as a JSONB document.
 - Row-level security (RLS) must remain enabled so users can only access their own row.
+
+## Supabase Debug Access (Agent Runbook)
+- Use the local diagnostics script for read-only inspection:
+  - `npm run debug:user-data -- --list-users --limit 20`
+  - `npm run debug:user-data -- --user-id <uuid>`
+- The script file is `scripts/debug-user-data.mjs`.
+- It reads credentials from `.env.local` (auto-loaded by the npm script):
+  - `SUPABASE_URL=https://aocndwnnkffumisprifx.supabase.co`
+  - `SUPABASE_SECRET_KEY=sb_secret_...`
+  - `SUPABASE_DEBUG_USER_ID=<uuid>` (optional default for `--user-id`)
+- For richer output, use:
+  - `--window-days <n>` to change rolling window analysis
+  - `--raw` to print raw JSON payloads
+- Security rules:
+  - Never commit secrets to git.
+  - Keep `.env.local` local only (already gitignored).
+  - Prefer a temporary secret key for debugging and rotate/revoke it after use.
+- In sandboxed Codex environments, networked Supabase calls may require escalated command permissions.

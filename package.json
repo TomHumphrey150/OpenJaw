@@ -8,6 +8,7 @@
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "dev:vercel": "npx --yes vercel@latest dev",
+    "debug:user-data": "node --env-file=.env.local scripts/debug-user-data.mjs",
     "test": "node --experimental-default-type=module --test test/*.test.mjs",
     "test:all": "node --experimental-default-type=module --test test/*.test.mjs",
     "test:defense-scoring": "node --experimental-default-type=module --test test/defenseScoring.test.mjs"
