@@ -41,6 +41,12 @@ test('importData hydrates new protocol arrays and remains export-compatible', ()
         habitClassifications: [{ interventionId: 'TX_A', status: 'neutral', nightsOn: 5, nightsOff: 5, updatedAt: '2026-02-16T08:00:00.000Z' }],
         hiddenInterventions: [],
         unlockedAchievements: [],
+        experienceFlow: {
+            hasCompletedInitialGuidedFlow: true,
+            lastGuidedEntryDate: '2026-02-15',
+            lastGuidedCompletedDate: '2026-02-15',
+            lastGuidedStatus: 'completed',
+        },
     };
 
     const result = storage.importData(JSON.stringify(payload));
@@ -52,6 +58,7 @@ test('importData hydrates new protocol arrays and remains export-compatible', ()
     assert.equal(loaded.morningStates.length, 1);
     assert.equal(loaded.habitTrials.length, 1);
     assert.equal(loaded.habitClassifications.length, 1);
+    assert.equal(loaded.experienceFlow.lastGuidedStatus, 'completed');
 
     const exported = JSON.parse(storage.exportData());
     assert.equal(Array.isArray(exported.nightExposures), true);
@@ -59,6 +66,7 @@ test('importData hydrates new protocol arrays and remains export-compatible', ()
     assert.equal(Array.isArray(exported.morningStates), true);
     assert.equal(Array.isArray(exported.habitTrials), true);
     assert.equal(Array.isArray(exported.habitClassifications), true);
+    assert.equal(exported.experienceFlow.lastGuidedStatus, 'completed');
 });
 
 test('importData defaults missing protocol arrays to empty lists', () => {

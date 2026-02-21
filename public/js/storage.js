@@ -87,6 +87,15 @@ export {
 } from './storage/diagram.js';
 
 export {
+    EXPERIENCE_FLOW_STATUS,
+    getExperienceFlow,
+    shouldEnterGuidedFlow,
+    markGuidedEntry,
+    markGuidedCompleted,
+    markGuidedInterrupted,
+} from './storage/experienceFlow.js';
+
+export {
     unlockAchievement,
     getUnlockedAchievements,
 } from './storage/achievements.js';
@@ -135,6 +144,14 @@ import { toggleHiddenIntervention, getHiddenInterventions } from './storage/hidd
 import { saveDiagram, getDiagram, clearDiagram } from './storage/diagram.js';
 import { unlockAchievement, getUnlockedAchievements } from './storage/achievements.js';
 import { exportData, importData, downloadExport } from './storage/io.js';
+import {
+    EXPERIENCE_FLOW_STATUS,
+    getExperienceFlow,
+    shouldEnterGuidedFlow,
+    markGuidedEntry,
+    markGuidedCompleted,
+    markGuidedInterrupted,
+} from './storage/experienceFlow.js';
 
 // Default export for convenience
 export default {
@@ -193,6 +210,12 @@ export default {
     saveDiagram,
     getDiagram,
     clearDiagram,
+    EXPERIENCE_FLOW_STATUS,
+    getExperienceFlow,
+    shouldEnterGuidedFlow,
+    markGuidedEntry,
+    markGuidedCompleted,
+    markGuidedInterrupted,
     exportData,
     importData,
     downloadExport,

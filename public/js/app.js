@@ -1,5 +1,6 @@
 import { checkServerHealth, showServerError, showLoading, showApp } from './serverCheck.js';
 import { initCausalEditor } from './causalEditor.js';
+import { initExperienceFlow } from './experienceFlow.js';
 import * as storage from './storage.js';
 import { initSupabase, checkAuthAndRedirect, signOut, getCurrentUser, getSupabase } from './auth.js';
 
@@ -12,6 +13,7 @@ const defaultDeps = {
     showLoadingFn: showLoading,
     showAppFn: showApp,
     initCausalEditorFn: initCausalEditor,
+    initExperienceFlowFn: initExperienceFlow,
     storageApi: storage,
     initSupabaseFn: initSupabase,
     checkAuthAndRedirectFn: checkAuthAndRedirect,
@@ -22,6 +24,7 @@ const defaultDeps = {
     alertFn: (message) => alert(message),
     confirmFn: (message) => confirm(message),
     reloadFn: () => runtimeWindow?.location?.reload?.(),
+    windowObj: runtimeWindow,
     documentObj: runtimeDocument,
 };
 
@@ -72,6 +75,13 @@ export async function init(overrides = {}) {
 
         // Initialize causal graph + defense check-in
         deps.initCausalEditorFn(interventionsData.interventions);
+
+        // Guided first-arrival experience flow
+        deps.initExperienceFlowFn({
+            storageApi: deps.storageApi,
+            documentObj: deps.documentObj,
+            windowObj: deps.windowObj,
+        });
 
         // Data management modal
         setupDataManagement(deps);

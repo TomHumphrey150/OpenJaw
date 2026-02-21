@@ -27,10 +27,18 @@ export const HABIT_STATUS = Object.freeze({
     UNKNOWN: 'unknown',
 });
 
+export const EXPERIENCE_FLOW_STATUS = Object.freeze({
+    NOT_STARTED: 'not_started',
+    IN_PROGRESS: 'in_progress',
+    COMPLETED: 'completed',
+    INTERRUPTED: 'interrupted',
+});
+
 const LEGACY_STORAGE_KEY = STORAGE_KEY;
 const LOCAL_UPDATED_SUFFIX = '__updated_at';
 const REMOTE_TABLE = 'user_data';
 const REMOTE_SYNC_DEBOUNCE_MS = 250;
+const EXPERIENCE_FLOW_STATUS_SET = new Set(Object.values(EXPERIENCE_FLOW_STATUS));
 
 export const EMPTY_STORE = {
     version: STORAGE_VERSION,
@@ -47,6 +55,7 @@ export const EMPTY_STORE = {
     hiddenInterventions: [],    // IDs of interventions hidden from check-in list
     unlockedAchievements: [],   // Achievement IDs that have been earned
     customCausalDiagram: undefined,
+    experienceFlow: createDefaultExperienceFlow(),
 };
 
 let currentUserId = null;
@@ -78,6 +87,41 @@ export function createEmptyStore() {
         hiddenInterventions: [],
         unlockedAchievements: [],
         customCausalDiagram: undefined,
+        experienceFlow: createDefaultExperienceFlow(),
+    };
+}
+
+export function createDefaultExperienceFlow() {
+    return {
+        hasCompletedInitialGuidedFlow: false,
+        lastGuidedEntryDate: null,
+        lastGuidedCompletedDate: null,
+        lastGuidedStatus: EXPERIENCE_FLOW_STATUS.NOT_STARTED,
+    };
+}
+
+function normalizeGuidedStatus(status) {
+    if (typeof status === 'string' && EXPERIENCE_FLOW_STATUS_SET.has(status)) {
+        return status;
+    }
+    return EXPERIENCE_FLOW_STATUS.NOT_STARTED;
+}
+
+function normalizeExperienceFlow(experienceFlow) {
+    const base = createDefaultExperienceFlow();
+    if (!experienceFlow || typeof experienceFlow !== 'object' || Array.isArray(experienceFlow)) {
+        return base;
+    }
+
+    return {
+        hasCompletedInitialGuidedFlow: Boolean(experienceFlow.hasCompletedInitialGuidedFlow),
+        lastGuidedEntryDate: typeof experienceFlow.lastGuidedEntryDate === 'string'
+            ? experienceFlow.lastGuidedEntryDate
+            : null,
+        lastGuidedCompletedDate: typeof experienceFlow.lastGuidedCompletedDate === 'string'
+            ? experienceFlow.lastGuidedCompletedDate
+            : null,
+        lastGuidedStatus: normalizeGuidedStatus(experienceFlow.lastGuidedStatus),
     };
 }
 
@@ -148,12 +192,21 @@ function normalizeData(data) {
         hiddenInterventions: Array.isArray(data.hiddenInterventions) ? data.hiddenInterventions : [],
         unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
         customCausalDiagram: data.customCausalDiagram || undefined,
+        experienceFlow: normalizeExperienceFlow(data.experienceFlow),
     };
 
     return normalized;
 }
 
 function hasMeaningfulData(store) {
+    const hasFlowActivity = (() => {
+        const flow = normalizeExperienceFlow(store?.experienceFlow);
+        return flow.hasCompletedInitialGuidedFlow ||
+            Boolean(flow.lastGuidedEntryDate) ||
+            Boolean(flow.lastGuidedCompletedDate) ||
+            flow.lastGuidedStatus !== EXPERIENCE_FLOW_STATUS.NOT_STARTED;
+    })();
+
     return Boolean(
         (store.personalStudies && store.personalStudies.length) ||
         (store.notes && store.notes.length) ||
@@ -167,7 +220,8 @@ function hasMeaningfulData(store) {
         (store.hiddenInterventions && store.hiddenInterventions.length) ||
         (store.unlockedAchievements && store.unlockedAchievements.length) ||
         (store.dailyCheckIns && Object.keys(store.dailyCheckIns).length) ||
-        store.customCausalDiagram
+        store.customCausalDiagram ||
+        hasFlowActivity
     );
 }
 

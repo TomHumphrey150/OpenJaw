@@ -1,0 +1,4 @@
+#include? "Secrets.xcconfig"
+
+SUPABASE_URL = https:/$()/aocndwnnkffumisprifx.supabase.co
+SUPABASE_PUBLISHABLE_KEY = sb_publishable_aOsCsYpbSEESl9zmLVqkaw_dr0q98LD

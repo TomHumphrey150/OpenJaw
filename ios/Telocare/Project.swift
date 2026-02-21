@@ -1,5 +1,28 @@
 import ProjectDescription
 
+let strictBaseSettings: SettingsDictionary = [
+    "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
+    "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
+    "CODE_SIGN_STYLE": "Automatic",
+    "DEVELOPMENT_TEAM": "3CNMWUW4KY",
+]
+
+let strictSettings = Settings.settings(
+    configurations: [
+        .debug(
+            name: "Debug",
+            settings: strictBaseSettings,
+            xcconfig: .relativeToRoot("Configs/Debug.xcconfig")
+        ),
+        .release(
+            name: "Release",
+            settings: strictBaseSettings,
+            xcconfig: .relativeToRoot("Configs/Release.xcconfig")
+        ),
+    ],
+    defaultSettings: .recommended
+)
+
 let project = Project(
     name: "Telocare",
     targets: [
@@ -14,13 +37,18 @@ let project = Project(
                         "UIColorName": "",
                         "UIImageName": "",
                     ],
+                    "SUPABASE_URL": "$(SUPABASE_URL)",
+                    "SUPABASE_PUBLISHABLE_KEY": "$(SUPABASE_PUBLISHABLE_KEY)",
                 ]
             ),
             buildableFolders: [
                 "Telocare/Sources",
                 "Telocare/Resources",
             ],
-            dependencies: []
+            dependencies: [
+                .external(name: "Supabase")
+            ],
+            settings: strictSettings
         ),
         .target(
             name: "TelocareTests",
@@ -31,7 +59,20 @@ let project = Project(
             buildableFolders: [
                 "Telocare/Tests"
             ],
-            dependencies: [.target(name: "Telocare")]
+            dependencies: [.target(name: "Telocare")],
+            settings: strictSettings
+        ),
+        .target(
+            name: "TelocareUITests",
+            destinations: .iOS,
+            product: .uiTests,
+            bundleId: "dev.tuist.TelocareUITests",
+            infoPlist: .default,
+            buildableFolders: [
+                "Telocare/UITests"
+            ],
+            dependencies: [.target(name: "Telocare")],
+            settings: strictSettings
         ),
     ]
 )

@@ -59,3 +59,13 @@ test('loadData returns isolated empty stores when storage is empty', () => {
     assert.equal(second.dailyCheckIns['2099-01-01'], undefined);
     assert.deepEqual(second.hiddenInterventions, []);
 });
+
+test('loadData includes default guided experience flow state', () => {
+    const loaded = storage.loadData();
+    assert.deepEqual(loaded.experienceFlow, {
+        hasCompletedInitialGuidedFlow: false,
+        lastGuidedEntryDate: null,
+        lastGuidedCompletedDate: null,
+        lastGuidedStatus: 'not_started',
+    });
+});

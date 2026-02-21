@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenJaw iOS Migration Plan</title>
+  <meta name="description" content="Planning document for converting the OpenJaw web dashboard into an iOS app using MVVM, manual DI, and test-first delivery." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink-900: #0d1b22;
+      --ink-700: #2c4a58;
+      --ink-500: #527382;
+      --paper-100: #f6f5f1;
+      --paper-200: #eeebe2;
+      --teal-500: #0f766e;
+      --teal-700: #115e59;
+      --amber-500: #d97706;
+      --red-500: #dc2626;
+      --line: #d6d2c7;
+      --card: #ffffff;
+      --radius: 16px;
+      --shadow: 0 18px 40px rgba(13, 27, 34, 0.12);
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink-900);
+      background:
+        radial-gradient(800px 500px at 85% -15%, rgba(15, 118, 110, 0.18), transparent 60%),
+        radial-gradient(640px 420px at -10% 15%, rgba(217, 119, 6, 0.15), transparent 58%),
+        linear-gradient(180deg, var(--paper-100), var(--paper-200));
+      font-family: "IBM Plex Sans", sans-serif;
+      line-height: 1.55;
+    }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .hero {
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 26px 24px;
+      box-shadow: var(--shadow);
+      animation: rise 480ms ease-out both;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    h1 { font-size: clamp(1.65rem, 3.3vw, 2.4rem); }
+    h2 { font-size: clamp(1.25rem, 2.4vw, 1.7rem); margin-top: 26px; }
+    h3 { font-size: 1.05rem; margin-top: 18px; }
+
+    p { margin: 0 0 12px; color: var(--ink-700); }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.84rem;
+      color: var(--ink-700);
+      background: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(13, 27, 34, 0.08);
+      animation: rise 520ms ease-out both;
+    }
+
+    .card:nth-child(2) { animation-delay: 60ms; }
+    .card:nth-child(3) { animation-delay: 120ms; }
+    .card:nth-child(4) { animation-delay: 180ms; }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--ink-700);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9em;
+      color: var(--teal-700);
+      background: #eef6f5;
+      padding: 1px 5px;
+      border-radius: 6px;
+    }
+
+    .architecture {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .layer {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .layer .label {
+      display: inline-block;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-500);
+      margin-bottom: 8px;
+    }
+
+    .flow {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--ink-500);
+    }
+
+    .phones {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .phone {
+      border: 1px solid #1f2937;
+      border-radius: 28px;
+      background: #0f172a;
+      padding: 10px;
+      color: #e5e7eb;
+      width: min(100%, 360px);
+      margin-inline: auto;
+      box-shadow: 0 18px 40px rgba(2, 6, 23, 0.35);
+      animation: rise 560ms ease-out both;
+    }
+
+    .phone:nth-child(1) { animation-delay: 30ms; }
+    .phone:nth-child(2) { animation-delay: 90ms; }
+    .phone:nth-child(3) { animation-delay: 150ms; }
+    .phone:nth-child(4) { animation-delay: 210ms; }
+
+    .screen {
+      position: relative;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #111827, #0b1220);
+      padding: 12px;
+      aspect-ratio: 393 / 852;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: #93c5fd;
+      margin-bottom: 8px;
+    }
+
+    .screen h4 {
+      margin: 4px 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.98rem;
+      color: #f8fafc;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      color: #cbd5e1;
+    }
+
+    .ring {
+      height: 90px;
+      border-radius: 14px;
+      border: 1px solid rgba(203, 213, 225, 0.2);
+      display: grid;
+      place-items: center;
+      margin-bottom: 10px;
+      background: radial-gradient(circle at center, rgba(15, 118, 110, 0.28), transparent 70%);
+    }
+
+    .ring strong { font-size: 1.25rem; color: #f8fafc; }
+
+    .bar {
+      height: 8px;
+      background: rgba(100, 116, 139, 0.35);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #0f766e, #14b8a6);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .mini-graph {
+      margin: 8px 0 10px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 6px;
+    }
+
+    .mini-graph svg {
+      width: 100%;
+      height: 110px;
+      display: block;
+    }
+
+    .mini-graph--large svg {
+      height: 148px;
+    }
+
+    .flow-progress {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .flow-progress span {
+      text-align: center;
+      font-size: 0.65rem;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      color: #94a3b8;
+      border-radius: 999px;
+      padding: 3px 4px;
+    }
+
+    .flow-progress span.active {
+      color: #ecfeff;
+      border-color: rgba(45, 212, 191, 0.6);
+      background: rgba(20, 184, 166, 0.2);
+    }
+
+    .flow-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .scroll-note {
+      font-size: 0.68rem;
+      color: #93c5fd;
+      margin-bottom: 6px;
+    }
+
+    .flow-cta {
+      text-align: center;
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #f8fafc;
+      border: 1px solid rgba(45, 212, 191, 0.55);
+      border-radius: 12px;
+      padding: 9px 8px;
+      background: linear-gradient(180deg, rgba(20, 184, 166, 0.3), rgba(15, 118, 110, 0.42));
+    }
+
+    .chatbar {
+      margin-top: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 0.68rem;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.82);
+    }
+
+    .profile-fab {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(226, 232, 240, 0.35);
+      background: linear-gradient(180deg, rgba(15, 118, 110, 0.9), rgba(17, 94, 89, 0.92));
+      color: #f8fafc;
+      display: grid;
+      place-items: center;
+      font-size: 0.8rem;
+      box-shadow: 0 8px 18px rgba(2, 6, 23, 0.35);
+    }
+
+    .tabbar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .tab {
+      text-align: center;
+      font-size: 0.68rem;
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      padding: 4px 6px;
+    }
+
+    .tab.active {
+      color: #f8fafc;
+      border-color: rgba(45, 212, 191, 0.55);
+      background: rgba(20, 184, 166, 0.22);
+    }
+
+    .tag-ok { color: #34d399; }
+    .tag-mid { color: #f59e0b; }
+    .tag-risk { color: #f87171; }
+
+    .phase {
+      margin-top: 16px;
+      border-top: 1px dashed var(--line);
+      padding-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .phase .step {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fffdfa;
+    }
+
+    .phase .step strong {
+      display: block;
+      margin-bottom: 6px;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .note {
+      margin-top: 16px;
+      border-left: 4px solid var(--amber-500);
+      padding: 10px 12px;
+      background: #fffbeb;
+      border-radius: 8px;
+      color: #6b4a08;
+      font-size: 0.9rem;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: 1fr; }
+      .architecture { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .phones { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+      .phase { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .wrap { padding: 20px 14px 48px; }
+      .phones { grid-template-columns: 1fr; }
+      .architecture { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>OpenJaw iOS Dashboard Plan</h1>
+      <p>Planning-only document for converting the web dashboard into a native iPhone app with <strong>MVVM</strong>, <strong>manual dependency injection</strong>, graph rendering parity, and an LLM enhancement workflow persisted to Supabase.</p>
+      <div class="meta">
+        <span class="pill">Status: Planning only</span>
+        <span class="pill">Architecture: MVVM + Use Cases + Repositories</span>
+        <span class="pill">DI: Manual composition root</span>
+        <span class="pill">Date: 2026-02-21</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Scope Translation (Web → iOS)</h2>
+        <ul>
+          <li>Keep core experience parity: defense check-ins, causal graph comprehension, and measurable evidence/effect tracking.</li>
+          <li>Use a two-mode UX: <strong>Guided Flow</strong> first (Outcomes → Situation → Inputs), then <strong>Explore Mode</strong> for free navigation and editing.</li>
+          <li>Guided Flow uses scroll-to-bottom CTAs with animated page transitions between steps to keep users focused on the sequence.</li>
+          <li>In Guided Flow, the app launches on <strong>Outcomes</strong>, then advances to <strong>Situation</strong> (graph), then <strong>Inputs</strong>.</li>
+          <li>Completing Inputs with <strong>Done</strong> exits flow mode and unlocks Explore Mode (tabbed navigation + deeper tooling).</li>
+          <li>Add a floating profile avatar affordance for settings, account, and sign-out from every screen.</li>
+          <li>Support LLM interactions across all entities: inputs, links, graph nodes, outcomes, and global plan synthesis.</li>
+          <li>In Explore Mode, expose contextual long-press actions and a persistent chat bar for model changes and evidence questions.</li>
+          <li>All AI changes must go through approved, typed tools; no free-form writes.</li>
+          <li>AI can customize user data structures only (outcomes/habits/graph/evidence/tracking), never app source code or runtime binaries.</li>
+          <li>Persist accepted enhancements back to <code>public.user_data</code> so web and iOS stay in sync.</li>
+          <li>Default daily journey remains: <strong>Outcomes → Situation → Inputs</strong> (what changed, why it changed, what to do next).</li>
+          <li>Preserve score semantics from existing JS logic before optimization or re-design.</li>
+          <li>Favor native interaction patterns for iPhone while keeping underlying model behavior consistent.</li>
+          <li>Accessibility first: all critical outcomes available via VoiceOver-readable text and announcements.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Guardrails from Repo Docs</h2>
+        <ul>
+          <li><code>docs/text-first-collaboration.md</code>: text-first verification paths.</li>
+          <li><code>docs/pr-checklist.md</code>: evidence-driven PR criteria.</li>
+          <li><code>docs/pr-notes/AGENTS.md</code>: append-only QA and ops notes.</li>
+          <li><code>ios/AGENTS.md</code>: iOS standards, VoiceOver baseline, test expectations.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Target Architecture</h2>
+      <div class="architecture">
+        <div class="layer">
+          <span class="label">App Layer</span>
+          <p><strong>Composition Root</strong><br>Build dependencies once in <code>AppContainer</code> and inject into features.</p>
+        </div>
+        <div class="layer">
+          <span class="label">Presentation</span>
+          <p><strong>SwiftUI + ViewModels</strong><br><code>GuidedFlowPager</code> + <code>ExploreTabShell</code> render state only; ViewModels own intents and transitions.</p>
+        </div>
+        <div class="layer">
+          <span class="label">Domain</span>
+          <p><strong>Use Cases</strong><br>Check-ins, shield score computation, graph transforms, outcomes evidence, sync conflict policy.</p>
+        </div>
+        <div class="layer">
+          <span class="label">Data</span>
+          <p><strong>Repositories</strong><br>Local store + Supabase gateway; deterministic mapping from <code>user_data</code> JSON to typed models.</p>
+        </div>
+        <div class="layer">
+          <span class="label">AI Services</span>
+          <p><strong>LLM Gateway + Tool Router</strong><br>Typed prompt builders + allowlisted tool calls + patch validators for entity-level enhancement.</p>
+        </div>
+      </div>
+      <p class="flow"><strong>Flow:</strong> AppCoordinator → ModeState(<code>guided</code>/<code>explore</code>) → Feature View → ViewModel → UseCase → Repository → Data Source (local/remote) → ViewModel state publish.</p>
+      <h3>Manual DI (initial)</h3>
+      <p>Start with manual construction, no framework:</p>
+      <p><code>AppContainer</code> creates <code>SupabaseClient</code>, <code>UserDataRepository</code>, <code>LLMEnhancementClient</code>, flow coordinators, and feature use cases; each screen receives its ViewModel via initializer injection.</p>
+    </section>
+
+    <section class="card">
+      <h2>User Flow Model (Guided → Explore)</h2>
+      <ol>
+        <li><strong>Step 1: Outcomes (Guided)</strong> user starts with measurable changes and context since last check-in.</li>
+        <li><strong>Bottom CTA:</strong> at the end of the Outcomes view, user taps a large button (<code>Go to Situation</code>) to animate to the next page.</li>
+        <li><strong>Step 2: Situation (Guided)</strong> user inspects the live graph to see key links and problem clusters.</li>
+        <li><strong>Bottom CTA:</strong> at the end of Situation, user taps <code>What can I do?</code> to animate to Inputs.</li>
+        <li><strong>Step 3: Inputs (Guided)</strong> user checks planned actions and adjustments.</li>
+        <li><strong>Exit flow:</strong> user taps <code>Done</code>; app transitions from guided mode to Explore Mode.</li>
+        <li><strong>Explore Mode:</strong> tabs and free navigation are enabled; long-press + chat actions allow deeper analysis and customization.</li>
+      </ol>
+      <p><strong>State model:</strong> <code>guided.outcomes</code> → <code>guided.situation</code> → <code>guided.inputs</code> → <code>explore</code>.</p>
+    </section>
+
+    <section class="card">
+      <h2>Situation Tab Graph Rendering Strategy (iOS)</h2>
+      <ul>
+        <li><strong>Primary recommendation:</strong> embed <code>Cytoscape.js</code> in a <code>WKWebView</code> with a thin Swift bridge to preserve web graph behavior quickly.</li>
+        <li><strong>Primary UI surface:</strong> the Situation tab centers on the interactive graph canvas (not a list-first layout).</li>
+        <li><strong>Bridge contract:</strong> Swift sends typed graph payload + display flags; JS emits typed events (<code>nodeSelected</code>, <code>edgeSelected</code>, <code>viewportChanged</code>).</li>
+        <li><strong>Style parity:</strong> keep node tiers, edge semantics, and defense color rules aligned with web.</li>
+        <li><strong>Future path:</strong> evaluate fully native renderer only after parity and performance criteria are met.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>AI Action System + Supabase Persistence</h2>
+      <ul>
+        <li>Guided mode stays focused on completion; advanced edits are intentionally deferred until Explore Mode.</li>
+        <li>Explore Mode exposes a persistent chat bar and contextual long-press actions (improve input, explain links, refine nodes, interpret outcomes).</li>
+        <li>The model never mutates app code; it can only request allowlisted data tools with typed arguments.</li>
+        <li>Each approved tool emits a typed patch preview; user accepts/rejects before persistence.</li>
+        <li>Accepted patches persist only to <code>public.user_data.data</code> through the shared sync pipeline.</li>
+        <li>Because web and iOS read/write the same per-user document, accepted enhancements appear across platforms after hydration.</li>
+        <li>Product intent: ship a strong starting model, then let users co-create and evolve habits, graph links, outcomes, and tracking dimensions over time.</li>
+      </ul>
+      <h3>Allowlisted AI Tools (v1)</h3>
+      <p><code>addOutcomeMetric</code>, <code>updateOutcomeMetric</code>, <code>addHabit</code>, <code>updateHabit</code>, <code>addGraphNode</code>, <code>updateGraphNode</code>, <code>addGraphEdge</code>, <code>updateGraphEdge</code>, <code>attachEvidence</code>, <code>removeEvidence</code>, <code>addTrackingDimension</code>, <code>updateTrackingDimension</code></p>
+      <h3>Hard Guardrails</h3>
+      <ul>
+        <li>No app code edits, build setting edits, schema migrations, or deployment actions from the in-app AI path.</li>
+        <li>No writes outside the authenticated user document; RLS remains enforced.</li>
+        <li>No untyped/free-form JSON replacement of the full document; only bounded patch operations.</li>
+        <li>Destructive actions (delete/archive) require explicit user confirmation in the patch review.</li>
+      </ul>
+      <h3>Patch Types (initial)</h3>
+      <p><code>InputPatch</code>, <code>GraphNodePatch</code>, <code>GraphEdgePatch</code>, <code>OutcomeMetricPatch</code>, <code>EvidencePatch</code>, <code>TrackingDimensionPatch</code>, <code>GlobalNarrativePatch</code></p>
+    </section>
+
+    <section class="card">
+      <h2>Testing Strategy</h2>
+      <ul>
+        <li><strong>Unit tests:</strong> ViewModels (state transitions, loading/error states), use cases (score math + edge cases), mapping/parsing.</li>
+        <li><strong>Repository tests:</strong> verify local+remote merge behavior and conflict resolution with fake clients.</li>
+        <li><strong>UI tests:</strong> guided sequence (Outcomes → Situation → Inputs), CTA handoff rules, animated transitions, and Done switch into Explore Mode.</li>
+        <li><strong>UI tests:</strong> Explore Mode navigation, graph drill-in, outcomes readouts, and profile/settings/sign-out entry flow.</li>
+        <li><strong>LLM contract tests:</strong> validate request/response schema, mode gating, allowlisted tool routing, patch safety guards, and rejection of malformed model output.</li>
+        <li><strong>Policy tests:</strong> block attempts to mutate code/deployment/schema fields from AI pathways; allow only data-level tool operations.</li>
+        <li><strong>Cross-platform sync tests:</strong> assert accepted iOS patches materialize in shared Supabase data and remain web-compatible.</li>
+        <li><strong>Accessibility checks:</strong> explicit VoiceOver reading order coverage for primary flows.</li>
+        <li><strong>PR evidence:</strong> write setup/test/qa/ops notes under <code>docs/pr-notes/*</code> with timestamped files.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>iPhone Flow Mock-Ups (Guided Journey + Explore Mode)</h2>
+      <p>Storyboard-first concept. Frames are scaled to approximate iPhone proportions (393×852 ratio).</p>
+      <div class="phones">
+        <article class="phone">
+          <div class="screen">
+            <div class="status"><span>9:41</span><span>5G ▮▮▮</span></div>
+            <button class="profile-fab" aria-label="Open profile and settings">👤</button>
+            <h4>Guided Flow: Step 1/3 Outcomes</h4>
+            <div class="flow-progress">
+              <span class="active">Outcomes</span>
+              <span>Situation</span>
+              <span>Inputs</span>
+            </div>
+            <div class="chip-row">
+              <span class="chip">Mode: Guided</span>
+              <span class="chip">Last 7 days</span>
+            </div>
+            <div class="ring"><strong>38</strong></div>
+            <div class="row"><span>RMMA burden trend</span><span class="tag-ok">-11%</span></div>
+            <div class="bar"><span style="width: 66%"></span></div>
+            <div class="row"><span>Top contributor</span><span class="tag-mid">Reflux pathway</span></div>
+            <div class="row"><span>Confidence</span><span class="tag-mid">Moderate</span></div>
+            <div class="flow-footer">
+              <div class="scroll-note">Scroll to bottom, then continue</div>
+              <div class="flow-cta">Go to Situation</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="phone">
+          <div class="screen">
+            <div class="status"><span>9:41</span><span>Wi-Fi ▮▮▮</span></div>
+            <button class="profile-fab" aria-label="Open profile and settings">👤</button>
+            <h4>Guided Flow: Step 2/3 Situation</h4>
+            <div class="flow-progress">
+              <span>Outcomes</span>
+              <span class="active">Situation</span>
+              <span>Inputs</span>
+            </div>
+            <div class="chip-row">
+              <span class="chip">Node: RMMA</span>
+              <span class="chip">Tier 7</span>
+            </div>
+            <div class="mini-graph mini-graph--large" aria-label="Situation graph preview">
+              <svg viewBox="0 0 240 110" role="img">
+                <line x1="30" y1="80" x2="95" y2="55" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="95" y1="55" x2="160" y2="42" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="160" y1="42" x2="212" y2="26" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="95" y1="55" x2="150" y2="82" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>
+                <circle cx="30" cy="80" r="9" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+                <circle cx="95" cy="55" r="10" fill="#1f2937" stroke="#f59e0b" stroke-width="2"/>
+                <circle cx="160" cy="42" r="10" fill="#1f2937" stroke="#f59e0b" stroke-width="2"/>
+                <circle cx="212" cy="26" r="11" fill="#1f2937" stroke="#ef4444" stroke-width="2"/>
+                <circle cx="150" cy="82" r="9" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+                <text x="22" y="97" font-size="8" fill="#cbd5e1">Stress</text>
+                <text x="85" y="71" font-size="8" fill="#cbd5e1">Micro</text>
+                <text x="149" y="58" font-size="8" fill="#cbd5e1">RMMA</text>
+                <text x="202" y="42" font-size="8" fill="#cbd5e1">Pain</text>
+              </svg>
+            </div>
+            <div class="row"><span>Visible problems</span><span class="tag-risk">3 hotspots</span></div>
+            <div class="row"><span>Top source</span><span>Reflux pathway</span></div>
+            <div class="flow-footer">
+              <div class="scroll-note">Review links, then continue</div>
+              <div class="flow-cta">What can I do?</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="phone">
+          <div class="screen">
+            <div class="status"><span>9:41</span><span>5G ▮▮▮</span></div>
+            <button class="profile-fab" aria-label="Open profile and settings">👤</button>
+            <h4>Guided Flow: Step 3/3 Inputs</h4>
+            <div class="flow-progress">
+              <span>Outcomes</span>
+              <span>Situation</span>
+              <span class="active">Inputs</span>
+            </div>
+            <div class="chip-row">
+              <span class="chip">Mode: Guided</span>
+              <span class="chip">Today</span>
+            </div>
+            <div class="row"><span>PPI</span><span class="tag-ok">Checked</span></div>
+            <div class="bar"><span style="width: 90%"></span></div>
+            <div class="row"><span>Reflux Diet</span><span class="tag-ok">Checked</span></div>
+            <div class="bar"><span style="width: 76%"></span></div>
+            <div class="row"><span>Bed Elevation</span><span class="tag-mid">1/7</span></div>
+            <div class="bar"><span style="width: 30%"></span></div>
+            <div class="row"><span>Planned edits</span><span>None in guided mode</span></div>
+            <div class="flow-footer">
+              <div class="scroll-note">Finish this cycle to unlock full controls</div>
+              <div class="flow-cta">Done</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="phone">
+          <div class="screen">
+            <div class="status"><span>9:42</span><span>Wi-Fi ▮▮▮</span></div>
+            <button class="profile-fab" aria-label="Open profile and settings">👤</button>
+            <h4>Explore Mode: Situation + AI</h4>
+            <div class="chip-row">
+              <span class="chip">Mode: Explore</span>
+              <span class="chip">Customizable</span>
+            </div>
+            <div class="mini-graph" aria-label="Situation graph preview">
+              <svg viewBox="0 0 240 110" role="img">
+                <line x1="30" y1="80" x2="95" y2="55" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="95" y1="55" x2="160" y2="42" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="160" y1="42" x2="212" y2="26" stroke="#38bdf8" stroke-width="2"/>
+                <line x1="95" y1="55" x2="150" y2="82" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>
+                <circle cx="30" cy="80" r="9" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+                <circle cx="95" cy="55" r="10" fill="#1f2937" stroke="#f59e0b" stroke-width="2"/>
+                <circle cx="160" cy="42" r="10" fill="#1f2937" stroke="#f59e0b" stroke-width="2"/>
+                <circle cx="212" cy="26" r="11" fill="#1f2937" stroke="#ef4444" stroke-width="2"/>
+                <circle cx="150" cy="82" r="9" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+                <text x="20" y="97" font-size="8" fill="#cbd5e1">Stress</text>
+                <text x="84" y="71" font-size="8" fill="#cbd5e1">Micro</text>
+                <text x="149" y="58" font-size="8" fill="#cbd5e1">RMMA</text>
+                <text x="201" y="42" font-size="8" fill="#cbd5e1">Pain</text>
+              </svg>
+            </div>
+            <div class="row"><span>Long-press node</span><span>Modify with AI</span></div>
+            <div class="row"><span>Evidence review</span><span>Show mechanism links</span></div>
+            <div class="row"><span>Add habit</span><span>Create + connect to node</span></div>
+            <div class="tabbar">
+              <span class="tab">Outcomes</span>
+              <span class="tab active">Situation</span>
+              <span class="tab">Inputs</span>
+            </div>
+            <div class="chatbar">Ask anything: "Is this habit evidence-backed?" "Add magnesium check-in." "Create outcome metric for morning jaw pain." (AI uses approved data tools only)</div>
+          </div>
+        </article>
+      </div>
+
+      <div class="phase">
+        <div class="step">
+          <strong>Phase 1: Foundation</strong>
+          Define models, repositories, use cases, and ViewModel contracts. Bring over scoring behavior with parity tests.
+        </div>
+        <div class="step">
+          <strong>Phase 2: Guided Flow</strong>
+          Build Outcomes → Situation → Inputs flow screens with bottom CTA progression, animated transitions, and Done handoff into Explore Mode.
+        </div>
+        <div class="step">
+          <strong>Phase 3: Explore + Hardening</strong>
+          Add free navigation tabs, persistent AI chat actions, sync diagnostics, conflict handling, patch safety checks, and full test evidence.
+        </div>
+      </div>
+
+      <div class="note">
+        This document is intentionally planning-only. No Swift source, target configuration, or runtime logic has been changed.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

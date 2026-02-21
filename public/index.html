@@ -31,6 +31,20 @@
 
     <!-- Main App -->
     <div id="app" class="hidden">
+        <div id="guided-resume-banner" class="guided-resume-banner hidden" role="status" aria-live="polite">
+            <p>Guided flow was interrupted. You can continue anytime.</p>
+            <button id="continue-guided-btn" class="guided-inline-btn" type="button">Continue Guided Flow</button>
+        </div>
+
+        <section id="guided-flow-shell" class="guided-flow-shell hidden" aria-live="polite" aria-label="Guided flow status">
+            <div class="guided-flow-shell-head">
+                <span id="guided-step-indicator" class="guided-step-indicator">Step 1 of 3</span>
+                <button id="guided-open-explore-btn" class="guided-inline-btn" type="button">Open Explore</button>
+            </div>
+            <h2 id="guided-step-title">Outcomes</h2>
+            <p id="guided-step-description"></p>
+        </section>
+
         <!-- Sidebar + Graph Grid -->
         <div id="graph-layout" class="graph-layout">
             <div id="defense-checkin" class="defense-sidebar"></div>
@@ -40,6 +54,10 @@
                 </div>
             </div>
             <div id="activity-feed-panel" class="activity-sidebar"></div>
+        </div>
+
+        <div id="guided-cta-wrap" class="guided-cta-wrap hidden">
+            <button id="guided-next-btn" class="guided-next-btn" type="button">Go to Graph</button>
         </div>
 
         <!-- Data Management Modal -->
@@ -73,6 +91,7 @@
         <footer>
             <p class="disclaimer" id="disclaimer"></p>
             <div class="footer-buttons">
+                <button id="restart-guided-flow-btn" class="footer-data-btn" title="Restart guided flow">Run Flow</button>
                 <button id="data-management-btn" class="footer-data-btn" title="Export/Import Data">Data</button>
                 <button id="sign-out-btn" class="footer-data-btn" title="Sign Out">Sign Out</button>
             </div>

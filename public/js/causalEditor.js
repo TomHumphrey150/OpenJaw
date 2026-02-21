@@ -42,6 +42,9 @@ let showDefenseMode = true;    // Defense heatmap mode active by default
 let pinnedInterventions = new Set(); // Pinned intervention node IDs for highlight persistence
 let pinnedNode = null;  // Currently pinned regular node ID (only one at a time)
 let _checkinFilterNodeId = null;  // node ID to filter check-in panel by (null = show all)
+const EXPERIENCE_FLOW_STATE_EVENT = 'openjaw:experience-flow-state';
+let _flowStateListenerBound = false;
+let _flowStateRenderTimeout = null;
 
 // Cytoscape instance tracking (container ID string → cy instance)
 const cyInstances = new Map();
@@ -95,6 +98,37 @@ function showToastNotification(message, cssClass = '', { html = false, duration 
     }, duration);
 }
 
+function getGuidedStep() {
+    const app = runtimeDocument?.getElementById('app');
+    if (!app || !app.dataset) return null;
+    if (app.dataset.activeMode !== 'guided') return null;
+    return app.dataset.guidedStep || null;
+}
+
+function isGuidedOutcomesStep() {
+    return getGuidedStep() === 'outcomes';
+}
+
+function advanceGuidedFlow() {
+    const nextBtn = runtimeDocument?.getElementById('guided-next-btn');
+    if (!nextBtn) return false;
+    nextBtn.click();
+    return true;
+}
+
+function bindExperienceFlowBridge() {
+    if (!runtimeWindow || _flowStateListenerBound) return;
+    runtimeWindow.addEventListener(EXPERIENCE_FLOW_STATE_EVENT, () => {
+        if (!currentGraphData) return;
+        if (_flowStateRenderTimeout) clearTimeout(_flowStateRenderTimeout);
+        _flowStateRenderTimeout = setTimeout(() => {
+            _flowStateRenderTimeout = null;
+            reRenderGraphs();
+        }, 20);
+    });
+    _flowStateListenerBound = true;
+}
+
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
@@ -110,6 +144,8 @@ export function initCausalEditor(interventions) {
     } else {
         currentGraphData = structuredClone(DEFAULT_GRAPH_DATA);
     }
+
+    bindExperienceFlowBridge();
 
     // Initialize all graph containers
     GRAPH_CONFIGS.forEach(config => {
@@ -1105,6 +1141,8 @@ function buildRealityFeedbackHtml({
     morningState = {},
     habitStatusCounts = {},
 } = {}) {
+    const guidedOutcomesStep = isGuidedOutcomesStep();
+    const saveButtonLabel = guidedOutcomesStep ? 'Save and go to Situation' : 'Save + Recompute';
     const objectiveRateValue = nightOutcome.microArousalRatePerHour ?? '';
     const objectiveCountValue = nightOutcome.microArousalCount ?? '';
     const objectiveConfidenceValue = nightOutcome.confidence ?? '';
@@ -1168,8 +1206,10 @@ function buildRealityFeedbackHtml({
     });
     html += `</div>`;
     html += `<div class="defense-protocol-actions">`;
-    html += `<button class="defense-protocol-btn" data-action="save-protocol">Save + Recompute</button>`;
-    html += `<button class="defense-protocol-btn subtle" data-action="recompute-only">Recompute only</button>`;
+    html += `<button class="defense-protocol-btn" data-action="save-protocol">${saveButtonLabel}</button>`;
+    if (!guidedOutcomesStep) {
+        html += `<button class="defense-protocol-btn subtle" data-action="recompute-only">Recompute only</button>`;
+    }
     html += `</div>`;
     html += `<div class="defense-protocol-summary">`;
     html += `<span class="defense-protocol-chip helpful">${habitStatusCounts.helpful || 0} helpful</span>`;
@@ -1205,6 +1245,7 @@ function wireRealityFeedbackHandlers(host, { dateKey, graphData }) {
     const saveProtocolBtn = host.querySelector('[data-action="save-protocol"]');
     if (saveProtocolBtn) {
         saveProtocolBtn.addEventListener('click', () => {
+            const guidedOutcomesStep = isGuidedOutcomesStep();
             const microRate = parseOptionalNumber(host.querySelector('[data-field="micro-rate"]')?.value, { min: 0 });
             const microCount = parseOptionalNumber(host.querySelector('[data-field="micro-count"]')?.value, { min: 0, integer: true });
             const microConfidence = parseOptionalNumber(host.querySelector('[data-field="micro-confidence"]')?.value, { min: 0, max: 1 });
@@ -1258,6 +1299,9 @@ function wireRealityFeedbackHandlers(host, { dateKey, graphData }) {
                 '',
                 { duration: 2200 }
             );
+            if (guidedOutcomesStep && advanceGuidedFlow()) {
+                return;
+            }
             buildCheckinPanel(graphData);
             if (showDefenseMode) reRenderGraphs();
         });

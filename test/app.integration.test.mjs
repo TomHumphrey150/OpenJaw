@@ -87,6 +87,18 @@ test('init hydrates storage for the authenticated user before rendering', async 
 
     let storageHydrated = 0;
     let graphInitialized = 0;
+    let guidedFlowInitialized = 0;
+    const storageApi = {
+        initStorageForUser: async (args) => {
+            storageHydrated += 1;
+            assert.equal(args.userId, 'user-42');
+            assert.deepEqual(args.supabaseClient, { fake: true });
+        },
+        downloadExport: () => {},
+        importData: () => ({ success: true }),
+        clearData: () => {},
+        flushRemoteSync: async () => {},
+    };
 
     await init({
         documentObj,
@@ -105,20 +117,16 @@ test('init hydrates storage for the authenticated user before rendering', async 
             return { ok: true, async json() { return { disclaimer: 'ok' }; } };
         },
         initCausalEditorFn: () => { graphInitialized += 1; },
-        storageApi: {
-            initStorageForUser: async (args) => {
-                storageHydrated += 1;
-                assert.equal(args.userId, 'user-42');
-                assert.deepEqual(args.supabaseClient, { fake: true });
-            },
-            downloadExport: () => {},
-            importData: () => ({ success: true }),
-            clearData: () => {},
-            flushRemoteSync: async () => {},
+        initExperienceFlowFn: ({ storageApi: suppliedStorageApi, documentObj: suppliedDocument }) => {
+            guidedFlowInitialized += 1;
+            assert.equal(suppliedStorageApi, storageApi);
+            assert.equal(suppliedDocument, documentObj);
         },
+        storageApi,
         confirmFn: () => false,
     });
 
     assert.equal(storageHydrated, 1);
     assert.equal(graphInitialized, 1);
+    assert.equal(guidedFlowInitialized, 1);
 });

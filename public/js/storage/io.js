@@ -33,6 +33,7 @@ export function importData(jsonString) {
             hiddenInterventions: Array.isArray(data.hiddenInterventions) ? data.hiddenInterventions : [],
             unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
             customCausalDiagram: data.customCausalDiagram || undefined,
+            experienceFlow: data.experienceFlow,
         };
 
         saveData(validated);

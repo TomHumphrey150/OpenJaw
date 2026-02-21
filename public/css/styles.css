@@ -2916,3 +2916,244 @@ footer {
 .toast-level-up {
     border-color: #22c55e;
 }
+
+/* ============================================
+   Guided First-Arrival Flow
+   ============================================ */
+.guided-resume-banner {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(79, 195, 247, 0.45);
+    border-radius: 10px;
+    background: rgba(79, 195, 247, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.guided-resume-banner p {
+    margin: 0;
+    font-size: 13px;
+    color: #dbeafe;
+}
+
+.guided-flow-shell {
+    margin: 12px 0;
+    padding: 14px 16px;
+    border: 1px solid rgba(129, 199, 132, 0.35);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.guided-flow-shell h2 {
+    margin: 0 0 4px;
+    font-size: 19px;
+    line-height: 1.2;
+}
+
+.guided-flow-shell p {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+.guided-flow-shell-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.guided-step-indicator {
+    font-size: 12px;
+    font-weight: 700;
+    color: #93c5fd;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.guided-inline-btn,
+.guided-next-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.guided-inline-btn {
+    padding: 7px 12px;
+}
+
+.guided-inline-btn:hover,
+.guided-next-btn:hover {
+    border-color: rgba(129, 199, 132, 0.75);
+    background: rgba(129, 199, 132, 0.15);
+}
+
+.guided-cta-wrap {
+    position: sticky;
+    bottom: 8px;
+    margin-top: 12px;
+    z-index: 30;
+    display: flex;
+    justify-content: center;
+}
+
+.guided-next-btn {
+    min-width: 220px;
+    padding: 12px 18px;
+}
+
+#app.mode-explore .guided-resume-banner.hidden {
+    display: none;
+}
+
+#app.mode-guided {
+    --guided-stage-width: 760px;
+}
+
+#app.mode-guided.guided-step-situation {
+    --guided-stage-width: 1120px;
+}
+
+#app.mode-guided .guided-resume-banner,
+#app.mode-guided .guided-flow-shell,
+#app.mode-guided .guided-cta-wrap {
+    width: min(100%, var(--guided-stage-width));
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#app.mode-guided #restart-guided-flow-btn {
+    display: none;
+}
+
+#app.mode-guided #graph-layout {
+    width: min(100%, var(--guided-stage-width));
+    margin-left: auto;
+    margin-right: auto;
+    min-height: calc(100vh - 250px);
+    transition: opacity 0.2s ease;
+}
+
+#app.mode-guided #graph-layout.guided-transition {
+    animation: guided-step-slide 0.28s ease;
+}
+
+@keyframes guided-step-slide {
+    from {
+        opacity: 0.4;
+        transform: translateX(26px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#app.mode-guided.guided-step-outcomes #graph-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#app.mode-guided.guided-step-outcomes .graph-main,
+#app.mode-guided.guided-step-outcomes #defense-checkin {
+    display: none;
+}
+
+#app.mode-guided.guided-step-outcomes #activity-feed-panel {
+    position: static;
+    height: auto;
+    max-height: none;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+}
+
+#app.mode-guided.guided-step-outcomes #activity-feed-panel .reality-feedback-host {
+    padding-top: 0;
+    margin: 0 auto;
+    max-width: 680px;
+}
+
+#app.mode-guided.guided-step-outcomes #activity-feed-panel .activity-feed-list {
+    display: none;
+}
+
+#app.mode-guided.guided-step-outcomes #activity-feed-panel .defense-protocol-card {
+    margin-top: 0;
+    padding: 14px;
+}
+
+#app.mode-guided.guided-step-situation #graph-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#app.mode-guided.guided-step-situation #defense-checkin,
+#app.mode-guided.guided-step-situation #activity-feed-panel {
+    display: none;
+}
+
+#app.mode-guided.guided-step-situation .graph-main {
+    min-height: calc(100vh - 300px);
+}
+
+#app.mode-guided.guided-step-situation .graph-main .causal-graph-container {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 1120px;
+    padding: 12px;
+}
+
+#app.mode-guided.guided-step-inputs #graph-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#app.mode-guided.guided-step-inputs .graph-main,
+#app.mode-guided.guided-step-inputs #activity-feed-panel {
+    display: none;
+}
+
+#app.mode-guided.guided-step-inputs #defense-checkin {
+    position: static;
+    align-self: stretch;
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    border: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 100%;
+}
+
+#app.mode-guided.guided-step-inputs #defense-checkin .defense-sidebar-header {
+    position: static;
+}
+
+@media (max-width: 900px) {
+    .guided-flow-shell-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .guided-resume-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .guided-cta-wrap {
+        bottom: 0;
+        margin-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .guided-next-btn {
+        width: 100%;
+    }
+}
