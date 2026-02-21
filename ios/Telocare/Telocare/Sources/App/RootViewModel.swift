@@ -146,11 +146,19 @@ final class RootViewModel: ObservableObject {
 
         do {
             let fetchedDocument = try await userDataRepository.fetch(userID: session.userID)
-            let document = withCanonicalGraphIfMissing(fetchedDocument)
+            let firstPartyContent = await loadFirstPartyContent()
+            let fallbackGraph = firstPartyContent.graphData ?? CanonicalGraphLoader.loadGraphOrFallback()
+            let document = withCanonicalGraphIfMissing(fetchedDocument, fallbackGraph: fallbackGraph)
             backfillCanonicalGraphIfMissing(from: fetchedDocument, using: document)
 
-            let snapshot = snapshotBuilder.build(from: document)
-            let graphData = snapshotBuilder.graphData(from: document)
+            let snapshot = snapshotBuilder.build(
+                from: document,
+                firstPartyContent: firstPartyContent
+            )
+            let graphData = snapshotBuilder.graphData(
+                from: document,
+                fallbackGraph: fallbackGraph
+            )
             let repository = userDataRepository
             dashboardViewModel = AppViewModel(
                 snapshot: snapshot,
@@ -159,6 +167,16 @@ final class RootViewModel: ObservableObject {
                 persistExperienceFlow: { updatedFlow in
                     Task.detached {
                         let patch = UserDataPatch.experienceFlow(updatedFlow)
+                        do {
+                            _ = try await repository.upsertUserDataPatch(patch)
+                        } catch {
+                        }
+                    }
+                },
+                initialMorningStates: document.morningStates,
+                persistMorningStates: { updatedMorningStates in
+                    Task.detached {
+                        let patch = UserDataPatch.morningStates(updatedMorningStates)
                         do {
                             _ = try await repository.upsertUserDataPatch(patch)
                         } catch {
@@ -177,15 +195,17 @@ final class RootViewModel: ObservableObject {
         }
     }
 
-    private func withCanonicalGraphIfMissing(_ document: UserDataDocument) -> UserDataDocument {
+    private func withCanonicalGraphIfMissing(
+        _ document: UserDataDocument,
+        fallbackGraph: CausalGraphData
+    ) -> UserDataDocument {
         guard document.customCausalDiagram == nil else {
             return document
         }
 
-        let canonicalGraph = CanonicalGraphLoader.loadGraphOrFallback()
         let lastModified = Self.timestampNow()
         let canonicalDiagram = CustomCausalDiagram(
-            graphData: canonicalGraph,
+            graphData: fallbackGraph,
             lastModified: lastModified
         )
 
@@ -215,6 +235,14 @@ final class RootViewModel: ObservableObject {
 
     nonisolated private static func timestampNow() -> String {
         ISO8601DateFormatter().string(from: Date())
+    }
+
+    private func loadFirstPartyContent() async -> FirstPartyContentBundle {
+        do {
+            return try await userDataRepository.fetchFirstPartyContent()
+        } catch {
+            return .empty
+        }
     }
 
     private func resetToAuthState() {

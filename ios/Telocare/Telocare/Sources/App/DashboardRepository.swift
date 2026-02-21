@@ -28,6 +28,7 @@ struct InMemoryDashboardRepository: DashboardRepository {
                     source: "wearable"
                 ),
             ],
+            outcomesMetadata: .empty,
             situation: SituationSummary(
                 focusedNode: "RMMA",
                 tier: "Tier 7",
@@ -42,7 +43,12 @@ struct InMemoryDashboardRepository: DashboardRepository {
                     completion: 0.90,
                     isCheckedToday: true,
                     classificationText: "Helpful",
-                    isHidden: false
+                    isHidden: false,
+                    evidenceLevel: nil,
+                    evidenceSummary: nil,
+                    detailedDescription: nil,
+                    citationIDs: [],
+                    externalLink: nil
                 ),
                 InputStatus(
                     id: "reflux_diet",
@@ -51,7 +57,12 @@ struct InMemoryDashboardRepository: DashboardRepository {
                     completion: 0.76,
                     isCheckedToday: true,
                     classificationText: nil,
-                    isHidden: false
+                    isHidden: false,
+                    evidenceLevel: nil,
+                    evidenceSummary: nil,
+                    detailedDescription: nil,
+                    citationIDs: [],
+                    externalLink: nil
                 ),
                 InputStatus(
                     id: "bed_elevation",
@@ -60,7 +71,12 @@ struct InMemoryDashboardRepository: DashboardRepository {
                     completion: 0.30,
                     isCheckedToday: false,
                     classificationText: nil,
-                    isHidden: false
+                    isHidden: false,
+                    evidenceLevel: nil,
+                    evidenceSummary: nil,
+                    detailedDescription: nil,
+                    citationIDs: [],
+                    externalLink: nil
                 ),
             ]
         )

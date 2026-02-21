@@ -9,7 +9,13 @@ struct GraphDisplayFlags: Codable, Equatable {
 enum GraphEvent: Equatable {
     case graphReady
     case nodeSelected(id: String, label: String)
-    case edgeSelected(source: String, target: String, label: String?)
+    case edgeSelected(
+        sourceID: String,
+        targetID: String,
+        sourceLabel: String,
+        targetLabel: String,
+        label: String?
+    )
     case viewportChanged(zoom: Double)
     case renderError(message: String)
 }

@@ -12,11 +12,14 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var graphDisplayFlags: GraphDisplayFlags
     @Published private(set) var focusedNodeID: String?
     @Published private(set) var graphSelectionText: String
+    @Published private(set) var morningOutcomeSelection: MorningOutcomeSelection
     @Published var chatDraft: String
 
     private var experienceFlow: ExperienceFlow
+    private var morningStates: [MorningState]
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistExperienceFlowUpdate: (ExperienceFlow) -> Void
+    private let persistMorningStatesUpdate: ([MorningState]) -> Void
     private let nowProvider: () -> Date
 
     convenience init(
@@ -28,6 +31,8 @@ final class AppViewModel: ObservableObject {
             graphData: CanonicalGraphLoader.loadGraphOrFallback(),
             initialExperienceFlow: .empty,
             persistExperienceFlow: { _ in },
+            initialMorningStates: [],
+            persistMorningStates: { _ in },
             accessibilityAnnouncer: accessibilityAnnouncer
         )
     }
@@ -37,17 +42,18 @@ final class AppViewModel: ObservableObject {
         graphData: CausalGraphData,
         initialExperienceFlow: ExperienceFlow = .empty,
         persistExperienceFlow: @escaping (ExperienceFlow) -> Void = { _ in },
+        initialMorningStates: [MorningState] = [],
+        persistMorningStates: @escaping ([MorningState]) -> Void = { _ in },
         nowProvider: @escaping () -> Date = Date.init,
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
         let todayKey = Self.localDateKey(from: nowProvider())
-        let shouldGuide = Self.shouldEnterGuidedFlow(on: todayKey, flow: initialExperienceFlow)
 
-        mode = shouldGuide ? .guided : .explore
+        mode = .explore
         guidedStep = .outcomes
         self.snapshot = snapshot
         isProfileSheetPresented = false
-        selectedExploreTab = .situation
+        selectedExploreTab = .inputs
         exploreFeedback = "AI chat backend is not connected yet."
         self.graphData = graphData
         graphDisplayFlags = GraphDisplayFlags(
@@ -57,15 +63,14 @@ final class AppViewModel: ObservableObject {
         )
         focusedNodeID = Self.resolveNodeID(from: graphData, focusedNodeLabel: snapshot.situation.focusedNode)
         graphSelectionText = "Graph ready."
+        morningOutcomeSelection = Self.morningOutcomeSelection(for: todayKey, from: initialMorningStates)
         chatDraft = ""
         experienceFlow = initialExperienceFlow
+        morningStates = initialMorningStates
         persistExperienceFlowUpdate = persistExperienceFlow
+        persistMorningStatesUpdate = persistMorningStates
         self.nowProvider = nowProvider
         self.accessibilityAnnouncer = accessibilityAnnouncer
-
-        if shouldGuide {
-            markGuidedEntry(on: todayKey)
-        }
     }
 
     func openProfileSheet() {
@@ -88,7 +93,7 @@ final class AppViewModel: ObservableObject {
         guard mode == .guided else { return }
         guard guidedStep == .inputs else { return }
         mode = .explore
-        selectedExploreTab = .situation
+        selectedExploreTab = .inputs
         markGuidedCompleted(on: Self.localDateKey(from: nowProvider()))
         announce("Guided flow complete. Explore mode unlocked.")
     }
@@ -169,12 +174,18 @@ final class AppViewModel: ObservableObject {
             completion: Double(nextDayCount) / 7.0,
             isCheckedToday: nextCheckedToday,
             classificationText: current.classificationText,
-            isHidden: current.isHidden
+            isHidden: current.isHidden,
+            evidenceLevel: current.evidenceLevel,
+            evidenceSummary: current.evidenceSummary,
+            detailedDescription: current.detailedDescription,
+            citationIDs: current.citationIDs,
+            externalLink: current.externalLink
         )
 
         snapshot = DashboardSnapshot(
             outcomes: snapshot.outcomes,
             outcomeRecords: snapshot.outcomeRecords,
+            outcomesMetadata: snapshot.outcomesMetadata,
             situation: snapshot.situation,
             inputs: inputs
         )
@@ -184,6 +195,30 @@ final class AppViewModel: ObservableObject {
             : "\(current.name) unchecked for today."
         exploreFeedback = message
         announce(message)
+    }
+
+    func setMorningOutcomeValue(_ value: Int?, for field: MorningOutcomeField) {
+        guard mode == .explore else { return }
+        let clampedValue = value.map { max(0, min(10, $0)) }
+        let nextSelection = morningOutcomeSelection.updating(field: field, value: clampedValue)
+        guard nextSelection != morningOutcomeSelection else { return }
+        morningOutcomeSelection = nextSelection
+    }
+
+    func saveMorningOutcomes() {
+        guard mode == .explore else { return }
+        guard morningOutcomeSelection.hasAnyValue else {
+            exploreFeedback = "Select at least one morning outcome before saving."
+            announce(exploreFeedback)
+            return
+        }
+
+        let timestamp = Self.timestampNow()
+        let nextRecord = morningOutcomeSelection.asMorningState(createdAt: timestamp)
+        morningStates = Self.upsert(morningState: nextRecord, in: morningStates)
+        persistMorningStatesUpdate(morningStates)
+        exploreFeedback = "Saved morning outcomes for \(morningOutcomeSelection.nightID)."
+        announce(exploreFeedback)
     }
 
     func handleAppMovedToBackground() {
@@ -201,8 +236,8 @@ final class AppViewModel: ObservableObject {
             graphSelectionText = "Selected node: \(label)."
             updateFocusedNode(label)
             announce(graphSelectionText)
-        case .edgeSelected(let source, let target, _):
-            graphSelectionText = "Selected link: \(source) to \(target)."
+        case .edgeSelected(_, _, let sourceLabel, let targetLabel, _):
+            graphSelectionText = "Selected link: \(sourceLabel) to \(targetLabel)."
             announce(graphSelectionText)
         case .viewportChanged(let zoom):
             graphSelectionText = "Graph zoom \(String(format: "%.2f", zoom))."
@@ -227,6 +262,7 @@ final class AppViewModel: ObservableObject {
         snapshot = DashboardSnapshot(
             outcomes: snapshot.outcomes,
             outcomeRecords: snapshot.outcomeRecords,
+            outcomesMetadata: snapshot.outcomesMetadata,
             situation: SituationSummary(
                 focusedNode: label,
                 tier: snapshot.situation.tier,
@@ -325,12 +361,42 @@ final class AppViewModel: ObservableObject {
         return String(format: "%04d-%02d-%02d", year, month, day)
     }
 
-    private static func shouldEnterGuidedFlow(on dateKey: String, flow: ExperienceFlow) -> Bool {
-        let firstEverOpen = !flow.hasCompletedInitialGuidedFlow && flow.lastGuidedEntryDate == nil
-        if firstEverOpen {
-            return true
+    private static func morningOutcomeSelection(for dateKey: String, from morningStates: [MorningState]) -> MorningOutcomeSelection {
+        guard let state = morningStates.first(where: { $0.nightId == dateKey }) else {
+            return MorningOutcomeSelection.empty(nightID: dateKey)
         }
 
-        return flow.lastGuidedEntryDate != dateKey
+        return MorningOutcomeSelection(
+            nightID: dateKey,
+            globalSensation: state.globalSensation.map { Int($0.rounded()) },
+            neckTightness: state.neckTightness.map { Int($0.rounded()) },
+            jawSoreness: state.jawSoreness.map { Int($0.rounded()) },
+            earFullness: state.earFullness.map { Int($0.rounded()) },
+            healthAnxiety: state.healthAnxiety.map { Int($0.rounded()) }
+        )
+    }
+
+    private static func upsert(morningState: MorningState, in existingStates: [MorningState]) -> [MorningState] {
+        var mutableStates = existingStates
+        guard let existingIndex = mutableStates.firstIndex(where: { $0.nightId == morningState.nightId }) else {
+            mutableStates.append(morningState)
+            return mutableStates
+        }
+
+        let existingCreatedAt = mutableStates[existingIndex].createdAt
+        mutableStates[existingIndex] = MorningState(
+            nightId: morningState.nightId,
+            globalSensation: morningState.globalSensation,
+            neckTightness: morningState.neckTightness,
+            jawSoreness: morningState.jawSoreness,
+            earFullness: morningState.earFullness,
+            healthAnxiety: morningState.healthAnxiety,
+            createdAt: existingCreatedAt
+        )
+        return mutableStates
+    }
+
+    private static func timestampNow() -> String {
+        ISO8601DateFormatter().string(from: Date())
     }
 }

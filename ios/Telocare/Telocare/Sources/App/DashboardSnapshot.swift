@@ -3,6 +3,7 @@ import Foundation
 struct DashboardSnapshot: Equatable {
     let outcomes: OutcomeSummary
     let outcomeRecords: [OutcomeRecord]
+    let outcomesMetadata: OutcomesMetadata
     let situation: SituationSummary
     let inputs: [InputStatus]
 }
@@ -38,4 +39,9 @@ struct InputStatus: Equatable, Identifiable {
     let isCheckedToday: Bool
     let classificationText: String?
     let isHidden: Bool
+    let evidenceLevel: String?
+    let evidenceSummary: String?
+    let detailedDescription: String?
+    let citationIDs: [String]
+    let externalLink: String?
 }

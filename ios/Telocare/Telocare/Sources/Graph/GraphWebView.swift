@@ -43,12 +43,11 @@ struct GraphWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        context.coordinator.enqueue(command: .setGraphData(graphData))
-        context.coordinator.enqueue(command: .setDisplayFlags(displayFlags))
-
-        if let focusedNodeID {
-            context.coordinator.enqueue(command: .focusNode(focusedNodeID))
-        }
+        context.coordinator.sync(
+            graphData: graphData,
+            displayFlags: displayFlags,
+            focusedNodeID: focusedNodeID
+        )
     }
 
     static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
@@ -65,6 +64,9 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
 
     private var isPageLoaded = false
     private var queuedJavaScript: [String] = []
+    private var lastGraphData: CausalGraphData?
+    private var lastDisplayFlags: GraphDisplayFlags?
+    private var lastFocusedNodeID: String?
 
     init(messageHandlerName: String, onEvent: @escaping (GraphEvent) -> Void) {
         self.messageHandlerName = messageHandlerName
@@ -78,6 +80,36 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
 
         let script = "window.TelocareGraph.receiveSwiftMessage(\(javaScriptStringLiteral(for: commandJSON)));"
         enqueue(javaScript: script)
+    }
+
+    func sync(
+        graphData: CausalGraphData,
+        displayFlags: GraphDisplayFlags,
+        focusedNodeID: String?
+    ) {
+        if lastGraphData != graphData {
+            enqueue(command: .setGraphData(graphData))
+            lastGraphData = graphData
+            lastFocusedNodeID = nil
+        }
+
+        if lastDisplayFlags != displayFlags {
+            enqueue(command: .setDisplayFlags(displayFlags))
+            lastDisplayFlags = displayFlags
+            lastFocusedNodeID = nil
+        }
+
+        guard let focusedNodeID else {
+            lastFocusedNodeID = nil
+            return
+        }
+
+        guard lastFocusedNodeID != focusedNodeID else {
+            return
+        }
+
+        enqueue(command: .focusNode(focusedNodeID))
+        lastFocusedNodeID = focusedNodeID
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -103,12 +135,23 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
         case "nodeSelected":
             let id = payload?["id"] as? String ?? ""
             let label = payload?["label"] as? String ?? id
+            lastFocusedNodeID = id
             onEvent(.nodeSelected(id: id, label: label))
         case "edgeSelected":
-            let source = payload?["sourceLabel"] as? String ?? (payload?["source"] as? String ?? "")
-            let target = payload?["targetLabel"] as? String ?? (payload?["target"] as? String ?? "")
+            let sourceID = payload?["source"] as? String ?? ""
+            let targetID = payload?["target"] as? String ?? ""
+            let sourceLabel = payload?["sourceLabel"] as? String ?? sourceID
+            let targetLabel = payload?["targetLabel"] as? String ?? targetID
             let label = payload?["label"] as? String
-            onEvent(.edgeSelected(source: source, target: target, label: label))
+            onEvent(
+                .edgeSelected(
+                    sourceID: sourceID,
+                    targetID: targetID,
+                    sourceLabel: sourceLabel,
+                    targetLabel: targetLabel,
+                    label: label
+                )
+            )
         case "viewportChanged":
             let zoom = Self.doubleValue(payload?["zoom"]) ?? 1.0
             onEvent(.viewportChanged(zoom: zoom))

@@ -8,7 +8,7 @@ struct DashboardContentView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            currentModeView
+            ExploreTabShell(viewModel: viewModel)
             ProfileAvatarButton(mode: viewModel.mode, action: viewModel.openProfileSheet)
         }
         .sheet(
@@ -23,22 +23,10 @@ struct DashboardContentView: View {
             )
             .accessibilityIdentifier(AccessibilityID.profileSheet)
         }
-        .animation(.easeInOut(duration: 0.28), value: viewModel.guidedStep)
-        .animation(.easeInOut(duration: 0.28), value: viewModel.mode)
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
                 viewModel.handleAppMovedToBackground()
             }
-        }
-    }
-
-    @ViewBuilder
-    private var currentModeView: some View {
-        switch viewModel.mode {
-        case .guided:
-            GuidedFlowPager(viewModel: viewModel)
-        case .explore:
-            ExploreTabShell(viewModel: viewModel)
         }
     }
 }

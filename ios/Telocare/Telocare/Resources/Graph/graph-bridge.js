@@ -20,6 +20,15 @@
     showProtectiveEdges: false,
     showInterventionNodes: false,
   };
+  const BASE_VISUAL_STYLE = Object.freeze({
+    nodeFontSize: 8,
+    nodeBorderWidth: 2,
+    nodeTextMaxWidth: 120,
+    nodePadding: 10,
+    edgeWidth: 2,
+    edgeFontSize: 7,
+    edgeArrowScale: 0.7,
+  });
 
   const defaultGraphData = {
     nodes: [
@@ -46,6 +55,7 @@
   let cy = null;
   let viewportThrottle = null;
   let resizeThrottle = null;
+  let zoomStyleFrame = null;
 
   function postEvent(event, payload) {
     const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.graphBridge;
@@ -106,18 +116,20 @@
       {
         selector: 'node',
         style: {
+          'shape': 'round-rectangle',
           'background-color': '#111827',
-          'border-width': 2,
+          'border-width': BASE_VISUAL_STYLE.nodeBorderWidth,
           'border-color': '#475569',
           'label': 'data(label)',
-          'font-size': 10,
+          'font-size': BASE_VISUAL_STYLE.nodeFontSize,
           'text-wrap': 'wrap',
-          'text-max-width': 120,
+          'text-max-width': BASE_VISUAL_STYLE.nodeTextMaxWidth,
           'text-valign': 'center',
           'text-halign': 'center',
           'color': '#e2e8f0',
-          'width': 44,
-          'height': 44,
+          'width': 'label',
+          'height': 'label',
+          'padding': BASE_VISUAL_STYLE.nodePadding,
           'overlay-padding': 6,
           'overlay-opacity': 0,
         },
@@ -192,6 +204,54 @@
     ];
   }
 
+  function clamp(min, value, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function zoomVisualScale(zoom) {
+    const safeZoom = Math.max(0.01, Number.isFinite(zoom) ? zoom : 1);
+    return clamp(0.52, Math.pow(1 / safeZoom, 0.62), 1);
+  }
+
+  function applyZoomAdaptiveStyle() {
+    if (!cy) return;
+
+    const zoom = cy.zoom();
+    const visualScale = zoomVisualScale(zoom);
+    const nodeTextScale = clamp(0.62, Math.pow(1 / Math.max(0.01, zoom), 0.35), 1.05);
+    const edgeTextScale = clamp(0.56, Math.pow(1 / Math.max(0.01, zoom), 0.4), 1);
+    const edgeTextOpacity = zoom < 1 ? 0 : (zoom < 1.2 ? 0.55 : 1);
+
+    cy.batch(() => {
+      cy.style()
+        .selector('node')
+        .style({
+          'font-size': BASE_VISUAL_STYLE.nodeFontSize * nodeTextScale,
+          'border-width': BASE_VISUAL_STYLE.nodeBorderWidth * visualScale,
+          'text-max-width': BASE_VISUAL_STYLE.nodeTextMaxWidth * nodeTextScale,
+          'padding': BASE_VISUAL_STYLE.nodePadding * visualScale,
+          'overlay-padding': 8,
+        })
+        .selector('edge')
+        .style({
+          'width': BASE_VISUAL_STYLE.edgeWidth * visualScale,
+          'font-size': BASE_VISUAL_STYLE.edgeFontSize * edgeTextScale,
+          'arrow-scale': BASE_VISUAL_STYLE.edgeArrowScale * visualScale,
+          'text-opacity': edgeTextOpacity,
+        })
+        .update();
+    });
+  }
+
+  function scheduleZoomAdaptiveStyleUpdate() {
+    if (zoomStyleFrame !== null) return;
+
+    zoomStyleFrame = window.requestAnimationFrame(() => {
+      zoomStyleFrame = null;
+      applyZoomAdaptiveStyle();
+    });
+  }
+
   function rowY(tier, height) {
     const minY = 60;
     const maxY = Math.max(minY + 1, height - 60);
@@ -234,6 +294,11 @@
   }
 
   function destroyGraph() {
+    if (zoomStyleFrame !== null) {
+      window.cancelAnimationFrame(zoomStyleFrame);
+      zoomStyleFrame = null;
+    }
+
     if (cy) {
       cy.destroy();
       cy = null;
@@ -259,15 +324,36 @@
     tooltip.innerHTML = '';
   }
 
+  function centerSelectionInVisibleSpace(renderedPosition) {
+    if (!cy || !renderedPosition) return;
+
+    const x = Number(renderedPosition.x);
+    const y = Number(renderedPosition.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+    const targetX = cy.width() / 2;
+    const targetY = cy.height() * 0.25;
+    const currentPan = cy.pan();
+
+    cy.animate({
+      pan: {
+        x: currentPan.x + (targetX - x),
+        y: currentPan.y + (targetY - y),
+      },
+      duration: 220,
+    });
+  }
+
   function bindGraphEvents(nodeLabelMap) {
+    cy.on('zoom', () => {
+      scheduleZoomAdaptiveStyleUpdate();
+    });
+
     cy.on('tap', 'node', (event) => {
       const node = event.target;
       const data = node.data();
-      const tooltipBody = data.tooltip && typeof data.tooltip === 'object'
-        ? [data.tooltip.evidence, data.tooltip.stat, data.tooltip.citation, data.tooltip.mechanism].filter(Boolean).join(' · ')
-        : '';
-
-      showTooltip(event.renderedPosition.x, event.renderedPosition.y, firstLine(data.label), tooltipBody);
+      hideTooltip();
+      centerSelectionInVisibleSpace(event.renderedPosition);
       postEvent('nodeSelected', {
         id: data.id,
         label: firstLine(data.label),
@@ -279,13 +365,8 @@
       const data = edge.data();
       const sourceLabel = nodeLabelMap.get(data.source) || data.source;
       const targetLabel = nodeLabelMap.get(data.target) || data.target;
-
-      showTooltip(
-        event.renderedPosition.x,
-        event.renderedPosition.y,
-        `${sourceLabel} -> ${targetLabel}`,
-        data.tooltip || data.label || ''
-      );
+      hideTooltip();
+      centerSelectionInVisibleSpace(event.renderedPosition);
 
       postEvent('edgeSelected', {
         source: data.source,
@@ -347,6 +428,8 @@
         padding: 28,
       }).run();
 
+      applyZoomAdaptiveStyle();
+
       const labelMap = new Map(elements.nodes.map((node) => [node.data.id, firstLine(node.data.label)]));
       bindGraphEvents(labelMap);
       postEvent('graphReady');
@@ -378,9 +461,6 @@
       zoom: Math.max(0.7, cy.zoom()),
       duration: 220,
     });
-
-    const data = node.data();
-    postEvent('nodeSelected', { id: data.id, label: firstLine(data.label) });
   }
 
   function handleCommand(envelope) {

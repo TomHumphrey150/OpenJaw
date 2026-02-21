@@ -312,7 +312,7 @@ struct NightOutcome: Codable, Equatable {
     let createdAt: String
 }
 
-struct MorningState: Codable, Equatable {
+struct MorningState: Codable, Equatable, Sendable {
     let nightId: String
     let globalSensation: Double?
     let neckTightness: Double?

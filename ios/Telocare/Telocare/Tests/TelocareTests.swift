@@ -3,51 +3,27 @@ import Testing
 @testable import Telocare
 
 struct AppViewModelTests {
-    @Test func startsInGuidedOutcomes() {
+    @Test func startsInExploreInputsTab() {
         let harness = AppViewModelHarness()
 
-        #expect(harness.viewModel.mode == .guided)
-        #expect(harness.viewModel.guidedStep == .outcomes)
+        #expect(harness.viewModel.mode == .explore)
+        #expect(harness.viewModel.selectedExploreTab == .inputs)
         #expect(harness.viewModel.snapshot.outcomes.shieldScore == 38)
         #expect(harness.viewModel.snapshot.outcomeRecords.isEmpty == false)
     }
 
-    @Test func guidedSequenceTransitionsIntoExploreMode() {
+    @Test func selectingExploreTabUpdatesSelectionAndAnnouncement() {
         let harness = AppViewModelHarness()
 
-        harness.viewModel.advanceFromOutcomes()
-        harness.viewModel.advanceFromSituation()
-        harness.viewModel.completeGuidedFlow()
+        harness.viewModel.selectExploreTab(.situation)
 
-        #expect(harness.viewModel.mode == .explore)
-        #expect(harness.viewModel.guidedStep == .inputs)
         #expect(harness.viewModel.selectedExploreTab == .situation)
-        #expect(
-            harness.recorder.messages == [
-                "Moved to Situation step.",
-                "Moved to Inputs step.",
-                "Guided flow complete. Explore mode unlocked.",
-            ]
-        )
-    }
-
-    @Test func outOfOrderGuidedActionsDoNotChangeState() {
-        let harness = AppViewModelHarness()
-
-        harness.viewModel.completeGuidedFlow()
-        harness.viewModel.advanceFromSituation()
-
-        #expect(harness.viewModel.mode == .guided)
-        #expect(harness.viewModel.guidedStep == .outcomes)
-        #expect(harness.recorder.messages.isEmpty)
+        #expect(harness.recorder.messages.last == "Situation tab selected.")
     }
 
     @Test func exploreActionsUpdateFeedbackAndAnnouncement() {
         let harness = AppViewModelHarness()
 
-        harness.viewModel.advanceFromOutcomes()
-        harness.viewModel.advanceFromSituation()
-        harness.viewModel.completeGuidedFlow()
         harness.viewModel.performExploreAction(.explainLinks)
 
         #expect(harness.viewModel.exploreFeedback == ExploreContextAction.explainLinks.detail)
@@ -56,10 +32,6 @@ struct AppViewModelTests {
 
     @Test func chatSubmissionRequiresTextAndClearsValidInput() {
         let harness = AppViewModelHarness()
-
-        harness.viewModel.advanceFromOutcomes()
-        harness.viewModel.advanceFromSituation()
-        harness.viewModel.completeGuidedFlow()
 
         harness.viewModel.chatDraft = "   "
         harness.viewModel.submitChatPrompt()
@@ -82,45 +54,33 @@ struct AppViewModelTests {
         #expect(harness.viewModel.graphSelectionText.contains("Selected node"))
     }
 
-    @Test func completedFlowTodayStartsInExploreMode() {
+    @Test func morningOutcomesSavePersistsUpdatedState() {
+        let stateRecorder = MorningStateRecorder()
         let harness = AppViewModelHarness(
-            initialExperienceFlow: ExperienceFlow(
-                hasCompletedInitialGuidedFlow: true,
-                lastGuidedEntryDate: "2026-02-21",
-                lastGuidedCompletedDate: "2026-02-21",
-                lastGuidedStatus: .completed
-            ),
-            nowProvider: {
-                let calendar = Calendar(identifier: .gregorian)
-                return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
-            }
+            persistMorningStates: { stateRecorder.append($0) }
         )
 
-        #expect(harness.viewModel.mode == .explore)
+        harness.viewModel.setMorningOutcomeValue(7, for: .globalSensation)
+        harness.viewModel.setMorningOutcomeValue(4, for: .neckTightness)
+        harness.viewModel.saveMorningOutcomes()
+
+        #expect(stateRecorder.values.count == 1)
+        #expect(stateRecorder.values.first?.count == 1)
+        #expect(stateRecorder.values.first?.first?.nightId == "2026-02-21")
+        #expect(stateRecorder.values.first?.first?.globalSensation == 7)
+        #expect(stateRecorder.values.first?.first?.neckTightness == 4)
     }
 
-    @Test func guidedFlowPersistsEntryCompletionAndInterruption() {
-        let recorder = ExperienceFlowRecorder()
+    @Test func morningOutcomesRequireAtLeastOneValueBeforeSaving() {
+        let stateRecorder = MorningStateRecorder()
         let harness = AppViewModelHarness(
-            initialExperienceFlow: .empty,
-            persistExperienceFlow: { recorder.append($0) },
-            nowProvider: {
-                let calendar = Calendar(identifier: .gregorian)
-                return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
-            }
+            persistMorningStates: { stateRecorder.append($0) }
         )
 
-        #expect(recorder.values.count == 1)
-        #expect(recorder.values.first?.lastGuidedStatus == .inProgress)
+        harness.viewModel.saveMorningOutcomes()
 
-        harness.viewModel.handleAppMovedToBackground()
-        #expect(recorder.values.last?.lastGuidedStatus == .interrupted)
-
-        harness.viewModel.advanceFromOutcomes()
-        harness.viewModel.advanceFromSituation()
-        harness.viewModel.completeGuidedFlow()
-
-        #expect(recorder.values.last?.lastGuidedStatus == .completed)
+        #expect(stateRecorder.values.isEmpty)
+        #expect(harness.viewModel.exploreFeedback == "Select at least one morning outcome before saving.")
     }
 }
 
@@ -131,7 +91,8 @@ private struct AppViewModelHarness {
     init(
         initialExperienceFlow: ExperienceFlow = .empty,
         persistExperienceFlow: @escaping (ExperienceFlow) -> Void = { _ in },
-        nowProvider: @escaping () -> Date = Date.init
+        initialMorningStates: [MorningState] = [],
+        persistMorningStates: @escaping ([MorningState]) -> Void = { _ in }
     ) {
         let recorder = AnnouncementRecorder()
         let announcer = AccessibilityAnnouncer { message in
@@ -143,7 +104,12 @@ private struct AppViewModelHarness {
             graphData: CanonicalGraphLoader.loadGraphOrFallback(),
             initialExperienceFlow: initialExperienceFlow,
             persistExperienceFlow: persistExperienceFlow,
-            nowProvider: nowProvider,
+            initialMorningStates: initialMorningStates,
+            persistMorningStates: persistMorningStates,
+            nowProvider: {
+                let calendar = Calendar(identifier: .gregorian)
+                return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
+            },
             accessibilityAnnouncer: announcer
         )
     }
@@ -153,10 +119,10 @@ private final class AnnouncementRecorder {
     var messages: [String] = []
 }
 
-private final class ExperienceFlowRecorder {
-    private(set) var values: [ExperienceFlow] = []
+private final class MorningStateRecorder {
+    private(set) var values: [[MorningState]] = []
 
-    func append(_ value: ExperienceFlow) {
+    func append(_ value: [MorningState]) {
         values.append(value)
     }
 }

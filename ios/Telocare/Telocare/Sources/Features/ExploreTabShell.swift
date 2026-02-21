@@ -5,13 +5,14 @@ struct ExploreTabShell: View {
 
     var body: some View {
         TabView(selection: selectedTabBinding) {
-            ExploreOutcomesScreen(
-                outcomes: viewModel.snapshot.outcomes,
-                outcomeRecords: viewModel.snapshot.outcomeRecords
+            ExploreInputsScreen(
+                inputs: viewModel.snapshot.inputs,
+                graphData: viewModel.graphData,
+                onToggleCheckedToday: viewModel.toggleInputCheckedToday
             )
-                .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
-                .tag(ExploreTab.outcomes)
-                .accessibilityIdentifier(AccessibilityID.exploreOutcomesScreen)
+                .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
+                .tag(ExploreTab.inputs)
+                .accessibilityIdentifier(AccessibilityID.exploreInputsScreen)
 
             ExploreSituationScreen(
                 situation: viewModel.snapshot.situation,
@@ -29,14 +30,17 @@ struct ExploreTabShell: View {
             .tag(ExploreTab.situation)
             .accessibilityIdentifier(AccessibilityID.exploreSituationScreen)
 
-            ExploreInputsScreen(
-                inputs: viewModel.snapshot.inputs,
-                graphData: viewModel.graphData,
-                onToggleCheckedToday: viewModel.toggleInputCheckedToday
+            ExploreOutcomesScreen(
+                outcomes: viewModel.snapshot.outcomes,
+                outcomeRecords: viewModel.snapshot.outcomeRecords,
+                outcomesMetadata: viewModel.snapshot.outcomesMetadata,
+                morningOutcomeSelection: viewModel.morningOutcomeSelection,
+                onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue,
+                onSaveMorningOutcomes: viewModel.saveMorningOutcomes
             )
-                .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
-                .tag(ExploreTab.inputs)
-                .accessibilityIdentifier(AccessibilityID.exploreInputsScreen)
+                .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
+                .tag(ExploreTab.outcomes)
+                .accessibilityIdentifier(AccessibilityID.exploreOutcomesScreen)
 
             ExploreChatScreen(
                 draft: $viewModel.chatDraft,
@@ -60,6 +64,10 @@ struct ExploreTabShell: View {
 private struct ExploreOutcomesScreen: View {
     let outcomes: OutcomeSummary
     let outcomeRecords: [OutcomeRecord]
+    let outcomesMetadata: OutcomesMetadata
+    let morningOutcomeSelection: MorningOutcomeSelection
+    let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
+    let onSaveMorningOutcomes: () -> Void
 
     @State private var selectedRecord: OutcomeRecord?
 
@@ -67,6 +75,14 @@ private struct ExploreOutcomesScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    MorningOutcomeEditor(
+                        selection: morningOutcomeSelection,
+                        onSetValue: onSetMorningOutcomeValue,
+                        onSave: onSaveMorningOutcomes
+                    )
+
+                    Divider()
+
                     Text("Explore Mode")
                         .font(.headline)
                     LabeledContent("Shield score", value: "\(outcomes.shieldScore)")
@@ -100,10 +116,74 @@ private struct ExploreOutcomesScreen: View {
             }
             .navigationTitle("Outcomes")
             .sheet(item: $selectedRecord) { record in
-                OutcomeRecordDetailSheet(record: record)
+                OutcomeRecordDetailSheet(record: record, outcomesMetadata: outcomesMetadata)
                     .accessibilityIdentifier(AccessibilityID.exploreOutcomeDetailSheet)
             }
         }
+    }
+}
+
+private struct MorningOutcomeEditor: View {
+    let selection: MorningOutcomeSelection
+    let onSetValue: (Int?, MorningOutcomeField) -> Void
+    let onSave: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Morning check-in")
+                .font(.headline)
+            Text("Night \(selection.nightID)")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text("Score once after waking. 0 is none, 5 is moderate, 10 is worst plausible.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            ForEach(MorningOutcomeField.allCases) { field in
+                MorningOutcomePickerRow(
+                    title: field.title,
+                    value: selection.value(for: field),
+                    accessibilityIdentifier: field.accessibilityIdentifier,
+                    onSetValue: { value in
+                        onSetValue(value, field)
+                    }
+                )
+            }
+
+            Button("Save morning outcomes", action: onSave)
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier(AccessibilityID.exploreMorningSaveButton)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct MorningOutcomePickerRow: View {
+    let title: String
+    let value: Int?
+    let accessibilityIdentifier: String
+    let onSetValue: (Int?) -> Void
+
+    var body: some View {
+        HStack(alignment: .center) {
+            Text(title)
+            Spacer()
+            Picker(title, selection: selectionBinding) {
+                Text("Not set").tag(Optional<Int>.none)
+                ForEach(0...10, id: \.self) { score in
+                    Text(String(score)).tag(Optional<Int>.some(score))
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier(accessibilityIdentifier)
+        }
+    }
+
+    private var selectionBinding: Binding<Int?> {
+        Binding(
+            get: { value },
+            set: onSetValue
+        )
     }
 }
 
@@ -138,6 +218,7 @@ private struct OutcomeRecordRow: View {
 
 private struct OutcomeRecordDetailSheet: View {
     let record: OutcomeRecord
+    let outcomesMetadata: OutcomesMetadata
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -152,8 +233,43 @@ private struct OutcomeRecordDetailSheet: View {
                 }
 
                 Section("How to read this") {
-                    Text("Microarousal rate tracks event frequency per hour; lower values indicate calmer sleep.")
-                    Text("Confidence is model certainty for this value, where higher is stronger.")
+                    if metricsForDisplay.isEmpty {
+                        Text("Outcome metadata is not available yet.")
+                    } else {
+                        ForEach(metricsForDisplay, id: \.id) { metric in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(metric.label)
+                                    .font(.subheadline.weight(.semibold))
+                                Text(metric.description)
+                                    .foregroundStyle(.secondary)
+                                LabeledContent("Unit", value: metric.unit)
+                                LabeledContent("Direction", value: metric.direction.replacingOccurrences(of: "_", with: " "))
+                            }
+                        }
+                    }
+                }
+
+                if !outcomeNodeEvidence.isEmpty {
+                    Section("Outcome pathway evidence") {
+                        ForEach(outcomeNodeEvidence) { node in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(node.label)
+                                    .font(.subheadline.weight(.semibold))
+                                if let evidence = node.evidence {
+                                    LabeledContent("Evidence", value: evidence)
+                                }
+                                if let stat = node.stat {
+                                    LabeledContent("Statistic", value: stat)
+                                }
+                                if let citation = node.citation {
+                                    LabeledContent("Citation", value: citation)
+                                }
+                                if let mechanism = node.mechanism {
+                                    LabeledContent("Mechanism", value: mechanism)
+                                }
+                            }
+                        }
+                    }
                 }
             }
             .navigationTitle("Outcome Details")
@@ -172,6 +288,18 @@ private struct OutcomeRecordDetailSheet: View {
         guard let value else { return "Not recorded" }
         return String(format: "%.2f", value)
     }
+
+    private var metricsForDisplay: [OutcomeMetricDefinition] {
+        outcomesMetadata.metrics.filter {
+            $0.id == "microArousalRatePerHour"
+                || $0.id == "microArousalCount"
+                || $0.id == "confidence"
+        }
+    }
+
+    private var outcomeNodeEvidence: [OutcomeNodeMetadata] {
+        outcomesMetadata.nodes
+    }
 }
 
 private struct ExploreSituationScreen: View {
@@ -187,6 +315,7 @@ private struct ExploreSituationScreen: View {
     let onShowProtectiveEdgesChanged: (Bool) -> Void
 
     @State private var isOptionsPresented = false
+    @State private var selectedGraphDetail: SituationGraphDetail?
 
     var body: some View {
         NavigationStack {
@@ -194,7 +323,7 @@ private struct ExploreSituationScreen: View {
                 graphData: graphData,
                 displayFlags: displayFlags,
                 focusedNodeID: focusedNodeID,
-                onEvent: onGraphEvent
+                onEvent: handleGraphEvent
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -248,6 +377,197 @@ private struct ExploreSituationScreen: View {
                 )
                 .accessibilityIdentifier(AccessibilityID.exploreSituationOptionsSheet)
             }
+            .sheet(item: $selectedGraphDetail) { detail in
+                SituationGraphDetailSheet(detail: detail)
+                    .presentationDetents([.fraction(0.5)])
+                    .presentationDragIndicator(.visible)
+                    .accessibilityIdentifier(AccessibilityID.exploreDetailsSheet)
+            }
+        }
+    }
+
+    private func handleGraphEvent(_ event: GraphEvent) {
+        onGraphEvent(event)
+
+        switch event {
+        case .nodeSelected(let id, let label):
+            selectedGraphDetail = SituationGraphDetail(
+                id: UUID(),
+                detail: .node(nodeDetail(forNodeID: id, fallbackLabel: label))
+            )
+        case .edgeSelected(let sourceID, let targetID, let sourceLabel, let targetLabel, let label):
+            selectedGraphDetail = SituationGraphDetail(
+                id: UUID(),
+                detail: .edge(
+                    edgeDetail(
+                        sourceID: sourceID,
+                        targetID: targetID,
+                        sourceLabel: sourceLabel,
+                        targetLabel: targetLabel,
+                        label: label
+                    )
+                )
+            )
+        case .graphReady, .viewportChanged, .renderError:
+            return
+        }
+    }
+
+    private func nodeDetail(forNodeID id: String, fallbackLabel: String) -> SituationNodeDetail {
+        guard let node = graphData.nodes.first(where: { $0.data.id == id })?.data else {
+            return SituationNodeDetail(
+                id: id,
+                label: fallbackLabel,
+                styleClass: nil,
+                tier: nil,
+                evidence: nil,
+                statistic: nil,
+                citation: nil,
+                mechanism: nil
+            )
+        }
+
+        return SituationNodeDetail(
+            id: node.id,
+            label: firstLine(node.label),
+            styleClass: node.styleClass,
+            tier: node.tier,
+            evidence: node.tooltip?.evidence,
+            statistic: node.tooltip?.stat,
+            citation: node.tooltip?.citation,
+            mechanism: node.tooltip?.mechanism
+        )
+    }
+
+    private func edgeDetail(
+        sourceID: String,
+        targetID: String,
+        sourceLabel: String,
+        targetLabel: String,
+        label: String?
+    ) -> SituationEdgeDetail {
+        let nodeLabelByID = Dictionary(
+            uniqueKeysWithValues: graphData.nodes.map { ($0.data.id, firstLine($0.data.label)) }
+        )
+
+        let matchedEdge = graphData.edges.first {
+            $0.data.source == sourceID
+                && $0.data.target == targetID
+                && ($0.data.label == label || label == nil)
+        }?.data ?? graphData.edges.first {
+            let edgeSourceLabel = nodeLabelByID[$0.data.source] ?? $0.data.source
+            let edgeTargetLabel = nodeLabelByID[$0.data.target] ?? $0.data.target
+            return edgeSourceLabel == sourceLabel
+                && edgeTargetLabel == targetLabel
+                && ($0.data.label == label || label == nil)
+        }?.data
+
+        return SituationEdgeDetail(
+            sourceID: sourceID,
+            targetID: targetID,
+            sourceLabel: sourceLabel,
+            targetLabel: targetLabel,
+            label: matchedEdge?.label ?? label,
+            edgeType: matchedEdge?.edgeType,
+            tooltip: matchedEdge?.tooltip,
+            edgeColor: matchedEdge?.edgeColor
+        )
+    }
+
+    private func firstLine(_ value: String) -> String {
+        value.components(separatedBy: "\n").first ?? value
+    }
+}
+
+private struct SituationGraphDetail: Identifiable, Equatable {
+    let id: UUID
+    let detail: SituationGraphDetailContent
+}
+
+private enum SituationGraphDetailContent: Equatable {
+    case node(SituationNodeDetail)
+    case edge(SituationEdgeDetail)
+}
+
+private struct SituationNodeDetail: Equatable {
+    let id: String
+    let label: String
+    let styleClass: String?
+    let tier: Int?
+    let evidence: String?
+    let statistic: String?
+    let citation: String?
+    let mechanism: String?
+}
+
+private struct SituationEdgeDetail: Equatable {
+    let sourceID: String
+    let targetID: String
+    let sourceLabel: String
+    let targetLabel: String
+    let label: String?
+    let edgeType: String?
+    let tooltip: String?
+    let edgeColor: String?
+}
+
+private struct SituationGraphDetailSheet: View {
+    let detail: SituationGraphDetail
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                switch detail.detail {
+                case .node(let node):
+                    nodeSection(node)
+                case .edge(let edge):
+                    edgeSection(edge)
+                }
+            }
+            .navigationTitle("Graph Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func nodeSection(_ node: SituationNodeDetail) -> some View {
+        Section("Node") {
+            LabeledContent("Label", value: node.label)
+            LabeledContent("Node ID", value: node.id)
+            LabeledContent("Style", value: node.styleClass ?? "Not provided")
+            LabeledContent("Tier", value: node.tier.map(String.init) ?? "Not provided")
+        }
+
+        Section("Evidence") {
+            LabeledContent("Evidence level", value: node.evidence ?? "Not provided")
+            LabeledContent("Statistic", value: node.statistic ?? "Not provided")
+            LabeledContent("Citation", value: node.citation ?? "Not provided")
+            LabeledContent("Mechanism", value: node.mechanism ?? "Not provided")
+        }
+    }
+
+    @ViewBuilder
+    private func edgeSection(_ edge: SituationEdgeDetail) -> some View {
+        Section("Link") {
+            LabeledContent("From", value: edge.sourceLabel)
+            LabeledContent("To", value: edge.targetLabel)
+            LabeledContent("Source ID", value: edge.sourceID)
+            LabeledContent("Target ID", value: edge.targetID)
+            LabeledContent("Label", value: edge.label ?? "Not provided")
+            LabeledContent("Type", value: edge.edgeType ?? "Not provided")
+            LabeledContent("Color", value: edge.edgeColor ?? "Not provided")
+        }
+
+        Section("Explanation") {
+            Text(edge.tooltip ?? "No explanation is available for this link yet.")
         }
     }
 }
@@ -420,6 +740,10 @@ private struct InputStatusRow: View {
                     LabeledContent("Classification", value: classification)
                 }
 
+                if let evidenceLevel = input.evidenceLevel {
+                    LabeledContent("Evidence", value: evidenceLevel)
+                }
+
                 if input.isHidden {
                     Text("Hidden on web")
                         .font(.footnote)
@@ -468,13 +792,22 @@ private struct InputDetailSheet: View {
                 }
 
                 Section("Evidence") {
-                    if let tooltip = graphNodeData?.tooltip {
-                        LabeledContent("Evidence", value: tooltip.evidence ?? "Not provided")
-                        LabeledContent("Statistic", value: tooltip.stat ?? "Not provided")
-                        LabeledContent("Citation", value: tooltip.citation ?? "Not provided")
-                        LabeledContent("Mechanism", value: tooltip.mechanism ?? "Not provided")
-                    } else {
-                        Text("No evidence details are available for this intervention.")
+                    LabeledContent("Evidence", value: input.evidenceLevel ?? graphNodeData?.tooltip?.evidence ?? "Not provided")
+                    LabeledContent("Summary", value: input.evidenceSummary ?? graphNodeData?.tooltip?.mechanism ?? "Not provided")
+                    LabeledContent("Citation IDs", value: citationValue)
+                    LabeledContent("Citation", value: graphNodeData?.tooltip?.citation ?? "Not provided")
+                    LabeledContent("Statistic", value: graphNodeData?.tooltip?.stat ?? "Not provided")
+                }
+
+                if let detailedDescription = input.detailedDescription {
+                    Section("Detailed description") {
+                        Text(detailedDescription)
+                    }
+                }
+
+                if let externalLink = input.externalLink {
+                    Section("Reference link") {
+                        Text(externalLink)
                     }
                 }
             }
@@ -496,6 +829,14 @@ private struct InputDetailSheet: View {
 
     private func firstLine(_ text: String) -> String {
         text.components(separatedBy: "\n").first ?? text
+    }
+
+    private var citationValue: String {
+        if !input.citationIDs.isEmpty {
+            return input.citationIDs.joined(separator: ", ")
+        }
+
+        return "Not provided"
     }
 }
 

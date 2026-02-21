@@ -32,6 +32,8 @@ struct RootViewModelTests {
 
         await waitUntil { viewModel.state == .ready }
         #expect(viewModel.dashboardViewModel != nil)
+        #expect(viewModel.dashboardViewModel?.mode == .explore)
+        #expect(viewModel.dashboardViewModel?.selectedExploreTab == .inputs)
     }
 
     @Test func signUpNeedsConfirmationKeepsAuthStateAndShowsStatus() async {
@@ -114,7 +116,7 @@ struct RootViewModelTests {
         #expect(viewModel.dashboardViewModel != nil)
     }
 
-    @Test func guidedEntryPersistsExperienceFlowPatch() async {
+    @Test func hydrationDoesNotPersistUserPatchUntilUserAction() async {
         let repository = TrackingUserDataRepository(document: .empty)
         let viewModel = RootViewModel(
             authClient: MockAuthClient(),
@@ -130,10 +132,32 @@ struct RootViewModelTests {
         viewModel.submitSignIn()
 
         await waitUntil { viewModel.state == .ready }
+        #expect(await repository.patchCallCount() == 0)
+    }
+
+    @Test func savingMorningOutcomesPersistsPatch() async {
+        let repository = TrackingUserDataRepository(document: .empty)
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        viewModel.dashboardViewModel?.setMorningOutcomeValue(6, for: .globalSensation)
+        viewModel.dashboardViewModel?.saveMorningOutcomes()
+
         await waitUntil { await repository.patchCallCount() == 1 }
     }
 
-    @Test func patchPersistenceFailureIsNonFatal() async {
+    @Test func patchPersistenceFailureIsNonFatalDuringMorningSave() async {
         let repository = TrackingUserDataRepository(
             document: .empty,
             patchShouldThrow: true
@@ -152,8 +176,53 @@ struct RootViewModelTests {
         viewModel.submitSignIn()
 
         await waitUntil { viewModel.state == .ready }
+        viewModel.dashboardViewModel?.setMorningOutcomeValue(5, for: .globalSensation)
+        viewModel.dashboardViewModel?.saveMorningOutcomes()
+
         await waitUntil { await repository.patchCallCount() == 1 }
         #expect(viewModel.dashboardViewModel != nil)
+    }
+
+    @Test func usesFirstPartyGraphWhenCustomGraphMissing() async {
+        let firstPartyGraph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "FIRST_PARTY_NODE",
+                        label: "First Party Node",
+                        styleClass: "mechanism",
+                        confirmed: "yes",
+                        tier: 5,
+                        tooltip: nil
+                    )
+                )
+            ],
+            edges: []
+        )
+        let repository = TrackingUserDataRepository(
+            document: .empty,
+            firstPartyContent: FirstPartyContentBundle(
+                graphData: firstPartyGraph,
+                interventionsCatalog: .empty,
+                outcomesMetadata: .empty
+            )
+        )
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        await waitUntil { await repository.backfillCallCount() == 1 }
+
+        #expect(viewModel.dashboardViewModel?.graphData.nodes.first?.data.id == "FIRST_PARTY_NODE")
     }
 
     private func waitUntil(_ condition: @escaping () async -> Bool) async {
@@ -169,6 +238,7 @@ struct RootViewModelTests {
 
 actor TrackingUserDataRepository: UserDataRepository {
     private let document: UserDataDocument
+    private let firstPartyContent: FirstPartyContentBundle
     private let backfillShouldThrow: Bool
     private let patchShouldThrow: Bool
     private var calls: Int = 0
@@ -176,10 +246,12 @@ actor TrackingUserDataRepository: UserDataRepository {
 
     init(
         document: UserDataDocument,
+        firstPartyContent: FirstPartyContentBundle = .empty,
         backfillShouldThrow: Bool = false,
         patchShouldThrow: Bool = false
     ) {
         self.document = document
+        self.firstPartyContent = firstPartyContent
         self.backfillShouldThrow = backfillShouldThrow
         self.patchShouldThrow = patchShouldThrow
     }
@@ -187,6 +259,10 @@ actor TrackingUserDataRepository: UserDataRepository {
     func fetch(userID: UUID) async throws -> UserDataDocument {
         _ = userID
         return document
+    }
+
+    func fetchFirstPartyContent() async throws -> FirstPartyContentBundle {
+        firstPartyContent
     }
 
     func backfillDefaultGraphIfMissing(canonicalGraph: CausalGraphData, lastModified: String) async throws -> Bool {

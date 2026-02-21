@@ -147,4 +147,82 @@ struct DashboardSnapshotBuilderTests {
         #expect(snapshot.outcomeRecords.first?.id == "2026-02-21")
         #expect(snapshot.outcomeRecords.last?.id == "2026-02-19")
     }
+
+    @Test func firstPartyCatalogEnrichesInputsAndOutcomesMetadata() {
+        let builder = DashboardSnapshotBuilder()
+        let document = UserDataDocument(
+            version: 1,
+            lastExport: nil,
+            personalStudies: [],
+            notes: [],
+            experiments: [],
+            interventionRatings: [],
+            dailyCheckIns: ["2026-02-21": ["PPI_TX"]],
+            nightExposures: [],
+            nightOutcomes: [],
+            morningStates: [],
+            habitTrials: [],
+            habitClassifications: [],
+            hiddenInterventions: [],
+            unlockedAchievements: [],
+            customCausalDiagram: nil,
+            experienceFlow: .empty
+        )
+        let firstPartyContent = FirstPartyContentBundle(
+            graphData: CausalGraphData(
+                nodes: [],
+                edges: []
+            ),
+            interventionsCatalog: InterventionsCatalog(
+                interventions: [
+                    InterventionDefinition(
+                        id: "PPI_TX",
+                        name: "PPI / Lansoprazole",
+                        description: "Take evening dose.",
+                        detailedDescription: "Take dose before bed for reflux control.",
+                        evidenceLevel: "Robust",
+                        evidenceSummary: "RCT-backed reduction in RMMA.",
+                        citationIds: ["ohmure_2016"],
+                        externalLink: "https://example.com/ppi-rct",
+                        defaultOrder: 1
+                    ),
+                    InterventionDefinition(
+                        id: "BED_ELEV_TX",
+                        name: "Bed Elevation",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: "Moderate",
+                        evidenceSummary: "Guideline-supported reflux reduction.",
+                        citationIds: ["gerd_guidelines"],
+                        externalLink: nil,
+                        defaultOrder: 2
+                    ),
+                ]
+            ),
+            outcomesMetadata: OutcomesMetadata(
+                metrics: [
+                    OutcomeMetricDefinition(
+                        id: "microArousalRatePerHour",
+                        label: "Microarousal rate/hour",
+                        unit: "events/hour",
+                        direction: "lower_better",
+                        description: "Lower values indicate calmer sleep continuity."
+                    )
+                ],
+                nodes: [],
+                updatedAt: "2026-02-21T21:30:00Z"
+            )
+        )
+
+        let snapshot = builder.build(
+            from: document,
+            firstPartyContent: firstPartyContent
+        )
+
+        #expect(snapshot.inputs.map { $0.id } == ["PPI_TX", "BED_ELEV_TX"])
+        #expect(snapshot.inputs.first?.evidenceLevel == "Robust")
+        #expect(snapshot.inputs.first?.evidenceSummary == "RCT-backed reduction in RMMA.")
+        #expect(snapshot.inputs.first?.citationIDs == ["ohmure_2016"])
+        #expect(snapshot.outcomesMetadata.metrics.count == 1)
+    }
 }
