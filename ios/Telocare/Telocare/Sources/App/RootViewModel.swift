@@ -169,6 +169,7 @@ final class RootViewModel: ObservableObject {
                 initialExperienceFlow: document.experienceFlow,
                 initialDailyCheckIns: document.dailyCheckIns,
                 initialDailyDoseProgress: document.dailyDoseProgress,
+                initialInterventionCompletionEvents: document.interventionCompletionEvents,
                 initialInterventionDoseSettings: document.interventionDoseSettings,
                 initialAppleHealthConnections: document.appleHealthConnections,
                 initialMorningStates: document.morningStates,

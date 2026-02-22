@@ -235,6 +235,28 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(startAgainButton.waitForExistence(timeout: 2))
     }
 
+    func testInputDetailShowsCompletionHistoryChart() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let inputsTab = app.tabBars.buttons["Inputs"]
+        XCTAssertTrue(inputsTab.waitForExistence(timeout: 4))
+        inputsTab.tap()
+
+        guard let interventionName = completeInterventionForHistoryAssertion(in: app) else {
+            XCTFail("Expected at least one check or increment action in Inputs.")
+            return
+        }
+
+        XCTAssertTrue(openInputDetail(named: interventionName, in: app))
+
+        let historyChart = element(withIdentifier: UIID.exploreInputCompletionHistoryChart, in: app)
+        XCTAssertTrue(historyChart.waitForExistence(timeout: 4))
+        XCTAssertTrue(waitForValueContaining("Latest", of: historyChart, timeout: 4))
+    }
+
     private func configuredApp(
         authState: UITestAuthState,
         signUpNeedsConfirmation: Bool = false,
@@ -302,6 +324,63 @@ final class TelocareUITests: XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    private func interventionName(fromActionLabel label: String) -> String? {
+        let prefixes = ["Check ", "Increment ", "Uncheck ", "Start tracking "]
+
+        for prefix in prefixes where label.hasPrefix(prefix) {
+            let name = String(label.dropFirst(prefix.count))
+            return name.isEmpty ? nil : name
+        }
+
+        return nil
+    }
+
+    private func completeInterventionForHistoryAssertion(in app: XCUIApplication) -> String? {
+        let checkButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Check ")).firstMatch
+        if checkButton.waitForExistence(timeout: 4),
+           let interventionName = interventionName(fromActionLabel: checkButton.label) {
+            checkButton.tap()
+            let doneFilter = app.buttons.matching(
+                NSPredicate(format: "label CONTAINS %@", "Done")
+            ).firstMatch
+            if doneFilter.waitForExistence(timeout: 2) {
+                doneFilter.tap()
+            }
+            return interventionName
+        }
+
+        let incrementButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Increment ")).firstMatch
+        if incrementButton.waitForExistence(timeout: 4),
+           let interventionName = interventionName(fromActionLabel: incrementButton.label) {
+            incrementButton.tap()
+            return interventionName
+        }
+
+        return nil
+    }
+
+    private func openInputDetail(named interventionName: String, in app: XCUIApplication) -> Bool {
+        let detailButton = app.buttons.containing(.staticText, identifier: interventionName).firstMatch
+        if detailButton.waitForExistence(timeout: 2) {
+            detailButton.tap()
+            return element(withIdentifier: UIID.exploreInputDetailSheet, in: app).waitForExistence(timeout: 2)
+        }
+
+        let namedButton = app.buttons[interventionName]
+        if namedButton.waitForExistence(timeout: 2) {
+            namedButton.tap()
+            return element(withIdentifier: UIID.exploreInputDetailSheet, in: app).waitForExistence(timeout: 2)
+        }
+
+        let title = app.staticTexts[interventionName]
+        if title.waitForExistence(timeout: 2) {
+            title.tap()
+            return element(withIdentifier: UIID.exploreInputDetailSheet, in: app).waitForExistence(timeout: 2)
+        }
+
+        return false
+    }
+
     private func reopenMorningCheckIn(in app: XCUIApplication, toggle: XCUIElement) {
         let globalPicker = element(withIdentifier: UIID.exploreMorningGlobalPicker, in: app)
         if globalPicker.waitForExistence(timeout: 1) {
@@ -346,6 +425,8 @@ private enum UIID {
     static let exploreOutcomesMorningChart = "explore.outcomes.morning.chart"
     static let exploreOutcomesNightChart = "explore.outcomes.night.chart"
     static let exploreOutcomesMorningCheckInToggle = "explore.outcomes.morning.toggle"
+    static let exploreInputDetailSheet = "explore.inputs.detail.sheet"
+    static let exploreInputCompletionHistoryChart = "explore.inputs.completion.history.chart"
     static let exploreMorningGlobalPicker = "explore.outcomes.morning.global.picker"
     static let exploreMorningNeckPicker = "explore.outcomes.morning.neck.picker"
     static let exploreMorningJawPicker = "explore.outcomes.morning.jaw.picker"

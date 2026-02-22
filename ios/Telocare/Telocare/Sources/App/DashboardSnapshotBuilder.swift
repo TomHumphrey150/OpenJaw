@@ -132,6 +132,9 @@ struct DashboardSnapshotBuilder {
                 ($0.interventionId, $0.status)
             }
         )
+        let completionEventsByID = completionEventsByInterventionID(
+            canonicalData.interventionCompletionEvents
+        )
         let nodeByID = Dictionary(uniqueKeysWithValues: graphData.nodes.map { ($0.data.id, $0.data) })
 
         let orderedInterventions = interventionInventory(
@@ -148,6 +151,7 @@ struct DashboardSnapshotBuilder {
             let graphNode = intervention.graphNodeID.flatMap { nodeByID[$0] } ?? nodeByID[intervention.id]
             let classificationText = classificationByID[intervention.id].map(humanizeClassification)
             let appleHealthConnection = canonicalData.appleHealthConnections[intervention.id]
+            let completionEvents = completionEventsByID[intervention.id] ?? []
 
             switch intervention.trackingMode {
             case .binary:
@@ -178,6 +182,7 @@ struct DashboardSnapshotBuilder {
                     completion: min(1.0, Double(daysOn) / 7.0),
                     isCheckedToday: latestIncludes,
                     doseState: nil,
+                    completionEvents: completionEvents,
                     graphNodeID: intervention.graphNodeID ?? intervention.id,
                     classificationText: classificationText,
                     isActive: activeInterventionIDs.contains(intervention.id),
@@ -199,6 +204,7 @@ struct DashboardSnapshotBuilder {
                         completion: 0,
                         isCheckedToday: false,
                         doseState: nil,
+                        completionEvents: completionEvents,
                         graphNodeID: intervention.graphNodeID ?? intervention.id,
                         classificationText: classificationText,
                         isActive: activeInterventionIDs.contains(intervention.id),
@@ -238,6 +244,7 @@ struct DashboardSnapshotBuilder {
                     completion: doseState.completionClamped,
                     isCheckedToday: doseState.isGoalMet,
                     doseState: doseState,
+                    completionEvents: completionEvents,
                     graphNodeID: intervention.graphNodeID ?? intervention.id,
                     classificationText: classificationText,
                     isActive: activeInterventionIDs.contains(intervention.id),
@@ -281,6 +288,7 @@ struct DashboardSnapshotBuilder {
         let classificationIDs = Set(canonicalData.habitClassifications.map { $0.interventionId })
         let ratingIDs = Set(canonicalData.interventionRatings.map { $0.interventionId })
         let doseProgressIDs = Set(canonicalData.dailyDoseProgress.values.flatMap { $0.keys })
+        let completionEventIDs = Set(canonicalData.interventionCompletionEvents.map { $0.interventionId })
         let settingsIDs = Set(canonicalData.interventionDoseSettings.keys)
         let appleHealthConnectionIDs = Set(canonicalData.appleHealthConnections.keys)
         let activeIDs = Set(canonicalData.activeInterventions)
@@ -289,6 +297,7 @@ struct DashboardSnapshotBuilder {
             .union(classificationIDs)
             .union(ratingIDs)
             .union(doseProgressIDs)
+            .union(completionEventIDs)
             .union(settingsIDs)
             .union(appleHealthConnectionIDs)
             .union(activeIDs)
@@ -401,6 +410,22 @@ struct DashboardSnapshotBuilder {
         return "\(value)/\(goal) \(state.unit.displayName) today (\(percent)%)"
     }
 
+    private func completionEventsByInterventionID(
+        _ events: [InterventionCompletionEvent]
+    ) -> [String: [InterventionCompletionEvent]] {
+        var grouped: [String: [InterventionCompletionEvent]] = [:]
+
+        for event in events {
+            grouped[event.interventionId, default: []].append(event)
+        }
+
+        return grouped.mapValues { values in
+            values.sorted { lhs, rhs in
+                lhs.occurredAt > rhs.occurredAt
+            }
+        }
+    }
+
     private func formattedDoseValue(_ value: Double) -> String {
         let rounded = value.rounded()
         if abs(rounded - value) < 0.0001 {
@@ -503,6 +528,7 @@ private struct CanonicalInterventionLookup {
 private struct CanonicalizedInterventionData {
     let dailyCheckIns: [String: [String]]
     let dailyDoseProgress: [String: [String: Double]]
+    let interventionCompletionEvents: [InterventionCompletionEvent]
     let interventionDoseSettings: [String: DoseSettings]
     let appleHealthConnections: [String: AppleHealthConnection]
     let activeInterventions: [String]
@@ -513,6 +539,10 @@ private struct CanonicalizedInterventionData {
     init(document: UserDataDocument, lookup: CanonicalInterventionLookup) {
         dailyCheckIns = Self.canonicalizedDailyCheckIns(document.dailyCheckIns, lookup: lookup)
         dailyDoseProgress = Self.canonicalizedDailyDoseProgress(document.dailyDoseProgress, lookup: lookup)
+        interventionCompletionEvents = Self.canonicalizedInterventionCompletionEvents(
+            document.interventionCompletionEvents,
+            lookup: lookup
+        )
         interventionDoseSettings = Self.canonicalizedDoseSettings(document.interventionDoseSettings, lookup: lookup)
         appleHealthConnections = Self.canonicalizedAppleHealthConnections(document.appleHealthConnections, lookup: lookup)
         activeInterventions = Self.canonicalizedIDs(document.activeInterventions, lookup: lookup)
@@ -530,6 +560,19 @@ private struct CanonicalizedInterventionData {
             next[dateKey] = canonicalizedIDs(ids, lookup: lookup)
         }
         return next
+    }
+
+    private static func canonicalizedInterventionCompletionEvents(
+        _ current: [InterventionCompletionEvent],
+        lookup: CanonicalInterventionLookup
+    ) -> [InterventionCompletionEvent] {
+        current.map { event in
+            InterventionCompletionEvent(
+                interventionId: lookup.canonicalID(for: event.interventionId),
+                occurredAt: event.occurredAt,
+                source: event.source
+            )
+        }
     }
 
     private static func canonicalizedDailyDoseProgress(

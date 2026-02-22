@@ -41,6 +41,7 @@ enum AccessibilityID {
     static let exploreOutcomesNightChart = "explore.outcomes.night.chart"
     static let exploreOutcomesMorningCheckInToggle = "explore.outcomes.morning.toggle"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"
+    static let exploreInputCompletionHistoryChart = "explore.inputs.completion.history.chart"
     static let exploreInputDoseIncrement = "explore.inputs.dose.increment"
     static let exploreInputDoseDecrement = "explore.inputs.dose.decrement"
     static let exploreInputDoseReset = "explore.inputs.dose.reset"

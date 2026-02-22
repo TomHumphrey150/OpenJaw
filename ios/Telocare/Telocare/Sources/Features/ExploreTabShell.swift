@@ -1747,6 +1747,7 @@ private struct InputDetailView: View {
 
                 appleHealthCard
                 statusCard
+                InputCompletionHistoryCard(events: input.completionEvents)
                 doseCard
                 evidenceCard
 

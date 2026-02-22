@@ -71,6 +71,9 @@ struct AppViewModelTests {
         let patch = await patchRecorder.lastPatch()
 
         #expect(patch?.dailyCheckIns?["2026-02-21"]?.contains("bed_elevation") == true)
+        #expect(patch?.interventionCompletionEvents?.count == 1)
+        #expect(patch?.interventionCompletionEvents?.first?.interventionId == "bed_elevation")
+        #expect(patch?.interventionCompletionEvents?.first?.source == .binaryCheck)
         #expect(patch?.activeInterventions == nil)
         #expect(patch?.hiddenInterventions == nil)
         #expect(patch?.morningStates == nil)
@@ -91,6 +94,7 @@ struct AppViewModelTests {
         let after = harness.viewModel.snapshot.inputs.first(where: { $0.id == "bed_elevation" })
 
         #expect(before?.isCheckedToday == after?.isCheckedToday)
+        #expect(before?.completionEvents == after?.completionEvents)
         #expect(harness.viewModel.exploreFeedback == "Could not save Bed Elevation check-in. Reverted.")
         #expect(harness.recorder.messages.last == "Could not save Bed Elevation check-in. Reverted.")
     }
@@ -111,6 +115,77 @@ struct AppViewModelTests {
         await waitUntil { await patchRecorder.count() == 1 }
         let patch = await patchRecorder.lastPatch()
         #expect(patch?.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 600)
+        #expect(patch?.interventionCompletionEvents?.count == 1)
+        #expect(patch?.interventionCompletionEvents?.first?.interventionId == "water_intake")
+        #expect(patch?.interventionCompletionEvents?.first?.source == .doseIncrement)
+    }
+
+    @Test func uncheckAndDoseUndoKeepExistingCompletionEvents() async {
+        let existingEvent = InterventionCompletionEvent(
+            interventionId: "ppi",
+            occurredAt: "2026-02-20T08:00:00Z",
+            source: .binaryCheck
+        )
+        let doseEvent = InterventionCompletionEvent(
+            interventionId: "water_intake",
+            occurredAt: "2026-02-20T08:05:00Z",
+            source: .doseIncrement
+        )
+
+        let checkPatchRecorder = PatchRecorder()
+        let checkHarness = AppViewModelHarness(
+            initialDailyCheckIns: ["2026-02-21": ["ppi"]],
+            initialInterventionCompletionEvents: [existingEvent],
+            persistUserDataPatch: { patch in
+                await checkPatchRecorder.record(patch)
+                return true
+            }
+        )
+
+        checkHarness.viewModel.toggleInputCheckedToday("ppi")
+
+        await waitUntil { await checkPatchRecorder.count() == 1 }
+        let checkPatch = await checkPatchRecorder.lastPatch()
+        #expect(checkPatch?.interventionCompletionEvents == [existingEvent])
+        #expect(checkHarness.viewModel.snapshot.inputs.first(where: { $0.id == "ppi" })?.completionEvents == [existingEvent])
+
+        let dosePatchRecorder = PatchRecorder()
+        let doseHarness = AppViewModelHarness(
+            snapshot: doseSnapshot(),
+            initialDailyDoseProgress: ["2026-02-21": ["water_intake": 500]],
+            initialInterventionCompletionEvents: [doseEvent],
+            persistUserDataPatch: { patch in
+                await dosePatchRecorder.record(patch)
+                return true
+            }
+        )
+
+        doseHarness.viewModel.decrementInputDose("water_intake")
+        await waitUntil { await dosePatchRecorder.count() == 1 }
+        let decrementPatch = await dosePatchRecorder.lastPatch()
+        #expect(decrementPatch?.interventionCompletionEvents == [doseEvent])
+
+        doseHarness.viewModel.resetInputDose("water_intake")
+        await waitUntil { await dosePatchRecorder.count() == 2 }
+        let resetPatch = await dosePatchRecorder.lastPatch()
+        #expect(resetPatch?.interventionCompletionEvents == [doseEvent])
+    }
+
+    @Test func doseIncrementFailureRevertsCompletionEvents() async {
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshot(),
+            initialDailyDoseProgress: ["2026-02-21": ["water_intake": 500]],
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            }
+        )
+
+        #expect(harness.viewModel.snapshot.inputs.first(where: { $0.id == "water_intake" })?.completionEvents.isEmpty == true)
+
+        harness.viewModel.incrementInputDose("water_intake")
+
+        await waitUntil { harness.viewModel.exploreFeedback.contains("Could not save dose progress") }
+        #expect(harness.viewModel.snapshot.inputs.first(where: { $0.id == "water_intake" })?.completionEvents.isEmpty == true)
     }
 
     @Test func doseUpdateSettingsPersistsPatch() async {
@@ -384,6 +459,7 @@ private struct AppViewModelHarness {
         initialExperienceFlow: ExperienceFlow = .empty,
         initialDailyCheckIns: [String: [String]] = [:],
         initialDailyDoseProgress: [String: [String: Double]] = [:],
+        initialInterventionCompletionEvents: [InterventionCompletionEvent] = [],
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialMorningStates: [MorningState] = [],
@@ -402,6 +478,7 @@ private struct AppViewModelHarness {
             initialExperienceFlow: initialExperienceFlow,
             initialDailyCheckIns: initialDailyCheckIns,
             initialDailyDoseProgress: initialDailyDoseProgress,
+            initialInterventionCompletionEvents: initialInterventionCompletionEvents,
             initialInterventionDoseSettings: initialInterventionDoseSettings,
             initialAppleHealthConnections: initialAppleHealthConnections,
             initialMorningStates: initialMorningStates,

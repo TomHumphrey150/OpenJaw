@@ -17,6 +17,23 @@ struct DashboardSnapshotBuilderTests {
             dailyDoseProgress: [
                 "2026-02-22": ["hydration_target": 1200, "HYDRATION": 900],
             ],
+            interventionCompletionEvents: [
+                InterventionCompletionEvent(
+                    interventionId: "hydration_target",
+                    occurredAt: "2026-02-22T08:00:00Z",
+                    source: .doseIncrement
+                ),
+                InterventionCompletionEvent(
+                    interventionId: "HYDRATION",
+                    occurredAt: "2026-02-22T08:05:00Z",
+                    source: .doseIncrement
+                ),
+                InterventionCompletionEvent(
+                    interventionId: "exercise_timing",
+                    occurredAt: "2026-02-22T07:55:00Z",
+                    source: .doseIncrement
+                ),
+            ],
             interventionDoseSettings: [
                 "water_intake": DoseSettings(dailyGoal: 3000, increment: 100),
             ],
@@ -95,12 +112,17 @@ struct DashboardSnapshotBuilderTests {
         #expect(water.statusText == "2100/3000 ml today (70%)")
         #expect(water.appleHealthState?.available == true)
         #expect(water.appleHealthState?.connected == false)
+        #expect(water.completionEvents.count == 2)
+        #expect(water.completionEvents.map { $0.interventionId } == ["water_intake", "water_intake"])
+        #expect(water.completionEvents.first?.occurredAt == "2026-02-22T08:05:00Z")
 
         let exercise = snapshot.inputs[1]
         #expect(exercise.trackingMode == .dose)
         #expect(exercise.doseState?.value == 0)
         #expect(exercise.doseState?.goal == 30)
         #expect(exercise.doseState?.increment == 10)
+        #expect(exercise.completionEvents.count == 1)
+        #expect(exercise.completionEvents.first?.interventionId == "exercise_minutes")
     }
 
     @Test func buildsInputInventoryFromGraphWithPersistedState() {

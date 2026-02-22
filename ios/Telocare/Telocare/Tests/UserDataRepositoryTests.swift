@@ -161,6 +161,7 @@ struct UserDataRepositoryTests {
         #expect(decoded.experienceFlow?.lastGuidedStatus == .completed)
         #expect(decoded.experienceFlow?.hasCompletedInitialGuidedFlow == true)
         #expect(decoded.dailyCheckIns == nil)
+        #expect(decoded.interventionCompletionEvents == nil)
         #expect(decoded.morningStates == nil)
         #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
@@ -186,6 +187,7 @@ struct UserDataRepositoryTests {
 
         #expect(decoded.experienceFlow == nil)
         #expect(decoded.dailyCheckIns == nil)
+        #expect(decoded.interventionCompletionEvents == nil)
         #expect(decoded.morningStates?.count == 1)
         #expect(decoded.morningStates?.first?.nightId == "2026-02-21")
         #expect(decoded.morningStates?.first?.globalSensation == 6)
@@ -222,6 +224,66 @@ struct UserDataRepositoryTests {
 
         #expect(decoded.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 1200)
         #expect(decoded.interventionDoseSettings == nil)
+    }
+
+    @Test func userDataPatchCanEncodeInterventionCompletionEvents() throws {
+        let patch = UserDataPatch.interventionCompletionEvents(
+            [
+                InterventionCompletionEvent(
+                    interventionId: "PPI_TX",
+                    occurredAt: "2026-02-21T08:00:00Z",
+                    source: .binaryCheck
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.interventionCompletionEvents?.count == 1)
+        #expect(decoded.interventionCompletionEvents?.first?.source == .binaryCheck)
+        #expect(decoded.dailyCheckIns == nil)
+        #expect(decoded.dailyDoseProgress == nil)
+    }
+
+    @Test func userDataPatchCanEncodeDailyCheckInsAndCompletionEventsAtomically() throws {
+        let patch = UserDataPatch.dailyCheckInsAndCompletionEvents(
+            ["2026-02-21": ["PPI_TX"]],
+            [
+                InterventionCompletionEvent(
+                    interventionId: "PPI_TX",
+                    occurredAt: "2026-02-21T08:00:00Z",
+                    source: .binaryCheck
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.dailyCheckIns?["2026-02-21"] == ["PPI_TX"])
+        #expect(decoded.interventionCompletionEvents?.count == 1)
+        #expect(decoded.dailyDoseProgress == nil)
+    }
+
+    @Test func userDataPatchCanEncodeDailyDoseProgressAndCompletionEventsAtomically() throws {
+        let patch = UserDataPatch.dailyDoseProgressAndCompletionEvents(
+            ["2026-02-21": ["water_intake": 1200]],
+            [
+                InterventionCompletionEvent(
+                    interventionId: "water_intake",
+                    occurredAt: "2026-02-21T08:00:00Z",
+                    source: .doseIncrement
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 1200)
+        #expect(decoded.interventionCompletionEvents?.first?.source == .doseIncrement)
+        #expect(decoded.dailyCheckIns == nil)
     }
 
     @Test func userDataPatchCanEncodeInterventionDoseSettings() throws {
@@ -295,6 +357,7 @@ private struct DecodedPatch: Decodable {
     let experienceFlow: ExperienceFlow?
     let dailyCheckIns: [String: [String]]?
     let dailyDoseProgress: [String: [String: Double]]?
+    let interventionCompletionEvents: [InterventionCompletionEvent]?
     let interventionDoseSettings: [String: DoseSettings]?
     let appleHealthConnections: [String: AppleHealthConnection]?
     let morningStates: [MorningState]?

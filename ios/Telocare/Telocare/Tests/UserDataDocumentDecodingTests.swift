@@ -9,6 +9,7 @@ struct UserDataDocumentDecodingTests {
 
         #expect(decoded.version == 1)
         #expect(decoded.dailyCheckIns["2026-02-21"] == ["PPI_TX"])
+        #expect(decoded.interventionCompletionEvents.isEmpty)
         #expect(decoded.activeInterventions.isEmpty)
         #expect(decoded.appleHealthConnections == [:])
         #expect(decoded.customCausalDiagram?.graphData.nodes.count == 1)
@@ -28,6 +29,16 @@ struct UserDataDocumentDecodingTests {
         let decoded = try JSONDecoder().decode(UserDataDocument.self, from: data)
 
         #expect(decoded.activeInterventions == ["PPI_TX", "BED_ELEV_TX"])
+    }
+
+    @Test func decodesInterventionCompletionEventsWhenPresent() throws {
+        let data = try jsonData(from: completionEventsJSON)
+        let decoded = try JSONDecoder().decode(UserDataDocument.self, from: data)
+
+        #expect(decoded.interventionCompletionEvents.count == 2)
+        #expect(decoded.interventionCompletionEvents.first?.interventionId == "PPI_TX")
+        #expect(decoded.interventionCompletionEvents.first?.source == .binaryCheck)
+        #expect(decoded.interventionCompletionEvents.last?.source == .doseIncrement)
     }
 
     @Test func failsToDecodeInvalidGraphPayload() throws {
@@ -157,6 +168,49 @@ private let activeInterventionsJSON = """
   "habitTrials": [],
   "habitClassifications": [],
   "activeInterventions": ["PPI_TX", "BED_ELEV_TX"],
+  "hiddenInterventions": [],
+  "unlockedAchievements": [],
+  "experienceFlow": {
+    "hasCompletedInitialGuidedFlow": false,
+    "lastGuidedEntryDate": null,
+    "lastGuidedCompletedDate": null,
+    "lastGuidedStatus": "not_started"
+  },
+  "customCausalDiagram": {
+    "graphData": {
+      "nodes": [],
+      "edges": []
+    },
+    "lastModified": "2026-02-21T00:00:00.000Z"
+  }
+}
+"""
+
+private let completionEventsJSON = """
+{
+  "version": 1,
+  "personalStudies": [],
+  "notes": [],
+  "experiments": [],
+  "interventionRatings": [],
+  "dailyCheckIns": {},
+  "interventionCompletionEvents": [
+    {
+      "interventionId": "PPI_TX",
+      "occurredAt": "2026-02-21T08:00:00Z",
+      "source": "binaryCheck"
+    },
+    {
+      "interventionId": "WATER_INTAKE",
+      "occurredAt": "2026-02-21T08:05:00Z",
+      "source": "doseIncrement"
+    }
+  ],
+  "nightExposures": [],
+  "nightOutcomes": [],
+  "morningStates": [],
+  "habitTrials": [],
+  "habitClassifications": [],
   "hiddenInterventions": [],
   "unlockedAchievements": [],
   "experienceFlow": {

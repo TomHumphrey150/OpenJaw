@@ -19,6 +19,7 @@ final class AppViewModel: ObservableObject {
     private var experienceFlow: ExperienceFlow
     private var dailyCheckIns: [String: [String]]
     private var dailyDoseProgress: [String: [String: Double]]
+    private var interventionCompletionEvents: [InterventionCompletionEvent]
     private var interventionDoseSettings: [String: DoseSettings]
     private var appleHealthConnections: [String: AppleHealthConnection]
     private var appleHealthValues: [String: Double]
@@ -35,6 +36,7 @@ final class AppViewModel: ObservableObject {
     private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
     private let appleHealthDoseService: AppleHealthDoseService
     private let nowProvider: () -> Date
+    private static let maxCompletionEventsPerIntervention = 200
 
     convenience init(
         loadDashboardSnapshotUseCase: LoadDashboardSnapshotUseCase,
@@ -46,6 +48,7 @@ final class AppViewModel: ObservableObject {
             initialExperienceFlow: .empty,
             initialDailyCheckIns: [:],
             initialDailyDoseProgress: [:],
+            initialInterventionCompletionEvents: [],
             initialInterventionDoseSettings: [:],
             initialAppleHealthConnections: [:],
             initialMorningStates: [],
@@ -62,6 +65,7 @@ final class AppViewModel: ObservableObject {
         initialExperienceFlow: ExperienceFlow = .empty,
         initialDailyCheckIns: [String: [String]] = [:],
         initialDailyDoseProgress: [String: [String: Double]] = [:],
+        initialInterventionCompletionEvents: [InterventionCompletionEvent] = [],
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialMorningStates: [MorningState] = [],
@@ -93,6 +97,10 @@ final class AppViewModel: ObservableObject {
         experienceFlow = initialExperienceFlow
         dailyCheckIns = initialDailyCheckIns
         dailyDoseProgress = initialDailyDoseProgress
+        let snapshotCompletionEvents = snapshot.inputs.flatMap { $0.completionEvents }
+        interventionCompletionEvents = snapshotCompletionEvents.isEmpty
+            ? initialInterventionCompletionEvents
+            : snapshotCompletionEvents
         interventionDoseSettings = initialInterventionDoseSettings
         appleHealthConnections = initialAppleHealthConnections
         appleHealthValues = [:]
@@ -204,6 +212,7 @@ final class AppViewModel: ObservableObject {
         guard currentInput.trackingMode == .binary else { return }
         let previousSnapshot = snapshot
         let previousDailyCheckIns = dailyCheckIns
+        let previousInterventionCompletionEvents = interventionCompletionEvents
 
         let currentDayCount = dayCount(for: currentInput)
         let nextCheckedToday = !currentInput.isCheckedToday
@@ -216,6 +225,22 @@ final class AppViewModel: ObservableObject {
             checkedToday: nextCheckedToday
         )
 
+        let eventTimestamp = Self.timestamp(from: nowProvider())
+        let nextInterventionCompletionEvents: [InterventionCompletionEvent]
+        if nextCheckedToday {
+            nextInterventionCompletionEvents = Self.appendCompletionEvent(
+                InterventionCompletionEvent(
+                    interventionId: currentInput.id,
+                    occurredAt: eventTimestamp,
+                    source: .binaryCheck
+                ),
+                to: interventionCompletionEvents,
+                maxPerIntervention: Self.maxCompletionEventsPerIntervention
+            )
+        } else {
+            nextInterventionCompletionEvents = interventionCompletionEvents
+        }
+
         let nextInput = InputStatus(
             id: currentInput.id,
             name: currentInput.name,
@@ -224,6 +249,10 @@ final class AppViewModel: ObservableObject {
             completion: Double(nextDayCount) / 7.0,
             isCheckedToday: nextCheckedToday,
             doseState: nil,
+            completionEvents: Self.completionEvents(
+                for: currentInput.id,
+                in: nextInterventionCompletionEvents
+            ),
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isActive: currentInput.isActive,
@@ -245,6 +274,7 @@ final class AppViewModel: ObservableObject {
 
         updateInput(nextInput, at: index)
         dailyCheckIns = nextDailyCheckIns
+        interventionCompletionEvents = nextInterventionCompletionEvents
 
         let successMessage = nextCheckedToday
             ? "\(currentInput.name) checked for today."
@@ -255,10 +285,16 @@ final class AppViewModel: ObservableObject {
         let operationToken = nextInputCheckOperationToken()
         Task {
             do {
-                try await persistPatch(.dailyCheckIns(nextDailyCheckIns))
+                try await persistPatch(
+                    .dailyCheckInsAndCompletionEvents(
+                        nextDailyCheckIns,
+                        nextInterventionCompletionEvents
+                    )
+                )
             } catch {
                 guard operationToken == inputCheckOperationToken else { return }
                 dailyCheckIns = previousDailyCheckIns
+                interventionCompletionEvents = previousInterventionCompletionEvents
                 snapshot = previousSnapshot
                 let failureMessage = "Could not save \(currentInput.name) check-in. Reverted."
                 exploreFeedback = failureMessage
@@ -568,6 +604,7 @@ final class AppViewModel: ObservableObject {
             completion: nextState.completionClamped,
             isCheckedToday: nextState.isGoalMet,
             doseState: nextState,
+            completionEvents: currentInput.completionEvents,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isActive: currentInput.isActive,
@@ -621,6 +658,7 @@ final class AppViewModel: ObservableObject {
             completion: currentInput.completion,
             isCheckedToday: currentInput.isCheckedToday,
             doseState: currentInput.doseState,
+            completionEvents: currentInput.completionEvents,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isActive: nextActive,
@@ -879,6 +917,7 @@ final class AppViewModel: ObservableObject {
 
         let previousSnapshot = snapshot
         let previousDailyDoseProgress = dailyDoseProgress
+        let previousInterventionCompletionEvents = interventionCompletionEvents
 
         let nextValue: Double
         switch operation {
@@ -898,6 +937,22 @@ final class AppViewModel: ObservableObject {
             unit: doseState.unit
         )
 
+        let eventTimestamp = Self.timestamp(from: nowProvider())
+        let nextInterventionCompletionEvents: [InterventionCompletionEvent]
+        if operation == .increment {
+            nextInterventionCompletionEvents = Self.appendCompletionEvent(
+                InterventionCompletionEvent(
+                    interventionId: currentInput.id,
+                    occurredAt: eventTimestamp,
+                    source: .doseIncrement
+                ),
+                to: interventionCompletionEvents,
+                maxPerIntervention: Self.maxCompletionEventsPerIntervention
+            )
+        } else {
+            nextInterventionCompletionEvents = interventionCompletionEvents
+        }
+
         let nextInput = InputStatus(
             id: currentInput.id,
             name: currentInput.name,
@@ -906,6 +961,10 @@ final class AppViewModel: ObservableObject {
             completion: nextDoseState.completionClamped,
             isCheckedToday: nextDoseState.isGoalMet,
             doseState: nextDoseState,
+            completionEvents: Self.completionEvents(
+                for: currentInput.id,
+                in: nextInterventionCompletionEvents
+            ),
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isActive: currentInput.isActive,
@@ -927,6 +986,7 @@ final class AppViewModel: ObservableObject {
 
         updateInput(nextInput, at: index)
         dailyDoseProgress = nextDailyDoseProgress
+        interventionCompletionEvents = nextInterventionCompletionEvents
 
         let successMessage: String
         switch operation {
@@ -944,10 +1004,16 @@ final class AppViewModel: ObservableObject {
         let operationToken = nextInputDoseOperationToken()
         Task {
             do {
-                try await persistPatch(.dailyDoseProgress(nextDailyDoseProgress))
+                try await persistPatch(
+                    .dailyDoseProgressAndCompletionEvents(
+                        nextDailyDoseProgress,
+                        nextInterventionCompletionEvents
+                    )
+                )
             } catch {
                 guard operationToken == inputDoseOperationToken else { return }
                 dailyDoseProgress = previousDailyDoseProgress
+                interventionCompletionEvents = previousInterventionCompletionEvents
                 snapshot = previousSnapshot
                 let failureMessage = "Could not save dose progress for \(currentInput.name). Reverted."
                 exploreFeedback = failureMessage
@@ -986,6 +1052,7 @@ final class AppViewModel: ObservableObject {
             completion: nextDoseState.completionClamped,
             isCheckedToday: nextDoseState.isGoalMet,
             doseState: nextDoseState,
+            completionEvents: currentInput.completionEvents,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isActive: currentInput.isActive,
@@ -1044,6 +1111,50 @@ final class AppViewModel: ObservableObject {
         }
 
         next[dateKey] = progress
+        return next
+    }
+
+    private static func completionEvents(
+        for interventionID: String,
+        in events: [InterventionCompletionEvent]
+    ) -> [InterventionCompletionEvent] {
+        events
+            .filter { $0.interventionId == interventionID }
+            .sorted { lhs, rhs in
+                lhs.occurredAt > rhs.occurredAt
+            }
+    }
+
+    private static func appendCompletionEvent(
+        _ event: InterventionCompletionEvent,
+        to current: [InterventionCompletionEvent],
+        maxPerIntervention: Int
+    ) -> [InterventionCompletionEvent] {
+        var next = current
+        next.append(event)
+
+        let matchingIndices = next.indices.filter { index in
+            next[index].interventionId == event.interventionId
+        }
+        let overflowCount = matchingIndices.count - maxPerIntervention
+        if overflowCount <= 0 {
+            return next
+        }
+
+        let oldestIndices = matchingIndices
+            .sorted { lhs, rhs in
+                if next[lhs].occurredAt == next[rhs].occurredAt {
+                    return lhs < rhs
+                }
+                return next[lhs].occurredAt < next[rhs].occurredAt
+            }
+            .prefix(overflowCount)
+            .sorted(by: >)
+
+        for index in oldestIndices {
+            next.remove(at: index)
+        }
+
         return next
     }
 
@@ -1133,7 +1244,11 @@ final class AppViewModel: ObservableObject {
     }
 
     private static func timestampNow() -> String {
-        ISO8601DateFormatter().string(from: Date())
+        timestamp(from: Date())
+    }
+
+    private static func timestamp(from date: Date) -> String {
+        ISO8601DateFormatter().string(from: date)
     }
 
     private static func appleHealthErrorCode(for error: Error) -> String {

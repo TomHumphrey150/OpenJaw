@@ -38,6 +38,23 @@ extension UserDataDocument {
             "2026-02-20": ["PPI_TX"],
             "2026-02-19": ["PPI_TX", "BED_ELEV_TX"],
         ],
+        interventionCompletionEvents: [
+            InterventionCompletionEvent(
+                interventionId: "PPI_TX",
+                occurredAt: "2026-02-21T08:01:00.000Z",
+                source: .binaryCheck
+            ),
+            InterventionCompletionEvent(
+                interventionId: "PPI_TX",
+                occurredAt: "2026-02-20T07:58:00.000Z",
+                source: .binaryCheck
+            ),
+            InterventionCompletionEvent(
+                interventionId: "REFLUX_DIET_TX",
+                occurredAt: "2026-02-21T08:12:00.000Z",
+                source: .binaryCheck
+            ),
+        ],
         nightExposures: [],
         nightOutcomes: [
             NightOutcome(nightId: "2026-02-21", microArousalCount: 11, microArousalRatePerHour: 2.1, confidence: 0.73, totalSleepMinutes: 402, source: "wearable", createdAt: "2026-02-21T07:40:00.000Z"),

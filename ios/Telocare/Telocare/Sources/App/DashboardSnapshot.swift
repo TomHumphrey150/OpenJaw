@@ -114,6 +114,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
     let completion: Double
     let isCheckedToday: Bool
     let doseState: InputDoseState?
+    let completionEvents: [InterventionCompletionEvent]
     let graphNodeID: String?
     let classificationText: String?
     let isActive: Bool
@@ -132,6 +133,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         completion: Double,
         isCheckedToday: Bool,
         doseState: InputDoseState? = nil,
+        completionEvents: [InterventionCompletionEvent] = [],
         graphNodeID: String? = nil,
         classificationText: String?,
         isActive: Bool,
@@ -149,6 +151,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         self.completion = completion
         self.isCheckedToday = isCheckedToday
         self.doseState = doseState
+        self.completionEvents = completionEvents
         self.graphNodeID = graphNodeID
         self.classificationText = classificationText
         self.isActive = isActive

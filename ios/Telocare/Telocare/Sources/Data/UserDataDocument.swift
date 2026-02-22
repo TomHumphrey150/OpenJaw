@@ -9,6 +9,7 @@ struct UserDataDocument: Codable, Equatable {
     let interventionRatings: [InterventionRating]
     let dailyCheckIns: [String: [String]]
     let dailyDoseProgress: [String: [String: Double]]
+    let interventionCompletionEvents: [InterventionCompletionEvent]
     let interventionDoseSettings: [String: DoseSettings]
     let appleHealthConnections: [String: AppleHealthConnection]
     let nightExposures: [NightExposure]
@@ -31,6 +32,7 @@ struct UserDataDocument: Codable, Equatable {
         interventionRatings: [],
         dailyCheckIns: [:],
         dailyDoseProgress: [:],
+        interventionCompletionEvents: [],
         interventionDoseSettings: [:],
         appleHealthConnections: [:],
         nightExposures: [],
@@ -54,6 +56,7 @@ struct UserDataDocument: Codable, Equatable {
         interventionRatings: [InterventionRating],
         dailyCheckIns: [String: [String]],
         dailyDoseProgress: [String: [String: Double]] = [:],
+        interventionCompletionEvents: [InterventionCompletionEvent] = [],
         interventionDoseSettings: [String: DoseSettings] = [:],
         appleHealthConnections: [String: AppleHealthConnection] = [:],
         nightExposures: [NightExposure],
@@ -75,6 +78,7 @@ struct UserDataDocument: Codable, Equatable {
         self.interventionRatings = interventionRatings
         self.dailyCheckIns = dailyCheckIns
         self.dailyDoseProgress = dailyDoseProgress
+        self.interventionCompletionEvents = interventionCompletionEvents
         self.interventionDoseSettings = interventionDoseSettings
         self.appleHealthConnections = appleHealthConnections
         self.nightExposures = nightExposures
@@ -98,6 +102,7 @@ struct UserDataDocument: Codable, Equatable {
         case interventionRatings
         case dailyCheckIns
         case dailyDoseProgress
+        case interventionCompletionEvents
         case interventionDoseSettings
         case appleHealthConnections
         case nightExposures
@@ -122,6 +127,7 @@ struct UserDataDocument: Codable, Equatable {
         interventionRatings = try container.decodeIfPresent([InterventionRating].self, forKey: .interventionRatings) ?? []
         dailyCheckIns = try container.decodeIfPresent([String: [String]].self, forKey: .dailyCheckIns) ?? [:]
         dailyDoseProgress = try container.decodeIfPresent([String: [String: Double]].self, forKey: .dailyDoseProgress) ?? [:]
+        interventionCompletionEvents = try container.decodeIfPresent([InterventionCompletionEvent].self, forKey: .interventionCompletionEvents) ?? []
         interventionDoseSettings = try container.decodeIfPresent([String: DoseSettings].self, forKey: .interventionDoseSettings) ?? [:]
         appleHealthConnections = try container.decodeIfPresent([String: AppleHealthConnection].self, forKey: .appleHealthConnections) ?? [:]
         nightExposures = try container.decodeIfPresent([NightExposure].self, forKey: .nightExposures) ?? []
@@ -315,6 +321,17 @@ struct InterventionRating: Codable, Equatable {
     let effectiveness: String
     let notes: String?
     let lastUpdated: String
+}
+
+enum InterventionCompletionEventSource: String, Codable, Equatable, Hashable, Sendable {
+    case binaryCheck
+    case doseIncrement
+}
+
+struct InterventionCompletionEvent: Codable, Equatable, Hashable, Sendable {
+    let interventionId: String
+    let occurredAt: String
+    let source: InterventionCompletionEventSource
 }
 
 struct DoseSettings: Codable, Equatable, Sendable {
