@@ -151,8 +151,14 @@ final class RootViewModel: ObservableObject {
             let fetchedDocument = try await userDataRepository.fetch(userID: session.userID)
             let firstPartyContent = await loadFirstPartyContent()
             let fallbackGraph = firstPartyContent.graphData ?? CanonicalGraphLoader.loadGraphOrFallback()
-            let document = withCanonicalGraphIfMissing(fetchedDocument, fallbackGraph: fallbackGraph)
+            let hydratedDocument = withCanonicalGraphIfMissing(fetchedDocument, fallbackGraph: fallbackGraph)
+            let document = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
             backfillCanonicalGraphIfMissing(from: fetchedDocument, using: document)
+            persistLegacyDormantGraphMigrationIfNeeded(
+                from: fetchedDocument,
+                hydrated: hydratedDocument,
+                migrated: document
+            )
 
             let snapshot = snapshotBuilder.build(
                 from: document,
@@ -198,13 +204,30 @@ final class RootViewModel: ObservableObject {
             return document
         }
 
+        let graphData = Self.seedLegacyDormantGraphDeactivationIfNeeded(fallbackGraph) ?? fallbackGraph
         let lastModified = Self.timestampNow()
         let canonicalDiagram = CustomCausalDiagram(
-            graphData: fallbackGraph,
+            graphData: graphData,
             lastModified: lastModified
         )
 
         return document.withCustomCausalDiagram(canonicalDiagram)
+    }
+
+    private func withLegacyDormantGraphDeactivationMigrationIfNeeded(_ document: UserDataDocument) -> UserDataDocument {
+        guard let customCausalDiagram = document.customCausalDiagram else {
+            return document
+        }
+
+        guard let migratedGraphData = Self.seedLegacyDormantGraphDeactivationIfNeeded(customCausalDiagram.graphData) else {
+            return document
+        }
+
+        let migratedDiagram = CustomCausalDiagram(
+            graphData: migratedGraphData,
+            lastModified: Self.timestampNow()
+        )
+        return document.withCustomCausalDiagram(migratedDiagram)
     }
 
     private func backfillCanonicalGraphIfMissing(from fetched: UserDataDocument, using hydrated: UserDataDocument) {
@@ -226,6 +249,106 @@ final class RootViewModel: ObservableObject {
             } catch {
             }
         }
+    }
+
+    private func persistLegacyDormantGraphMigrationIfNeeded(
+        from fetched: UserDataDocument,
+        hydrated: UserDataDocument,
+        migrated: UserDataDocument
+    ) {
+        guard fetched.customCausalDiagram != nil else {
+            return
+        }
+
+        guard hydrated.customCausalDiagram != migrated.customCausalDiagram else {
+            return
+        }
+
+        guard let migratedDiagram = migrated.customCausalDiagram else {
+            return
+        }
+
+        let repository = userDataRepository
+        Task.detached {
+            do {
+                _ = try await repository.upsertUserDataPatch(.customCausalDiagram(migratedDiagram))
+            } catch {
+            }
+        }
+    }
+
+    private static func seedLegacyDormantGraphDeactivationIfNeeded(_ graphData: CausalGraphData) -> CausalGraphData? {
+        if hasExplicitGraphDeactivationState(graphData) {
+            return nil
+        }
+
+        let dormantNodeIDs = Set(
+            graphData.nodes
+                .map(\.data)
+                .filter(isLegacyDormantNode)
+                .map(\.id)
+        )
+
+        guard !dormantNodeIDs.isEmpty else {
+            return nil
+        }
+
+        let nextNodes = graphData.nodes.map { node in
+            guard dormantNodeIDs.contains(node.data.id) else {
+                return node
+            }
+
+            return GraphNodeElement(
+                data: GraphNodeData(
+                    id: node.data.id,
+                    label: node.data.label,
+                    styleClass: node.data.styleClass,
+                    confirmed: node.data.confirmed,
+                    tier: node.data.tier,
+                    tooltip: node.data.tooltip,
+                    isDeactivated: true
+                )
+            )
+        }
+
+        let nextEdges = graphData.edges.map { edge in
+            guard dormantNodeIDs.contains(edge.data.source) || dormantNodeIDs.contains(edge.data.target) else {
+                return edge
+            }
+
+            return GraphEdgeElement(
+                data: GraphEdgeData(
+                    source: edge.data.source,
+                    target: edge.data.target,
+                    label: edge.data.label,
+                    edgeType: edge.data.edgeType,
+                    edgeColor: edge.data.edgeColor,
+                    tooltip: edge.data.tooltip,
+                    isDeactivated: true
+                )
+            )
+        }
+
+        return CausalGraphData(
+            nodes: nextNodes,
+            edges: nextEdges
+        )
+    }
+
+    private static func hasExplicitGraphDeactivationState(_ graphData: CausalGraphData) -> Bool {
+        if graphData.nodes.contains(where: { $0.data.isDeactivated != nil }) {
+            return true
+        }
+
+        return graphData.edges.contains(where: { $0.data.isDeactivated != nil })
+    }
+
+    private static func isLegacyDormantNode(_ node: GraphNodeData) -> Bool {
+        guard let confirmed = node.confirmed?.lowercased() else {
+            return false
+        }
+
+        return confirmed == "no" || confirmed == "inactive" || confirmed == "external"
     }
 
     nonisolated private static func timestampNow() -> String {

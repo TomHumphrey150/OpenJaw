@@ -90,13 +90,11 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
         if lastGraphData != graphData {
             enqueue(command: .setGraphData(graphData))
             lastGraphData = graphData
-            lastFocusedNodeID = nil
         }
 
         if lastDisplayFlags != displayFlags {
             enqueue(command: .setDisplayFlags(displayFlags))
             lastDisplayFlags = displayFlags
-            lastFocusedNodeID = nil
         }
 
         guard let focusedNodeID else {
@@ -143,13 +141,15 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
             let sourceLabel = payload?["sourceLabel"] as? String ?? sourceID
             let targetLabel = payload?["targetLabel"] as? String ?? targetID
             let label = payload?["label"] as? String
+            let edgeType = payload?["edgeType"] as? String
             onEvent(
                 .edgeSelected(
                     sourceID: sourceID,
                     targetID: targetID,
                     sourceLabel: sourceLabel,
                     targetLabel: targetLabel,
-                    label: label
+                    label: label,
+                    edgeType: edgeType
                 )
             )
         case "viewportChanged":

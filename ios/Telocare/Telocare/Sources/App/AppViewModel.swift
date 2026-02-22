@@ -31,6 +31,7 @@ final class AppViewModel: ObservableObject {
     private var inputActiveOperationToken: Int
     private var appleHealthConnectionOperationToken: Int
     private var morningOutcomeOperationToken: Int
+    private var graphDeactivationOperationToken: Int
 
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
@@ -116,6 +117,7 @@ final class AppViewModel: ObservableObject {
         inputActiveOperationToken = 0
         appleHealthConnectionOperationToken = 0
         morningOutcomeOperationToken = 0
+        graphDeactivationOperationToken = 0
 
         self.persistUserDataPatch = persistUserDataPatch
         self.appleHealthDoseService = appleHealthDoseService
@@ -202,6 +204,115 @@ final class AppViewModel: ObservableObject {
             showProtectiveEdges: isEnabled,
             showInterventionNodes: graphDisplayFlags.showInterventionNodes
         )
+    }
+
+    func toggleGraphNodeDeactivated(_ nodeID: String) {
+        guard mode == .explore else { return }
+        guard let nodeIndex = graphData.nodes.firstIndex(where: { $0.data.id == nodeID }) else { return }
+
+        let previousGraphData = graphData
+        let currentNode = graphData.nodes[nodeIndex].data
+        let nextIsDeactivated = !(currentNode.isDeactivated ?? false)
+
+        var nextNodes = graphData.nodes
+        nextNodes[nodeIndex] = GraphNodeElement(
+            data: GraphNodeData(
+                id: currentNode.id,
+                label: currentNode.label,
+                styleClass: currentNode.styleClass,
+                confirmed: currentNode.confirmed,
+                tier: currentNode.tier,
+                tooltip: currentNode.tooltip,
+                isDeactivated: nextIsDeactivated
+            )
+        )
+
+        let nextGraphData = CausalGraphData(
+            nodes: nextNodes,
+            edges: graphData.edges
+        )
+        graphData = nextGraphData
+
+        let nodeLabel = Self.firstLine(for: currentNode.label)
+        let successMessage = nextIsDeactivated
+            ? "\(nodeLabel) deactivated."
+            : "\(nodeLabel) reactivated."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextGraphDeactivationOperationToken()
+        Task {
+            do {
+                try await persistPatch(graphDeactivationPatch(for: nextGraphData))
+            } catch {
+                guard operationToken == graphDeactivationOperationToken else { return }
+                graphData = previousGraphData
+                let failureMessage = "Could not save \(nodeLabel) state. Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
+    }
+
+    func toggleGraphEdgeDeactivated(
+        sourceID: String,
+        targetID: String,
+        label: String?,
+        edgeType: String?
+    ) {
+        guard mode == .explore else { return }
+        guard let edgeIndex = graphData.edges.firstIndex(where: {
+            Self.edgeIdentityMatches(
+                edgeData: $0.data,
+                sourceID: sourceID,
+                targetID: targetID,
+                label: label,
+                edgeType: edgeType
+            )
+        }) else { return }
+
+        let previousGraphData = graphData
+        let currentEdge = graphData.edges[edgeIndex].data
+        let nextIsDeactivated = !(currentEdge.isDeactivated ?? false)
+
+        var nextEdges = graphData.edges
+        nextEdges[edgeIndex] = GraphEdgeElement(
+            data: GraphEdgeData(
+                source: currentEdge.source,
+                target: currentEdge.target,
+                label: currentEdge.label,
+                edgeType: currentEdge.edgeType,
+                edgeColor: currentEdge.edgeColor,
+                tooltip: currentEdge.tooltip,
+                isDeactivated: nextIsDeactivated
+            )
+        )
+
+        let nextGraphData = CausalGraphData(
+            nodes: graphData.nodes,
+            edges: nextEdges
+        )
+        graphData = nextGraphData
+
+        let edgeText = edgeDescription(sourceID: sourceID, targetID: targetID)
+        let successMessage = nextIsDeactivated
+            ? "Link \(edgeText) deactivated."
+            : "Link \(edgeText) reactivated."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextGraphDeactivationOperationToken()
+        Task {
+            do {
+                try await persistPatch(graphDeactivationPatch(for: nextGraphData))
+            } catch {
+                guard operationToken == graphDeactivationOperationToken else { return }
+                graphData = previousGraphData
+                let failureMessage = "Could not save link \(edgeText) state. Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
     }
 
     func toggleInputCheckedToday(_ inputID: String) {
@@ -752,7 +863,7 @@ final class AppViewModel: ObservableObject {
             graphSelectionText = "Selected node: \(label)."
             updateFocusedNode(label)
             announce(graphSelectionText)
-        case .edgeSelected(_, _, let sourceLabel, let targetLabel, _):
+        case .edgeSelected(_, _, let sourceLabel, let targetLabel, _, _):
             graphSelectionText = "Selected link: \(sourceLabel) to \(targetLabel)."
             announce(graphSelectionText)
         case .viewportChanged(let zoom):
@@ -881,6 +992,11 @@ final class AppViewModel: ObservableObject {
     private func nextMorningOutcomeOperationToken() -> Int {
         morningOutcomeOperationToken += 1
         return morningOutcomeOperationToken
+    }
+
+    private func nextGraphDeactivationOperationToken() -> Int {
+        graphDeactivationOperationToken += 1
+        return graphDeactivationOperationToken
     }
 
     private func dayCount(for input: InputStatus) -> Int {
@@ -1074,6 +1190,24 @@ final class AppViewModel: ObservableObject {
         return String(format: "%.1f", value)
     }
 
+    private func graphDeactivationPatch(for graphData: CausalGraphData) -> UserDataPatch {
+        UserDataPatch.customCausalDiagram(
+            CustomCausalDiagram(
+                graphData: graphData,
+                lastModified: Self.timestamp(from: nowProvider())
+            )
+        )
+    }
+
+    private func edgeDescription(sourceID: String, targetID: String) -> String {
+        let labelsByID = Dictionary(
+            uniqueKeysWithValues: graphData.nodes.map { ($0.data.id, Self.firstLine(for: $0.data.label)) }
+        )
+        let sourceLabel = labelsByID[sourceID] ?? sourceID
+        let targetLabel = labelsByID[targetID] ?? targetID
+        return "\(sourceLabel) to \(targetLabel)"
+    }
+
     private static func updatedDailyCheckIns(
         from current: [String: [String]],
         dateKey: String,
@@ -1189,8 +1323,33 @@ final class AppViewModel: ObservableObject {
         }?.data.id
     }
 
+    private static func edgeIdentityMatches(
+        edgeData: GraphEdgeData,
+        sourceID: String,
+        targetID: String,
+        label: String?,
+        edgeType: String?
+    ) -> Bool {
+        guard edgeData.source == sourceID else { return false }
+        guard edgeData.target == targetID else { return false }
+        guard normalizedOptionalString(edgeData.label) == normalizedOptionalString(label) else { return false }
+        return normalizedOptionalString(edgeData.edgeType) == normalizedOptionalString(edgeType)
+    }
+
     private static func firstLine(for label: String) -> String {
         label.components(separatedBy: "\n").first ?? label
+    }
+
+    private static func normalizedOptionalString(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return nil
+        }
+
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+
+        return trimmed
     }
 
     private static func localDateKey(from date: Date) -> String {

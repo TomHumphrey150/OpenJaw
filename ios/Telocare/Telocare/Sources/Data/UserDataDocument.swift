@@ -553,6 +553,25 @@ struct GraphNodeData: Codable, Equatable, Sendable {
     let confirmed: String?
     let tier: Int?
     let tooltip: GraphTooltip?
+    let isDeactivated: Bool?
+
+    init(
+        id: String,
+        label: String,
+        styleClass: String,
+        confirmed: String?,
+        tier: Int?,
+        tooltip: GraphTooltip?,
+        isDeactivated: Bool? = nil
+    ) {
+        self.id = id
+        self.label = label
+        self.styleClass = styleClass
+        self.confirmed = confirmed
+        self.tier = tier
+        self.tooltip = tooltip
+        self.isDeactivated = isDeactivated
+    }
 }
 
 struct GraphTooltip: Codable, Equatable, Sendable {
@@ -573,4 +592,23 @@ struct GraphEdgeData: Codable, Equatable, Sendable {
     let edgeType: String?
     let edgeColor: String?
     let tooltip: String?
+    let isDeactivated: Bool?
+
+    init(
+        source: String,
+        target: String,
+        label: String?,
+        edgeType: String?,
+        edgeColor: String?,
+        tooltip: String?,
+        isDeactivated: Bool? = nil
+    ) {
+        self.source = source
+        self.target = target
+        self.label = label
+        self.edgeType = edgeType
+        self.edgeColor = edgeColor
+        self.tooltip = tooltip
+        self.isDeactivated = isDeactivated
+    }
 }

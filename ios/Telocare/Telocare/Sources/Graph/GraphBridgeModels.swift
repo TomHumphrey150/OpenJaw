@@ -14,7 +14,8 @@ enum GraphEvent: Equatable {
         targetID: String,
         sourceLabel: String,
         targetLabel: String,
-        label: String?
+        label: String?,
+        edgeType: String?
     )
     case viewportChanged(zoom: Double)
     case renderError(message: String)

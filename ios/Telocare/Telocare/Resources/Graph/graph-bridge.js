@@ -29,6 +29,8 @@
     edgeFontSize: 7,
     edgeArrowScale: 0.7,
   });
+  const DEACTIVATED_NODE_OPACITY = 0.35;
+  const DEACTIVATED_EDGE_OPACITY = 0.22;
 
   const defaultGraphData = {
     nodes: [
@@ -76,6 +78,15 @@
     return value;
   }
 
+  function withClass(item, className) {
+    const existing = typeof item.classes === 'string' ? item.classes.trim() : '';
+    const classes = existing ? `${existing} ${className}` : className;
+    return {
+      ...item,
+      classes,
+    };
+  }
+
   function filteredGraphData(graphData) {
     const interventionIDs = new Set();
     const filteredNodes = graphData.nodes.filter((item) => {
@@ -88,26 +99,53 @@
       return true;
     });
 
-    const dormantIDs = new Set(
-      graphData.nodes
-        .map((item) => (item && item.data ? item.data : null))
-        .filter((node) => node && (node.confirmed === 'no' || node.confirmed === 'inactive' || node.confirmed === 'external'))
-        .map((node) => node.id)
-    );
-
     const filteredEdges = graphData.edges.filter((item) => {
       const edge = item && item.data ? item.data : null;
       if (!edge || typeof edge.source !== 'string' || typeof edge.target !== 'string') return false;
       if (!displayFlags.showInterventionNodes && (interventionIDs.has(edge.source) || interventionIDs.has(edge.target))) return false;
       if (!displayFlags.showFeedbackEdges && edge.edgeType === 'feedback') return false;
       if (!displayFlags.showProtectiveEdges && edge.edgeType === 'protective') return false;
-      if (dormantIDs.has(edge.source) || dormantIDs.has(edge.target)) return false;
       return true;
     });
 
+    const deactivatedNodeIDs = new Set(
+      filteredNodes
+        .map((item) => (item && item.data ? item.data : null))
+        .filter((node) => node && node.isDeactivated === true)
+        .map((node) => node.id)
+    );
+
+    const visibleNodes = filteredNodes.map((item) => {
+      const node = item && item.data ? item.data : null;
+      if (!node || node.isDeactivated !== true) {
+        return item;
+      }
+
+      return withClass(item, 'is-deactivated');
+    });
+
+    const edgesAfterNodeDeactivation = filteredEdges.filter((item) => {
+      const edge = item && item.data ? item.data : null;
+      if (!edge) return false;
+      return !deactivatedNodeIDs.has(edge.source);
+    });
+
+    const visibleEdges = edgesAfterNodeDeactivation.map((item) => {
+      const edge = item && item.data ? item.data : null;
+      if (!edge) return item;
+
+      const isDeactivated = edge.isDeactivated === true
+        || deactivatedNodeIDs.has(edge.target);
+      if (!isDeactivated) {
+        return item;
+      }
+
+      return withClass(item, 'is-deactivated');
+    });
+
     return {
-      nodes: filteredNodes,
-      edges: filteredEdges,
+      nodes: visibleNodes,
+      edges: visibleEdges,
     };
   }
 
@@ -132,6 +170,8 @@
       {
         selector: 'node',
         style: {
+          'z-index-compare': 'manual',
+          'z-index': 20,
           'shape': 'round-rectangle',
           'background-color': nodeBg,
           'border-width': BASE_VISUAL_STYLE.nodeBorderWidth,
@@ -188,8 +228,17 @@
         },
       },
       {
+        selector: 'node.is-deactivated',
+        style: {
+          'z-index': 2,
+          'opacity': DEACTIVATED_NODE_OPACITY,
+        },
+      },
+      {
         selector: 'edge',
         style: {
+          'z-index-compare': 'manual',
+          'z-index': 10,
           'curve-style': 'bezier',
           'line-color': 'data(edgeColor)',
           'target-arrow-color': 'data(edgeColor)',
@@ -215,6 +264,13 @@
         selector: 'edge[edgeType = "protective"]',
         style: {
           'line-style': 'dashed',
+        },
+      },
+      {
+        selector: 'edge.is-deactivated',
+        style: {
+          'z-index': 1,
+          'opacity': DEACTIVATED_EDGE_OPACITY,
         },
       },
       {
@@ -328,6 +384,41 @@
     }
   }
 
+  function captureViewport() {
+    if (!cy) return null;
+
+    const pan = cy.pan();
+    const zoom = cy.zoom();
+    if (!pan || !Number.isFinite(pan.x) || !Number.isFinite(pan.y) || !Number.isFinite(zoom)) {
+      return null;
+    }
+
+    return {
+      pan: {
+        x: pan.x,
+        y: pan.y,
+      },
+      zoom,
+    };
+  }
+
+  function restoreViewport(viewport) {
+    if (!cy || !viewport || !viewport.pan) {
+      return false;
+    }
+
+    const pan = viewport.pan;
+    const zoom = viewport.zoom;
+    if (!Number.isFinite(pan.x) || !Number.isFinite(pan.y) || !Number.isFinite(zoom)) {
+      return false;
+    }
+
+    const clampedZoom = clamp(cy.minZoom(), zoom, cy.maxZoom());
+    cy.zoom(clampedZoom);
+    cy.pan({ x: pan.x, y: pan.y });
+    return true;
+  }
+
   function showTooltip(x, y, title, body) {
     if (!title && !body) {
       hideTooltip();
@@ -397,6 +488,7 @@
         sourceLabel,
         targetLabel,
         label: data.label || null,
+        edgeType: data.edgeType || null,
       });
     });
 
@@ -420,8 +512,10 @@
     });
   }
 
-  function renderGraph(graphData) {
+  function renderGraph(graphData, options) {
     try {
+      const preserveViewport = Boolean(options && options.preserveViewport);
+      const previousViewport = preserveViewport ? captureViewport() : null;
       const filtered = filteredGraphData(graphData);
       const elements = {
         nodes: filtered.nodes,
@@ -447,9 +541,13 @@
         name: 'preset',
         positions: (node) => positions[node.id()] || undefined,
         animate: false,
-        fit: true,
+        fit: previousViewport === null,
         padding: 28,
       }).run();
+
+      if (previousViewport && !restoreViewport(previousViewport)) {
+        cy.fit(undefined, 28);
+      }
 
       applyZoomAdaptiveStyle();
 
@@ -468,7 +566,7 @@
 
     resizeThrottle = setTimeout(() => {
       resizeThrottle = null;
-      renderGraph(currentGraphData);
+      renderGraph(currentGraphData, { preserveViewport: true });
     }, 90);
   }
 
@@ -493,7 +591,7 @@
 
     if (envelope.command === 'setGraphData') {
       currentGraphData = normalizeGraphData(envelope.payload);
-      renderGraph(currentGraphData);
+      renderGraph(currentGraphData, { preserveViewport: true });
       return;
     }
 
@@ -502,7 +600,7 @@
       displayFlags.showFeedbackEdges = Boolean(payload.showFeedbackEdges);
       displayFlags.showProtectiveEdges = Boolean(payload.showProtectiveEdges);
       displayFlags.showInterventionNodes = Boolean(payload.showInterventionNodes);
-      renderGraph(currentGraphData);
+      renderGraph(currentGraphData, { preserveViewport: true });
       return;
     }
 

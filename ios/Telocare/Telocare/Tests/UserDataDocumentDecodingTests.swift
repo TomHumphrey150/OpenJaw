@@ -41,6 +41,14 @@ struct UserDataDocumentDecodingTests {
         #expect(decoded.interventionCompletionEvents.last?.source == .doseIncrement)
     }
 
+    @Test func decodesGraphDeactivationFlagsWhenPresent() throws {
+        let data = try jsonData(from: deactivatedGraphJSON)
+        let decoded = try JSONDecoder().decode(UserDataDocument.self, from: data)
+
+        #expect(decoded.customCausalDiagram?.graphData.nodes.first?.data.isDeactivated == true)
+        #expect(decoded.customCausalDiagram?.graphData.edges.first?.data.isDeactivated == true)
+    }
+
     @Test func failsToDecodeInvalidGraphPayload() throws {
         #expect(throws: DecodingError.self) {
             let data = try jsonData(from: invalidGraphJSON)
@@ -223,6 +231,56 @@ private let completionEventsJSON = """
     "graphData": {
       "nodes": [],
       "edges": []
+    },
+    "lastModified": "2026-02-21T00:00:00.000Z"
+  }
+}
+"""
+
+private let deactivatedGraphJSON = """
+{
+  "version": 1,
+  "personalStudies": [],
+  "notes": [],
+  "experiments": [],
+  "interventionRatings": [],
+  "dailyCheckIns": {},
+  "nightExposures": [],
+  "nightOutcomes": [],
+  "morningStates": [],
+  "habitTrials": [],
+  "habitClassifications": [],
+  "hiddenInterventions": [],
+  "unlockedAchievements": [],
+  "experienceFlow": {
+    "hasCompletedInitialGuidedFlow": false,
+    "lastGuidedEntryDate": null,
+    "lastGuidedCompletedDate": null,
+    "lastGuidedStatus": "not_started"
+  },
+  "customCausalDiagram": {
+    "graphData": {
+      "nodes": [
+        {
+          "data": {
+            "id": "RMMA",
+            "label": "RMMA",
+            "styleClass": "robust",
+            "tier": 7,
+            "isDeactivated": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "data": {
+            "source": "RMMA",
+            "target": "NECK_TIGHTNESS",
+            "edgeType": "forward",
+            "isDeactivated": true
+          }
+        }
+      ]
     },
     "lastModified": "2026-02-21T00:00:00.000Z"
   }

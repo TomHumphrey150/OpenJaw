@@ -55,6 +55,80 @@ struct AppViewModelTests {
         #expect(harness.viewModel.graphSelectionText.contains("Selected node"))
     }
 
+    @Test func graphNodeDeactivationTogglePersistsCustomDiagramPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated == nil)
+
+        harness.viewModel.toggleGraphNodeDeactivated("RMMA")
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated == true)
+        #expect(
+            patch?.customCausalDiagram?.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated == true
+        )
+    }
+
+    @Test func graphEdgeDeactivationTogglePersistsCustomDiagramPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.toggleGraphEdgeDeactivated(
+            sourceID: "STRESS",
+            targetID: "SLEEP_DEP",
+            label: "hyperarousal",
+            edgeType: "forward"
+        )
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(
+            harness.viewModel.graphData.edges.first {
+                $0.data.source == "STRESS"
+                    && $0.data.target == "SLEEP_DEP"
+                    && $0.data.label == "hyperarousal"
+                    && $0.data.edgeType == "forward"
+            }?.data.isDeactivated == true
+        )
+        #expect(
+            patch?.customCausalDiagram?.graphData.edges.first {
+                $0.data.source == "STRESS"
+                    && $0.data.target == "SLEEP_DEP"
+                    && $0.data.label == "hyperarousal"
+                    && $0.data.edgeType == "forward"
+            }?.data.isDeactivated == true
+        )
+    }
+
+    @Test func graphDeactivationFailureRevertsState() async {
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            }
+        )
+
+        let before = harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated
+
+        harness.viewModel.toggleGraphNodeDeactivated("RMMA")
+
+        await waitUntil { harness.viewModel.exploreFeedback.contains("Could not save") }
+        let after = harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated
+        #expect(before == after)
+        #expect(harness.viewModel.exploreFeedback.contains("Reverted."))
+    }
+
     @Test func inputCheckTogglePersistsDailyCheckInsPatch() async {
         let patchRecorder = PatchRecorder()
         let harness = AppViewModelHarness(

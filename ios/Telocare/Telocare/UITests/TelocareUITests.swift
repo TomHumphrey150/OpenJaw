@@ -173,6 +173,38 @@ final class TelocareUITests: XCTestCase {
         XCTAssertFalse(selection.isEmpty)
     }
 
+    func testSituationDetailSheetSupportsDeactivationToggle() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let situationTab = app.tabBars.buttons["Situation"]
+        XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
+        situationTab.tap()
+
+        let graph = app.webViews[UIID.graphWebView]
+        XCTAssertTrue(graph.waitForExistence(timeout: 2))
+        graph.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.2)).tap()
+
+        let nodeToggleButton = app.buttons[UIID.exploreDetailsNodeDeactivationButton]
+        let edgeToggleButton = app.buttons[UIID.exploreDetailsEdgeDeactivationButton]
+        let nodeToggleExists = nodeToggleButton.waitForExistence(timeout: 2)
+        let edgeToggleExists = nodeToggleExists ? false : edgeToggleButton.waitForExistence(timeout: 2)
+        XCTAssertTrue(nodeToggleExists || edgeToggleExists)
+
+        let toggleButton = nodeToggleExists ? nodeToggleButton : edgeToggleButton
+        let initialLabel = toggleButton.label
+        toggleButton.tap()
+        XCTAssertTrue(waitForLabelChange(of: toggleButton, from: initialLabel, timeout: 2))
+
+        let statusIdentifier = nodeToggleExists
+            ? UIID.exploreDetailsNodeDeactivationStatus
+            : UIID.exploreDetailsEdgeDeactivationStatus
+        let status = element(withIdentifier: statusIdentifier, in: app)
+        XCTAssertTrue(status.waitForExistence(timeout: 2))
+    }
+
     func testProfileSignOutReturnsToAuthScreen() {
         let app = configuredApp(authState: .authenticated)
         app.launch()
@@ -324,6 +356,12 @@ final class TelocareUITests: XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    private func waitForLabelChange(of element: XCUIElement, from initialLabel: String, timeout: TimeInterval) -> Bool {
+        let predicate = NSPredicate(format: "label != %@", initialLabel)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
     private func interventionName(fromActionLabel label: String) -> String? {
         let prefixes = ["Check ", "Increment ", "Uncheck ", "Start tracking "]
 
@@ -414,6 +452,10 @@ private enum UIID {
     static let guidedDoneCTA = "guided.inputs.done"
     static let graphWebView = "graph.webview"
     static let graphSelectionText = "graph.selection.text"
+    static let exploreDetailsNodeDeactivationButton = "explore.situation.details.node.deactivate"
+    static let exploreDetailsEdgeDeactivationButton = "explore.situation.details.edge.deactivate"
+    static let exploreDetailsNodeDeactivationStatus = "explore.situation.details.node.status"
+    static let exploreDetailsEdgeDeactivationStatus = "explore.situation.details.edge.status"
     static let profileButton = "profile.open.button"
     static let profileSheet = "profile.sheet"
     static let profileAccountEntry = "profile.account.entry"

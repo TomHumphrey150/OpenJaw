@@ -93,6 +93,134 @@ struct RootViewModelTests {
         #expect(await repository.backfillCallCount() == 0)
     }
 
+    @Test func existingCustomGraphWithoutDeactivationFlagsPersistsDormantMigrationPatch() async {
+        let graphData = CausalGraphData(
+            nodes: [
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "OSA",
+                        label: "Sleep Apnea / UARS",
+                        styleClass: "mechanism",
+                        confirmed: "no",
+                        tier: 1,
+                        tooltip: nil
+                    )
+                ),
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "RMMA",
+                        label: "RMMA",
+                        styleClass: "robust",
+                        confirmed: "yes",
+                        tier: 7,
+                        tooltip: nil
+                    )
+                )
+            ],
+            edges: [
+                GraphEdgeElement(
+                    data: GraphEdgeData(
+                        source: "OSA",
+                        target: "RMMA",
+                        label: nil,
+                        edgeType: "forward",
+                        edgeColor: "#374151",
+                        tooltip: nil
+                    )
+                )
+            ]
+        )
+        let document = UserDataDocument.empty.withCustomCausalDiagram(
+            CustomCausalDiagram(
+                graphData: graphData,
+                lastModified: "2026-02-21T00:00:00Z"
+            )
+        )
+        let repository = TrackingUserDataRepository(document: document)
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        await waitUntil { await repository.patchCallCount() == 1 }
+
+        let patch = await repository.lastPatch()
+        #expect(patch?.customCausalDiagram?.graphData.nodes.first?.data.isDeactivated == true)
+        #expect(patch?.customCausalDiagram?.graphData.edges.first?.data.isDeactivated == true)
+    }
+
+    @Test func existingCustomGraphWithExplicitDeactivationSkipsDormantMigrationPatch() async {
+        let graphData = CausalGraphData(
+            nodes: [
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "OSA",
+                        label: "Sleep Apnea / UARS",
+                        styleClass: "mechanism",
+                        confirmed: "no",
+                        tier: 1,
+                        tooltip: nil,
+                        isDeactivated: true
+                    )
+                ),
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "RMMA",
+                        label: "RMMA",
+                        styleClass: "robust",
+                        confirmed: "yes",
+                        tier: 7,
+                        tooltip: nil
+                    )
+                )
+            ],
+            edges: [
+                GraphEdgeElement(
+                    data: GraphEdgeData(
+                        source: "OSA",
+                        target: "RMMA",
+                        label: nil,
+                        edgeType: "forward",
+                        edgeColor: "#374151",
+                        tooltip: nil
+                    )
+                )
+            ]
+        )
+        let document = UserDataDocument.empty.withCustomCausalDiagram(
+            CustomCausalDiagram(
+                graphData: graphData,
+                lastModified: "2026-02-21T00:00:00Z"
+            )
+        )
+        let repository = TrackingUserDataRepository(document: document)
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        #expect(await repository.patchCallCount() == 0)
+    }
+
     @Test func backfillFailureIsNonFatal() async {
         let repository = TrackingUserDataRepository(
             document: .empty,

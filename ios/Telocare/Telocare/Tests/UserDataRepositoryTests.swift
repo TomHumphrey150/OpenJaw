@@ -165,6 +165,7 @@ struct UserDataRepositoryTests {
         #expect(decoded.morningStates == nil)
         #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
+        #expect(decoded.customCausalDiagram == nil)
     }
 
     @Test func userDataPatchCanEncodeMorningStates() throws {
@@ -193,6 +194,7 @@ struct UserDataRepositoryTests {
         #expect(decoded.morningStates?.first?.globalSensation == 6)
         #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
+        #expect(decoded.customCausalDiagram == nil)
     }
 
     @Test func userDataPatchCanEncodeDailyCheckIns() throws {
@@ -344,6 +346,53 @@ struct UserDataRepositoryTests {
         #expect(decoded.dailyCheckIns == nil)
         #expect(decoded.morningStates == nil)
         #expect(decoded.hiddenInterventions == ["PPI_TX", "BED_ELEV_TX"])
+        #expect(decoded.customCausalDiagram == nil)
+    }
+
+    @Test func userDataPatchCanEncodeCustomCausalDiagram() throws {
+        let graph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "RMMA",
+                        label: "RMMA",
+                        styleClass: "robust",
+                        confirmed: "yes",
+                        tier: 7,
+                        tooltip: nil,
+                        isDeactivated: true
+                    )
+                )
+            ],
+            edges: [
+                GraphEdgeElement(
+                    data: GraphEdgeData(
+                        source: "RMMA",
+                        target: "NECK_TIGHTNESS",
+                        label: nil,
+                        edgeType: "forward",
+                        edgeColor: "#1e3a5f",
+                        tooltip: nil,
+                        isDeactivated: true
+                    )
+                )
+            ]
+        )
+        let patch = UserDataPatch.customCausalDiagram(
+            CustomCausalDiagram(
+                graphData: graph,
+                lastModified: "2026-02-22T10:00:00Z"
+            )
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.customCausalDiagram?.graphData.nodes.first?.data.id == "RMMA")
+        #expect(decoded.customCausalDiagram?.graphData.nodes.first?.data.isDeactivated == true)
+        #expect(decoded.customCausalDiagram?.graphData.edges.first?.data.isDeactivated == true)
+        #expect(decoded.dailyCheckIns == nil)
+        #expect(decoded.activeInterventions == nil)
     }
 }
 
@@ -363,4 +412,5 @@ private struct DecodedPatch: Decodable {
     let morningStates: [MorningState]?
     let activeInterventions: [String]?
     let hiddenInterventions: [String]?
+    let customCausalDiagram: CustomCausalDiagram?
 }

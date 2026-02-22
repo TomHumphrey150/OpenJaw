@@ -34,7 +34,16 @@ struct ExploreTabShell: View {
                 onAction: viewModel.performExploreAction,
                 onShowInterventionsChanged: viewModel.setShowInterventionNodes,
                 onShowFeedbackEdgesChanged: viewModel.setShowFeedbackEdges,
-                onShowProtectiveEdgesChanged: viewModel.setShowProtectiveEdges
+                onShowProtectiveEdgesChanged: viewModel.setShowProtectiveEdges,
+                onToggleNodeDeactivated: viewModel.toggleGraphNodeDeactivated,
+                onToggleEdgeDeactivated: { sourceID, targetID, label, edgeType in
+                    viewModel.toggleGraphEdgeDeactivated(
+                        sourceID: sourceID,
+                        targetID: targetID,
+                        label: label,
+                        edgeType: edgeType
+                    )
+                }
             )
             .tabItem { Label(ExploreTab.situation.title, systemImage: ExploreTab.situation.symbolName) }
             .tag(ExploreTab.situation)
@@ -748,9 +757,11 @@ private struct ExploreSituationScreen: View {
     let onShowInterventionsChanged: (Bool) -> Void
     let onShowFeedbackEdgesChanged: (Bool) -> Void
     let onShowProtectiveEdgesChanged: (Bool) -> Void
+    let onToggleNodeDeactivated: (String) -> Void
+    let onToggleEdgeDeactivated: (String, String, String?, String?) -> Void
 
     @State private var isOptionsPresented = false
-    @State private var selectedGraphDetail: SituationGraphDetail?
+    @State private var selectedGraphSelection: SituationGraphSelection?
 
     var body: some View {
         NavigationStack {
@@ -812,8 +823,12 @@ private struct ExploreSituationScreen: View {
                 )
                 .accessibilityIdentifier(AccessibilityID.exploreSituationOptionsSheet)
             }
-            .sheet(item: $selectedGraphDetail) { detail in
-                SituationGraphDetailSheet(detail: detail)
+            .sheet(item: $selectedGraphSelection) { selection in
+                SituationGraphDetailSheet(
+                    detail: detail(for: selection),
+                    onToggleNodeDeactivated: onToggleNodeDeactivated,
+                    onToggleEdgeDeactivated: onToggleEdgeDeactivated
+                )
                     .presentationDetents([.fraction(0.5)])
                     .presentationDragIndicator(.visible)
                     .accessibilityIdentifier(AccessibilityID.exploreDetailsSheet)
@@ -826,25 +841,49 @@ private struct ExploreSituationScreen: View {
 
         switch event {
         case .nodeSelected(let id, let label):
-            selectedGraphDetail = SituationGraphDetail(
-                id: UUID(),
-                detail: .node(nodeDetail(forNodeID: id, fallbackLabel: label))
+            selectedGraphSelection = .node(
+                nodeID: id,
+                fallbackLabel: label
             )
-        case .edgeSelected(let sourceID, let targetID, let sourceLabel, let targetLabel, let label):
-            selectedGraphDetail = SituationGraphDetail(
-                id: UUID(),
-                detail: .edge(
-                    edgeDetail(
-                        sourceID: sourceID,
-                        targetID: targetID,
-                        sourceLabel: sourceLabel,
-                        targetLabel: targetLabel,
-                        label: label
-                    )
+        case .edgeSelected(let sourceID, let targetID, let sourceLabel, let targetLabel, let label, let edgeType):
+            let detail = edgeDetail(
+                sourceID: sourceID,
+                targetID: targetID,
+                sourceLabel: sourceLabel,
+                targetLabel: targetLabel,
+                label: label,
+                edgeType: edgeType
+            )
+            selectedGraphSelection = .edge(
+                SituationEdgeSelection(
+                    sourceID: sourceID,
+                    targetID: targetID,
+                    sourceLabel: sourceLabel,
+                    targetLabel: targetLabel,
+                    label: detail.label,
+                    edgeType: detail.edgeType
                 )
             )
         case .graphReady, .viewportChanged, .renderError:
             return
+        }
+    }
+
+    private func detail(for selection: SituationGraphSelection) -> SituationGraphDetail {
+        switch selection {
+        case .node(let nodeID, let fallbackLabel):
+            return .node(nodeDetail(forNodeID: nodeID, fallbackLabel: fallbackLabel))
+        case .edge(let edgeSelection):
+            return .edge(
+                edgeDetail(
+                    sourceID: edgeSelection.sourceID,
+                    targetID: edgeSelection.targetID,
+                    sourceLabel: edgeSelection.sourceLabel,
+                    targetLabel: edgeSelection.targetLabel,
+                    label: edgeSelection.label,
+                    edgeType: edgeSelection.edgeType
+                )
+            )
         }
     }
 
@@ -858,7 +897,8 @@ private struct ExploreSituationScreen: View {
                 evidence: nil,
                 statistic: nil,
                 citation: nil,
-                mechanism: nil
+                mechanism: nil,
+                isDeactivated: false
             )
         }
 
@@ -870,7 +910,8 @@ private struct ExploreSituationScreen: View {
             evidence: node.tooltip?.evidence,
             statistic: node.tooltip?.stat,
             citation: node.tooltip?.citation,
-            mechanism: node.tooltip?.mechanism
+            mechanism: node.tooltip?.mechanism,
+            isDeactivated: node.isDeactivated == true
         )
     }
 
@@ -879,23 +920,37 @@ private struct ExploreSituationScreen: View {
         targetID: String,
         sourceLabel: String,
         targetLabel: String,
-        label: String?
+        label: String?,
+        edgeType: String?
     ) -> SituationEdgeDetail {
         let nodeLabelByID = Dictionary(
             uniqueKeysWithValues: graphData.nodes.map { ($0.data.id, firstLine($0.data.label)) }
         )
 
+        let nodeByID = Dictionary(
+            uniqueKeysWithValues: graphData.nodes.map { ($0.data.id, $0.data) }
+        )
+
         let matchedEdge = graphData.edges.first {
-            $0.data.source == sourceID
-                && $0.data.target == targetID
-                && ($0.data.label == label || label == nil)
+            edgeIdentityMatches(
+                edge: $0.data,
+                sourceID: sourceID,
+                targetID: targetID,
+                label: label,
+                edgeType: edgeType
+            )
         }?.data ?? graphData.edges.first {
             let edgeSourceLabel = nodeLabelByID[$0.data.source] ?? $0.data.source
             let edgeTargetLabel = nodeLabelByID[$0.data.target] ?? $0.data.target
             return edgeSourceLabel == sourceLabel
                 && edgeTargetLabel == targetLabel
-                && ($0.data.label == label || label == nil)
+                && normalizedOptionalString($0.data.label) == normalizedOptionalString(label)
+                && normalizedOptionalString($0.data.edgeType) == normalizedOptionalString(edgeType)
         }?.data
+
+        let isExplicitlyDeactivated = matchedEdge?.isDeactivated == true
+        let sourceIsDeactivated = nodeByID[sourceID]?.isDeactivated == true
+        let targetIsDeactivated = nodeByID[targetID]?.isDeactivated == true
 
         return SituationEdgeDetail(
             sourceID: sourceID,
@@ -903,23 +958,73 @@ private struct ExploreSituationScreen: View {
             sourceLabel: sourceLabel,
             targetLabel: targetLabel,
             label: matchedEdge?.label ?? label,
-            edgeType: matchedEdge?.edgeType,
+            edgeType: matchedEdge?.edgeType ?? edgeType,
             tooltip: matchedEdge?.tooltip,
-            edgeColor: matchedEdge?.edgeColor
+            edgeColor: matchedEdge?.edgeColor,
+            isExplicitlyDeactivated: isExplicitlyDeactivated,
+            isEffectivelyDeactivated: isExplicitlyDeactivated || sourceIsDeactivated || targetIsDeactivated
         )
     }
 
     private func firstLine(_ value: String) -> String {
         value.components(separatedBy: "\n").first ?? value
     }
+    private func edgeIdentityMatches(
+        edge: GraphEdgeData,
+        sourceID: String,
+        targetID: String,
+        label: String?,
+        edgeType: String?
+    ) -> Bool {
+        guard edge.source == sourceID else { return false }
+        guard edge.target == targetID else { return false }
+        guard normalizedOptionalString(edge.label) == normalizedOptionalString(label) else { return false }
+        return normalizedOptionalString(edge.edgeType) == normalizedOptionalString(edgeType)
+    }
+
+    private func normalizedOptionalString(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return nil
+        }
+
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+
+        return trimmed
+    }
 }
 
-private struct SituationGraphDetail: Identifiable, Equatable {
-    let id: UUID
-    let detail: SituationGraphDetailContent
+private enum SituationGraphSelection: Identifiable, Equatable {
+    case node(nodeID: String, fallbackLabel: String)
+    case edge(SituationEdgeSelection)
+
+    var id: String {
+        switch self {
+        case .node(let nodeID, _):
+            return "node:\(nodeID)"
+        case .edge(let edgeSelection):
+            return "edge:\(edgeSelection.id)"
+        }
+    }
 }
 
-private enum SituationGraphDetailContent: Equatable {
+private struct SituationEdgeSelection: Equatable {
+    let sourceID: String
+    let targetID: String
+    let sourceLabel: String
+    let targetLabel: String
+    let label: String?
+    let edgeType: String?
+
+    var id: String {
+        let normalizedLabel = label ?? ""
+        let normalizedType = edgeType ?? ""
+        return "\(sourceID)|\(targetID)|\(normalizedLabel)|\(normalizedType)"
+    }
+}
+
+private enum SituationGraphDetail: Equatable {
     case node(SituationNodeDetail)
     case edge(SituationEdgeDetail)
 }
@@ -933,6 +1038,7 @@ private struct SituationNodeDetail: Equatable {
     let statistic: String?
     let citation: String?
     let mechanism: String?
+    let isDeactivated: Bool
 }
 
 private struct SituationEdgeDetail: Equatable {
@@ -944,17 +1050,21 @@ private struct SituationEdgeDetail: Equatable {
     let edgeType: String?
     let tooltip: String?
     let edgeColor: String?
+    let isExplicitlyDeactivated: Bool
+    let isEffectivelyDeactivated: Bool
 }
 
 private struct SituationGraphDetailSheet: View {
     let detail: SituationGraphDetail
+    let onToggleNodeDeactivated: (String) -> Void
+    let onToggleEdgeDeactivated: (String, String, String?, String?) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
-                    switch detail.detail {
+                    switch detail {
                     case .node(let node):
                         nodeContent(node)
                     case .edge(let edge):
@@ -976,11 +1086,8 @@ private struct SituationGraphDetailSheet: View {
         }
     }
 
-    // MARK: - Node Content
-
     @ViewBuilder
     private func nodeContent(_ node: SituationNodeDetail) -> some View {
-        // Header with colored indicator
         HStack(spacing: TelocareTheme.Spacing.sm) {
             Circle()
                 .fill(accentColor(for: node.styleClass))
@@ -991,7 +1098,6 @@ private struct SituationGraphDetailSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
 
-        // Node info card
         WarmCard {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                 WarmSectionHeader(title: "Node Info")
@@ -999,6 +1105,11 @@ private struct SituationGraphDetailSheet: View {
                 if let tier = node.tier {
                     DetailRow(label: "Tier", value: String(tier))
                 }
+                DetailRow(
+                    label: "Status",
+                    value: node.isDeactivated ? "Deactivated" : "Active"
+                )
+                .accessibilityIdentifier(AccessibilityID.exploreDetailsNodeDeactivationStatus)
             }
         }
         .overlay(
@@ -1006,7 +1117,17 @@ private struct SituationGraphDetailSheet: View {
                 .stroke(accentColor(for: node.styleClass), lineWidth: 2)
         )
 
-        // Evidence card
+        WarmCard {
+            Button(node.isDeactivated ? "Reactivate node" : "Deactivate node") {
+                onToggleNodeDeactivated(node.id)
+            }
+            .font(TelocareTheme.Typography.body.weight(.semibold))
+            .foregroundStyle(TelocareTheme.charcoal)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier(AccessibilityID.exploreDetailsNodeDeactivationButton)
+            .accessibilityValue(node.isDeactivated ? "Deactivated" : "Active")
+        }
+
         if node.evidence != nil || node.statistic != nil || node.citation != nil || node.mechanism != nil {
             WarmCard {
                 VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
@@ -1036,13 +1157,10 @@ private struct SituationGraphDetailSheet: View {
         }
     }
 
-    // MARK: - Edge Content
-
     @ViewBuilder
     private func edgeContent(_ edge: SituationEdgeDetail) -> some View {
         let edgeAccent = edgeAccentColor(for: edge.edgeType, color: edge.edgeColor)
 
-        // Header showing link direction
         VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
             HStack(spacing: TelocareTheme.Spacing.sm) {
                 RoundedRectangle(cornerRadius: 2)
@@ -1058,7 +1176,6 @@ private struct SituationGraphDetailSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
 
-        // Link details card
         WarmCard {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                 WarmSectionHeader(title: "Details")
@@ -1068,6 +1185,11 @@ private struct SituationGraphDetailSheet: View {
                 if let edgeType = edge.edgeType {
                     DetailRow(label: "Type", value: edgeType.capitalized)
                 }
+                DetailRow(
+                    label: "Status",
+                    value: edgeStatusText(edge)
+                )
+                .accessibilityIdentifier(AccessibilityID.exploreDetailsEdgeDeactivationStatus)
             }
         }
         .overlay(
@@ -1075,7 +1197,22 @@ private struct SituationGraphDetailSheet: View {
                 .stroke(edgeAccent, lineWidth: 2)
         )
 
-        // Explanation card
+        WarmCard {
+            Button(edge.isExplicitlyDeactivated ? "Reactivate link" : "Deactivate link") {
+                onToggleEdgeDeactivated(
+                    edge.sourceID,
+                    edge.targetID,
+                    edge.label,
+                    edge.edgeType
+                )
+            }
+            .font(TelocareTheme.Typography.body.weight(.semibold))
+            .foregroundStyle(TelocareTheme.charcoal)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier(AccessibilityID.exploreDetailsEdgeDeactivationButton)
+            .accessibilityValue(edgeStatusText(edge))
+        }
+
         WarmCard {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                 WarmSectionHeader(title: "Explanation")
@@ -1087,29 +1224,34 @@ private struct SituationGraphDetailSheet: View {
         }
     }
 
-    // MARK: - Helpers
+    private func edgeStatusText(_ edge: SituationEdgeDetail) -> String {
+        if edge.isEffectivelyDeactivated {
+            return "Deactivated"
+        }
+
+        return "Active"
+    }
 
     private func accentColor(for styleClass: String?) -> Color {
         switch styleClass?.lowercased() {
         case "robust":
-            return Color(red: 0.52, green: 0.76, blue: 0.56) // #85C28F
+            return Color(red: 0.52, green: 0.76, blue: 0.56)
         case "moderate":
-            return Color(red: 1.0, green: 0.6, blue: 0.4)    // #FF9966
+            return Color(red: 1.0, green: 0.6, blue: 0.4)
         case "preliminary":
-            return Color(red: 0.83, green: 0.65, blue: 1.0)  // #D4A5FF
+            return Color(red: 0.83, green: 0.65, blue: 1.0)
         case "mechanism":
-            return Color(red: 0.49, green: 0.83, blue: 0.99) // #7DD3FC
+            return Color(red: 0.49, green: 0.83, blue: 0.99)
         case "symptom":
-            return TelocareTheme.coral                        // #FF7060
+            return TelocareTheme.coral
         case "intervention":
-            return TelocareTheme.coral                        // #FF7060
+            return TelocareTheme.coral
         default:
             return TelocareTheme.warmGray
         }
     }
 
     private func edgeAccentColor(for edgeType: String?, color: String?) -> Color {
-        // First check explicit color
         if let color = color?.lowercased() {
             if color.contains("green") || color.contains("protective") {
                 return Color(red: 0.52, green: 0.76, blue: 0.56)
@@ -1118,7 +1260,7 @@ private struct SituationGraphDetailSheet: View {
                 return TelocareTheme.coral
             }
         }
-        // Then check edge type
+
         switch edgeType?.lowercased() {
         case "protective", "inhibits":
             return Color(red: 0.52, green: 0.76, blue: 0.56)
