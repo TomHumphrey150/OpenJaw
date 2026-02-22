@@ -29,6 +29,6 @@ struct MockUserDataRepository: UserDataRepository {
 
     func upsertUserDataPatch(_ patch: UserDataPatch) async throws -> Bool {
         _ = patch
-        return false
+        return true
     }
 }

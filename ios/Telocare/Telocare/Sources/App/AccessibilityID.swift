@@ -36,7 +36,6 @@ enum AccessibilityID {
     static let exploreMorningJawPicker = "explore.outcomes.morning.jaw.picker"
     static let exploreMorningEarPicker = "explore.outcomes.morning.ear.picker"
     static let exploreMorningAnxietyPicker = "explore.outcomes.morning.anxiety.picker"
-    static let exploreMorningSaveButton = "explore.outcomes.morning.save.button"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"
     static let exploreSituationEditButton = "explore.situation.edit.button"
     static let exploreSituationOptionsSheet = "explore.situation.options.sheet"

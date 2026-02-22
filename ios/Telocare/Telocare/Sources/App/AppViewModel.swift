@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class AppViewModel: ObservableObject {
     @Published private(set) var mode: AppMode
     @Published private(set) var guidedStep: GuidedStep
@@ -16,10 +17,15 @@ final class AppViewModel: ObservableObject {
     @Published var chatDraft: String
 
     private var experienceFlow: ExperienceFlow
+    private var dailyCheckIns: [String: [String]]
     private var morningStates: [MorningState]
+    private var hiddenInterventions: [String]
+    private var inputCheckOperationToken: Int
+    private var inputHiddenOperationToken: Int
+    private var morningOutcomeOperationToken: Int
+
     private let accessibilityAnnouncer: AccessibilityAnnouncer
-    private let persistExperienceFlowUpdate: (ExperienceFlow) -> Void
-    private let persistMorningStatesUpdate: ([MorningState]) -> Void
+    private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
     private let nowProvider: () -> Date
 
     convenience init(
@@ -30,9 +36,10 @@ final class AppViewModel: ObservableObject {
             snapshot: loadDashboardSnapshotUseCase.execute(),
             graphData: CanonicalGraphLoader.loadGraphOrFallback(),
             initialExperienceFlow: .empty,
-            persistExperienceFlow: { _ in },
+            initialDailyCheckIns: [:],
             initialMorningStates: [],
-            persistMorningStates: { _ in },
+            initialHiddenInterventions: [],
+            persistUserDataPatch: { _ in true },
             accessibilityAnnouncer: accessibilityAnnouncer
         )
     }
@@ -41,9 +48,10 @@ final class AppViewModel: ObservableObject {
         snapshot: DashboardSnapshot,
         graphData: CausalGraphData,
         initialExperienceFlow: ExperienceFlow = .empty,
-        persistExperienceFlow: @escaping (ExperienceFlow) -> Void = { _ in },
+        initialDailyCheckIns: [String: [String]] = [:],
         initialMorningStates: [MorningState] = [],
-        persistMorningStates: @escaping ([MorningState]) -> Void = { _ in },
+        initialHiddenInterventions: [String] = [],
+        persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         nowProvider: @escaping () -> Date = Date.init,
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
@@ -65,10 +73,17 @@ final class AppViewModel: ObservableObject {
         graphSelectionText = "Graph ready."
         morningOutcomeSelection = Self.morningOutcomeSelection(for: todayKey, from: initialMorningStates)
         chatDraft = ""
+
         experienceFlow = initialExperienceFlow
+        dailyCheckIns = initialDailyCheckIns
         morningStates = initialMorningStates
-        persistExperienceFlowUpdate = persistExperienceFlow
-        persistMorningStatesUpdate = persistMorningStates
+        hiddenInterventions = initialHiddenInterventions
+
+        inputCheckOperationToken = 0
+        inputHiddenOperationToken = 0
+        morningOutcomeOperationToken = 0
+
+        self.persistUserDataPatch = persistUserDataPatch
         self.nowProvider = nowProvider
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
@@ -154,71 +169,154 @@ final class AppViewModel: ObservableObject {
         guard mode == .explore else { return }
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
 
-        let current = snapshot.inputs[index]
-        let currentDayCount = dayCount(for: current)
-        let nextCheckedToday = !current.isCheckedToday
+        let currentInput = snapshot.inputs[index]
+        let previousSnapshot = snapshot
+        let previousDailyCheckIns = dailyCheckIns
+
+        let currentDayCount = dayCount(for: currentInput)
+        let nextCheckedToday = !currentInput.isCheckedToday
         let nextDayCount = updatedDayCount(
             currentDayCount: currentDayCount,
-            currentlyCheckedToday: current.isCheckedToday
+            currentlyCheckedToday: currentInput.isCheckedToday
         )
         let nextStatusText = statusText(
             dayCount: nextDayCount,
             checkedToday: nextCheckedToday
         )
 
-        var inputs = snapshot.inputs
-        inputs[index] = InputStatus(
-            id: current.id,
-            name: current.name,
+        let nextInput = InputStatus(
+            id: currentInput.id,
+            name: currentInput.name,
             statusText: nextStatusText,
             completion: Double(nextDayCount) / 7.0,
             isCheckedToday: nextCheckedToday,
-            classificationText: current.classificationText,
-            isHidden: current.isHidden,
-            evidenceLevel: current.evidenceLevel,
-            evidenceSummary: current.evidenceSummary,
-            detailedDescription: current.detailedDescription,
-            citationIDs: current.citationIDs,
-            externalLink: current.externalLink
+            classificationText: currentInput.classificationText,
+            isHidden: currentInput.isHidden,
+            evidenceLevel: currentInput.evidenceLevel,
+            evidenceSummary: currentInput.evidenceSummary,
+            detailedDescription: currentInput.detailedDescription,
+            citationIDs: currentInput.citationIDs,
+            externalLink: currentInput.externalLink
         )
 
-        snapshot = DashboardSnapshot(
-            outcomes: snapshot.outcomes,
-            outcomeRecords: snapshot.outcomeRecords,
-            outcomesMetadata: snapshot.outcomesMetadata,
-            situation: snapshot.situation,
-            inputs: inputs
+        let dateKey = Self.localDateKey(from: nowProvider())
+        let nextDailyCheckIns = Self.updatedDailyCheckIns(
+            from: dailyCheckIns,
+            dateKey: dateKey,
+            interventionID: currentInput.id,
+            isChecked: nextCheckedToday
         )
 
-        let message = nextCheckedToday
-            ? "\(current.name) checked for today."
-            : "\(current.name) unchecked for today."
-        exploreFeedback = message
-        announce(message)
+        updateInput(nextInput, at: index)
+        dailyCheckIns = nextDailyCheckIns
+
+        let successMessage = nextCheckedToday
+            ? "\(currentInput.name) checked for today."
+            : "\(currentInput.name) unchecked for today."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextInputCheckOperationToken()
+        Task {
+            do {
+                try await persistPatch(.dailyCheckIns(nextDailyCheckIns))
+            } catch {
+                guard operationToken == inputCheckOperationToken else { return }
+                dailyCheckIns = previousDailyCheckIns
+                snapshot = previousSnapshot
+                let failureMessage = "Could not save \(currentInput.name) check-in. Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
+    }
+
+    func toggleInputHidden(_ inputID: String) {
+        guard mode == .explore else { return }
+        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+
+        let currentInput = snapshot.inputs[index]
+        let previousSnapshot = snapshot
+        let previousHiddenInterventions = hiddenInterventions
+        let nextHidden = !currentInput.isHidden
+
+        let nextInput = InputStatus(
+            id: currentInput.id,
+            name: currentInput.name,
+            statusText: currentInput.statusText,
+            completion: currentInput.completion,
+            isCheckedToday: currentInput.isCheckedToday,
+            classificationText: currentInput.classificationText,
+            isHidden: nextHidden,
+            evidenceLevel: currentInput.evidenceLevel,
+            evidenceSummary: currentInput.evidenceSummary,
+            detailedDescription: currentInput.detailedDescription,
+            citationIDs: currentInput.citationIDs,
+            externalLink: currentInput.externalLink
+        )
+
+        let nextHiddenInterventions = Self.updatedHiddenInterventions(
+            from: hiddenInterventions,
+            interventionID: currentInput.id,
+            isHidden: nextHidden
+        )
+
+        updateInput(nextInput, at: index)
+        hiddenInterventions = nextHiddenInterventions
+
+        let successMessage = nextHidden
+            ? "\(currentInput.name) muted."
+            : "\(currentInput.name) unmuted."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextInputHiddenOperationToken()
+        Task {
+            do {
+                try await persistPatch(.hiddenInterventions(nextHiddenInterventions))
+            } catch {
+                guard operationToken == inputHiddenOperationToken else { return }
+                hiddenInterventions = previousHiddenInterventions
+                snapshot = previousSnapshot
+                let failureMessage = "Could not save mute state for \(currentInput.name). Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
     }
 
     func setMorningOutcomeValue(_ value: Int?, for field: MorningOutcomeField) {
         guard mode == .explore else { return }
+
         let clampedValue = value.map { max(0, min(10, $0)) }
         let nextSelection = morningOutcomeSelection.updating(field: field, value: clampedValue)
         guard nextSelection != morningOutcomeSelection else { return }
+
+        let previousSelection = morningOutcomeSelection
+        let previousMorningStates = morningStates
+        let nextRecord = nextSelection.asMorningState(createdAt: Self.timestampNow())
+        let nextMorningStates = Self.upsert(morningState: nextRecord, in: morningStates)
+
         morningOutcomeSelection = nextSelection
-    }
+        morningStates = nextMorningStates
 
-    func saveMorningOutcomes() {
-        guard mode == .explore else { return }
-        guard morningOutcomeSelection.hasAnyValue else {
-            exploreFeedback = "Select at least one morning outcome before saving."
-            announce(exploreFeedback)
-            return
+        let successMessage = "Saved morning outcomes for \(nextSelection.nightID)."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextMorningOutcomeOperationToken()
+        Task {
+            do {
+                try await persistPatch(.morningStates(nextMorningStates))
+            } catch {
+                guard operationToken == morningOutcomeOperationToken else { return }
+                morningOutcomeSelection = previousSelection
+                morningStates = previousMorningStates
+                let failureMessage = "Could not save morning outcomes. Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
         }
-
-        let timestamp = Self.timestampNow()
-        let nextRecord = morningOutcomeSelection.asMorningState(createdAt: timestamp)
-        morningStates = Self.upsert(morningState: nextRecord, in: morningStates)
-        persistMorningStatesUpdate(morningStates)
-        exploreFeedback = "Saved morning outcomes for \(morningOutcomeSelection.nightID)."
-        announce(exploreFeedback)
     }
 
     func handleAppMovedToBackground() {
@@ -256,6 +354,18 @@ final class AppViewModel: ObservableObject {
 
     private func announce(_ message: String) {
         accessibilityAnnouncer.announce(message)
+    }
+
+    private func updateInput(_ nextInput: InputStatus, at index: Int) {
+        var inputs = snapshot.inputs
+        inputs[index] = nextInput
+        snapshot = DashboardSnapshot(
+            outcomes: snapshot.outcomes,
+            outcomeRecords: snapshot.outcomeRecords,
+            outcomesMetadata: snapshot.outcomesMetadata,
+            situation: snapshot.situation,
+            inputs: inputs
+        )
     }
 
     private func updateFocusedNode(_ label: String) {
@@ -310,7 +420,34 @@ final class AppViewModel: ObservableObject {
     private func persistExperienceFlow(_ next: ExperienceFlow) {
         guard next != experienceFlow else { return }
         experienceFlow = next
-        persistExperienceFlowUpdate(next)
+        Task {
+            do {
+                try await persistPatch(.experienceFlow(next))
+            } catch {
+            }
+        }
+    }
+
+    private func persistPatch(_ patch: UserDataPatch) async throws {
+        let didWrite = try await persistUserDataPatch(patch)
+        guard didWrite else {
+            throw PersistenceError.writeRejected
+        }
+    }
+
+    private func nextInputCheckOperationToken() -> Int {
+        inputCheckOperationToken += 1
+        return inputCheckOperationToken
+    }
+
+    private func nextInputHiddenOperationToken() -> Int {
+        inputHiddenOperationToken += 1
+        return inputHiddenOperationToken
+    }
+
+    private func nextMorningOutcomeOperationToken() -> Int {
+        morningOutcomeOperationToken += 1
+        return morningOutcomeOperationToken
     }
 
     private func dayCount(for input: InputStatus) -> Int {
@@ -336,6 +473,45 @@ final class AppViewModel: ObservableObject {
         }
 
         return "Not checked yet"
+    }
+
+    private static func updatedDailyCheckIns(
+        from current: [String: [String]],
+        dateKey: String,
+        interventionID: String,
+        isChecked: Bool
+    ) -> [String: [String]] {
+        var next = current
+        var interventionIDs = next[dateKey] ?? []
+
+        if isChecked {
+            if !interventionIDs.contains(interventionID) {
+                interventionIDs.append(interventionID)
+            }
+        } else {
+            interventionIDs.removeAll { $0 == interventionID }
+        }
+
+        next[dateKey] = interventionIDs
+        return next
+    }
+
+    private static func updatedHiddenInterventions(
+        from current: [String],
+        interventionID: String,
+        isHidden: Bool
+    ) -> [String] {
+        var next = current
+
+        if isHidden {
+            if !next.contains(interventionID) {
+                next.append(interventionID)
+            }
+            return next
+        }
+
+        next.removeAll { $0 == interventionID }
+        return next
     }
 
     private static func resolveNodeID(from graphData: CausalGraphData, focusedNodeLabel: String) -> String? {
@@ -399,4 +575,8 @@ final class AppViewModel: ObservableObject {
     private static func timestampNow() -> String {
         ISO8601DateFormatter().string(from: Date())
     }
+}
+
+private enum PersistenceError: Error {
+    case writeRejected
 }

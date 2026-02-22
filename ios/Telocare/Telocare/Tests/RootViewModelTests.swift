@@ -135,7 +135,7 @@ struct RootViewModelTests {
         #expect(await repository.patchCallCount() == 0)
     }
 
-    @Test func savingMorningOutcomesPersistsPatch() async {
+    @Test func togglingInputCheckPersistsPatch() async {
         let repository = TrackingUserDataRepository(document: .empty)
         let viewModel = RootViewModel(
             authClient: MockAuthClient(),
@@ -151,13 +151,60 @@ struct RootViewModelTests {
         viewModel.submitSignIn()
 
         await waitUntil { viewModel.state == .ready }
-        viewModel.dashboardViewModel?.setMorningOutcomeValue(6, for: .globalSensation)
-        viewModel.dashboardViewModel?.saveMorningOutcomes()
+        viewModel.dashboardViewModel?.toggleInputCheckedToday("PPI_TX")
 
         await waitUntil { await repository.patchCallCount() == 1 }
+        let includesIntervention = await repository.lastPatch()?.dailyCheckIns?.values.contains { ids in
+            ids.contains("PPI_TX")
+        }
+        #expect(includesIntervention == true)
     }
 
-    @Test func patchPersistenceFailureIsNonFatalDuringMorningSave() async {
+    @Test func togglingInputMutePersistsPatch() async {
+        let repository = TrackingUserDataRepository(document: .empty)
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        viewModel.dashboardViewModel?.toggleInputHidden("PPI_TX")
+
+        await waitUntil { await repository.patchCallCount() == 1 }
+        #expect(await repository.lastPatch()?.hiddenInterventions?.contains("PPI_TX") == true)
+    }
+
+    @Test func selectingMorningOutcomePersistsPatch() async {
+        let repository = TrackingUserDataRepository(document: .empty)
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        viewModel.dashboardViewModel?.setMorningOutcomeValue(5, for: .globalSensation)
+
+        await waitUntil { await repository.patchCallCount() == 1 }
+        #expect(await repository.lastPatch()?.morningStates?.first?.globalSensation == 5)
+    }
+
+    @Test func patchPersistenceFailureIsNonFatalDuringMorningTap() async {
         let repository = TrackingUserDataRepository(
             document: .empty,
             patchShouldThrow: true
@@ -177,7 +224,6 @@ struct RootViewModelTests {
 
         await waitUntil { viewModel.state == .ready }
         viewModel.dashboardViewModel?.setMorningOutcomeValue(5, for: .globalSensation)
-        viewModel.dashboardViewModel?.saveMorningOutcomes()
 
         await waitUntil { await repository.patchCallCount() == 1 }
         #expect(viewModel.dashboardViewModel != nil)
@@ -243,6 +289,7 @@ actor TrackingUserDataRepository: UserDataRepository {
     private let patchShouldThrow: Bool
     private var calls: Int = 0
     private var patchCalls: Int = 0
+    private var patches: [UserDataPatch] = []
 
     init(
         document: UserDataDocument,
@@ -282,7 +329,7 @@ actor TrackingUserDataRepository: UserDataRepository {
     }
 
     func upsertUserDataPatch(_ patch: UserDataPatch) async throws -> Bool {
-        _ = patch
+        patches.append(patch)
         patchCalls += 1
 
         if patchShouldThrow {
@@ -294,6 +341,10 @@ actor TrackingUserDataRepository: UserDataRepository {
 
     func patchCallCount() -> Int {
         patchCalls
+    }
+
+    func lastPatch() -> UserDataPatch? {
+        patches.last
     }
 }
 

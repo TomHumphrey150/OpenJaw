@@ -75,6 +75,21 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(app.buttons[UIID.exploreChatSendButton].exists)
     }
 
+    func testOutcomesScreenDoesNotShowSaveButton() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        if app.buttons[UIID.guidedOutcomesCTA].waitForExistence(timeout: 1) {
+            completeGuidedFlow(in: app)
+        }
+
+        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
+        outcomesTab.tap()
+
+        XCTAssertFalse(app.buttons[UIID.exploreMorningSaveButton].exists)
+    }
+
     func testSituationGraphDoesNotHideTabBar() {
         let app = configuredApp(authState: .authenticated)
         app.launch()
@@ -165,4 +180,5 @@ private enum UIID {
     static let profileSignOutEntry = "profile.signout.entry"
     static let exploreChatInput = "explore.chat.input"
     static let exploreChatSendButton = "explore.chat.send.button"
+    static let exploreMorningSaveButton = "explore.outcomes.morning.save.button"
 }

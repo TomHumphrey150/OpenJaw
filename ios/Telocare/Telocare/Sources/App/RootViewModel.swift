@@ -164,24 +164,11 @@ final class RootViewModel: ObservableObject {
                 snapshot: snapshot,
                 graphData: graphData,
                 initialExperienceFlow: document.experienceFlow,
-                persistExperienceFlow: { updatedFlow in
-                    Task.detached {
-                        let patch = UserDataPatch.experienceFlow(updatedFlow)
-                        do {
-                            _ = try await repository.upsertUserDataPatch(patch)
-                        } catch {
-                        }
-                    }
-                },
+                initialDailyCheckIns: document.dailyCheckIns,
                 initialMorningStates: document.morningStates,
-                persistMorningStates: { updatedMorningStates in
-                    Task.detached {
-                        let patch = UserDataPatch.morningStates(updatedMorningStates)
-                        do {
-                            _ = try await repository.upsertUserDataPatch(patch)
-                        } catch {
-                        }
-                    }
+                initialHiddenInterventions: document.hiddenInterventions,
+                persistUserDataPatch: { patch in
+                    try await repository.upsertUserDataPatch(patch)
                 },
                 accessibilityAnnouncer: accessibilityAnnouncer
             )

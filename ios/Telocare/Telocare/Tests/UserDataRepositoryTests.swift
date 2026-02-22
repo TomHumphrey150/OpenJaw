@@ -160,7 +160,9 @@ struct UserDataRepositoryTests {
 
         #expect(decoded.experienceFlow?.lastGuidedStatus == .completed)
         #expect(decoded.experienceFlow?.hasCompletedInitialGuidedFlow == true)
+        #expect(decoded.dailyCheckIns == nil)
         #expect(decoded.morningStates == nil)
+        #expect(decoded.hiddenInterventions == nil)
     }
 
     @Test func userDataPatchCanEncodeMorningStates() throws {
@@ -182,9 +184,39 @@ struct UserDataRepositoryTests {
         let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
 
         #expect(decoded.experienceFlow == nil)
+        #expect(decoded.dailyCheckIns == nil)
         #expect(decoded.morningStates?.count == 1)
         #expect(decoded.morningStates?.first?.nightId == "2026-02-21")
         #expect(decoded.morningStates?.first?.globalSensation == 6)
+        #expect(decoded.hiddenInterventions == nil)
+    }
+
+    @Test func userDataPatchCanEncodeDailyCheckIns() throws {
+        let patch = UserDataPatch.dailyCheckIns(
+            [
+                "2026-02-21": ["PPI_TX", "REFLUX_DIET_TX"]
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.experienceFlow == nil)
+        #expect(decoded.dailyCheckIns?["2026-02-21"] == ["PPI_TX", "REFLUX_DIET_TX"])
+        #expect(decoded.morningStates == nil)
+        #expect(decoded.hiddenInterventions == nil)
+    }
+
+    @Test func userDataPatchCanEncodeHiddenInterventions() throws {
+        let patch = UserDataPatch.hiddenInterventions(["PPI_TX", "BED_ELEV_TX"])
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.experienceFlow == nil)
+        #expect(decoded.dailyCheckIns == nil)
+        #expect(decoded.morningStates == nil)
+        #expect(decoded.hiddenInterventions == ["PPI_TX", "BED_ELEV_TX"])
     }
 }
 
@@ -196,5 +228,7 @@ private enum RepositoryFailure: Error {
 
 private struct DecodedPatch: Decodable {
     let experienceFlow: ExperienceFlow?
+    let dailyCheckIns: [String: [String]]?
     let morningStates: [MorningState]?
+    let hiddenInterventions: [String]?
 }

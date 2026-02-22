@@ -8,7 +8,8 @@ struct ExploreTabShell: View {
             ExploreInputsScreen(
                 inputs: viewModel.snapshot.inputs,
                 graphData: viewModel.graphData,
-                onToggleCheckedToday: viewModel.toggleInputCheckedToday
+                onToggleCheckedToday: viewModel.toggleInputCheckedToday,
+                onToggleHidden: viewModel.toggleInputHidden
             )
                 .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
                 .tag(ExploreTab.inputs)
@@ -35,8 +36,7 @@ struct ExploreTabShell: View {
                 outcomeRecords: viewModel.snapshot.outcomeRecords,
                 outcomesMetadata: viewModel.snapshot.outcomesMetadata,
                 morningOutcomeSelection: viewModel.morningOutcomeSelection,
-                onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue,
-                onSaveMorningOutcomes: viewModel.saveMorningOutcomes
+                onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue
             )
                 .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
                 .tag(ExploreTab.outcomes)
@@ -67,7 +67,6 @@ private struct ExploreOutcomesScreen: View {
     let outcomesMetadata: OutcomesMetadata
     let morningOutcomeSelection: MorningOutcomeSelection
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
-    let onSaveMorningOutcomes: () -> Void
 
     @State private var navigationPath = NavigationPath()
     @State private var isMorningCheckInExpanded = true
@@ -158,11 +157,6 @@ private struct ExploreOutcomesScreen: View {
                         )
                         .accessibilityIdentifier(field.accessibilityIdentifier)
                     }
-
-                    Button("Save check-in", action: onSaveMorningOutcomes)
-                        .buttonStyle(WarmPrimaryButtonStyle())
-                        .frame(maxWidth: .infinity)
-                        .accessibilityIdentifier(AccessibilityID.exploreMorningSaveButton)
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -955,6 +949,7 @@ private struct ExploreInputsScreen: View {
     let inputs: [InputStatus]
     let graphData: CausalGraphData
     let onToggleCheckedToday: (String) -> Void
+    let onToggleHidden: (String) -> Void
 
     @State private var navigationPath = NavigationPath()
     @State private var filterMode: InputFilterMode = .all
@@ -970,7 +965,7 @@ private struct ExploreInputsScreen: View {
             .navigationTitle("Interventions")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: InputStatus.self) { input in
-                InputDetailView(input: input, graphData: graphData)
+                InputDetailView(input: input, graphData: graphData, onToggleHidden: onToggleHidden)
                     .accessibilityIdentifier(AccessibilityID.exploreInputDetailSheet)
             }
         }
@@ -1074,21 +1069,26 @@ private struct ExploreInputsScreen: View {
         }
     }
 
+    /// Inputs sorted by impact score (most useful first)
+    private var sortedInputs: [InputStatus] {
+        InputScoring.sortedByImpact(inputs: inputs, graphData: graphData)
+    }
+
     private var filteredInputs: [InputStatus] {
         switch filterMode {
         case .all:
-            return inputs.filter { !$0.isHidden }
+            return sortedInputs.filter { !$0.isHidden }
         case .pending:
-            return inputs.filter { !$0.isHidden && !$0.isCheckedToday }
+            return sortedInputs.filter { !$0.isHidden && !$0.isCheckedToday }
         case .completed:
-            return inputs.filter { !$0.isHidden && $0.isCheckedToday }
+            return sortedInputs.filter { !$0.isHidden && $0.isCheckedToday }
         case .hidden:
-            return inputs.filter(\.isHidden)
+            return sortedInputs.filter(\.isHidden)
         }
     }
 
     private var visibleInputs: [InputStatus] {
-        inputs.filter { !$0.isHidden }
+        sortedInputs.filter { !$0.isHidden }
     }
 
     @ViewBuilder
@@ -1275,6 +1275,9 @@ private struct EvidenceBadge: View {
 private struct InputDetailView: View {
     let input: InputStatus
     let graphData: CausalGraphData
+    let onToggleHidden: (String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {
@@ -1294,11 +1297,36 @@ private struct InputDetailView: View {
                 if input.externalLink != nil {
                     linkCard
                 }
+
+                muteCard
             }
             .padding(TelocareTheme.Spacing.md)
         }
         .background(TelocareTheme.sand.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Mute Card
+
+    @ViewBuilder
+    private var muteCard: some View {
+        WarmCard {
+            Button {
+                onToggleHidden(input.id)
+                dismiss()
+            } label: {
+                HStack {
+                    Image(systemName: input.isHidden ? "bell" : "bell.slash")
+                        .font(.system(size: 16))
+                    Text(input.isHidden ? "Unmute this intervention" : "Mute this intervention")
+                        .font(TelocareTheme.Typography.body)
+                    Spacer()
+                }
+                .foregroundStyle(input.isHidden ? TelocareTheme.coral : TelocareTheme.warmGray)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     // MARK: - Status Card

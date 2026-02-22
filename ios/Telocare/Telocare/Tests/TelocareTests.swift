@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import Telocare
 
+@MainActor
 struct AppViewModelTests {
     @Test func startsInExploreInputsTab() {
         let harness = AppViewModelHarness()
@@ -54,45 +55,140 @@ struct AppViewModelTests {
         #expect(harness.viewModel.graphSelectionText.contains("Selected node"))
     }
 
-    @Test func morningOutcomesSavePersistsUpdatedState() {
-        let stateRecorder = MorningStateRecorder()
+    @Test func inputCheckTogglePersistsDailyCheckInsPatch() async {
+        let patchRecorder = PatchRecorder()
         let harness = AppViewModelHarness(
-            persistMorningStates: { stateRecorder.append($0) }
+            initialDailyCheckIns: ["2026-02-21": ["ppi"]],
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.toggleInputCheckedToday("bed_elevation")
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+
+        #expect(patch?.dailyCheckIns?["2026-02-21"]?.contains("bed_elevation") == true)
+        #expect(patch?.hiddenInterventions == nil)
+        #expect(patch?.morningStates == nil)
+    }
+
+    @Test func inputCheckToggleFailureRevertsState() async {
+        let harness = AppViewModelHarness(
+            initialDailyCheckIns: ["2026-02-21": ["ppi"]],
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            }
+        )
+
+        let before = harness.viewModel.snapshot.inputs.first(where: { $0.id == "bed_elevation" })
+        harness.viewModel.toggleInputCheckedToday("bed_elevation")
+
+        await waitUntil { harness.viewModel.exploreFeedback.contains("Could not save") }
+        let after = harness.viewModel.snapshot.inputs.first(where: { $0.id == "bed_elevation" })
+
+        #expect(before?.isCheckedToday == after?.isCheckedToday)
+        #expect(harness.viewModel.exploreFeedback == "Could not save Bed Elevation check-in. Reverted.")
+        #expect(harness.recorder.messages.last == "Could not save Bed Elevation check-in. Reverted.")
+    }
+
+    @Test func inputMuteTogglePersistsHiddenInterventionsPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.toggleInputHidden("ppi")
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+
+        #expect(patch?.hiddenInterventions?.contains("ppi") == true)
+        #expect(patch?.dailyCheckIns == nil)
+        #expect(patch?.morningStates == nil)
+    }
+
+    @Test func inputMuteToggleFailureRevertsState() async {
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            }
+        )
+
+        let before = harness.viewModel.snapshot.inputs.first(where: { $0.id == "ppi" })
+        harness.viewModel.toggleInputHidden("ppi")
+
+        await waitUntil { harness.viewModel.exploreFeedback.contains("Could not save mute state") }
+        let after = harness.viewModel.snapshot.inputs.first(where: { $0.id == "ppi" })
+
+        #expect(before?.isHidden == after?.isHidden)
+        #expect(harness.viewModel.exploreFeedback == "Could not save mute state for PPI. Reverted.")
+        #expect(harness.recorder.messages.last == "Could not save mute state for PPI. Reverted.")
+    }
+
+    @Test func morningOutcomeTapPersistsPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
         )
 
         harness.viewModel.setMorningOutcomeValue(7, for: .globalSensation)
-        harness.viewModel.setMorningOutcomeValue(4, for: .neckTightness)
-        harness.viewModel.saveMorningOutcomes()
 
-        #expect(stateRecorder.values.count == 1)
-        #expect(stateRecorder.values.first?.count == 1)
-        #expect(stateRecorder.values.first?.first?.nightId == "2026-02-21")
-        #expect(stateRecorder.values.first?.first?.globalSensation == 7)
-        #expect(stateRecorder.values.first?.first?.neckTightness == 4)
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+
+        #expect(patch?.morningStates?.first?.nightId == "2026-02-21")
+        #expect(patch?.morningStates?.first?.globalSensation == 7)
+        #expect(patch?.dailyCheckIns == nil)
+        #expect(patch?.hiddenInterventions == nil)
     }
 
-    @Test func morningOutcomesRequireAtLeastOneValueBeforeSaving() {
-        let stateRecorder = MorningStateRecorder()
+    @Test func morningOutcomeTapFailureRevertsState() async {
         let harness = AppViewModelHarness(
-            persistMorningStates: { stateRecorder.append($0) }
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            }
         )
 
-        harness.viewModel.saveMorningOutcomes()
+        #expect(harness.viewModel.morningOutcomeSelection.value(for: .globalSensation) == nil)
+        harness.viewModel.setMorningOutcomeValue(7, for: .globalSensation)
 
-        #expect(stateRecorder.values.isEmpty)
-        #expect(harness.viewModel.exploreFeedback == "Select at least one morning outcome before saving.")
+        await waitUntil { harness.viewModel.exploreFeedback == "Could not save morning outcomes. Reverted." }
+
+        #expect(harness.viewModel.morningOutcomeSelection.value(for: .globalSensation) == nil)
+        #expect(harness.recorder.messages.last == "Could not save morning outcomes. Reverted.")
+    }
+
+    private func waitUntil(_ condition: @escaping () async -> Bool) async {
+        for _ in 0..<200 {
+            if await condition() {
+                return
+            }
+
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
     }
 }
 
+@MainActor
 private struct AppViewModelHarness {
     let viewModel: AppViewModel
     let recorder: AnnouncementRecorder
 
     init(
         initialExperienceFlow: ExperienceFlow = .empty,
-        persistExperienceFlow: @escaping (ExperienceFlow) -> Void = { _ in },
+        initialDailyCheckIns: [String: [String]] = [:],
         initialMorningStates: [MorningState] = [],
-        persistMorningStates: @escaping ([MorningState]) -> Void = { _ in }
+        initialHiddenInterventions: [String] = [],
+        persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true }
     ) {
         let recorder = AnnouncementRecorder()
         let announcer = AccessibilityAnnouncer { message in
@@ -103,9 +199,10 @@ private struct AppViewModelHarness {
             snapshot: InMemoryDashboardRepository().loadDashboardSnapshot(),
             graphData: CanonicalGraphLoader.loadGraphOrFallback(),
             initialExperienceFlow: initialExperienceFlow,
-            persistExperienceFlow: persistExperienceFlow,
+            initialDailyCheckIns: initialDailyCheckIns,
             initialMorningStates: initialMorningStates,
-            persistMorningStates: persistMorningStates,
+            initialHiddenInterventions: initialHiddenInterventions,
+            persistUserDataPatch: persistUserDataPatch,
             nowProvider: {
                 let calendar = Calendar(identifier: .gregorian)
                 return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
@@ -119,10 +216,22 @@ private final class AnnouncementRecorder {
     var messages: [String] = []
 }
 
-private final class MorningStateRecorder {
-    private(set) var values: [[MorningState]] = []
+private actor PatchRecorder {
+    private var patches: [UserDataPatch] = []
 
-    func append(_ value: [MorningState]) {
-        values.append(value)
+    func record(_ patch: UserDataPatch) {
+        patches.append(patch)
     }
+
+    func count() -> Int {
+        patches.count
+    }
+
+    func lastPatch() -> UserDataPatch? {
+        patches.last
+    }
+}
+
+private enum PatchFailure: Error {
+    case writeFailed
 }
