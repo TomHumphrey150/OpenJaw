@@ -208,6 +208,11 @@ final class RootViewModel: ObservableObject {
             currentUserEmail = session.email
             state = .ready
             accessibilityAnnouncer.announce("Signed in. Dashboard ready.")
+            if let dashboardViewModel {
+                Task {
+                    await dashboardViewModel.refreshAllConnectedAppleHealth(trigger: .automatic)
+                }
+            }
         } catch {
             dashboardViewModel = nil
             state = .fatal(message: "Failed to load user data from Supabase.")

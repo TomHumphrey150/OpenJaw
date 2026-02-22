@@ -38,7 +38,7 @@ struct DashboardContentView: View {
 
             if newPhase == .active {
                 Task {
-                    await viewModel.refreshAllConnectedAppleHealth()
+                    await viewModel.refreshAllConnectedAppleHealth(trigger: .automatic)
                 }
             }
         }

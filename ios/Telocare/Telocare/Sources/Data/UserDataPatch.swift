@@ -154,6 +154,23 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         )
     }
 
+    static func appleHealthConnectionsAndDailyDoseProgress(
+        _ appleHealthConnections: [String: AppleHealthConnection],
+        _ dailyDoseProgress: [String: [String: Double]]
+    ) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: appleHealthConnections,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil
+        )
+    }
+
     static func morningStates(_ value: [MorningState]) -> UserDataPatch {
         UserDataPatch(
             experienceFlow: nil,

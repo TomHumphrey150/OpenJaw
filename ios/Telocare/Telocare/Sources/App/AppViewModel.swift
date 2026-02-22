@@ -1,6 +1,12 @@
 import Combine
 import Foundation
 
+enum AppleHealthRefreshTrigger: Sendable {
+    case manual
+    case automatic
+    case postConnect
+}
+
 @MainActor
 final class AppViewModel: ObservableObject {
     @Published private(set) var mode: AppMode
@@ -485,7 +491,7 @@ final class AppViewModel: ObservableObject {
                 let message = "Connected \(currentInput.name) to Apple Health."
                 exploreFeedback = message
                 announce(message)
-                await refreshAppleHealth(for: inputID)
+                await refreshAppleHealth(for: inputID, trigger: .postConnect)
             } catch {
                 guard operationToken == appleHealthConnectionOperationToken else { return }
                 appleHealthConnections = previousConnections
@@ -551,7 +557,10 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    func refreshAppleHealth(for inputID: String) async {
+    func refreshAppleHealth(
+        for inputID: String,
+        trigger: AppleHealthRefreshTrigger = .manual
+    ) async {
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
         let currentInput = snapshot.inputs[index]
         guard let currentDoseState = currentInput.doseState else { return }
@@ -579,13 +588,25 @@ final class AppViewModel: ObservableObject {
         updateInput(syncingInput, at: index)
 
         do {
+            try await appleHealthDoseService.requestReadAuthorization(for: [config])
             let healthValue = try await appleHealthDoseService.fetchTodayValue(
                 for: config,
                 unit: currentDoseState.unit,
                 now: nowProvider()
             )
+            var nextDailyDoseProgressForPatch: [String: [String: Double]]?
             if let healthValue {
-                appleHealthValues[inputID] = max(0, healthValue)
+                let sanitizedHealthValue = max(0, healthValue)
+                appleHealthValues[inputID] = sanitizedHealthValue
+                let dateKey = Self.localDateKey(from: nowProvider())
+                let nextDailyDoseProgress = Self.updatedDailyDoseProgressForAppleHealthSync(
+                    from: dailyDoseProgress,
+                    dateKey: dateKey,
+                    interventionID: inputID,
+                    value: sanitizedHealthValue
+                )
+                dailyDoseProgress = nextDailyDoseProgress
+                nextDailyDoseProgressForPatch = nextDailyDoseProgress
             } else {
                 appleHealthValues.removeValue(forKey: inputID)
             }
@@ -625,13 +646,24 @@ final class AppViewModel: ObservableObject {
                 }
             }
 
-            try await persistPatch(.appleHealthConnections(appleHealthConnections))
+            let patchToPersist: UserDataPatch
+            if let nextDailyDoseProgressForPatch {
+                patchToPersist = .appleHealthConnectionsAndDailyDoseProgress(
+                    appleHealthConnections,
+                    nextDailyDoseProgressForPatch
+                )
+            } else {
+                patchToPersist = .appleHealthConnections(appleHealthConnections)
+            }
+            try await persistPatch(patchToPersist)
 
-            let message = healthValue == nil
-                ? "No Apple Health data for \(currentInput.name) today. Using app entries."
-                : "Synced \(currentInput.name) from Apple Health."
-            exploreFeedback = message
-            announce(message)
+            if trigger != .automatic {
+                let message = healthValue == nil
+                    ? "No Apple Health data for \(currentInput.name) today. Using app entries."
+                    : "Synced \(currentInput.name) from Apple Health."
+                exploreFeedback = message
+                announce(message)
+            }
         } catch {
             let syncTimestamp = Self.timestampNow()
             let updatedConnection = AppleHealthConnection(
@@ -674,7 +706,7 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    func refreshAllConnectedAppleHealth() async {
+    func refreshAllConnectedAppleHealth(trigger: AppleHealthRefreshTrigger = .manual) async {
         let connectedInputs = snapshot.inputs.compactMap { input -> String? in
             guard input.appleHealthState?.connected == true else {
                 return nil
@@ -683,7 +715,7 @@ final class AppViewModel: ObservableObject {
         }
 
         for inputID in connectedInputs {
-            await refreshAppleHealth(for: inputID)
+            await refreshAppleHealth(for: inputID, trigger: trigger)
         }
     }
 
@@ -1244,6 +1276,25 @@ final class AppViewModel: ObservableObject {
             progress[interventionID] = value
         }
 
+        next[dateKey] = progress
+        return next
+    }
+
+    private static func updatedDailyDoseProgressForAppleHealthSync(
+        from current: [String: [String: Double]],
+        dateKey: String,
+        interventionID: String,
+        value: Double
+    ) -> [String: [String: Double]] {
+        let sanitizedValue = max(0, value)
+        if sanitizedValue <= 0 {
+            return current
+        }
+
+        var next = current
+        var progress = next[dateKey] ?? [:]
+        let existingValue = progress[interventionID] ?? 0
+        progress[interventionID] = max(existingValue, sanitizedValue)
         next[dateKey] = progress
         return next
     }

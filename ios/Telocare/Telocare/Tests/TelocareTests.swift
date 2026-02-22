@@ -319,6 +319,29 @@ struct AppViewModelTests {
         #expect(input?.appleHealthState?.syncStatus == .synced)
     }
 
+    @Test func refreshAppleHealthPersistsConnectionsAndDailyDoseProgressPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshotWithAppleHealth(connected: true),
+            initialDailyDoseProgress: ["2026-02-21": ["water_intake": 500]],
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            },
+            appleHealthDoseService: MockAppleHealthDoseService(
+                requestAuthorization: { _ in },
+                fetchValue: { _, _, _ in 1200 }
+            )
+        )
+
+        await harness.viewModel.refreshAppleHealth(for: "water_intake", trigger: .manual)
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(patch?.appleHealthConnections?["water_intake"]?.lastSyncStatus == .synced)
+        #expect(patch?.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 1200)
+    }
+
     @Test func refreshAppleHealthNoDataKeepsManualDose() async {
         let harness = AppViewModelHarness(
             snapshot: doseSnapshotWithAppleHealth(connected: true),
@@ -334,6 +357,45 @@ struct AppViewModelTests {
         #expect(input?.doseState?.healthValue == nil)
         #expect(input?.doseState?.value == 500)
         #expect(input?.appleHealthState?.syncStatus == .noData)
+    }
+
+    @Test func automaticRefreshSuppressesNoDataAnnouncementButManualAnnounces() async {
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshotWithAppleHealth(connected: true),
+            appleHealthDoseService: MockAppleHealthDoseService(
+                requestAuthorization: { _ in },
+                fetchValue: { _, _, _ in nil }
+            )
+        )
+
+        await harness.viewModel.refreshAppleHealth(for: "water_intake", trigger: .automatic)
+        #expect(harness.recorder.messages.isEmpty)
+
+        await harness.viewModel.refreshAppleHealth(for: "water_intake", trigger: .manual)
+        #expect(harness.recorder.messages.last == "No Apple Health data for Water Intake today. Using app entries.")
+    }
+
+    @Test func automaticRefreshFailureAnnouncesAndPersistsFailedStatus() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshotWithAppleHealth(connected: true),
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            },
+            appleHealthDoseService: MockAppleHealthDoseService(
+                requestAuthorization: { _ in
+                    throw PatchFailure.writeFailed
+                }
+            )
+        )
+
+        await harness.viewModel.refreshAppleHealth(for: "water_intake", trigger: .automatic)
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(patch?.appleHealthConnections?["water_intake"]?.lastSyncStatus == .failed)
+        #expect(harness.recorder.messages.last == "Could not refresh Apple Health for Water Intake.")
     }
 
     @Test func inputActivationTogglePersistsActiveInterventionsPatch() async {

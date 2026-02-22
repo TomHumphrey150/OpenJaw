@@ -439,6 +439,100 @@ struct RootViewModelTests {
         #expect(viewModel.dashboardViewModel?.graphData.nodes.first?.data.id == "FIRST_PARTY_NODE")
     }
 
+    @Test func hydrationAutoRefreshesConnectedAppleHealthAndPersistsDoseProgress() async {
+        let document = UserDataDocument(
+            version: 1,
+            lastExport: nil,
+            personalStudies: [],
+            notes: [],
+            experiments: [],
+            interventionRatings: [],
+            dailyCheckIns: [:],
+            dailyDoseProgress: [:],
+            interventionCompletionEvents: [],
+            interventionDoseSettings: ["water_intake": DoseSettings(dailyGoal: 3000, increment: 100)],
+            appleHealthConnections: [
+                "water_intake": AppleHealthConnection(
+                    isConnected: true,
+                    connectedAt: "2026-02-21T00:00:00Z",
+                    lastSyncAt: nil,
+                    lastSyncStatus: .synced,
+                    lastErrorCode: nil
+                )
+            ],
+            nightExposures: [],
+            nightOutcomes: [],
+            morningStates: [],
+            habitTrials: [],
+            habitClassifications: [],
+            activeInterventions: ["water_intake"],
+            hiddenInterventions: [],
+            unlockedAchievements: [],
+            customCausalDiagram: nil,
+            experienceFlow: .empty
+        )
+        let firstPartyContent = FirstPartyContentBundle(
+            graphData: CausalGraphData(nodes: [], edges: []),
+            interventionsCatalog: InterventionsCatalog(
+                interventions: [
+                    InterventionDefinition(
+                        id: "water_intake",
+                        name: "Water Intake",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: nil,
+                        evidenceSummary: nil,
+                        citationIds: [],
+                        externalLink: nil,
+                        defaultOrder: 1,
+                        trackingType: .dose,
+                        doseConfig: DoseConfig(
+                            unit: .milliliters,
+                            defaultDailyGoal: 3000,
+                            defaultIncrement: 100
+                        ),
+                        appleHealthAvailable: true,
+                        appleHealthConfig: AppleHealthConfig(
+                            identifier: .dietaryWater,
+                            aggregation: .cumulativeSum,
+                            dayAttribution: .localDay
+                        )
+                    )
+                ]
+            ),
+            outcomesMetadata: .empty
+        )
+        let repository = TrackingUserDataRepository(
+            document: document,
+            firstPartyContent: firstPartyContent
+        )
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            appleHealthDoseService: MockAppleHealthDoseService(
+                requestAuthorization: { _ in },
+                fetchValue: { _, _, _ in 1200 }
+            ),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        await waitUntil { await repository.patchCallCount() >= 1 }
+
+        let patch = await repository.lastPatch()
+        #expect(patch?.appleHealthConnections?["water_intake"]?.lastSyncStatus == .synced)
+        let syncedValue = patch?.dailyDoseProgress?.values
+            .compactMap { $0["water_intake"] }
+            .max()
+        #expect(syncedValue == 1200)
+    }
+
     private func waitUntil(_ condition: @escaping () async -> Bool) async {
         for _ in 0..<200 {
             if await condition() {

@@ -17,8 +17,12 @@ struct ExploreTabShell: View {
                 onUpdateDoseSettings: viewModel.updateDoseSettings,
                 onConnectAppleHealth: viewModel.connectInputToAppleHealth,
                 onDisconnectAppleHealth: viewModel.disconnectInputFromAppleHealth,
-                onRefreshAppleHealth: viewModel.refreshAppleHealth,
-                onRefreshAllAppleHealth: viewModel.refreshAllConnectedAppleHealth,
+                onRefreshAppleHealth: { inputID in
+                    await viewModel.refreshAppleHealth(for: inputID, trigger: .manual)
+                },
+                onRefreshAllAppleHealth: {
+                    await viewModel.refreshAllConnectedAppleHealth(trigger: .manual)
+                },
                 onToggleActive: viewModel.toggleInputActive,
                 selectedSkinID: selectedSkinID
             )
