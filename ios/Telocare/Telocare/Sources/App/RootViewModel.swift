@@ -17,6 +17,8 @@ final class RootViewModel: ObservableObject {
     private let userDataRepository: UserDataRepository
     private let snapshotBuilder: DashboardSnapshotBuilder
     private let appleHealthDoseService: AppleHealthDoseService
+    private let museSessionService: MuseSessionService
+    private let museLicenseData: Data?
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistSkinPreference: (TelocareSkinID) -> Void
     private let bootstrapSession: AuthSession?
@@ -27,6 +29,8 @@ final class RootViewModel: ObservableObject {
         userDataRepository: UserDataRepository,
         snapshotBuilder: DashboardSnapshotBuilder,
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
+        museSessionService: MuseSessionService = MockMuseSessionService(),
+        museLicenseData: Data? = nil,
         accessibilityAnnouncer: AccessibilityAnnouncer,
         initialSkinID: TelocareSkinID = .warmCoral,
         persistSkinPreference: @escaping (TelocareSkinID) -> Void = { _ in },
@@ -37,6 +41,8 @@ final class RootViewModel: ObservableObject {
         self.userDataRepository = userDataRepository
         self.snapshotBuilder = snapshotBuilder
         self.appleHealthDoseService = appleHealthDoseService
+        self.museSessionService = museSessionService
+        self.museLicenseData = museLicenseData
         self.accessibilityAnnouncer = accessibilityAnnouncer
         self.persistSkinPreference = persistSkinPreference
         self.bootstrapSession = bootstrapSession
@@ -171,11 +177,19 @@ final class RootViewModel: ObservableObject {
             let firstPartyContent = await loadFirstPartyContent()
             let fallbackGraph = firstPartyContent.graphData ?? CanonicalGraphLoader.loadGraphOrFallback()
             let hydratedDocument = withCanonicalGraphIfMissing(fetchedDocument, fallbackGraph: fallbackGraph)
-            let document = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
+            let graphMigratedDocument = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
+            let document = withWakeDaySleepAttributionMigrationIfNeeded(
+                graphMigratedDocument,
+                interventionsCatalog: firstPartyContent.interventionsCatalog
+            )
             backfillCanonicalGraphIfMissing(from: fetchedDocument, using: document)
             persistLegacyDormantGraphMigrationIfNeeded(
                 from: fetchedDocument,
                 hydrated: hydratedDocument,
+                migrated: graphMigratedDocument
+            )
+            persistWakeDaySleepAttributionMigrationIfNeeded(
+                from: graphMigratedDocument,
                 migrated: document
             )
 
@@ -197,12 +211,15 @@ final class RootViewModel: ObservableObject {
                 initialInterventionCompletionEvents: document.interventionCompletionEvents,
                 initialInterventionDoseSettings: document.interventionDoseSettings,
                 initialAppleHealthConnections: document.appleHealthConnections,
+                initialNightOutcomes: document.nightOutcomes,
                 initialMorningStates: document.morningStates,
                 initialActiveInterventions: document.activeInterventions,
                 persistUserDataPatch: { patch in
                     try await repository.upsertUserDataPatch(patch)
                 },
                 appleHealthDoseService: appleHealthDoseService,
+                museSessionService: museSessionService,
+                museLicenseData: museLicenseData,
                 accessibilityAnnouncer: accessibilityAnnouncer
             )
             currentUserEmail = session.email
@@ -301,6 +318,68 @@ final class RootViewModel: ObservableObject {
         }
     }
 
+    private func withWakeDaySleepAttributionMigrationIfNeeded(
+        _ document: UserDataDocument,
+        interventionsCatalog: InterventionsCatalog
+    ) -> UserDataDocument {
+        guard !document.wakeDaySleepAttributionMigrated else {
+            return document
+        }
+
+        let sleepInterventionIDs = Self.sleepInterventionIDs(
+            from: interventionsCatalog
+        )
+        let migratedDailyDoseProgress = Self.shiftSleepDoseProgress(
+            document.dailyDoseProgress,
+            sleepInterventionIDs: sleepInterventionIDs
+        )
+        let migratedNightOutcomes = Self.shiftNightOutcomes(document.nightOutcomes)
+        let migratedMorningStates = Self.shiftMorningStates(document.morningStates)
+
+        let hasChanges =
+            migratedDailyDoseProgress != document.dailyDoseProgress
+            || migratedNightOutcomes != document.nightOutcomes
+            || migratedMorningStates != document.morningStates
+        guard hasChanges else {
+            return document
+        }
+
+        return document.withSleepAttributionMigration(
+            dailyDoseProgress: migratedDailyDoseProgress,
+            nightOutcomes: migratedNightOutcomes,
+            morningStates: migratedMorningStates,
+            wakeDaySleepAttributionMigrated: true
+        )
+    }
+
+    private func persistWakeDaySleepAttributionMigrationIfNeeded(
+        from fetched: UserDataDocument,
+        migrated: UserDataDocument
+    ) {
+        guard
+            fetched.wakeDaySleepAttributionMigrated != migrated.wakeDaySleepAttributionMigrated
+            || fetched.dailyDoseProgress != migrated.dailyDoseProgress
+            || fetched.nightOutcomes != migrated.nightOutcomes
+            || fetched.morningStates != migrated.morningStates
+        else {
+            return
+        }
+
+        let repository = userDataRepository
+        Task.detached {
+            do {
+                _ = try await repository.upsertUserDataPatch(
+                    .sleepAttributionMigration(
+                        dailyDoseProgress: migrated.dailyDoseProgress,
+                        nightOutcomes: migrated.nightOutcomes,
+                        morningStates: migrated.morningStates
+                    )
+                )
+            } catch {
+            }
+        }
+    }
+
     private static func seedLegacyDormantGraphDeactivationIfNeeded(_ graphData: CausalGraphData) -> CausalGraphData? {
         if hasExplicitGraphDeactivationState(graphData) {
             return nil
@@ -373,6 +452,199 @@ final class RootViewModel: ObservableObject {
         }
 
         return confirmed == "no" || confirmed == "inactive" || confirmed == "external"
+    }
+
+    private static func sleepInterventionIDs(from catalog: InterventionsCatalog) -> Set<String> {
+        Set(
+            catalog.interventions.compactMap { intervention in
+                guard let config = intervention.appleHealthConfig else {
+                    return nil
+                }
+
+                if config.identifier == .sleepAnalysis {
+                    return intervention.id
+                }
+
+                if config.dayAttribution == .previousNightNoonCutoff {
+                    return intervention.id
+                }
+
+                return nil
+            }
+        )
+    }
+
+    private static func shiftSleepDoseProgress(
+        _ dailyDoseProgress: [String: [String: Double]],
+        sleepInterventionIDs: Set<String>
+    ) -> [String: [String: Double]] {
+        guard !sleepInterventionIDs.isEmpty else {
+            return dailyDoseProgress
+        }
+
+        var migrated = dailyDoseProgress
+
+        for (dateKey, dosesByIntervention) in dailyDoseProgress {
+            let shiftedDateKey = shiftedDateKeyByOneDay(dateKey)
+            guard shiftedDateKey != dateKey else {
+                continue
+            }
+
+            let sleepEntries = dosesByIntervention.filter { sleepInterventionIDs.contains($0.key) }
+            guard !sleepEntries.isEmpty else {
+                continue
+            }
+
+            var sourceDoses = migrated[dateKey] ?? [:]
+            var targetDoses = migrated[shiftedDateKey] ?? [:]
+
+            for (interventionID, value) in sleepEntries {
+                sourceDoses.removeValue(forKey: interventionID)
+                let existingValue = targetDoses[interventionID] ?? 0
+                targetDoses[interventionID] = max(existingValue, value)
+            }
+
+            if sourceDoses.isEmpty {
+                migrated.removeValue(forKey: dateKey)
+            } else {
+                migrated[dateKey] = sourceDoses
+            }
+            migrated[shiftedDateKey] = targetDoses
+        }
+
+        return migrated
+    }
+
+    private static func shiftNightOutcomes(_ nightOutcomes: [NightOutcome]) -> [NightOutcome] {
+        var outcomesByNightID: [String: NightOutcome] = [:]
+
+        for outcome in nightOutcomes {
+            let shiftedNightID = shiftedDateKeyByOneDay(outcome.nightId)
+            guard shiftedNightID != outcome.nightId else {
+                outcomesByNightID[outcome.nightId] = preferredNightOutcome(
+                    existing: outcomesByNightID[outcome.nightId],
+                    candidate: outcome
+                )
+                continue
+            }
+
+            let shiftedOutcome = NightOutcome(
+                nightId: shiftedNightID,
+                microArousalCount: outcome.microArousalCount,
+                microArousalRatePerHour: outcome.microArousalRatePerHour,
+                confidence: outcome.confidence,
+                totalSleepMinutes: outcome.totalSleepMinutes,
+                source: outcome.source,
+                createdAt: outcome.createdAt
+            )
+            outcomesByNightID[shiftedNightID] = preferredNightOutcome(
+                existing: outcomesByNightID[shiftedNightID],
+                candidate: shiftedOutcome
+            )
+        }
+
+        return outcomesByNightID.values.sorted { $0.nightId > $1.nightId }
+    }
+
+    private static func preferredNightOutcome(
+        existing: NightOutcome?,
+        candidate: NightOutcome
+    ) -> NightOutcome {
+        guard let existing else {
+            return candidate
+        }
+
+        if candidate.createdAt >= existing.createdAt {
+            return candidate
+        }
+
+        return existing
+    }
+
+    private static func shiftMorningStates(_ morningStates: [MorningState]) -> [MorningState] {
+        var statesByNightID: [String: MorningState] = [:]
+
+        for state in morningStates {
+            let shiftedNightID = shiftedDateKeyByOneDay(state.nightId)
+            guard shiftedNightID != state.nightId else {
+                statesByNightID[state.nightId] = preferredMorningState(
+                    existing: statesByNightID[state.nightId],
+                    candidate: state
+                )
+                continue
+            }
+
+            let shiftedState = MorningState(
+                nightId: shiftedNightID,
+                globalSensation: state.globalSensation,
+                neckTightness: state.neckTightness,
+                jawSoreness: state.jawSoreness,
+                earFullness: state.earFullness,
+                healthAnxiety: state.healthAnxiety,
+                stressLevel: state.stressLevel,
+                createdAt: state.createdAt
+            )
+            statesByNightID[shiftedNightID] = preferredMorningState(
+                existing: statesByNightID[shiftedNightID],
+                candidate: shiftedState
+            )
+        }
+
+        return statesByNightID.values.sorted { $0.nightId > $1.nightId }
+    }
+
+    private static func preferredMorningState(
+        existing: MorningState?,
+        candidate: MorningState
+    ) -> MorningState {
+        guard let existing else {
+            return candidate
+        }
+
+        if candidate.createdAt >= existing.createdAt {
+            return candidate
+        }
+
+        return existing
+    }
+
+    private static func shiftedDateKeyByOneDay(_ dateKey: String) -> String {
+        let parts = dateKey.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3 else {
+            return dateKey
+        }
+        guard
+            let year = Int(parts[0]),
+            let month = Int(parts[1]),
+            let day = Int(parts[2])
+        else {
+            return dateKey
+        }
+
+        let calendar = Calendar(identifier: .gregorian)
+        let components = DateComponents(
+            calendar: calendar,
+            year: year,
+            month: month,
+            day: day
+        )
+        guard let date = calendar.date(from: components) else {
+            return dateKey
+        }
+        guard let shiftedDate = calendar.date(byAdding: .day, value: 1, to: date) else {
+            return dateKey
+        }
+
+        let shiftedComponents = calendar.dateComponents([.year, .month, .day], from: shiftedDate)
+        guard
+            let shiftedYear = shiftedComponents.year,
+            let shiftedMonth = shiftedComponents.month,
+            let shiftedDay = shiftedComponents.day
+        else {
+            return dateKey
+        }
+
+        return String(format: "%04d-%02d-%02d", shiftedYear, shiftedMonth, shiftedDay)
     }
 
     nonisolated private static func timestampNow() -> String {

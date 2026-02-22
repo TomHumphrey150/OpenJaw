@@ -20,6 +20,9 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var focusedNodeID: String?
     @Published private(set) var graphSelectionText: String
     @Published private(set) var morningOutcomeSelection: MorningOutcomeSelection
+    @Published private(set) var museConnectionState: MuseConnectionState
+    @Published private(set) var museRecordingState: MuseRecordingState
+    @Published private(set) var museSessionFeedback: String
     @Published var chatDraft: String
 
     private var experienceFlow: ExperienceFlow
@@ -29,6 +32,7 @@ final class AppViewModel: ObservableObject {
     private var interventionDoseSettings: [String: DoseSettings]
     private var appleHealthConnections: [String: AppleHealthConnection]
     private var appleHealthValues: [String: Double]
+    private var nightOutcomes: [NightOutcome]
     private var morningStates: [MorningState]
     private var activeInterventions: [String]
     private var inputCheckOperationToken: Int
@@ -38,12 +42,18 @@ final class AppViewModel: ObservableObject {
     private var appleHealthConnectionOperationToken: Int
     private var morningOutcomeOperationToken: Int
     private var graphDeactivationOperationToken: Int
+    private var museSessionOperationToken: Int
+    private var museOutcomeSaveOperationToken: Int
 
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
     private let appleHealthDoseService: AppleHealthDoseService
+    private let museSessionService: MuseSessionService
+    private let museLicenseData: Data?
     private let nowProvider: () -> Date
     private static let maxCompletionEventsPerIntervention = 200
+    private static let minimumMuseRecordingMinutes = 120.0
+    private static let museOutcomeSource = "muse_athena_heuristic_v1"
 
     convenience init(
         loadDashboardSnapshotUseCase: LoadDashboardSnapshotUseCase,
@@ -58,10 +68,13 @@ final class AppViewModel: ObservableObject {
             initialInterventionCompletionEvents: [],
             initialInterventionDoseSettings: [:],
             initialAppleHealthConnections: [:],
+            initialNightOutcomes: [],
             initialMorningStates: [],
             initialActiveInterventions: [],
             persistUserDataPatch: { _ in true },
             appleHealthDoseService: MockAppleHealthDoseService(),
+            museSessionService: MockMuseSessionService(),
+            museLicenseData: nil,
             accessibilityAnnouncer: accessibilityAnnouncer
         )
     }
@@ -75,10 +88,13 @@ final class AppViewModel: ObservableObject {
         initialInterventionCompletionEvents: [InterventionCompletionEvent] = [],
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
+        initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
         initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
+        museSessionService: MuseSessionService = MockMuseSessionService(),
+        museLicenseData: Data? = nil,
         nowProvider: @escaping () -> Date = Date.init,
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
@@ -99,6 +115,9 @@ final class AppViewModel: ObservableObject {
         focusedNodeID = Self.resolveNodeID(from: graphData, focusedNodeLabel: snapshot.situation.focusedNode)
         graphSelectionText = "Graph ready."
         morningOutcomeSelection = Self.morningOutcomeSelection(for: todayKey, from: initialMorningStates)
+        museConnectionState = .disconnected
+        museRecordingState = .idle
+        museSessionFeedback = "Muse session idle."
         chatDraft = ""
 
         experienceFlow = initialExperienceFlow
@@ -111,6 +130,7 @@ final class AppViewModel: ObservableObject {
         interventionDoseSettings = initialInterventionDoseSettings
         appleHealthConnections = initialAppleHealthConnections
         appleHealthValues = [:]
+        nightOutcomes = initialNightOutcomes
         morningStates = initialMorningStates
         let snapshotActiveInterventions = snapshot.inputs.compactMap { input -> String? in
             input.isActive ? input.id : nil
@@ -124,9 +144,13 @@ final class AppViewModel: ObservableObject {
         appleHealthConnectionOperationToken = 0
         morningOutcomeOperationToken = 0
         graphDeactivationOperationToken = 0
+        museSessionOperationToken = 0
+        museOutcomeSaveOperationToken = 0
 
         self.persistUserDataPatch = persistUserDataPatch
         self.appleHealthDoseService = appleHealthDoseService
+        self.museSessionService = museSessionService
+        self.museLicenseData = museLicenseData
         self.nowProvider = nowProvider
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
@@ -139,8 +163,263 @@ final class AppViewModel: ObservableObject {
         morningStates
     }
 
+    var museConnectionStatusText: String {
+        switch museConnectionState {
+        case .disconnected:
+            return "Disconnected"
+        case .scanning:
+            return "Scanning"
+        case .discovered(let headband):
+            return "Discovered \(headband.name)"
+        case .connecting(let headband):
+            return "Connecting to \(headband.name)"
+        case .connected(let headband):
+            return "Connected to \(headband.name)"
+        case .needsLicense:
+            return "Needs license"
+        case .needsUpdate:
+            return "Needs device update"
+        case .failed(let message):
+            return "Error: \(message)"
+        }
+    }
+
+    var museRecordingStatusText: String {
+        switch museRecordingState {
+        case .idle:
+            return "Not recording"
+        case .recording(let startedAt):
+            let minutes = max(0, nowProvider().timeIntervalSince(startedAt) / 60.0)
+            return "Recording (\(Self.formattedMinutes(minutes)))"
+        case .stopped(let summary):
+            return "Stopped (\(Self.formattedMinutes(summary.totalSleepMinutes)))"
+        }
+    }
+
+    var museCanScan: Bool {
+        switch museConnectionState {
+        case .disconnected, .failed, .needsLicense, .needsUpdate:
+            return true
+        case .scanning, .discovered, .connecting, .connected:
+            return false
+        }
+    }
+
+    var museCanConnect: Bool {
+        if case .discovered = museConnectionState {
+            return true
+        }
+
+        return false
+    }
+
+    var museCanDisconnect: Bool {
+        switch museConnectionState {
+        case .disconnected, .needsLicense, .needsUpdate, .failed:
+            return false
+        case .scanning, .discovered, .connecting, .connected:
+            return true
+        }
+    }
+
+    var museCanStartRecording: Bool {
+        guard case .connected = museConnectionState else {
+            return false
+        }
+
+        if case .recording = museRecordingState {
+            return false
+        }
+
+        return true
+    }
+
+    var museCanStopRecording: Bool {
+        if case .recording = museRecordingState {
+            return true
+        }
+
+        return false
+    }
+
+    var museCanSaveNightOutcome: Bool {
+        guard case .stopped(let summary) = museRecordingState else {
+            return false
+        }
+
+        return summary.totalSleepMinutes >= Self.minimumMuseRecordingMinutes
+    }
+
+    var museRecordingSummary: MuseRecordingSummary? {
+        if case .stopped(let summary) = museRecordingState {
+            return summary
+        }
+
+        return nil
+    }
+
+    var museDisclaimerText: String {
+        "Muse output is a non-diagnostic wellness signal and does not diagnose or treat medical conditions."
+    }
+
     func setProfileSheetPresented(_ isPresented: Bool) {
         isProfileSheetPresented = isPresented
+    }
+
+    func scanForMuseHeadband() {
+        guard mode == .explore else { return }
+
+        let operationToken = nextMuseSessionOperationToken()
+        museConnectionState = .scanning
+        let message = "Scanning for Muse headbands."
+        museSessionFeedback = message
+        announce(message)
+
+        Task {
+            do {
+                let headbands = try await museSessionService.scanForHeadbands()
+                guard operationToken == museSessionOperationToken else { return }
+                guard let headband = headbands.first else {
+                    museConnectionState = .disconnected
+                    let emptyMessage = "No Muse headbands found."
+                    museSessionFeedback = emptyMessage
+                    announce(emptyMessage)
+                    return
+                }
+
+                museConnectionState = .discovered(headband)
+                let successMessage = "Found \(headband.name)."
+                museSessionFeedback = successMessage
+                announce(successMessage)
+            } catch {
+                guard operationToken == museSessionOperationToken else { return }
+                applyMuseSessionError(error, fallback: "Could not scan for Muse headbands.")
+            }
+        }
+    }
+
+    func connectToMuseHeadband() {
+        guard mode == .explore else { return }
+        guard case .discovered(let headband) = museConnectionState else { return }
+
+        let operationToken = nextMuseSessionOperationToken()
+        museConnectionState = .connecting(headband)
+        let message = "Connecting to \(headband.name)."
+        museSessionFeedback = message
+        announce(message)
+
+        Task {
+            do {
+                try await museSessionService.connect(to: headband, licenseData: museLicenseData)
+                guard operationToken == museSessionOperationToken else { return }
+                museConnectionState = .connected(headband)
+                let successMessage = "Connected to \(headband.name)."
+                museSessionFeedback = successMessage
+                announce(successMessage)
+            } catch {
+                guard operationToken == museSessionOperationToken else { return }
+                applyMuseSessionError(error, fallback: "Could not connect to \(headband.name).")
+            }
+        }
+    }
+
+    func disconnectMuseHeadband() {
+        guard mode == .explore else { return }
+
+        let operationToken = nextMuseSessionOperationToken()
+        Task {
+            await museSessionService.disconnect()
+            guard operationToken == museSessionOperationToken else { return }
+            if case .recording = museRecordingState {
+                museRecordingState = .idle
+            }
+            museConnectionState = .disconnected
+            let message = "Muse disconnected."
+            museSessionFeedback = message
+            announce(message)
+        }
+    }
+
+    func startMuseRecording() {
+        guard mode == .explore else { return }
+        guard case .connected = museConnectionState else { return }
+        guard case .idle = museRecordingState else { return }
+
+        let operationToken = nextMuseSessionOperationToken()
+        let startDate = nowProvider()
+        museRecordingState = .recording(startedAt: startDate)
+        let message = "Recording started. Keep Telocare open in the foreground."
+        museSessionFeedback = message
+        announce(message)
+
+        Task {
+            do {
+                try await museSessionService.startRecording(at: startDate)
+                guard operationToken == museSessionOperationToken else { return }
+            } catch {
+                guard operationToken == museSessionOperationToken else { return }
+                museRecordingState = .idle
+                applyMuseSessionError(error, fallback: "Could not start recording.")
+            }
+        }
+    }
+
+    func stopMuseRecording() {
+        guard mode == .explore else { return }
+        guard case .recording = museRecordingState else { return }
+        stopMuseRecordingForCurrentState()
+    }
+
+    func saveMuseNightOutcome() {
+        guard mode == .explore else { return }
+        guard case .stopped(let summary) = museRecordingState else { return }
+        guard summary.totalSleepMinutes >= Self.minimumMuseRecordingMinutes else {
+            let message = "Recording must be at least 2 hours to save."
+            museSessionFeedback = message
+            announce(message)
+            return
+        }
+
+        let previousSnapshot = snapshot
+        let previousNightOutcomes = nightOutcomes
+        let nightID = Self.localDateKey(from: nowProvider())
+        let createdAt = Self.timestamp(from: nowProvider())
+        let nextOutcome = NightOutcome(
+            nightId: nightID,
+            microArousalCount: summary.microArousalCount,
+            microArousalRatePerHour: summary.microArousalRatePerHour,
+            confidence: summary.confidence,
+            totalSleepMinutes: summary.totalSleepMinutes,
+            source: Self.museOutcomeSource,
+            createdAt: createdAt
+        )
+        let nextNightOutcomes = Self.upsert(nightOutcome: nextOutcome, in: nightOutcomes)
+        let nextOutcomeRecords = Self.outcomeRecords(from: nextNightOutcomes)
+
+        nightOutcomes = nextNightOutcomes
+        updateOutcomeRecords(nextOutcomeRecords)
+
+        let successMessage = "Saved Muse night outcome for \(nightID)."
+        museSessionFeedback = successMessage
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextMuseOutcomeSaveOperationToken()
+        Task {
+            do {
+                try await persistPatch(.nightOutcomes(nextNightOutcomes))
+                guard operationToken == museOutcomeSaveOperationToken else { return }
+                museRecordingState = .idle
+            } catch {
+                guard operationToken == museOutcomeSaveOperationToken else { return }
+                snapshot = previousSnapshot
+                nightOutcomes = previousNightOutcomes
+                let failureMessage = "Could not save Muse night outcome. Reverted."
+                museSessionFeedback = failureMessage
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
     }
 
     func advanceFromOutcomes() {
@@ -881,6 +1160,10 @@ final class AppViewModel: ObservableObject {
     }
 
     func handleAppMovedToBackground() {
+        if case .recording = museRecordingState {
+            stopMuseRecordingForCurrentState(triggeredByBackground: true)
+        }
+
         guard mode == .guided else { return }
         guard experienceFlow.lastGuidedStatus == .inProgress else { return }
         markGuidedInterrupted(on: Self.localDateKey(from: nowProvider()))
@@ -944,6 +1227,16 @@ final class AppViewModel: ObservableObject {
         )
     }
 
+    private func updateOutcomeRecords(_ records: [OutcomeRecord]) {
+        snapshot = DashboardSnapshot(
+            outcomes: snapshot.outcomes,
+            outcomeRecords: records,
+            outcomesMetadata: snapshot.outcomesMetadata,
+            situation: snapshot.situation,
+            inputs: snapshot.inputs
+        )
+    }
+
     private func markGuidedEntry(on dateKey: String) {
         persistExperienceFlow(
             ExperienceFlow(
@@ -996,6 +1289,80 @@ final class AppViewModel: ObservableObject {
         }
     }
 
+    private func stopMuseRecordingForCurrentState(triggeredByBackground: Bool = false) {
+        let operationToken = nextMuseSessionOperationToken()
+        let endDate = nowProvider()
+
+        Task {
+            do {
+                let summary = try await museSessionService.stopRecording(at: endDate)
+                guard operationToken == museSessionOperationToken else { return }
+                museRecordingState = .stopped(summary)
+
+                let durationText = Self.formattedMinutes(summary.totalSleepMinutes)
+                let isLongEnough = summary.totalSleepMinutes >= Self.minimumMuseRecordingMinutes
+
+                let message: String
+                if triggeredByBackground {
+                    if isLongEnough {
+                        message = "Recording stopped because Telocare moved to background (\(durationText))."
+                    } else {
+                        message = "Recording stopped in background (\(durationText)). At least 2 hours are required to save."
+                    }
+                } else if isLongEnough {
+                    message = "Recording stopped (\(durationText)). Ready to save."
+                } else {
+                    message = "Recording stopped (\(durationText)). At least 2 hours are required to save."
+                }
+
+                museSessionFeedback = message
+                announce(message)
+            } catch {
+                guard operationToken == museSessionOperationToken else { return }
+                museRecordingState = .idle
+                let fallback = triggeredByBackground
+                    ? "Recording ended because Telocare moved to background."
+                    : "Could not stop recording."
+                applyMuseSessionError(error, fallback: fallback)
+            }
+        }
+    }
+
+    private func applyMuseSessionError(_ error: Error, fallback: String) {
+        guard let museError = error as? MuseSessionServiceError else {
+            museConnectionState = .failed(fallback)
+            museSessionFeedback = fallback
+            announce(fallback)
+            return
+        }
+
+        let message: String
+        switch museError {
+        case .unavailable:
+            message = "Muse integration is unavailable in this build."
+            museConnectionState = .failed(message)
+        case .noHeadbandFound:
+            message = "No Muse headbands found."
+            museConnectionState = .disconnected
+        case .notConnected:
+            message = "Muse is not connected."
+            museConnectionState = .disconnected
+        case .needsLicense:
+            message = "Muse license is required before connecting."
+            museConnectionState = .needsLicense
+        case .needsUpdate:
+            message = "Muse headband firmware update is required."
+            museConnectionState = .needsUpdate
+        case .alreadyRecording:
+            message = "Recording is already in progress."
+        case .notRecording:
+            message = "No active recording to stop."
+        }
+
+        museSessionFeedback = message
+        announce(message)
+    }
+
     private func nextInputCheckOperationToken() -> Int {
         inputCheckOperationToken += 1
         return inputCheckOperationToken
@@ -1029,6 +1396,16 @@ final class AppViewModel: ObservableObject {
     private func nextGraphDeactivationOperationToken() -> Int {
         graphDeactivationOperationToken += 1
         return graphDeactivationOperationToken
+    }
+
+    private func nextMuseSessionOperationToken() -> Int {
+        museSessionOperationToken += 1
+        return museSessionOperationToken
+    }
+
+    private func nextMuseOutcomeSaveOperationToken() -> Int {
+        museOutcomeSaveOperationToken += 1
+        return museOutcomeSaveOperationToken
     }
 
     private func dayCount(for input: InputStatus) -> Int {
@@ -1451,6 +1828,39 @@ final class AppViewModel: ObservableObject {
             createdAt: existingCreatedAt
         )
         return mutableStates
+    }
+
+    private static func upsert(nightOutcome: NightOutcome, in existingOutcomes: [NightOutcome]) -> [NightOutcome] {
+        var mutableOutcomes = existingOutcomes
+        guard let existingIndex = mutableOutcomes.firstIndex(where: { $0.nightId == nightOutcome.nightId }) else {
+            mutableOutcomes.append(nightOutcome)
+            return mutableOutcomes.sorted { $0.nightId > $1.nightId }
+        }
+
+        mutableOutcomes[existingIndex] = nightOutcome
+        return mutableOutcomes.sorted { $0.nightId > $1.nightId }
+    }
+
+    private static func outcomeRecords(from nightOutcomes: [NightOutcome]) -> [OutcomeRecord] {
+        nightOutcomes
+            .sorted { $0.nightId > $1.nightId }
+            .map { outcome in
+                OutcomeRecord(
+                    id: outcome.nightId,
+                    microArousalRatePerHour: outcome.microArousalRatePerHour,
+                    microArousalCount: outcome.microArousalCount,
+                    confidence: outcome.confidence,
+                    source: outcome.source
+                )
+            }
+    }
+
+    private static func formattedMinutes(_ minutes: Double) -> String {
+        let roundedMinutes = Int(minutes.rounded())
+        let safeMinutes = max(0, roundedMinutes)
+        let hours = safeMinutes / 60
+        let remainingMinutes = safeMinutes % 60
+        return "\(hours)h \(remainingMinutes)m"
     }
 
     private static func timestampNow() -> String {

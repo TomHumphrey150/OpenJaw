@@ -15,6 +15,7 @@ struct UserDataDocument: Codable, Equatable {
     let nightExposures: [NightExposure]
     let nightOutcomes: [NightOutcome]
     let morningStates: [MorningState]
+    let wakeDaySleepAttributionMigrated: Bool
     let habitTrials: [HabitTrialWindow]
     let habitClassifications: [HabitClassification]
     let activeInterventions: [String]
@@ -38,6 +39,7 @@ struct UserDataDocument: Codable, Equatable {
         nightExposures: [],
         nightOutcomes: [],
         morningStates: [],
+        wakeDaySleepAttributionMigrated: false,
         habitTrials: [],
         habitClassifications: [],
         activeInterventions: [],
@@ -62,6 +64,7 @@ struct UserDataDocument: Codable, Equatable {
         nightExposures: [NightExposure],
         nightOutcomes: [NightOutcome],
         morningStates: [MorningState],
+        wakeDaySleepAttributionMigrated: Bool = false,
         habitTrials: [HabitTrialWindow],
         habitClassifications: [HabitClassification],
         activeInterventions: [String] = [],
@@ -84,6 +87,7 @@ struct UserDataDocument: Codable, Equatable {
         self.nightExposures = nightExposures
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
+        self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
         self.habitTrials = habitTrials
         self.habitClassifications = habitClassifications
         self.activeInterventions = activeInterventions
@@ -108,6 +112,7 @@ struct UserDataDocument: Codable, Equatable {
         case nightExposures
         case nightOutcomes
         case morningStates
+        case wakeDaySleepAttributionMigrated
         case habitTrials
         case habitClassifications
         case activeInterventions
@@ -133,6 +138,7 @@ struct UserDataDocument: Codable, Equatable {
         nightExposures = try container.decodeIfPresent([NightExposure].self, forKey: .nightExposures) ?? []
         nightOutcomes = try container.decodeIfPresent([NightOutcome].self, forKey: .nightOutcomes) ?? []
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
+        wakeDaySleepAttributionMigrated = try container.decodeIfPresent(Bool.self, forKey: .wakeDaySleepAttributionMigrated) ?? false
         habitTrials = try container.decodeIfPresent([HabitTrialWindow].self, forKey: .habitTrials) ?? []
         habitClassifications = try container.decodeIfPresent([HabitClassification].self, forKey: .habitClassifications) ?? []
         activeInterventions = try container.decodeIfPresent([String].self, forKey: .activeInterventions) ?? []
@@ -396,7 +402,7 @@ struct NightExposure: Codable, Equatable {
     let createdAt: String
 }
 
-struct NightOutcome: Codable, Equatable {
+struct NightOutcome: Codable, Equatable, Sendable {
     let nightId: String
     let microArousalCount: Double?
     let microArousalRatePerHour: Double?

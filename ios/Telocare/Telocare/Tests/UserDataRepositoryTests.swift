@@ -162,10 +162,12 @@ struct UserDataRepositoryTests {
         #expect(decoded.experienceFlow?.hasCompletedInitialGuidedFlow == true)
         #expect(decoded.dailyCheckIns == nil)
         #expect(decoded.interventionCompletionEvents == nil)
+        #expect(decoded.nightOutcomes == nil)
         #expect(decoded.morningStates == nil)
         #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
         #expect(decoded.customCausalDiagram == nil)
+        #expect(decoded.wakeDaySleepAttributionMigrated == nil)
     }
 
     @Test func userDataPatchCanEncodeMorningStates() throws {
@@ -189,12 +191,77 @@ struct UserDataRepositoryTests {
         #expect(decoded.experienceFlow == nil)
         #expect(decoded.dailyCheckIns == nil)
         #expect(decoded.interventionCompletionEvents == nil)
+        #expect(decoded.nightOutcomes == nil)
         #expect(decoded.morningStates?.count == 1)
         #expect(decoded.morningStates?.first?.nightId == "2026-02-21")
         #expect(decoded.morningStates?.first?.globalSensation == 6)
         #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
         #expect(decoded.customCausalDiagram == nil)
+    }
+
+    @Test func userDataPatchCanEncodeNightOutcomes() throws {
+        let patch = UserDataPatch.nightOutcomes(
+            [
+                NightOutcome(
+                    nightId: "2026-02-22",
+                    microArousalCount: 14,
+                    microArousalRatePerHour: 2.8,
+                    confidence: 0.71,
+                    totalSleepMinutes: 360,
+                    source: "muse_athena_heuristic_v1",
+                    createdAt: "2026-02-22T07:40:00Z"
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.nightOutcomes?.count == 1)
+        #expect(decoded.nightOutcomes?.first?.nightId == "2026-02-22")
+        #expect(decoded.nightOutcomes?.first?.microArousalRatePerHour == 2.8)
+        #expect(decoded.morningStates == nil)
+        #expect(decoded.wakeDaySleepAttributionMigrated == nil)
+    }
+
+    @Test func userDataPatchCanEncodeSleepAttributionMigration() throws {
+        let patch = UserDataPatch.sleepAttributionMigration(
+            dailyDoseProgress: [
+                "2026-02-22": ["sleep_hours": 7.5]
+            ],
+            nightOutcomes: [
+                NightOutcome(
+                    nightId: "2026-02-22",
+                    microArousalCount: 10,
+                    microArousalRatePerHour: 1.8,
+                    confidence: 0.77,
+                    totalSleepMinutes: 420,
+                    source: "wearable",
+                    createdAt: "2026-02-22T07:45:00Z"
+                )
+            ],
+            morningStates: [
+                MorningState(
+                    nightId: "2026-02-22",
+                    globalSensation: 4,
+                    neckTightness: 3,
+                    jawSoreness: 2,
+                    earFullness: 2,
+                    healthAnxiety: 3,
+                    stressLevel: 4,
+                    createdAt: "2026-02-22T08:10:00Z"
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.dailyDoseProgress?["2026-02-22"]?["sleep_hours"] == 7.5)
+        #expect(decoded.nightOutcomes?.first?.nightId == "2026-02-22")
+        #expect(decoded.morningStates?.first?.nightId == "2026-02-22")
+        #expect(decoded.wakeDaySleepAttributionMigrated == true)
     }
 
     @Test func userDataPatchCanEncodeDailyCheckIns() throws {
@@ -409,8 +476,10 @@ private struct DecodedPatch: Decodable {
     let interventionCompletionEvents: [InterventionCompletionEvent]?
     let interventionDoseSettings: [String: DoseSettings]?
     let appleHealthConnections: [String: AppleHealthConnection]?
+    let nightOutcomes: [NightOutcome]?
     let morningStates: [MorningState]?
     let activeInterventions: [String]?
     let hiddenInterventions: [String]?
     let customCausalDiagram: CustomCausalDiagram?
+    let wakeDaySleepAttributionMigrated: Bool?
 }

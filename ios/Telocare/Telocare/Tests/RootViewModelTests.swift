@@ -261,6 +261,156 @@ struct RootViewModelTests {
         #expect(await repository.patchCallCount() == 0)
     }
 
+    @Test func wakeDaySleepMigrationShiftsHistoricalSleepKeysAndPersistsMarkerPatch() async {
+        let document = UserDataDocument(
+            version: 1,
+            lastExport: nil,
+            personalStudies: [],
+            notes: [],
+            experiments: [],
+            interventionRatings: [],
+            dailyCheckIns: [:],
+            dailyDoseProgress: [
+                "2026-02-21": [
+                    "sleep_hours": 7.5,
+                    "water_intake": 900
+                ]
+            ],
+            interventionCompletionEvents: [],
+            interventionDoseSettings: [:],
+            appleHealthConnections: [:],
+            nightExposures: [],
+            nightOutcomes: [
+                NightOutcome(
+                    nightId: "2026-02-21",
+                    microArousalCount: 10,
+                    microArousalRatePerHour: 2,
+                    confidence: 0.74,
+                    totalSleepMinutes: 390,
+                    source: "wearable",
+                    createdAt: "2026-02-21T07:40:00Z"
+                )
+            ],
+            morningStates: [
+                MorningState(
+                    nightId: "2026-02-21",
+                    globalSensation: 5,
+                    neckTightness: 4,
+                    jawSoreness: 3,
+                    earFullness: 2,
+                    healthAnxiety: 4,
+                    stressLevel: 5,
+                    createdAt: "2026-02-21T08:05:00Z"
+                )
+            ],
+            wakeDaySleepAttributionMigrated: false,
+            habitTrials: [],
+            habitClassifications: [],
+            activeInterventions: [],
+            hiddenInterventions: [],
+            unlockedAchievements: [],
+            customCausalDiagram: nil,
+            experienceFlow: .empty
+        )
+        let repository = TrackingUserDataRepository(
+            document: document,
+            firstPartyContent: sleepMigrationFirstPartyContent()
+        )
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        await waitUntil { await repository.patchCallCount() == 1 }
+
+        let patch = await repository.lastPatch()
+        #expect(patch?.wakeDaySleepAttributionMigrated == true)
+        #expect(patch?.dailyDoseProgress?["2026-02-22"]?["sleep_hours"] == 7.5)
+        #expect(patch?.dailyDoseProgress?["2026-02-21"]?["sleep_hours"] == nil)
+        #expect(patch?.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 900)
+        #expect(patch?.nightOutcomes?.first?.nightId == "2026-02-22")
+        #expect(patch?.morningStates?.first?.nightId == "2026-02-22")
+    }
+
+    @Test func wakeDaySleepMigrationSkipsWhenMarkerAlreadySet() async {
+        let document = UserDataDocument(
+            version: 1,
+            lastExport: nil,
+            personalStudies: [],
+            notes: [],
+            experiments: [],
+            interventionRatings: [],
+            dailyCheckIns: [:],
+            dailyDoseProgress: [
+                "2026-02-22": [
+                    "sleep_hours": 7.5,
+                    "water_intake": 900
+                ]
+            ],
+            interventionCompletionEvents: [],
+            interventionDoseSettings: [:],
+            appleHealthConnections: [:],
+            nightExposures: [],
+            nightOutcomes: [
+                NightOutcome(
+                    nightId: "2026-02-22",
+                    microArousalCount: 10,
+                    microArousalRatePerHour: 2,
+                    confidence: 0.74,
+                    totalSleepMinutes: 390,
+                    source: "wearable",
+                    createdAt: "2026-02-21T07:40:00Z"
+                )
+            ],
+            morningStates: [
+                MorningState(
+                    nightId: "2026-02-22",
+                    globalSensation: 5,
+                    neckTightness: 4,
+                    jawSoreness: 3,
+                    earFullness: 2,
+                    healthAnxiety: 4,
+                    stressLevel: 5,
+                    createdAt: "2026-02-21T08:05:00Z"
+                )
+            ],
+            wakeDaySleepAttributionMigrated: true,
+            habitTrials: [],
+            habitClassifications: [],
+            activeInterventions: [],
+            hiddenInterventions: [],
+            unlockedAchievements: [],
+            customCausalDiagram: nil,
+            experienceFlow: .empty
+        )
+        let repository = TrackingUserDataRepository(
+            document: document,
+            firstPartyContent: sleepMigrationFirstPartyContent()
+        )
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: repository,
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        #expect(await repository.patchCallCount() == 0)
+    }
+
     @Test func backfillFailureIsNonFatal() async {
         let repository = TrackingUserDataRepository(
             document: .empty,
@@ -531,6 +681,63 @@ struct RootViewModelTests {
             .compactMap { $0["water_intake"] }
             .max()
         #expect(syncedValue == 1200)
+    }
+
+    private func sleepMigrationFirstPartyContent() -> FirstPartyContentBundle {
+        FirstPartyContentBundle(
+            graphData: .defaultGraph,
+            interventionsCatalog: InterventionsCatalog(
+                interventions: [
+                    InterventionDefinition(
+                        id: "sleep_hours",
+                        name: "Sleep Hours",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: nil,
+                        evidenceSummary: nil,
+                        citationIds: [],
+                        externalLink: nil,
+                        defaultOrder: 1,
+                        trackingType: .dose,
+                        doseConfig: DoseConfig(
+                            unit: .hours,
+                            defaultDailyGoal: 8,
+                            defaultIncrement: 0.5
+                        ),
+                        appleHealthAvailable: true,
+                        appleHealthConfig: AppleHealthConfig(
+                            identifier: .sleepAnalysis,
+                            aggregation: .sleepAsleepDurationSum,
+                            dayAttribution: .previousNightNoonCutoff
+                        )
+                    ),
+                    InterventionDefinition(
+                        id: "water_intake",
+                        name: "Water Intake",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: nil,
+                        evidenceSummary: nil,
+                        citationIds: [],
+                        externalLink: nil,
+                        defaultOrder: 2,
+                        trackingType: .dose,
+                        doseConfig: DoseConfig(
+                            unit: .milliliters,
+                            defaultDailyGoal: 3000,
+                            defaultIncrement: 100
+                        ),
+                        appleHealthAvailable: true,
+                        appleHealthConfig: AppleHealthConfig(
+                            identifier: .dietaryWater,
+                            aggregation: .cumulativeSum,
+                            dayAttribution: .localDay
+                        )
+                    )
+                ]
+            ),
+            outcomesMetadata: .empty
+        )
     }
 
     private func waitUntil(_ condition: @escaping () async -> Bool) async {

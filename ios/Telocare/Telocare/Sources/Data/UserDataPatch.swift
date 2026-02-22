@@ -7,10 +7,12 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let interventionCompletionEvents: [InterventionCompletionEvent]?
     let interventionDoseSettings: [String: DoseSettings]?
     let appleHealthConnections: [String: AppleHealthConnection]?
+    let nightOutcomes: [NightOutcome]?
     let morningStates: [MorningState]?
     let activeInterventions: [String]?
     let hiddenInterventions: [String]?
     let customCausalDiagram: CustomCausalDiagram?
+    let wakeDaySleepAttributionMigrated: Bool?
 
     init(
         experienceFlow: ExperienceFlow?,
@@ -19,10 +21,12 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         interventionCompletionEvents: [InterventionCompletionEvent]?,
         interventionDoseSettings: [String: DoseSettings]?,
         appleHealthConnections: [String: AppleHealthConnection]?,
+        nightOutcomes: [NightOutcome]? = nil,
         morningStates: [MorningState]?,
         activeInterventions: [String]?,
         hiddenInterventions: [String]?,
-        customCausalDiagram: CustomCausalDiagram? = nil
+        customCausalDiagram: CustomCausalDiagram? = nil,
+        wakeDaySleepAttributionMigrated: Bool? = nil
     ) {
         self.experienceFlow = experienceFlow
         self.dailyCheckIns = dailyCheckIns
@@ -30,10 +34,12 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         self.interventionCompletionEvents = interventionCompletionEvents
         self.interventionDoseSettings = interventionDoseSettings
         self.appleHealthConnections = appleHealthConnections
+        self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
         self.activeInterventions = activeInterventions
         self.hiddenInterventions = hiddenInterventions
         self.customCausalDiagram = customCausalDiagram
+        self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
     }
 
     static func experienceFlow(_ value: ExperienceFlow) -> UserDataPatch {
@@ -182,6 +188,41 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             morningStates: value,
             activeInterventions: nil,
             hiddenInterventions: nil
+        )
+    }
+
+    static func nightOutcomes(_ value: [NightOutcome]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            nightOutcomes: value,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil
+        )
+    }
+
+    static func sleepAttributionMigration(
+        dailyDoseProgress: [String: [String: Double]],
+        nightOutcomes: [NightOutcome],
+        morningStates: [MorningState]
+    ) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            nightOutcomes: nightOutcomes,
+            morningStates: morningStates,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            wakeDaySleepAttributionMigrated: true
         )
     }
 

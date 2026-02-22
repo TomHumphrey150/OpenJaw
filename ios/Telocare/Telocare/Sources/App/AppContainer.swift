@@ -53,6 +53,8 @@ final class AppContainer {
                 userDataRepository: SupabaseUserDataRepository(client: supabaseClient),
                 snapshotBuilder: snapshotBuilder,
                 appleHealthDoseService: HealthKitAppleHealthDoseService(),
+                museSessionService: defaultMuseSessionService,
+                museLicenseData: configuration.museLicenseData,
                 accessibilityAnnouncer: accessibilityAnnouncer,
                 initialSkinID: initialSkinID,
                 persistSkinPreference: saveSkinPreference
@@ -63,6 +65,8 @@ final class AppContainer {
                 userDataRepository: MockUserDataRepository(document: .empty),
                 snapshotBuilder: snapshotBuilder,
                 appleHealthDoseService: MockAppleHealthDoseService(),
+                museSessionService: MockMuseSessionService(),
+                museLicenseData: nil,
                 accessibilityAnnouncer: accessibilityAnnouncer,
                 initialSkinID: initialSkinID,
                 persistSkinPreference: saveSkinPreference,
@@ -105,6 +109,8 @@ final class AppContainer {
             userDataRepository: MockUserDataRepository(document: mockDocument),
             snapshotBuilder: snapshotBuilder,
             appleHealthDoseService: MockAppleHealthDoseService(),
+            museSessionService: MockMuseSessionService(),
+            museLicenseData: nil,
             accessibilityAnnouncer: accessibilityAnnouncer,
             initialSkinID: initialSkinID,
             persistSkinPreference: saveSkinPreference
@@ -149,5 +155,13 @@ final class AppContainer {
     private var shouldUseEmptyMockData: Bool {
         environment["TELOCARE_MOCK_EMPTY_USER_DATA"] == "1"
             || arguments.contains("--mock-empty-user-data")
+    }
+
+    private var defaultMuseSessionService: MuseSessionService {
+#if targetEnvironment(simulator)
+        return MockMuseSessionService()
+#else
+        return UnavailableMuseSessionService()
+#endif
     }
 }

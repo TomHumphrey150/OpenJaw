@@ -3,17 +3,24 @@ import Foundation
 struct AppConfiguration {
     let supabaseURL: URL
     let supabasePublishableKey: String
+    let museLicenseData: Data?
 
     init(bundle: Bundle = .main) throws {
         let rawURL = try AppConfiguration.requiredValue(for: "SUPABASE_URL", bundle: bundle)
         let rawKey = try AppConfiguration.requiredValue(for: "SUPABASE_PUBLISHABLE_KEY", bundle: bundle)
+        let rawLicense = bundle.object(forInfoDictionaryKey: "MUSE_LICENSE_BASE64") as? String
         try self.init(
             supabaseURLString: rawURL,
-            supabasePublishableKey: rawKey
+            supabasePublishableKey: rawKey,
+            museLicenseBase64: rawLicense
         )
     }
 
-    init(supabaseURLString: String, supabasePublishableKey: String) throws {
+    init(
+        supabaseURLString: String,
+        supabasePublishableKey: String,
+        museLicenseBase64: String? = nil
+    ) throws {
         let rawURL = try AppConfiguration.validatedValue(supabaseURLString, key: "SUPABASE_URL")
         let rawKey = try AppConfiguration.validatedValue(supabasePublishableKey, key: "SUPABASE_PUBLISHABLE_KEY")
 
@@ -23,6 +30,7 @@ struct AppConfiguration {
 
         supabaseURL = url
         self.supabasePublishableKey = rawKey
+        museLicenseData = AppConfiguration.optionalBase64Data(museLicenseBase64)
     }
 
     private static func requiredValue(for key: String, bundle: Bundle) throws -> String {
@@ -45,6 +53,19 @@ struct AppConfiguration {
         }
 
         return trimmed
+    }
+
+    private static func optionalBase64Data(_ value: String?) -> Data? {
+        guard let value else {
+            return nil
+        }
+
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+
+        return Data(base64Encoded: trimmed)
     }
 }
 

@@ -472,6 +472,188 @@ struct AppViewModelTests {
         #expect(harness.recorder.messages.last == "Could not save morning outcomes. Reverted.")
     }
 
+    @Test func museSessionFlowSavesNightOutcomePatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            initialNightOutcomes: [
+                NightOutcome(
+                    nightId: "2026-02-20",
+                    microArousalCount: 9,
+                    microArousalRatePerHour: 1.8,
+                    confidence: 0.7,
+                    totalSleepMinutes: 360,
+                    source: "wearable",
+                    createdAt: "2026-02-20T07:30:00Z"
+                )
+            ],
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            },
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museCanSaveNightOutcome }
+
+        harness.viewModel.saveMuseNightOutcome()
+        await waitUntil { await patchRecorder.count() == 1 }
+
+        let patch = await patchRecorder.lastPatch()
+        let latestNight = patch?.nightOutcomes?.first(where: { $0.nightId == "2026-02-21" })
+        #expect(latestNight?.microArousalCount == 6)
+        #expect(latestNight?.microArousalRatePerHour == 2)
+        #expect(latestNight?.source == "muse_athena_heuristic_v1")
+        #expect(harness.viewModel.museCanSaveNightOutcome == false)
+    }
+
+    @Test func museNightOutcomeSaveRequiresMinimumTwoHours() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            },
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-90 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 4,
+                        confidence: 0.7,
+                        totalSleepMinutes: 90
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museRecordingSummary != nil }
+
+        #expect(harness.viewModel.museCanSaveNightOutcome == false)
+        harness.viewModel.saveMuseNightOutcome()
+
+        await waitUntil { harness.viewModel.museSessionFeedback.contains("2 hours") }
+        #expect(await patchRecorder.count() == 0)
+    }
+
+    @Test func museConnectNeedsLicenseSurfacesState() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                connectHeadband: { _, _ in
+                    throw MuseSessionServiceError.needsLicense
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+
+        await waitUntil { harness.viewModel.museConnectionStatusText == "Needs license" }
+        #expect(harness.viewModel.museSessionFeedback.contains("license"))
+    }
+
+    @Test func museNightOutcomeSaveFailureRevertsOutcomeRecords() async {
+        let harness = AppViewModelHarness(
+            initialNightOutcomes: [
+                NightOutcome(
+                    nightId: "2026-02-20",
+                    microArousalCount: 9,
+                    microArousalRatePerHour: 1.8,
+                    confidence: 0.7,
+                    totalSleepMinutes: 360,
+                    source: "wearable",
+                    createdAt: "2026-02-20T07:30:00Z"
+                )
+            ],
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            },
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180
+                    )
+                }
+            )
+        )
+
+        let beforeRecords = harness.viewModel.snapshot.outcomeRecords
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museCanSaveNightOutcome }
+        harness.viewModel.saveMuseNightOutcome()
+
+        await waitUntil { harness.viewModel.museSessionFeedback.contains("Reverted.") }
+        #expect(harness.viewModel.snapshot.outcomeRecords == beforeRecords)
+        #expect(harness.viewModel.museCanSaveNightOutcome == true)
+    }
+
+    @Test func museRecordingStopsWhenAppMovesToBackground() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-2.5 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 5,
+                        confidence: 0.76,
+                        totalSleepMinutes: 150
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+
+        harness.viewModel.handleAppMovedToBackground()
+
+        await waitUntil { harness.viewModel.museRecordingSummary != nil }
+        #expect(harness.viewModel.museSessionFeedback.contains("background"))
+        #expect(harness.viewModel.museCanSaveNightOutcome == true)
+    }
+
     private func waitUntil(_ condition: @escaping () async -> Bool) async {
         for _ in 0..<200 {
             if await condition() {
@@ -598,10 +780,13 @@ private struct AppViewModelHarness {
         initialInterventionCompletionEvents: [InterventionCompletionEvent] = [],
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
+        initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
         initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
-        appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService()
+        appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
+        museSessionService: MuseSessionService = MockMuseSessionService(),
+        museLicenseData: Data? = nil
     ) {
         let recorder = AnnouncementRecorder()
         let announcer = AccessibilityAnnouncer { message in
@@ -617,10 +802,13 @@ private struct AppViewModelHarness {
             initialInterventionCompletionEvents: initialInterventionCompletionEvents,
             initialInterventionDoseSettings: initialInterventionDoseSettings,
             initialAppleHealthConnections: initialAppleHealthConnections,
+            initialNightOutcomes: initialNightOutcomes,
             initialMorningStates: initialMorningStates,
             initialActiveInterventions: initialActiveInterventions,
             persistUserDataPatch: persistUserDataPatch,
             appleHealthDoseService: appleHealthDoseService,
+            museSessionService: museSessionService,
+            museLicenseData: museLicenseData,
             nowProvider: {
                 let calendar = Calendar(identifier: .gregorian)
                 return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()

@@ -141,6 +141,69 @@ final class TelocareUITests: XCTestCase {
         )
     }
 
+    func testOutcomesMuseSectionShowsTextFirstControls() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
+        outcomesTab.tap()
+
+        scrollToMuseSection(in: app)
+
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseSessionSection, in: app).waitForExistence(timeout: 4))
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseConnectionStatus, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseRecordingStatus, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseScanButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseConnectButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseDisconnectButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseStartRecordingButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseStopRecordingButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseSaveNightOutcomeButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseFeedbackText, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseDisclaimerText, in: app).exists)
+    }
+
+    func testOutcomesMuseSessionFlowEnablesSaveAction() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
+        outcomesTab.tap()
+
+        scrollToMuseSection(in: app)
+
+        let scanButton = element(withIdentifier: UIID.exploreMuseScanButton, in: app)
+        let connectButton = element(withIdentifier: UIID.exploreMuseConnectButton, in: app)
+        let startButton = element(withIdentifier: UIID.exploreMuseStartRecordingButton, in: app)
+        let stopButton = element(withIdentifier: UIID.exploreMuseStopRecordingButton, in: app)
+        let saveButton = element(withIdentifier: UIID.exploreMuseSaveNightOutcomeButton, in: app)
+        let connectionStatus = element(withIdentifier: UIID.exploreMuseConnectionStatus, in: app)
+        let recordingStatus = element(withIdentifier: UIID.exploreMuseRecordingStatus, in: app)
+
+        XCTAssertTrue(scanButton.waitForExistence(timeout: 4))
+        scanButton.tap()
+        XCTAssertTrue(waitForLabelContaining("Discovered", of: connectionStatus, timeout: 4))
+
+        connectButton.tap()
+        XCTAssertTrue(waitForLabelContaining("Connected", of: connectionStatus, timeout: 4))
+
+        startButton.tap()
+        XCTAssertTrue(waitForLabelContaining("Recording", of: recordingStatus, timeout: 4))
+
+        stopButton.tap()
+        XCTAssertTrue(waitForLabelContaining("Stopped", of: recordingStatus, timeout: 4))
+
+        XCTAssertTrue(saveButton.isEnabled)
+        saveButton.tap()
+        XCTAssertTrue(waitForLabelContaining("Not recording", of: recordingStatus, timeout: 4))
+    }
+
     func testSituationGraphDoesNotHideTabBar() {
         let app = configuredApp(authState: .authenticated)
         app.launch()
@@ -185,12 +248,49 @@ final class TelocareUITests: XCTestCase {
 
         let graph = app.webViews[UIID.graphWebView]
         XCTAssertTrue(graph.waitForExistence(timeout: 2))
-        graph.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.2)).tap()
-
+        XCTAssertTrue(app.staticTexts[UIID.graphSelectionText].waitForExistence(timeout: 2))
         let nodeToggleButton = app.buttons[UIID.exploreDetailsNodeDeactivationButton]
         let edgeToggleButton = app.buttons[UIID.exploreDetailsEdgeDeactivationButton]
-        let nodeToggleExists = nodeToggleButton.waitForExistence(timeout: 2)
-        let edgeToggleExists = nodeToggleExists ? false : edgeToggleButton.waitForExistence(timeout: 2)
+        let detailSheet = element(withIdentifier: UIID.exploreDetailsSheet, in: app)
+        var nodeToggleExists = false
+        var edgeToggleExists = false
+
+        let tapTargets = [
+            CGVector(dx: 0.18, dy: 0.22),
+            CGVector(dx: 0.32, dy: 0.22),
+            CGVector(dx: 0.46, dy: 0.22),
+            CGVector(dx: 0.60, dy: 0.22),
+            CGVector(dx: 0.74, dy: 0.22),
+            CGVector(dx: 0.18, dy: 0.36),
+            CGVector(dx: 0.32, dy: 0.36),
+            CGVector(dx: 0.46, dy: 0.36),
+            CGVector(dx: 0.60, dy: 0.36),
+            CGVector(dx: 0.74, dy: 0.36),
+            CGVector(dx: 0.18, dy: 0.50),
+            CGVector(dx: 0.32, dy: 0.50),
+            CGVector(dx: 0.46, dy: 0.50),
+            CGVector(dx: 0.60, dy: 0.50),
+            CGVector(dx: 0.74, dy: 0.50),
+            CGVector(dx: 0.18, dy: 0.64),
+            CGVector(dx: 0.32, dy: 0.64),
+            CGVector(dx: 0.46, dy: 0.64),
+            CGVector(dx: 0.60, dy: 0.64),
+            CGVector(dx: 0.74, dy: 0.64)
+        ]
+
+        for target in tapTargets {
+            graph.coordinate(withNormalizedOffset: target).tap()
+            if !detailSheet.waitForExistence(timeout: 1.2) {
+                continue
+            }
+
+            nodeToggleExists = nodeToggleButton.waitForExistence(timeout: 1.2)
+            edgeToggleExists = edgeToggleButton.waitForExistence(timeout: 1.2)
+            if nodeToggleExists || edgeToggleExists {
+                break
+            }
+        }
+
         XCTAssertTrue(nodeToggleExists || edgeToggleExists)
 
         let toggleButton = nodeToggleExists ? nodeToggleButton : edgeToggleButton
@@ -413,6 +513,12 @@ final class TelocareUITests: XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    private func waitForLabelContaining(_ expectedSubstring: String, of element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let predicate = NSPredicate(format: "label CONTAINS %@", expectedSubstring)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
     private func interventionName(fromActionLabel label: String) -> String? {
         let prefixes = ["Check ", "Increment ", "Uncheck ", "Start tracking "]
 
@@ -485,6 +591,18 @@ final class TelocareUITests: XCTestCase {
 
         XCTAssertTrue(globalPicker.waitForExistence(timeout: 4))
     }
+
+    private func scrollToMuseSection(in app: XCUIApplication) {
+        let section = element(withIdentifier: UIID.exploreMuseSessionSection, in: app)
+        for _ in 0..<4 {
+            if section.exists {
+                return
+            }
+            app.swipeUp()
+        }
+
+        XCTAssertTrue(section.waitForExistence(timeout: 4))
+    }
 }
 
 private enum UITestAuthState: String {
@@ -503,6 +621,7 @@ private enum UIID {
     static let guidedDoneCTA = "guided.inputs.done"
     static let graphWebView = "graph.webview"
     static let graphSelectionText = "graph.selection.text"
+    static let exploreDetailsSheet = "explore.situation.details.sheet"
     static let exploreDetailsNodeDeactivationButton = "explore.situation.details.node.deactivate"
     static let exploreDetailsEdgeDeactivationButton = "explore.situation.details.edge.deactivate"
     static let exploreDetailsNodeDeactivationStatus = "explore.situation.details.node.status"
@@ -521,6 +640,17 @@ private enum UIID {
     static let exploreOutcomesMorningChart = "explore.outcomes.morning.chart"
     static let exploreOutcomesNightChart = "explore.outcomes.night.chart"
     static let exploreOutcomesMorningCheckInToggle = "explore.outcomes.morning.toggle"
+    static let exploreMuseSessionSection = "explore.outcomes.muse.section"
+    static let exploreMuseConnectionStatus = "explore.outcomes.muse.connection.status"
+    static let exploreMuseRecordingStatus = "explore.outcomes.muse.recording.status"
+    static let exploreMuseScanButton = "explore.outcomes.muse.scan.button"
+    static let exploreMuseConnectButton = "explore.outcomes.muse.connect.button"
+    static let exploreMuseDisconnectButton = "explore.outcomes.muse.disconnect.button"
+    static let exploreMuseStartRecordingButton = "explore.outcomes.muse.start.button"
+    static let exploreMuseStopRecordingButton = "explore.outcomes.muse.stop.button"
+    static let exploreMuseSaveNightOutcomeButton = "explore.outcomes.muse.save.button"
+    static let exploreMuseFeedbackText = "explore.outcomes.muse.feedback.text"
+    static let exploreMuseDisclaimerText = "explore.outcomes.muse.disclaimer.text"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"
     static let exploreInputCompletionHistoryChart = "explore.inputs.completion.history.chart"
     static let exploreMorningGlobalPicker = "explore.outcomes.morning.global.picker"

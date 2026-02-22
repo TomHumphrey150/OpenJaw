@@ -40,8 +40,11 @@ let project = Project(
                     "SUPABASE_URL": "$(SUPABASE_URL)",
                     "SUPABASE_PUBLISHABLE_KEY": "$(SUPABASE_PUBLISHABLE_KEY)",
                     "TELOCARE_SKIN": "$(TELOCARE_SKIN)",
+                    "MUSE_LICENSE_BASE64": "$(MUSE_LICENSE_BASE64)",
                     "NSHealthShareUsageDescription": "Telocare reads selected Apple Health data to auto-update your intervention dose progress.",
                     "NSHealthUpdateUsageDescription": "Telocare requests Health access setup for read-only intervention syncing.",
+                    "NSBluetoothAlwaysUsageDescription": "Telocare uses Bluetooth to discover and connect to your Muse headband for overnight wellness sessions.",
+                    "NSBluetoothPeripheralUsageDescription": "Telocare uses Bluetooth to communicate with your Muse headband during recording.",
                 ]
             ),
             buildableFolders: [

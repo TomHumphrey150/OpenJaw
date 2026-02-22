@@ -62,7 +62,24 @@ struct ExploreTabShell: View {
                 outcomesMetadata: viewModel.snapshot.outcomesMetadata,
                 morningStates: viewModel.morningStateHistory,
                 morningOutcomeSelection: viewModel.morningOutcomeSelection,
+                museConnectionStatusText: viewModel.museConnectionStatusText,
+                museRecordingStatusText: viewModel.museRecordingStatusText,
+                museSessionFeedback: viewModel.museSessionFeedback,
+                museDisclaimerText: viewModel.museDisclaimerText,
+                museCanScan: viewModel.museCanScan,
+                museCanConnect: viewModel.museCanConnect,
+                museCanDisconnect: viewModel.museCanDisconnect,
+                museCanStartRecording: viewModel.museCanStartRecording,
+                museCanStopRecording: viewModel.museCanStopRecording,
+                museCanSaveNightOutcome: viewModel.museCanSaveNightOutcome,
+                museRecordingSummary: viewModel.museRecordingSummary,
                 onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue,
+                onScanForMuse: viewModel.scanForMuseHeadband,
+                onConnectToMuse: viewModel.connectToMuseHeadband,
+                onDisconnectMuse: viewModel.disconnectMuseHeadband,
+                onStartMuseRecording: viewModel.startMuseRecording,
+                onStopMuseRecording: viewModel.stopMuseRecording,
+                onSaveMuseNightOutcome: viewModel.saveMuseNightOutcome,
                 selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
@@ -97,7 +114,24 @@ private struct ExploreOutcomesScreen: View {
     let outcomesMetadata: OutcomesMetadata
     let morningStates: [MorningState]
     let morningOutcomeSelection: MorningOutcomeSelection
+    let museConnectionStatusText: String
+    let museRecordingStatusText: String
+    let museSessionFeedback: String
+    let museDisclaimerText: String
+    let museCanScan: Bool
+    let museCanConnect: Bool
+    let museCanDisconnect: Bool
+    let museCanStartRecording: Bool
+    let museCanStopRecording: Bool
+    let museCanSaveNightOutcome: Bool
+    let museRecordingSummary: MuseRecordingSummary?
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
+    let onScanForMuse: () -> Void
+    let onConnectToMuse: () -> Void
+    let onDisconnectMuse: () -> Void
+    let onStartMuseRecording: () -> Void
+    let onStopMuseRecording: () -> Void
+    let onSaveMuseNightOutcome: () -> Void
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
@@ -111,7 +145,24 @@ private struct ExploreOutcomesScreen: View {
         outcomesMetadata: OutcomesMetadata,
         morningStates: [MorningState],
         morningOutcomeSelection: MorningOutcomeSelection,
+        museConnectionStatusText: String,
+        museRecordingStatusText: String,
+        museSessionFeedback: String,
+        museDisclaimerText: String,
+        museCanScan: Bool,
+        museCanConnect: Bool,
+        museCanDisconnect: Bool,
+        museCanStartRecording: Bool,
+        museCanStopRecording: Bool,
+        museCanSaveNightOutcome: Bool,
+        museRecordingSummary: MuseRecordingSummary?,
         onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void,
+        onScanForMuse: @escaping () -> Void,
+        onConnectToMuse: @escaping () -> Void,
+        onDisconnectMuse: @escaping () -> Void,
+        onStartMuseRecording: @escaping () -> Void,
+        onStopMuseRecording: @escaping () -> Void,
+        onSaveMuseNightOutcome: @escaping () -> Void,
         selectedSkinID: TelocareSkinID
     ) {
         self.outcomes = outcomes
@@ -119,7 +170,24 @@ private struct ExploreOutcomesScreen: View {
         self.outcomesMetadata = outcomesMetadata
         self.morningStates = morningStates
         self.morningOutcomeSelection = morningOutcomeSelection
+        self.museConnectionStatusText = museConnectionStatusText
+        self.museRecordingStatusText = museRecordingStatusText
+        self.museSessionFeedback = museSessionFeedback
+        self.museDisclaimerText = museDisclaimerText
+        self.museCanScan = museCanScan
+        self.museCanConnect = museCanConnect
+        self.museCanDisconnect = museCanDisconnect
+        self.museCanStartRecording = museCanStartRecording
+        self.museCanStopRecording = museCanStopRecording
+        self.museCanSaveNightOutcome = museCanSaveNightOutcome
+        self.museRecordingSummary = museRecordingSummary
         self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
+        self.onScanForMuse = onScanForMuse
+        self.onConnectToMuse = onConnectToMuse
+        self.onDisconnectMuse = onDisconnectMuse
+        self.onStartMuseRecording = onStartMuseRecording
+        self.onStopMuseRecording = onStopMuseRecording
+        self.onSaveMuseNightOutcome = onSaveMuseNightOutcome
         self.selectedSkinID = selectedSkinID
         _isMorningCheckInExpanded = State(initialValue: !morningOutcomeSelection.isComplete)
         _selectedMorningMetric = State(initialValue: .composite)
@@ -134,6 +202,7 @@ private struct ExploreOutcomesScreen: View {
                     morningCheckInSection
                     morningTrendSection
                     nightTrendSection
+                    museSessionSection
                     insightsSummaryCard
                     nightRecordsSection
                 }
@@ -449,6 +518,144 @@ private struct ExploreOutcomesScreen: View {
         .accessibilityIdentifier(AccessibilityID.exploreOutcomesNightChart)
         .accessibilityLabel("Night outcomes trend chart")
         .accessibilityValue(nightChartAccessibilityValue)
+    }
+
+    @ViewBuilder
+    private var museSessionSection: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                WarmSectionHeader(
+                    title: "Muse session",
+                    subtitle: "Manual overnight recording"
+                )
+
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    statusRow(
+                        title: "Connection",
+                        value: museConnectionStatusText,
+                        accessibilityID: AccessibilityID.exploreMuseConnectionStatus
+                    )
+                    statusRow(
+                        title: "Recording",
+                        value: museRecordingStatusText,
+                        accessibilityID: AccessibilityID.exploreMuseRecordingStatus
+                    )
+                }
+
+                if let summaryText = museSummaryText {
+                    Text(summaryText)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    actionButton(
+                        title: "Scan",
+                        accessibilityID: AccessibilityID.exploreMuseScanButton,
+                        isEnabled: museCanScan,
+                        action: onScanForMuse
+                    )
+                    actionButton(
+                        title: "Connect",
+                        accessibilityID: AccessibilityID.exploreMuseConnectButton,
+                        isEnabled: museCanConnect,
+                        action: onConnectToMuse
+                    )
+                    actionButton(
+                        title: "Disconnect",
+                        accessibilityID: AccessibilityID.exploreMuseDisconnectButton,
+                        isEnabled: museCanDisconnect,
+                        action: onDisconnectMuse
+                    )
+                    actionButton(
+                        title: "Start recording",
+                        accessibilityID: AccessibilityID.exploreMuseStartRecordingButton,
+                        isEnabled: museCanStartRecording,
+                        action: onStartMuseRecording
+                    )
+                    actionButton(
+                        title: "Stop recording",
+                        accessibilityID: AccessibilityID.exploreMuseStopRecordingButton,
+                        isEnabled: museCanStopRecording,
+                        action: onStopMuseRecording
+                    )
+                    actionButton(
+                        title: "Save night outcome",
+                        accessibilityID: AccessibilityID.exploreMuseSaveNightOutcomeButton,
+                        isEnabled: museCanSaveNightOutcome,
+                        action: onSaveMuseNightOutcome
+                    )
+                }
+
+                Text(museSessionFeedback)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier(AccessibilityID.exploreMuseFeedbackText)
+
+                Text(museDisclaimerText)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier(AccessibilityID.exploreMuseDisclaimerText)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.exploreMuseSessionSection)
+    }
+
+    @ViewBuilder
+    private func actionButton(
+        title: String,
+        accessibilityID: String,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(TelocareTheme.Typography.body)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(TelocareTheme.coral)
+        .disabled(!isEnabled)
+        .accessibilityIdentifier(accessibilityID)
+    }
+
+    @ViewBuilder
+    private func statusRow(
+        title: String,
+        value: String,
+        accessibilityID: String
+    ) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(TelocareTheme.Typography.body)
+                .foregroundStyle(TelocareTheme.charcoal)
+            Spacer()
+            Text(value)
+                .font(TelocareTheme.Typography.body)
+                .foregroundStyle(TelocareTheme.warmGray)
+                .multilineTextAlignment(.trailing)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(accessibilityID)
+    }
+
+    private var museSummaryText: String? {
+        guard let summary = museRecordingSummary else {
+            return nil
+        }
+
+        let rateText: String
+        if let rate = summary.microArousalRatePerHour {
+            rateText = String(format: "%.2f/hr", rate)
+        } else {
+            rateText = "n/a"
+        }
+
+        return "Microarousals \(Int(summary.microArousalCount.rounded())), rate \(rateText), confidence \(String(format: "%.2f", summary.confidence))."
     }
 
     private func formattedMorningValue(_ value: Double) -> String {

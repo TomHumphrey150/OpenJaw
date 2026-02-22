@@ -1,7 +1,12 @@
 import Foundation
 
 extension UserDataDocument {
-    func withCustomCausalDiagram(_ customCausalDiagram: CustomCausalDiagram) -> UserDataDocument {
+    func withSleepAttributionMigration(
+        dailyDoseProgress: [String: [String: Double]],
+        nightOutcomes: [NightOutcome],
+        morningStates: [MorningState],
+        wakeDaySleepAttributionMigrated: Bool
+    ) -> UserDataDocument {
         UserDataDocument(
             version: version,
             lastExport: lastExport,

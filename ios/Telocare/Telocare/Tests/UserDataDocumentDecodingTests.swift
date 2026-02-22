@@ -12,6 +12,7 @@ struct UserDataDocumentDecodingTests {
         #expect(decoded.interventionCompletionEvents.isEmpty)
         #expect(decoded.activeInterventions.isEmpty)
         #expect(decoded.appleHealthConnections == [:])
+        #expect(decoded.wakeDaySleepAttributionMigrated == false)
         #expect(decoded.customCausalDiagram?.graphData.nodes.count == 1)
     }
 
