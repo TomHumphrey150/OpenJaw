@@ -79,10 +79,11 @@ final class AppContainer {
                 : nil,
             signUpErrorMessage: nil
         )
+        let mockDocument: UserDataDocument = shouldUseEmptyMockData ? .empty : .mockForUI
 
         return RootViewModel(
             authClient: authClient,
-            userDataRepository: MockUserDataRepository(),
+            userDataRepository: MockUserDataRepository(document: mockDocument),
             snapshotBuilder: snapshotBuilder,
             appleHealthDoseService: MockAppleHealthDoseService(),
             accessibilityAnnouncer: accessibilityAnnouncer
@@ -107,5 +108,10 @@ final class AppContainer {
     private var shouldMockSignInFail: Bool {
         environment["TELOCARE_SIGNIN_FAILS"] == "1"
             || arguments.contains("--mock-signin-invalid-credentials")
+    }
+
+    private var shouldUseEmptyMockData: Bool {
+        environment["TELOCARE_MOCK_EMPTY_USER_DATA"] == "1"
+            || arguments.contains("--mock-empty-user-data")
     }
 }

@@ -90,6 +90,56 @@ final class TelocareUITests: XCTestCase {
         XCTAssertFalse(app.buttons[UIID.exploreMorningSaveButton].exists)
     }
 
+    func testOutcomesMorningCheckInAutoCollapseAndManualReopen() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
+        outcomesTab.tap()
+
+        let toggle = app.buttons[UIID.exploreOutcomesMorningCheckInToggle]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 4))
+        if (toggle.value as? String) != "Expanded" {
+            toggle.tap()
+            XCTAssertTrue(waitForValue("Expanded", of: toggle, timeout: 4))
+        }
+
+        selectMorningRating(in: app, pickerID: UIID.exploreMorningGlobalPicker)
+        selectMorningRating(in: app, pickerID: UIID.exploreMorningNeckPicker)
+        selectMorningRating(in: app, pickerID: UIID.exploreMorningJawPicker)
+        selectMorningRating(in: app, pickerID: UIID.exploreMorningEarPicker)
+        selectMorningRating(in: app, pickerID: UIID.exploreMorningAnxietyPicker)
+
+        XCTAssertTrue(waitForValue("Collapsed", of: toggle, timeout: 4))
+
+        let morningChart = element(withIdentifier: UIID.exploreOutcomesMorningChart, in: app)
+        XCTAssertTrue(morningChart.waitForExistence(timeout: 4))
+        XCTAssertTrue(waitForValueContaining("Expanded", of: morningChart, timeout: 4))
+
+        reopenMorningCheckIn(in: app, toggle: toggle)
+        XCTAssertTrue(waitForValueContaining("Compact", of: morningChart, timeout: 4))
+    }
+
+    func testOutcomesNightChartShowsPlaceholderWhenNoData() {
+        let app = configuredApp(authState: .authenticated, useEmptyMockData: true)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
+        outcomesTab.tap()
+
+        XCTAssertTrue(element(withIdentifier: UIID.exploreOutcomesNightChart, in: app).waitForExistence(timeout: 4))
+        XCTAssertTrue(
+            app.staticTexts["No night outcome data yet. This chart will populate when night outcomes are recorded."]
+                .waitForExistence(timeout: 4)
+        )
+    }
+
     func testSituationGraphDoesNotHideTabBar() {
         let app = configuredApp(authState: .authenticated)
         app.launch()
@@ -137,13 +187,17 @@ final class TelocareUITests: XCTestCase {
 
     private func configuredApp(
         authState: UITestAuthState,
-        signUpNeedsConfirmation: Bool = false
+        signUpNeedsConfirmation: Bool = false,
+        useEmptyMockData: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["TELOCARE_USE_MOCK_SERVICES"] = "1"
         app.launchEnvironment["TELOCARE_UI_AUTH_STATE"] = authState.rawValue
         if signUpNeedsConfirmation {
             app.launchEnvironment["TELOCARE_SIGNUP_NEEDS_CONFIRMATION"] = "1"
+        }
+        if useEmptyMockData {
+            app.launchEnvironment["TELOCARE_MOCK_EMPTY_USER_DATA"] = "1"
         }
         return app
     }
@@ -173,6 +227,46 @@ final class TelocareUITests: XCTestCase {
 
         return app.tabBars.buttons["Situation"].waitForExistence(timeout: timeout)
     }
+
+    private func selectMorningRating(in app: XCUIApplication, pickerID: String) {
+        let picker = element(withIdentifier: pickerID, in: app)
+        XCTAssertTrue(picker.waitForExistence(timeout: 4))
+        let button = picker.buttons["Moderate: 😐"]
+        XCTAssertTrue(button.waitForExistence(timeout: 4))
+        button.tap()
+    }
+
+    private func element(withIdentifier identifier: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)[identifier]
+    }
+
+    private func waitForValue(_ expectedValue: String, of element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let predicate = NSPredicate(format: "value == %@", expectedValue)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func waitForValueContaining(_ expectedSubstring: String, of element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let predicate = NSPredicate(format: "value CONTAINS %@", expectedSubstring)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func reopenMorningCheckIn(in app: XCUIApplication, toggle: XCUIElement) {
+        let globalPicker = element(withIdentifier: UIID.exploreMorningGlobalPicker, in: app)
+        if globalPicker.waitForExistence(timeout: 1) {
+            return
+        }
+
+        for _ in 0..<3 {
+            toggle.tap()
+            if globalPicker.waitForExistence(timeout: 1.5) {
+                return
+            }
+        }
+
+        XCTAssertTrue(globalPicker.waitForExistence(timeout: 4))
+    }
 }
 
 private enum UITestAuthState: String {
@@ -199,4 +293,12 @@ private enum UIID {
     static let exploreChatInput = "explore.chat.input"
     static let exploreChatSendButton = "explore.chat.send.button"
     static let exploreMorningSaveButton = "explore.outcomes.morning.save.button"
+    static let exploreOutcomesMorningChart = "explore.outcomes.morning.chart"
+    static let exploreOutcomesNightChart = "explore.outcomes.night.chart"
+    static let exploreOutcomesMorningCheckInToggle = "explore.outcomes.morning.toggle"
+    static let exploreMorningGlobalPicker = "explore.outcomes.morning.global.picker"
+    static let exploreMorningNeckPicker = "explore.outcomes.morning.neck.picker"
+    static let exploreMorningJawPicker = "explore.outcomes.morning.jaw.picker"
+    static let exploreMorningEarPicker = "explore.outcomes.morning.ear.picker"
+    static let exploreMorningAnxietyPicker = "explore.outcomes.morning.anxiety.picker"
 }

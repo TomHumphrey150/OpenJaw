@@ -1,3 +1,4 @@
+import Charts
 import SwiftUI
 
 struct ExploreTabShell: View {
@@ -43,6 +44,7 @@ struct ExploreTabShell: View {
                 outcomes: viewModel.snapshot.outcomes,
                 outcomeRecords: viewModel.snapshot.outcomeRecords,
                 outcomesMetadata: viewModel.snapshot.outcomesMetadata,
+                morningStates: viewModel.morningStateHistory,
                 morningOutcomeSelection: viewModel.morningOutcomeSelection,
                 onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue
             )
@@ -73,11 +75,33 @@ private struct ExploreOutcomesScreen: View {
     let outcomes: OutcomeSummary
     let outcomeRecords: [OutcomeRecord]
     let outcomesMetadata: OutcomesMetadata
+    let morningStates: [MorningState]
     let morningOutcomeSelection: MorningOutcomeSelection
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
 
     @State private var navigationPath = NavigationPath()
-    @State private var isMorningCheckInExpanded = true
+    @State private var isMorningCheckInExpanded: Bool
+    @State private var selectedMorningMetric: MorningTrendMetric
+    @State private var selectedNightMetric: NightTrendMetric
+
+    init(
+        outcomes: OutcomeSummary,
+        outcomeRecords: [OutcomeRecord],
+        outcomesMetadata: OutcomesMetadata,
+        morningStates: [MorningState],
+        morningOutcomeSelection: MorningOutcomeSelection,
+        onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void
+    ) {
+        self.outcomes = outcomes
+        self.outcomeRecords = outcomeRecords
+        self.outcomesMetadata = outcomesMetadata
+        self.morningStates = morningStates
+        self.morningOutcomeSelection = morningOutcomeSelection
+        self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
+        _isMorningCheckInExpanded = State(initialValue: !morningOutcomeSelection.isComplete)
+        _selectedMorningMetric = State(initialValue: .composite)
+        _selectedNightMetric = State(initialValue: .microArousalRatePerHour)
+    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -85,6 +109,8 @@ private struct ExploreOutcomesScreen: View {
                 VStack(spacing: TelocareTheme.Spacing.lg) {
                     morningGreetingCard
                     morningCheckInSection
+                    morningTrendSection
+                    nightTrendSection
                     insightsSummaryCard
                     nightRecordsSection
                 }
@@ -97,6 +123,13 @@ private struct ExploreOutcomesScreen: View {
             .navigationDestination(for: OutcomeRecord.self) { record in
                 OutcomeDetailView(record: record, outcomesMetadata: outcomesMetadata)
                     .accessibilityIdentifier(AccessibilityID.exploreOutcomeDetailSheet)
+            }
+        }
+        .onChange(of: morningOutcomeSelection.isComplete) { _, isComplete in
+            guard isComplete else { return }
+            guard isMorningCheckInExpanded else { return }
+            withAnimation(.spring(response: 0.3)) {
+                isMorningCheckInExpanded = false
             }
         }
     }
@@ -153,8 +186,12 @@ private struct ExploreOutcomesScreen: View {
                     Image(systemName: isMorningCheckInExpanded ? "chevron.up" : "chevron.down")
                         .foregroundStyle(TelocareTheme.warmGray)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.exploreOutcomesMorningCheckInToggle)
+            .accessibilityValue(isMorningCheckInExpanded ? "Expanded" : "Collapsed")
 
             if isMorningCheckInExpanded {
                 VStack(spacing: TelocareTheme.Spacing.md) {
@@ -176,6 +213,267 @@ private struct ExploreOutcomesScreen: View {
             get: { morningOutcomeSelection.value(for: field) },
             set: { onSetMorningOutcomeValue($0, field) }
         )
+    }
+
+    private var morningTrendPoints: [OutcomeTrendPoint] {
+        OutcomeTrendDataBuilder()
+            .morningPoints(from: morningStates, metric: selectedMorningMetric)
+    }
+
+    private var nightTrendPoints: [OutcomeTrendPoint] {
+        OutcomeTrendDataBuilder()
+            .nightPoints(from: outcomeRecords, metric: selectedNightMetric)
+    }
+
+    private var morningChartHeight: CGFloat {
+        isMorningCheckInExpanded ? 170 : 280
+    }
+
+    private var morningYAxisValues: [Double] {
+        [0, 2.5, 5, 7.5, 10]
+    }
+
+    private var nightChartYDomain: ClosedRange<Double> {
+        if selectedNightMetric == .confidence {
+            return 0...1
+        }
+
+        let maxValue = nightTrendPoints.map(\.value).max() ?? 0
+        let paddedMax = maxValue * 1.1
+        return 0...max(1, paddedMax)
+    }
+
+    private var morningSummaryText: String {
+        guard let latest = morningTrendPoints.last else {
+            return "No morning trend data in last 14 days."
+        }
+
+        return "Latest \(selectedMorningMetric.title): \(formattedMorningValue(latest.value)) on \(formattedDate(latest.date))."
+    }
+
+    private var morningDirectionText: String {
+        "Lower is better. 😌 is best and 😫 is worst."
+    }
+
+    private var nightSummaryText: String {
+        guard let latest = nightTrendPoints.last else {
+            return "No night outcome data yet. This chart will populate when night outcomes are recorded."
+        }
+
+        return "Latest \(selectedNightMetric.title): \(formattedNightValue(latest.value)) on \(formattedDate(latest.date))."
+    }
+
+    private var nightDirectionText: String {
+        switch selectedNightMetric {
+        case .confidence:
+            return "Direction: higher is better."
+        case .microArousalRatePerHour, .microArousalCount:
+            return "Direction: lower is better."
+        }
+    }
+
+    private var morningChartAccessibilityValue: String {
+        let layout = isMorningCheckInExpanded ? "Compact" : "Expanded"
+        guard let latest = morningTrendPoints.last else {
+            return "\(selectedMorningMetric.title), no data, \(layout), lower is better"
+        }
+
+        return "\(selectedMorningMetric.title), \(formattedMorningValue(latest.value)), \(morningEmoji(for: latest.value)), \(layout), lower is better"
+    }
+
+    private var nightChartAccessibilityValue: String {
+        guard let latest = nightTrendPoints.last else {
+            return "\(selectedNightMetric.title), no data"
+        }
+
+        return "\(selectedNightMetric.title), \(formattedNightValue(latest.value)), \(nightDirectionText)"
+    }
+
+    @ViewBuilder
+    private var morningTrendSection: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                HStack(alignment: .top, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Morning trend", subtitle: "Last 14 days")
+                    Spacer()
+                    Picker("Morning metric", selection: $selectedMorningMetric) {
+                        ForEach(MorningTrendMetric.allCases) { metric in
+                            Text(metric.title).tag(metric)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                if morningTrendPoints.isEmpty {
+                    Text("No morning trend data in last 14 days.")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                } else {
+                    Chart(morningTrendPoints) { point in
+                        LineMark(
+                            x: .value("Day", point.date),
+                            y: .value(selectedMorningMetric.title, point.value)
+                        )
+                        .foregroundStyle(TelocareTheme.coral)
+                        .interpolationMethod(.catmullRom)
+
+                        PointMark(
+                            x: .value("Day", point.date),
+                            y: .value(selectedMorningMetric.title, point.value)
+                        )
+                        .foregroundStyle(TelocareTheme.coral)
+                        .symbolSize(36)
+                    }
+                    .frame(height: morningChartHeight)
+                    .chartYScale(domain: 0...10)
+                    .chartYAxis {
+                        AxisMarks(position: .leading, values: morningYAxisValues) { value in
+                            AxisGridLine()
+                            AxisTick()
+                            AxisValueLabel {
+                                if let rawValue = value.as(Double.self) {
+                                    Text(morningYAxisLabel(for: rawValue))
+                                }
+                            }
+                        }
+                    }
+                    .chartXAxis {
+                        AxisMarks(values: .stride(by: .day, count: 2)) {
+                            AxisGridLine()
+                            AxisTick()
+                            AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                        }
+                    }
+                }
+
+                Text(morningSummaryText)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(morningDirectionText)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .animation(.spring(response: 0.3), value: isMorningCheckInExpanded)
+        .accessibilityIdentifier(AccessibilityID.exploreOutcomesMorningChart)
+        .accessibilityLabel("Morning outcomes trend chart")
+        .accessibilityValue(morningChartAccessibilityValue)
+    }
+
+    @ViewBuilder
+    private var nightTrendSection: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                HStack(alignment: .top, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Night trend", subtitle: "Last 14 days")
+                    Spacer()
+                    Picker("Night metric", selection: $selectedNightMetric) {
+                        ForEach(NightTrendMetric.allCases) { metric in
+                            Text(metric.title).tag(metric)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                if nightTrendPoints.isEmpty {
+                    Text("No night outcome data yet. This chart will populate when night outcomes are recorded.")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                } else {
+                    Chart(nightTrendPoints) { point in
+                        LineMark(
+                            x: .value("Day", point.date),
+                            y: .value(selectedNightMetric.title, point.value)
+                        )
+                        .foregroundStyle(TelocareTheme.success)
+                        .interpolationMethod(.catmullRom)
+
+                        PointMark(
+                            x: .value("Day", point.date),
+                            y: .value(selectedNightMetric.title, point.value)
+                        )
+                        .foregroundStyle(TelocareTheme.success)
+                    }
+                    .frame(height: 200)
+                    .chartYScale(domain: nightChartYDomain)
+                    .chartXAxis {
+                        AxisMarks(values: .stride(by: .day, count: 2)) {
+                            AxisGridLine()
+                            AxisTick()
+                            AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                        }
+                    }
+                }
+
+                Text(nightSummaryText)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(nightDirectionText)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.exploreOutcomesNightChart)
+        .accessibilityLabel("Night outcomes trend chart")
+        .accessibilityValue(nightChartAccessibilityValue)
+    }
+
+    private func formattedMorningValue(_ value: Double) -> String {
+        String(format: "%.1f", value)
+    }
+
+    private func formattedNightValue(_ value: Double) -> String {
+        if selectedNightMetric == .confidence {
+            return String(format: "%.2f", value)
+        }
+
+        if abs(value.rounded() - value) < 0.0001 {
+            return String(Int(value.rounded()))
+        }
+
+        return String(format: "%.1f", value)
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    private func morningEmoji(for value: Double) -> String {
+        switch value {
+        case ..<1.25:
+            return "😌"
+        case ..<3.75:
+            return "🙂"
+        case ..<6.25:
+            return "😐"
+        case ..<8.75:
+            return "😣"
+        default:
+            return "😫"
+        }
+    }
+
+    private func morningYAxisLabel(for value: Double) -> String {
+        switch value {
+        case ..<1.25:
+            return "😌"
+        case ..<3.75:
+            return "🙂"
+        case ..<6.25:
+            return "😐"
+        case ..<8.75:
+            return "😣"
+        default:
+            return "😫"
+        }
     }
 
     // MARK: - Insights Summary Card

@@ -116,6 +116,10 @@ final class AppViewModel: ObservableObject {
         isProfileSheetPresented = true
     }
 
+    var morningStateHistory: [MorningState] {
+        morningStates
+    }
+
     func setProfileSheetPresented(_ isPresented: Bool) {
         isProfileSheetPresented = isPresented
     }

@@ -27,6 +27,14 @@ struct MorningOutcomeSelection: Equatable {
             || healthAnxiety != nil
     }
 
+    var isComplete: Bool {
+        globalSensation != nil
+            && neckTightness != nil
+            && jawSoreness != nil
+            && earFullness != nil
+            && healthAnxiety != nil
+    }
+
     func value(for field: MorningOutcomeField) -> Int? {
         switch field {
         case .globalSensation:

@@ -39,6 +39,7 @@ struct EmojiRatingPicker: View {
         .padding(TelocareTheme.Spacing.md)
         .background(TelocareTheme.cream)
         .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+        .accessibilityElement(children: .contain)
     }
 
     @ViewBuilder
