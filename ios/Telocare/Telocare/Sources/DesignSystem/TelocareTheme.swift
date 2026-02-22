@@ -1,23 +1,69 @@
 import SwiftUI
+import UIKit
 
 enum TelocareTheme {
-    // MARK: - Primary Colors (Warm Coral/Orange Palette)
-    static let coral = Color(red: 1.0, green: 0.44, blue: 0.37)
-    static let coralLight = Color(red: 1.0, green: 0.55, blue: 0.49)
-    static let coralDark = Color(red: 0.89, green: 0.35, blue: 0.29)
-    static let peach = Color(red: 1.0, green: 0.87, blue: 0.81)
-    static let warmOrange = Color(red: 1.0, green: 0.60, blue: 0.40)
+    private static var selectedSkinID: TelocareSkinID = .warmCoral
+    private static var selectedTokens: TelocareSkinTokens = TelocareSkinCatalog.tokens(for: .warmCoral)
 
-    // MARK: - Neutral Colors
-    static let sand = Color(red: 0.98, green: 0.96, blue: 0.93)
-    static let cream = Color(red: 1.0, green: 0.99, blue: 0.97)
-    static let warmGray = Color(red: 0.55, green: 0.52, blue: 0.50)
-    static let charcoal = Color(red: 0.25, green: 0.23, blue: 0.22)
+    static var currentSkinID: TelocareSkinID {
+        selectedSkinID
+    }
 
-    // MARK: - Semantic Colors
-    static let success = Color(red: 0.52, green: 0.76, blue: 0.56)
-    static let warning = Color(red: 1.0, green: 0.78, blue: 0.36)
-    static let muted = Color(red: 0.75, green: 0.72, blue: 0.70)
+    static func configure(skinID: TelocareSkinID) {
+        selectedSkinID = skinID
+        selectedTokens = TelocareSkinCatalog.tokens(for: skinID)
+    }
+
+    static var coral: Color { color(from: selectedTokens.coralHex) }
+    static var coralLight: Color { color(from: selectedTokens.coralLightHex) }
+    static var coralDark: Color { color(from: selectedTokens.coralDarkHex) }
+    static var peach: Color { color(from: selectedTokens.peachHex) }
+    static var warmOrange: Color { color(from: selectedTokens.warmOrangeHex) }
+
+    static var sand: Color { color(from: selectedTokens.sandHex) }
+    static var cream: Color { color(from: selectedTokens.creamHex) }
+    static var warmGray: Color { color(from: selectedTokens.warmGrayHex) }
+    static var charcoal: Color { color(from: selectedTokens.charcoalHex) }
+
+    static var success: Color { color(from: selectedTokens.successHex) }
+    static var warning: Color { color(from: selectedTokens.warningHex) }
+    static var muted: Color { color(from: selectedTokens.mutedHex) }
+    static var robust: Color { color(from: selectedTokens.robustHex) }
+    static var moderate: Color { color(from: selectedTokens.moderateHex) }
+    static var preliminary: Color { color(from: selectedTokens.preliminaryHex) }
+    static var mechanism: Color { color(from: selectedTokens.mechanismHex) }
+    static var symptom: Color { color(from: selectedTokens.symptomHex) }
+    static var intervention: Color { color(from: selectedTokens.interventionHex) }
+    static var graphEdgeCausal: Color { color(from: selectedTokens.graph.edgeCausalColor) }
+    static var graphEdgeProtective: Color { color(from: selectedTokens.graph.edgeProtectiveColor) }
+    static var graphEdgeFeedback: Color { color(from: selectedTokens.graph.edgeFeedbackColor) }
+    static var graphEdgeMechanism: Color { color(from: selectedTokens.graph.edgeMechanismColor) }
+    static var graphEdgeIntervention: Color { color(from: selectedTokens.graph.edgeInterventionColor) }
+
+    static var graphSkin: GraphSkin {
+        let graph = selectedTokens.graph
+        return GraphSkin(
+            backgroundColor: graph.backgroundColor,
+            textColor: graph.textColor,
+            nodeBackgroundColor: graph.nodeBackgroundColor,
+            nodeBorderDefaultColor: graph.nodeBorderDefaultColor,
+            nodeBorderRobustColor: graph.nodeBorderRobustColor,
+            nodeBorderModerateColor: graph.nodeBorderModerateColor,
+            nodeBorderPreliminaryColor: graph.nodeBorderPreliminaryColor,
+            nodeBorderMechanismColor: graph.nodeBorderMechanismColor,
+            nodeBorderSymptomColor: graph.nodeBorderSymptomColor,
+            nodeBorderInterventionColor: graph.nodeBorderInterventionColor,
+            edgeTextBackgroundColor: graph.edgeTextBackgroundColor,
+            tooltipBackgroundColor: graph.tooltipBackgroundColor,
+            tooltipBorderColor: graph.tooltipBorderColor,
+            selectionOverlayColor: graph.selectionOverlayColor,
+            edgeCausalColor: graph.edgeCausalColor,
+            edgeProtectiveColor: graph.edgeProtectiveColor,
+            edgeFeedbackColor: graph.edgeFeedbackColor,
+            edgeMechanismColor: graph.edgeMechanismColor,
+            edgeInterventionColor: graph.edgeInterventionColor
+        )
+    }
 
     // MARK: - Typography
     enum Typography {
@@ -50,6 +96,14 @@ enum TelocareTheme {
     // MARK: - Shadows
     static let softShadow = WarmShadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
     static let cardShadow = WarmShadow(color: .black.opacity(0.04), radius: 12, x: 0, y: 6)
+
+    private static func color(from hex: String) -> Color {
+        guard let uiColor = UIColor(hex: hex) else {
+            return .clear
+        }
+
+        return Color(uiColor: uiColor)
+    }
 }
 
 struct WarmShadow {
@@ -57,4 +111,20 @@ struct WarmShadow {
     let radius: CGFloat
     let x: CGFloat
     let y: CGFloat
+}
+
+private extension UIColor {
+    convenience init?(hex: String) {
+        let cleaned = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = cleaned.hasPrefix("#") ? String(cleaned.dropFirst()) : cleaned
+
+        guard normalized.count == 6, let value = Int(normalized, radix: 16) else {
+            return nil
+        }
+
+        let red = CGFloat((value >> 16) & 0xFF) / 255.0
+        let green = CGFloat((value >> 8) & 0xFF) / 255.0
+        let blue = CGFloat(value & 0xFF) / 255.0
+        self.init(red: red, green: green, blue: blue, alpha: 1.0)
+    }
 }

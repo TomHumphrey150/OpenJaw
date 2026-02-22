@@ -5,6 +5,7 @@ final class RootViewModel: ObservableObject {
     @Published private(set) var state: RootState
     @Published private(set) var dashboardViewModel: AppViewModel?
     @Published private(set) var currentUserEmail: String?
+    @Published private(set) var selectedSkinID: TelocareSkinID
 
     @Published var authEmail: String
     @Published var authPassword: String
@@ -17,6 +18,7 @@ final class RootViewModel: ObservableObject {
     private let snapshotBuilder: DashboardSnapshotBuilder
     private let appleHealthDoseService: AppleHealthDoseService
     private let accessibilityAnnouncer: AccessibilityAnnouncer
+    private let persistSkinPreference: (TelocareSkinID) -> Void
     private let bootstrapSession: AuthSession?
     private let bootstrapErrorMessage: String?
 
@@ -26,6 +28,8 @@ final class RootViewModel: ObservableObject {
         snapshotBuilder: DashboardSnapshotBuilder,
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         accessibilityAnnouncer: AccessibilityAnnouncer,
+        initialSkinID: TelocareSkinID = .warmCoral,
+        persistSkinPreference: @escaping (TelocareSkinID) -> Void = { _ in },
         bootstrapSession: AuthSession? = nil,
         bootstrapErrorMessage: String? = nil
     ) {
@@ -34,6 +38,7 @@ final class RootViewModel: ObservableObject {
         self.snapshotBuilder = snapshotBuilder
         self.appleHealthDoseService = appleHealthDoseService
         self.accessibilityAnnouncer = accessibilityAnnouncer
+        self.persistSkinPreference = persistSkinPreference
         self.bootstrapSession = bootstrapSession
         self.bootstrapErrorMessage = bootstrapErrorMessage
 
@@ -44,6 +49,9 @@ final class RootViewModel: ObservableObject {
         authStatusMessage = nil
         isAuthBusy = false
         currentUserEmail = nil
+        selectedSkinID = initialSkinID
+
+        TelocareTheme.configure(skinID: initialSkinID)
 
         Task {
             await bootstrap()
@@ -71,6 +79,17 @@ final class RootViewModel: ObservableObject {
 
             resetToAuthState()
         }
+    }
+
+    func setSkin(_ skinID: TelocareSkinID) {
+        guard selectedSkinID != skinID else {
+            return
+        }
+
+        TelocareTheme.configure(skinID: skinID)
+        selectedSkinID = skinID
+        persistSkinPreference(skinID)
+        accessibilityAnnouncer.announce("Theme changed to \(skinID.displayName).")
     }
 
     private func bootstrap() async {

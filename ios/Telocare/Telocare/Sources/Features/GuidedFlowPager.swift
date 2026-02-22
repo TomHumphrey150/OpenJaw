@@ -132,6 +132,7 @@ private struct GuidedSituationScreen: View {
                 GuidedStepHeader(step: .situation)
                 GraphWebView(
                     graphData: graphData,
+                    graphSkin: TelocareTheme.graphSkin,
                     displayFlags: displayFlags,
                     focusedNodeID: focusedNodeID,
                     onEvent: onGraphEvent

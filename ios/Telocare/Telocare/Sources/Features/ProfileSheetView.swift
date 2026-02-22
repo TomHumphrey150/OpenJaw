@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ProfileSheetView: View {
     let accountDescription: String
+    let selectedSkinID: TelocareSkinID
+    let onSelectSkin: (TelocareSkinID) -> Void
     let onSignOut: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -20,19 +22,43 @@ struct ProfileSheetView: View {
                             .foregroundStyle(TelocareTheme.charcoal)
                     }
                     .accessibilityIdentifier(AccessibilityID.profileAccountEntry)
-
-                    NavigationLink(
-                        destination: ProfileEntryDetailView(
-                            title: "Settings",
-                            message: "Settings include text-first and accessibility preferences."
-                        )
-                    ) {
-                        Label("Settings", systemImage: "gearshape")
-                            .foregroundStyle(TelocareTheme.charcoal)
-                    }
-                    .accessibilityIdentifier(AccessibilityID.profileSettingsEntry)
                 } header: {
                     Text("General")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(TelocareTheme.coral)
+                        .textCase(nil)
+                }
+
+                Section {
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Text("Appearance")
+                            .font(TelocareTheme.Typography.headline)
+                            .foregroundStyle(TelocareTheme.charcoal)
+                        Text("Applies immediately across the app.")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                    }
+                    .padding(.vertical, TelocareTheme.Spacing.xs)
+                    .accessibilityIdentifier(AccessibilityID.profileThemeSection)
+
+                    ThemeOptionRow(
+                        title: TelocareSkinID.warmCoral.displayName,
+                        systemImage: "sun.max.fill",
+                        isSelected: selectedSkinID == .warmCoral,
+                        action: { onSelectSkin(.warmCoral) }
+                    )
+                    .accessibilityIdentifier(AccessibilityID.profileThemeWarmCoralOption)
+
+                    ThemeOptionRow(
+                        title: TelocareSkinID.garden.displayName,
+                        systemImage: "leaf.fill",
+                        isSelected: selectedSkinID == .garden,
+                        action: { onSelectSkin(.garden) }
+                    )
+                    .accessibilityIdentifier(AccessibilityID.profileThemeGardenOption)
+                } header: {
+                    Text("Settings")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
@@ -68,6 +94,31 @@ struct ProfileSheetView: View {
                 }
             }
         }
+    }
+}
+
+private struct ThemeOptionRow: View {
+    let title: String
+    let systemImage: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                Image(systemName: systemImage)
+                    .foregroundStyle(TelocareTheme.coral)
+                Text(title)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(TelocareTheme.coral)
+                        .font(.body.weight(.semibold))
+                }
+            }
+        }
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 

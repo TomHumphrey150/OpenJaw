@@ -3,12 +3,17 @@ import SwiftUI
 struct DashboardContentView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.scenePhase) private var scenePhase
+    let selectedSkinID: TelocareSkinID
+    let onSelectSkin: (TelocareSkinID) -> Void
     let accountDescription: String
     let onSignOut: () -> Void
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            ExploreTabShell(viewModel: viewModel)
+            ExploreTabShell(
+                viewModel: viewModel,
+                selectedSkinID: selectedSkinID
+            )
             ProfileAvatarButton(mode: viewModel.mode, action: viewModel.openProfileSheet)
         }
         .sheet(
@@ -19,6 +24,8 @@ struct DashboardContentView: View {
         ) {
             ProfileSheetView(
                 accountDescription: accountDescription,
+                selectedSkinID: selectedSkinID,
+                onSelectSkin: onSelectSkin,
                 onSignOut: onSignOut
             )
             .accessibilityIdentifier(AccessibilityID.profileSheet)

@@ -5,23 +5,35 @@ import Supabase
 final class AppContainer {
     private let arguments: [String]
     private let environment: [String: String]
+    private let bundle: Bundle
+    private let skinPreferenceStore: SkinPreferenceStore
     private let accessibilityAnnouncer: AccessibilityAnnouncer
 
     init(
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment,
+        bundle: Bundle = .main,
+        skinPreferenceStore: SkinPreferenceStore = SkinPreferenceStore(),
         accessibilityAnnouncer: AccessibilityAnnouncer = .voiceOver
     ) {
         self.arguments = arguments
         self.environment = environment
+        self.bundle = bundle
+        self.skinPreferenceStore = skinPreferenceStore
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
 
     func makeRootViewModel() -> RootViewModel {
         let snapshotBuilder = DashboardSnapshotBuilder()
+        let initialSkinID = resolvedSkinID
+
+        TelocareTheme.configure(skinID: initialSkinID)
 
         if shouldUseMockServices {
-            return makeMockRootViewModel(snapshotBuilder: snapshotBuilder)
+            return makeMockRootViewModel(
+                snapshotBuilder: snapshotBuilder,
+                initialSkinID: initialSkinID
+            )
         }
 
         do {
@@ -41,7 +53,9 @@ final class AppContainer {
                 userDataRepository: SupabaseUserDataRepository(client: supabaseClient),
                 snapshotBuilder: snapshotBuilder,
                 appleHealthDoseService: HealthKitAppleHealthDoseService(),
-                accessibilityAnnouncer: accessibilityAnnouncer
+                accessibilityAnnouncer: accessibilityAnnouncer,
+                initialSkinID: initialSkinID,
+                persistSkinPreference: saveSkinPreference
             )
         } catch {
             return RootViewModel(
@@ -50,6 +64,8 @@ final class AppContainer {
                 snapshotBuilder: snapshotBuilder,
                 appleHealthDoseService: MockAppleHealthDoseService(),
                 accessibilityAnnouncer: accessibilityAnnouncer,
+                initialSkinID: initialSkinID,
+                persistSkinPreference: saveSkinPreference,
                 bootstrapErrorMessage: error.localizedDescription
             )
         }
@@ -62,7 +78,10 @@ final class AppContainer {
             || arguments.contains("--ui-test-unauthenticated")
     }
 
-    private func makeMockRootViewModel(snapshotBuilder: DashboardSnapshotBuilder) -> RootViewModel {
+    private func makeMockRootViewModel(
+        snapshotBuilder: DashboardSnapshotBuilder,
+        initialSkinID: TelocareSkinID
+    ) -> RootViewModel {
         let mockSession = isMockAuthenticated
             ? AuthSession(
                 userID: UUID(uuidString: "11111111-1111-1111-1111-111111111111") ?? UUID(),
@@ -86,8 +105,25 @@ final class AppContainer {
             userDataRepository: MockUserDataRepository(document: mockDocument),
             snapshotBuilder: snapshotBuilder,
             appleHealthDoseService: MockAppleHealthDoseService(),
-            accessibilityAnnouncer: accessibilityAnnouncer
+            accessibilityAnnouncer: accessibilityAnnouncer,
+            initialSkinID: initialSkinID,
+            persistSkinPreference: saveSkinPreference
         )
+    }
+
+    private var resolvedSkinID: TelocareSkinID {
+        let infoDictionarySkin = bundle.object(forInfoDictionaryKey: "TELOCARE_SKIN") as? String
+        let storedSkinID = skinPreferenceStore.load()
+        return TelocareSkinResolver.resolve(
+            arguments: arguments,
+            environment: environment,
+            infoDictionarySkin: infoDictionarySkin,
+            storedSkinID: storedSkinID
+        )
+    }
+
+    private func saveSkinPreference(_ skinID: TelocareSkinID) {
+        skinPreferenceStore.save(skinID)
     }
 
     private var isMockAuthenticated: Bool {

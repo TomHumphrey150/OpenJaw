@@ -6,6 +6,28 @@ struct GraphDisplayFlags: Codable, Equatable {
     let showInterventionNodes: Bool
 }
 
+struct GraphSkin: Codable, Equatable {
+    let backgroundColor: String
+    let textColor: String
+    let nodeBackgroundColor: String
+    let nodeBorderDefaultColor: String
+    let nodeBorderRobustColor: String
+    let nodeBorderModerateColor: String
+    let nodeBorderPreliminaryColor: String
+    let nodeBorderMechanismColor: String
+    let nodeBorderSymptomColor: String
+    let nodeBorderInterventionColor: String
+    let edgeTextBackgroundColor: String
+    let tooltipBackgroundColor: String
+    let tooltipBorderColor: String
+    let selectionOverlayColor: String
+    let edgeCausalColor: String
+    let edgeProtectiveColor: String
+    let edgeFeedbackColor: String
+    let edgeMechanismColor: String
+    let edgeInterventionColor: String
+}
+
 enum GraphEvent: Equatable {
     case graphReady
     case nodeSelected(id: String, label: String)
@@ -24,6 +46,7 @@ enum GraphEvent: Equatable {
 enum GraphCommand {
     case setGraphData(CausalGraphData)
     case setDisplayFlags(GraphDisplayFlags)
+    case setSkin(GraphSkin)
     case focusNode(String)
 
     var name: String {
@@ -32,6 +55,8 @@ enum GraphCommand {
             return "setGraphData"
         case .setDisplayFlags:
             return "setDisplayFlags"
+        case .setSkin:
+            return "setSkin"
         case .focusNode:
             return "focusNode"
         }
@@ -47,6 +72,11 @@ enum GraphCommand {
         case .setDisplayFlags(let flags):
             return encode(
                 envelope: GraphCommandEnvelope(command: name, payload: flags),
+                encoder: encoder
+            )
+        case .setSkin(let skin):
+            return encode(
+                envelope: GraphCommandEnvelope(command: name, payload: skin),
                 encoder: encoder
             )
         case .focusNode(let nodeID):

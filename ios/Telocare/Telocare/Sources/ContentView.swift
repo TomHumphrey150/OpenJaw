@@ -23,6 +23,8 @@ struct ContentView: View {
             if let dashboardViewModel = rootViewModel.dashboardViewModel {
                 DashboardContentView(
                     viewModel: dashboardViewModel,
+                    selectedSkinID: rootViewModel.selectedSkinID,
+                    onSelectSkin: rootViewModel.setSkin,
                     accountDescription: accountDescription,
                     onSignOut: rootViewModel.signOut
                 )
@@ -58,11 +60,14 @@ private struct ProgressScreen: View {
             ProgressView()
             Text(title)
                 .font(.headline)
+                .foregroundStyle(TelocareTheme.charcoal)
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(TelocareTheme.warmGray)
         }
         .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(TelocareTheme.sand.ignoresSafeArea())
         .accessibilityIdentifier(accessibilityID)
     }
 }
@@ -74,13 +79,16 @@ private struct FatalScreen: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Configuration Error")
                 .font(.title3.bold())
+                .foregroundStyle(TelocareTheme.charcoal)
             Text(message)
                 .font(.body)
+                .foregroundStyle(TelocareTheme.charcoal)
             Text("Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY through Tuist xcconfig files.")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(TelocareTheme.warmGray)
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(TelocareTheme.sand.ignoresSafeArea())
     }
 }

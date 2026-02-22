@@ -8,9 +8,10 @@ struct AuthView: View {
             VStack(spacing: 8) {
                 Text("Telocare")
                     .font(.largeTitle.bold())
+                    .foregroundStyle(TelocareTheme.charcoal)
                 Text("Sign in with email and password")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(TelocareTheme.warmGray)
             }
 
             VStack(spacing: 12) {
@@ -37,6 +38,7 @@ struct AuthView: View {
                     viewModel.submitSignIn()
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(TelocareTheme.coral)
                 .disabled(viewModel.isAuthBusy)
                 .accessibilityIdentifier(AccessibilityID.authSignInButton)
 
@@ -44,6 +46,7 @@ struct AuthView: View {
                     viewModel.submitSignUp()
                 }
                 .buttonStyle(.bordered)
+                .tint(TelocareTheme.coral)
                 .disabled(viewModel.isAuthBusy)
                 .accessibilityIdentifier(AccessibilityID.authCreateAccountButton)
             }
@@ -62,7 +65,7 @@ struct AuthView: View {
 
             if let status = viewModel.authStatusMessage {
                 Text(status)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(TelocareTheme.warmGray)
                     .font(.footnote)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier(AccessibilityID.authStatusMessage)
@@ -72,5 +75,7 @@ struct AuthView: View {
         }
         .padding(24)
         .frame(maxWidth: 420)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(TelocareTheme.sand.ignoresSafeArea())
     }
 }

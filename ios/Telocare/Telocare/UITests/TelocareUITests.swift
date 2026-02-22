@@ -212,10 +212,61 @@ final class TelocareUITests: XCTestCase {
         app.buttons[UIID.profileButton].tap()
         XCTAssertTrue(app.otherElements[UIID.profileSheet].waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons[UIID.profileAccountEntry].exists)
-        XCTAssertTrue(app.buttons[UIID.profileSettingsEntry].exists)
+        XCTAssertTrue(element(withIdentifier: UIID.profileThemeSection, in: app).exists)
+        XCTAssertTrue(app.buttons[UIID.profileThemeWarmCoralOption].exists)
+        XCTAssertTrue(app.buttons[UIID.profileThemeGardenOption].exists)
         XCTAssertTrue(app.buttons[UIID.profileSignOutEntry].exists)
         app.buttons[UIID.profileSignOutEntry].tap()
         XCTAssertTrue(app.textFields[UIID.authEmailInput].waitForExistence(timeout: 2))
+    }
+
+    func testProfileThemeCanSwitchToGardenAndBack() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        app.buttons[UIID.profileButton].tap()
+        XCTAssertTrue(app.otherElements[UIID.profileSheet].waitForExistence(timeout: 2))
+
+        let warmCoralOption = app.buttons[UIID.profileThemeWarmCoralOption]
+        let gardenOption = app.buttons[UIID.profileThemeGardenOption]
+        XCTAssertTrue(warmCoralOption.waitForExistence(timeout: 2))
+        XCTAssertTrue(gardenOption.exists)
+
+        gardenOption.tap()
+        XCTAssertTrue(waitForValue("Selected", of: gardenOption, timeout: 2))
+        XCTAssertTrue(waitForValue("Not selected", of: warmCoralOption, timeout: 2))
+
+        warmCoralOption.tap()
+        XCTAssertTrue(waitForValue("Selected", of: warmCoralOption, timeout: 2))
+        XCTAssertTrue(waitForValue("Not selected", of: gardenOption, timeout: 2))
+    }
+
+    func testSwitchingThemeWhileViewingSituationKeepsGraphInteractive() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+        completeGuidedFlow(in: app)
+
+        let situationTab = app.tabBars.buttons["Situation"]
+        XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
+        situationTab.tap()
+
+        let graph = app.webViews[UIID.graphWebView]
+        XCTAssertTrue(graph.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts[UIID.graphSelectionText].waitForExistence(timeout: 2))
+
+        app.buttons[UIID.profileButton].tap()
+        let gardenOption = app.buttons[UIID.profileThemeGardenOption]
+        XCTAssertTrue(gardenOption.waitForExistence(timeout: 2))
+        gardenOption.tap()
+
+        let closeButton = app.buttons[UIID.profileCloseButton]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 2))
+        closeButton.tap()
+
+        XCTAssertTrue(graph.waitForExistence(timeout: 2))
+        graph.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.2)).tap()
+        let selection = app.staticTexts[UIID.graphSelectionText].label
+        XCTAssertFalse(selection.isEmpty)
     }
 
     func testInputsDefaultToAvailableAndSupportsCommitAndUncommit() {
@@ -458,8 +509,11 @@ private enum UIID {
     static let exploreDetailsEdgeDeactivationStatus = "explore.situation.details.edge.status"
     static let profileButton = "profile.open.button"
     static let profileSheet = "profile.sheet"
+    static let profileCloseButton = "profile.close.button"
     static let profileAccountEntry = "profile.account.entry"
-    static let profileSettingsEntry = "profile.settings.entry"
+    static let profileThemeSection = "profile.theme.section"
+    static let profileThemeWarmCoralOption = "profile.theme.option.warm.coral"
+    static let profileThemeGardenOption = "profile.theme.option.garden"
     static let profileSignOutEntry = "profile.signout.entry"
     static let exploreChatInput = "explore.chat.input"
     static let exploreChatSendButton = "explore.chat.send.button"

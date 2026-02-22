@@ -4,6 +4,46 @@ import Testing
 
 @MainActor
 struct RootViewModelTests {
+    @Test func setSkinUpdatesSelectionAndPersistsPreference() async {
+        var persistedSkins: [TelocareSkinID] = []
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: MockUserDataRepository(),
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in },
+            initialSkinID: .warmCoral,
+            persistSkinPreference: { skinID in
+                persistedSkins.append(skinID)
+            }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.setSkin(.garden)
+
+        #expect(viewModel.selectedSkinID == .garden)
+        #expect(persistedSkins == [.garden])
+    }
+
+    @Test func setSkinDoesNotPersistWhenSelectionIsUnchanged() async {
+        var persistCallCount = 0
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: MockUserDataRepository(),
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in },
+            initialSkinID: .warmCoral,
+            persistSkinPreference: { _ in
+                persistCallCount += 1
+            }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.setSkin(.warmCoral)
+
+        #expect(viewModel.selectedSkinID == .warmCoral)
+        #expect(persistCallCount == 0)
+    }
+
     @Test func bootstrapWithoutSessionShowsAuthState() async {
         let viewModel = RootViewModel(
             authClient: MockAuthClient(),

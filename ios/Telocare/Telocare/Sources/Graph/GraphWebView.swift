@@ -3,6 +3,7 @@ import WebKit
 
 struct GraphWebView: UIViewRepresentable {
     let graphData: CausalGraphData
+    let graphSkin: GraphSkin
     let displayFlags: GraphDisplayFlags
     let focusedNodeID: String?
     let onEvent: (GraphEvent) -> Void
@@ -45,6 +46,7 @@ struct GraphWebView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         context.coordinator.sync(
             graphData: graphData,
+            graphSkin: graphSkin,
             displayFlags: displayFlags,
             focusedNodeID: focusedNodeID
         )
@@ -65,6 +67,7 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
     private var isPageLoaded = false
     private var queuedJavaScript: [String] = []
     private var lastGraphData: CausalGraphData?
+    private var lastGraphSkin: GraphSkin?
     private var lastDisplayFlags: GraphDisplayFlags?
     private var lastFocusedNodeID: String?
 
@@ -84,9 +87,15 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
 
     func sync(
         graphData: CausalGraphData,
+        graphSkin: GraphSkin,
         displayFlags: GraphDisplayFlags,
         focusedNodeID: String?
     ) {
+        if lastGraphSkin != graphSkin {
+            enqueue(command: .setSkin(graphSkin))
+            lastGraphSkin = graphSkin
+        }
+
         if lastGraphData != graphData {
             enqueue(command: .setGraphData(graphData))
             lastGraphData = graphData

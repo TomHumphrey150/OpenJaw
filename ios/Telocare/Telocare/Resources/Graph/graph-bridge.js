@@ -58,6 +58,14 @@
   let viewportThrottle = null;
   let resizeThrottle = null;
   let zoomStyleFrame = null;
+  let currentSkin = readSkinFromCSS();
+
+  const LEGACY_EDGE_COLOR_TOKEN_BY_HEX = Object.freeze({
+    b45309: 'edgeCausalColor',
+    '1b4332': 'edgeProtectiveColor',
+    '1e3a5f': 'edgeMechanismColor',
+    '065f46': 'edgeInterventionColor',
+  });
 
   function postEvent(event, payload) {
     const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.graphBridge;
@@ -99,14 +107,39 @@
       return true;
     });
 
-    const filteredEdges = graphData.edges.filter((item) => {
-      const edge = item && item.data ? item.data : null;
-      if (!edge || typeof edge.source !== 'string' || typeof edge.target !== 'string') return false;
-      if (!displayFlags.showInterventionNodes && (interventionIDs.has(edge.source) || interventionIDs.has(edge.target))) return false;
-      if (!displayFlags.showFeedbackEdges && edge.edgeType === 'feedback') return false;
-      if (!displayFlags.showProtectiveEdges && edge.edgeType === 'protective') return false;
-      return true;
-    });
+    const nodeByID = new Map(
+      filteredNodes
+        .map((item) => (item && item.data ? item.data : null))
+        .filter((node) => node && typeof node.id === 'string')
+        .map((node) => [node.id, node])
+    );
+
+    const filteredEdges = graphData.edges
+      .filter((item) => {
+        const edge = item && item.data ? item.data : null;
+        if (!edge || typeof edge.source !== 'string' || typeof edge.target !== 'string') return false;
+        if (!displayFlags.showInterventionNodes && (interventionIDs.has(edge.source) || interventionIDs.has(edge.target))) return false;
+        if (!displayFlags.showFeedbackEdges && edge.edgeType === 'feedback') return false;
+        if (!displayFlags.showProtectiveEdges && edge.edgeType === 'protective') return false;
+        return true;
+      })
+      .map((item) => {
+        const edge = item && item.data ? item.data : null;
+        if (!edge) return item;
+
+        const edgeColor = resolvedEdgeColor(edge, nodeByID);
+        if (edgeColor === edge.edgeColor) {
+          return item;
+        }
+
+        return {
+          ...item,
+          data: {
+            ...edge,
+            edgeColor,
+          },
+        };
+      });
 
     const deactivatedNodeIDs = new Set(
       filteredNodes
@@ -151,6 +184,163 @@
 
   function getCSSVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function readSkinFromCSS() {
+    return {
+      backgroundColor: getCSSVar('--bg-color') || '#FAF5EE',
+      textColor: getCSSVar('--text-color') || '#403B38',
+      nodeBackgroundColor: getCSSVar('--node-bg') || '#FFFDF7',
+      nodeBorderDefaultColor: getCSSVar('--node-border-default') || '#BFB8B3',
+      nodeBorderRobustColor: getCSSVar('--node-border-robust') || '#85C28F',
+      nodeBorderModerateColor: getCSSVar('--node-border-moderate') || '#FF9966',
+      nodeBorderPreliminaryColor: getCSSVar('--node-border-preliminary') || '#D4A5FF',
+      nodeBorderMechanismColor: getCSSVar('--node-border-mechanism') || '#7DD3FC',
+      nodeBorderSymptomColor: getCSSVar('--node-border-symptom') || '#FF7060',
+      nodeBorderInterventionColor: getCSSVar('--node-border-intervention') || '#FF7060',
+      edgeTextBackgroundColor: getCSSVar('--edge-text-bg') || '#FAF5EE',
+      tooltipBackgroundColor: getCSSVar('--tooltip-bg') || 'rgba(255, 253, 247, 0.97)',
+      tooltipBorderColor: getCSSVar('--tooltip-border') || 'rgba(140, 133, 128, 0.4)',
+      selectionOverlayColor: getCSSVar('--selection-overlay') || '#FF7060',
+      edgeCausalColor: getCSSVar('--edge-causal') || '#B45309',
+      edgeProtectiveColor: getCSSVar('--edge-protective') || '#1B4332',
+      edgeFeedbackColor: getCSSVar('--edge-feedback') || '#FF9966',
+      edgeMechanismColor: getCSSVar('--edge-mechanism') || '#1E3A5F',
+      edgeInterventionColor: getCSSVar('--edge-intervention') || '#065F46',
+    };
+  }
+
+  function sanitizedString(value, fallback) {
+    if (typeof value !== 'string') return fallback;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : fallback;
+  }
+
+  function normalizeSkinPayload(payload) {
+    const base = currentSkin || readSkinFromCSS();
+    const source = payload && typeof payload === 'object' ? payload : {};
+
+    return {
+      backgroundColor: sanitizedString(source.backgroundColor, base.backgroundColor),
+      textColor: sanitizedString(source.textColor, base.textColor),
+      nodeBackgroundColor: sanitizedString(source.nodeBackgroundColor, base.nodeBackgroundColor),
+      nodeBorderDefaultColor: sanitizedString(source.nodeBorderDefaultColor, base.nodeBorderDefaultColor),
+      nodeBorderRobustColor: sanitizedString(source.nodeBorderRobustColor, base.nodeBorderRobustColor),
+      nodeBorderModerateColor: sanitizedString(source.nodeBorderModerateColor, base.nodeBorderModerateColor),
+      nodeBorderPreliminaryColor: sanitizedString(source.nodeBorderPreliminaryColor, base.nodeBorderPreliminaryColor),
+      nodeBorderMechanismColor: sanitizedString(source.nodeBorderMechanismColor, base.nodeBorderMechanismColor),
+      nodeBorderSymptomColor: sanitizedString(source.nodeBorderSymptomColor, base.nodeBorderSymptomColor),
+      nodeBorderInterventionColor: sanitizedString(source.nodeBorderInterventionColor, base.nodeBorderInterventionColor),
+      edgeTextBackgroundColor: sanitizedString(source.edgeTextBackgroundColor, base.edgeTextBackgroundColor),
+      tooltipBackgroundColor: sanitizedString(source.tooltipBackgroundColor, base.tooltipBackgroundColor),
+      tooltipBorderColor: sanitizedString(source.tooltipBorderColor, base.tooltipBorderColor),
+      selectionOverlayColor: sanitizedString(source.selectionOverlayColor, base.selectionOverlayColor),
+      edgeCausalColor: sanitizedString(source.edgeCausalColor, base.edgeCausalColor),
+      edgeProtectiveColor: sanitizedString(source.edgeProtectiveColor, base.edgeProtectiveColor),
+      edgeFeedbackColor: sanitizedString(source.edgeFeedbackColor, base.edgeFeedbackColor),
+      edgeMechanismColor: sanitizedString(source.edgeMechanismColor, base.edgeMechanismColor),
+      edgeInterventionColor: sanitizedString(source.edgeInterventionColor, base.edgeInterventionColor),
+    };
+  }
+
+  function applySkin(payload) {
+    currentSkin = normalizeSkinPayload(payload);
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--bg-color', currentSkin.backgroundColor);
+    rootStyle.setProperty('--text-color', currentSkin.textColor);
+    rootStyle.setProperty('--node-bg', currentSkin.nodeBackgroundColor);
+    rootStyle.setProperty('--node-border-default', currentSkin.nodeBorderDefaultColor);
+    rootStyle.setProperty('--node-border-robust', currentSkin.nodeBorderRobustColor);
+    rootStyle.setProperty('--node-border-moderate', currentSkin.nodeBorderModerateColor);
+    rootStyle.setProperty('--node-border-preliminary', currentSkin.nodeBorderPreliminaryColor);
+    rootStyle.setProperty('--node-border-mechanism', currentSkin.nodeBorderMechanismColor);
+    rootStyle.setProperty('--node-border-symptom', currentSkin.nodeBorderSymptomColor);
+    rootStyle.setProperty('--node-border-intervention', currentSkin.nodeBorderInterventionColor);
+    rootStyle.setProperty('--edge-text-bg', currentSkin.edgeTextBackgroundColor);
+    rootStyle.setProperty('--tooltip-bg', currentSkin.tooltipBackgroundColor);
+    rootStyle.setProperty('--tooltip-border', currentSkin.tooltipBorderColor);
+    rootStyle.setProperty('--selection-overlay', currentSkin.selectionOverlayColor);
+    rootStyle.setProperty('--edge-causal', currentSkin.edgeCausalColor);
+    rootStyle.setProperty('--edge-protective', currentSkin.edgeProtectiveColor);
+    rootStyle.setProperty('--edge-feedback', currentSkin.edgeFeedbackColor);
+    rootStyle.setProperty('--edge-mechanism', currentSkin.edgeMechanismColor);
+    rootStyle.setProperty('--edge-intervention', currentSkin.edgeInterventionColor);
+  }
+
+  function normalizedHexColor(value) {
+    if (typeof value !== 'string') return null;
+    const cleaned = value.trim().toLowerCase().replace('#', '');
+    if (!/^[0-9a-f]{6}$/.test(cleaned)) return null;
+    return cleaned;
+  }
+
+  function edgeColorFromType(edgeType) {
+    const normalizedType = typeof edgeType === 'string'
+      ? edgeType.trim().toLowerCase()
+      : '';
+
+    if (normalizedType === 'protective' || normalizedType === 'inhibits') {
+      return currentSkin.edgeProtectiveColor;
+    }
+    if (normalizedType === 'feedback') {
+      return currentSkin.edgeFeedbackColor;
+    }
+    if (normalizedType === 'dashed') {
+      return currentSkin.edgeMechanismColor;
+    }
+    if (normalizedType === 'causal' || normalizedType === 'causes' || normalizedType === 'triggers') {
+      return currentSkin.edgeCausalColor;
+    }
+
+    return null;
+  }
+
+  function resolvedEdgeColor(edge, nodeByID) {
+    const explicitColor = typeof edge.edgeColor === 'string' ? edge.edgeColor.trim() : '';
+    const normalizedExplicitHex = normalizedHexColor(explicitColor);
+
+    if (normalizedExplicitHex && LEGACY_EDGE_COLOR_TOKEN_BY_HEX[normalizedExplicitHex]) {
+      const token = LEGACY_EDGE_COLOR_TOKEN_BY_HEX[normalizedExplicitHex];
+      return currentSkin[token];
+    }
+
+    const lowerExplicitColor = explicitColor.toLowerCase();
+    if (lowerExplicitColor.includes('protective') || lowerExplicitColor.includes('green')) {
+      return currentSkin.edgeProtectiveColor;
+    }
+    if (lowerExplicitColor.includes('feedback')) {
+      return currentSkin.edgeFeedbackColor;
+    }
+    if (lowerExplicitColor.includes('mechanism') || lowerExplicitColor.includes('blue')) {
+      return currentSkin.edgeMechanismColor;
+    }
+    if (lowerExplicitColor.includes('intervention')) {
+      return currentSkin.edgeInterventionColor;
+    }
+    if (lowerExplicitColor.includes('causal') || lowerExplicitColor.includes('red') || lowerExplicitColor.includes('harmful')) {
+      return currentSkin.edgeCausalColor;
+    }
+
+    if (explicitColor && normalizedExplicitHex === null) {
+      return explicitColor;
+    }
+
+    if (explicitColor && normalizedExplicitHex !== null) {
+      return explicitColor;
+    }
+
+    const typeColor = edgeColorFromType(edge.edgeType);
+    if (typeColor) {
+      return typeColor;
+    }
+
+    const sourceNode = nodeByID.get(edge.source);
+    const targetNode = nodeByID.get(edge.target);
+    if ((sourceNode && sourceNode.styleClass === 'intervention') || (targetNode && targetNode.styleClass === 'intervention')) {
+      return currentSkin.edgeInterventionColor;
+    }
+
+    return currentSkin.edgeCausalColor;
   }
 
   function cyStyles() {
@@ -589,6 +779,14 @@
       return;
     }
 
+    if (envelope.command === 'setSkin') {
+      applySkin(envelope.payload);
+      if (cy) {
+        renderGraph(currentGraphData, { preserveViewport: true });
+      }
+      return;
+    }
+
     if (envelope.command === 'setGraphData') {
       currentGraphData = normalizeGraphData(envelope.payload);
       renderGraph(currentGraphData, { preserveViewport: true });
@@ -631,6 +829,4 @@
   }
 
   window.addEventListener('resize', refreshLayoutForContainerSizeChange);
-
-  renderGraph(currentGraphData);
 })();

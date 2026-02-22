@@ -39,6 +39,7 @@ let project = Project(
                     ],
                     "SUPABASE_URL": "$(SUPABASE_URL)",
                     "SUPABASE_PUBLISHABLE_KEY": "$(SUPABASE_PUBLISHABLE_KEY)",
+                    "TELOCARE_SKIN": "$(TELOCARE_SKIN)",
                     "NSHealthShareUsageDescription": "Telocare reads selected Apple Health data to auto-update your intervention dose progress.",
                     "NSHealthUpdateUsageDescription": "Telocare requests Health access setup for read-only intervention syncing.",
                 ]

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ExploreTabShell: View {
     @ObservedObject var viewModel: AppViewModel
+    let selectedSkinID: TelocareSkinID
 
     var body: some View {
         TabView(selection: selectedTabBinding) {
@@ -18,7 +19,8 @@ struct ExploreTabShell: View {
                 onDisconnectAppleHealth: viewModel.disconnectInputFromAppleHealth,
                 onRefreshAppleHealth: viewModel.refreshAppleHealth,
                 onRefreshAllAppleHealth: viewModel.refreshAllConnectedAppleHealth,
-                onToggleActive: viewModel.toggleInputActive
+                onToggleActive: viewModel.toggleInputActive,
+                selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
                 .tag(ExploreTab.inputs)
@@ -43,7 +45,8 @@ struct ExploreTabShell: View {
                         label: label,
                         edgeType: edgeType
                     )
-                }
+                },
+                selectedSkinID: selectedSkinID
             )
             .tabItem { Label(ExploreTab.situation.title, systemImage: ExploreTab.situation.symbolName) }
             .tag(ExploreTab.situation)
@@ -55,7 +58,8 @@ struct ExploreTabShell: View {
                 outcomesMetadata: viewModel.snapshot.outcomesMetadata,
                 morningStates: viewModel.morningStateHistory,
                 morningOutcomeSelection: viewModel.morningOutcomeSelection,
-                onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue
+                onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue,
+                selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
                 .tag(ExploreTab.outcomes)
@@ -64,12 +68,15 @@ struct ExploreTabShell: View {
             ExploreChatScreen(
                 draft: $viewModel.chatDraft,
                 feedback: viewModel.exploreFeedback,
-                onSend: viewModel.submitChatPrompt
+                onSend: viewModel.submitChatPrompt,
+                selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.chat.title, systemImage: ExploreTab.chat.symbolName) }
                 .tag(ExploreTab.chat)
                 .accessibilityIdentifier(AccessibilityID.exploreChatScreen)
         }
+        .tint(TelocareTheme.coral)
+        .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
     }
 
     private var selectedTabBinding: Binding<ExploreTab> {
@@ -87,6 +94,7 @@ private struct ExploreOutcomesScreen: View {
     let morningStates: [MorningState]
     let morningOutcomeSelection: MorningOutcomeSelection
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
+    let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
     @State private var isMorningCheckInExpanded: Bool
@@ -99,7 +107,8 @@ private struct ExploreOutcomesScreen: View {
         outcomesMetadata: OutcomesMetadata,
         morningStates: [MorningState],
         morningOutcomeSelection: MorningOutcomeSelection,
-        onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void
+        onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void,
+        selectedSkinID: TelocareSkinID
     ) {
         self.outcomes = outcomes
         self.outcomeRecords = outcomeRecords
@@ -107,6 +116,7 @@ private struct ExploreOutcomesScreen: View {
         self.morningStates = morningStates
         self.morningOutcomeSelection = morningOutcomeSelection
         self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
+        self.selectedSkinID = selectedSkinID
         _isMorningCheckInExpanded = State(initialValue: !morningOutcomeSelection.isComplete)
         _selectedMorningMetric = State(initialValue: .composite)
         _selectedNightMetric = State(initialValue: .microArousalRatePerHour)
@@ -134,6 +144,8 @@ private struct ExploreOutcomesScreen: View {
                     .accessibilityIdentifier(AccessibilityID.exploreOutcomeDetailSheet)
             }
         }
+        .tint(TelocareTheme.coral)
+        .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
         .onChange(of: morningOutcomeSelection.isComplete) { _, isComplete in
             guard isComplete else { return }
             guard isMorningCheckInExpanded else { return }
@@ -759,6 +771,7 @@ private struct ExploreSituationScreen: View {
     let onShowProtectiveEdgesChanged: (Bool) -> Void
     let onToggleNodeDeactivated: (String) -> Void
     let onToggleEdgeDeactivated: (String, String, String?, String?) -> Void
+    let selectedSkinID: TelocareSkinID
 
     @State private var isOptionsPresented = false
     @State private var selectedGraphSelection: SituationGraphSelection?
@@ -767,6 +780,7 @@ private struct ExploreSituationScreen: View {
         NavigationStack {
             GraphWebView(
                 graphData: graphData,
+                graphSkin: TelocareTheme.graphSkin,
                 displayFlags: displayFlags,
                 focusedNodeID: focusedNodeID,
                 onEvent: handleGraphEvent
@@ -834,6 +848,8 @@ private struct ExploreSituationScreen: View {
                     .accessibilityIdentifier(AccessibilityID.exploreDetailsSheet)
             }
         }
+        .tint(TelocareTheme.coral)
+        .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
     }
 
     private func handleGraphEvent(_ event: GraphEvent) {
@@ -1235,42 +1251,79 @@ private struct SituationGraphDetailSheet: View {
     private func accentColor(for styleClass: String?) -> Color {
         switch styleClass?.lowercased() {
         case "robust":
-            return Color(red: 0.52, green: 0.76, blue: 0.56)
+            return TelocareTheme.robust
         case "moderate":
-            return Color(red: 1.0, green: 0.6, blue: 0.4)
+            return TelocareTheme.moderate
         case "preliminary":
-            return Color(red: 0.83, green: 0.65, blue: 1.0)
+            return TelocareTheme.preliminary
         case "mechanism":
-            return Color(red: 0.49, green: 0.83, blue: 0.99)
+            return TelocareTheme.mechanism
         case "symptom":
-            return TelocareTheme.coral
+            return TelocareTheme.symptom
         case "intervention":
-            return TelocareTheme.coral
+            return TelocareTheme.intervention
         default:
             return TelocareTheme.warmGray
         }
     }
 
     private func edgeAccentColor(for edgeType: String?, color: String?) -> Color {
+        if let normalizedHex = normalizedHexColor(color) {
+            switch normalizedHex {
+            case "1b4332":
+                return TelocareTheme.graphEdgeProtective
+            case "065f46":
+                return TelocareTheme.graphEdgeIntervention
+            case "1e3a5f":
+                return TelocareTheme.graphEdgeMechanism
+            case "b45309":
+                return TelocareTheme.graphEdgeCausal
+            default:
+                break
+            }
+        }
+
         if let color = color?.lowercased() {
             if color.contains("green") || color.contains("protective") {
-                return Color(red: 0.52, green: 0.76, blue: 0.56)
+                return TelocareTheme.graphEdgeProtective
             }
             if color.contains("red") || color.contains("harmful") {
-                return TelocareTheme.coral
+                return TelocareTheme.symptom
+            }
+            if color.contains("blue") {
+                return TelocareTheme.graphEdgeMechanism
             }
         }
 
         switch edgeType?.lowercased() {
         case "protective", "inhibits":
-            return Color(red: 0.52, green: 0.76, blue: 0.56)
+            return TelocareTheme.graphEdgeProtective
         case "causal", "causes", "triggers":
-            return TelocareTheme.coral
+            return TelocareTheme.graphEdgeCausal
         case "feedback":
-            return Color(red: 1.0, green: 0.6, blue: 0.4)
+            return TelocareTheme.graphEdgeFeedback
+        case "dashed":
+            return TelocareTheme.graphEdgeMechanism
         default:
             return TelocareTheme.warmGray
         }
+    }
+
+    private func normalizedHexColor(_ value: String?) -> String? {
+        guard let value else {
+            return nil
+        }
+
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "#", with: "")
+
+        guard normalized.count == 6 else {
+            return nil
+        }
+
+        return normalized
     }
 
     private func displayName(for styleClass: String?) -> String {
@@ -1406,6 +1459,7 @@ private struct ExploreInputsScreen: View {
     let onRefreshAppleHealth: (String) async -> Void
     let onRefreshAllAppleHealth: () async -> Void
     let onToggleActive: (String) -> Void
+    let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
     @State private var filterMode: InputFilterMode
@@ -1422,7 +1476,8 @@ private struct ExploreInputsScreen: View {
         onDisconnectAppleHealth: @escaping (String) -> Void,
         onRefreshAppleHealth: @escaping (String) async -> Void,
         onRefreshAllAppleHealth: @escaping () async -> Void,
-        onToggleActive: @escaping (String) -> Void
+        onToggleActive: @escaping (String) -> Void,
+        selectedSkinID: TelocareSkinID
     ) {
         self.inputs = inputs
         self.graphData = graphData
@@ -1436,6 +1491,7 @@ private struct ExploreInputsScreen: View {
         self.onRefreshAppleHealth = onRefreshAppleHealth
         self.onRefreshAllAppleHealth = onRefreshAllAppleHealth
         self.onToggleActive = onToggleActive
+        self.selectedSkinID = selectedSkinID
         _filterMode = State(initialValue: inputs.contains(where: \.isActive) ? .pending : .available)
     }
 
@@ -1469,6 +1525,8 @@ private struct ExploreInputsScreen: View {
                 }
             }
         }
+        .tint(TelocareTheme.coral)
+        .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
     }
 
     private func showInputDetail(_ input: InputStatus) {
@@ -2339,6 +2397,7 @@ private struct ExploreChatScreen: View {
     @Binding var draft: String
     let feedback: String
     let onSend: () -> Void
+    let selectedSkinID: TelocareSkinID
 
     @State private var messages: [ChatMessage] = [
         ChatMessage(
@@ -2380,6 +2439,8 @@ private struct ExploreChatScreen: View {
             .navigationTitle("Chat")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .tint(TelocareTheme.coral)
+        .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
     }
 
     // MARK: - Suggested Prompts
