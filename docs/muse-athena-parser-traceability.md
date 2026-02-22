@@ -22,3 +22,13 @@ Covered by:
 - `MusePacketParserTests.adapterCoreUsesOnlyGetterFamilyForOpticsType`
 
 These tests enforce the SIGABRT-avoidance contract from SDK headers.
+
+## Diagnostics traceability
+
+| Diagnostics artifact | Source path | Writer path | Verification coverage | Notes |
+| --- | --- | --- | --- | --- |
+| Raw Muse stream (`session.muse`) | `IXNMuseDataPacket` + `IXNMuseArtifactPacket` from `MuseSDKDataListenerBridge` | `MuseDiagnosticsSession.recordDataPacket(_:)` / `recordArtifactPacket(_:)` via `IXNMuseFileWriter` | Device build (`MuseSDKSessionService` path) + manual smoke checklist export step | Binary SDK format for full-fidelity replay/debug |
+| Per-second decision trace (`decisions.ndjson`, `type=second`) | `MuseSecondDecision` emitted by `MuseArousalDetector` | `MuseSessionAccumulator.buildSummary(onDecision:)` -> `MuseSDKSessionService.stopRecording` -> `MuseDiagnosticsEventWriter.appendDecision(_:)` | `MuseSessionAccumulatorTests.buildSummaryEmitsPerSecondDecisions`, `MuseDiagnosticsReplayTests.replayingDecisionTraceMatchesSummary` | Contains detector inputs, event decisions, awake evidence |
+| Session service events (`decisions.ndjson`, `type=service_event`) | Connection state transitions, connect preset/outcome, SDK errors, recording lifecycle | `MuseDiagnosticsRecorder.recordServiceEvent(_:)` -> `MuseDiagnosticsEventWriter.appendServiceEvent(_:at:)` | UI/device smoke flow + manual diagnostics inspection | Supports timeline debugging outside algorithm-only traces |
+| Detection summary (`decisions.ndjson`, `type=summary`) | Final `MuseDetectionSummary` from detector | `MuseDiagnosticsEventWriter.appendSummary(_:)` | `MuseDiagnosticsReplayTests.replayingDecisionTraceMatchesSummary` | Snapshot for parity checks during offline tuning |
+| Session manifest (`manifest.json`) | Heuristic constants, app version, session bounds, file list | `MuseDiagnosticsEventWriter.writeManifest(startedAt:endedAt:summary:files:)` | Manual export smoke + contract doc | Schema-versioned metadata for tool compatibility |

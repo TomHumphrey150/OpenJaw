@@ -12,17 +12,53 @@ struct MuseSecondFrame: Equatable, Sendable {
     var eegChannels: [Double]?
 }
 
+struct MuseSecondDecision: Equatable, Sendable, Codable {
+    let secondEpoch: Int64
+    let headbandOn: Bool
+    let isGoodChannels: [Bool]?
+    let hsiPrecisionChannels: [Double]?
+    let hasQualityInputs: Bool
+    let hasImuInputs: Bool
+    let hasOpticsInput: Bool
+    let qualityGateSatisfied: Bool
+    let blinkDetected: Bool
+    let jawClenchDetected: Bool
+    let motionSpikeDetected: Bool
+    let fitDisturbanceDetected: Bool
+    let opticsSpikeDetected: Bool?
+    let eventDetected: Bool
+    let eventCounted: Bool
+    let accelerometerMagnitude: Double?
+    let gyroMagnitude: Double?
+    let opticsPeakToPeak: Double?
+    let awakeEvidence: Double
+}
+
 struct MuseDetectionSummary: Equatable, Sendable {
     let microArousalCount: Int
     let validSeconds: Int
     let confidence: Double
+    let awakeLikelihood: Double
+    let headbandOnCoverage: Double
+    let qualityGateCoverage: Double
+    let fitGuidance: MuseFitGuidance
+    let decisions: [MuseSecondDecision]
 }
 
 struct MuseArousalDetector {
     func summarize(framesBySecond: [Int64: MuseSecondFrame]) -> MuseDetectionSummary {
         let sortedFrames = framesBySecond.sorted { $0.key < $1.key }
         guard !sortedFrames.isEmpty else {
-            return MuseDetectionSummary(microArousalCount: 0, validSeconds: 0, confidence: 0)
+            return MuseDetectionSummary(
+                microArousalCount: 0,
+                validSeconds: 0,
+                confidence: 0,
+                awakeLikelihood: 0,
+                headbandOnCoverage: 0,
+                qualityGateCoverage: 0,
+                fitGuidance: .insufficientSignal,
+                decisions: []
+            )
         }
 
         let totalSeconds = sortedFrames.count
@@ -31,19 +67,34 @@ struct MuseArousalDetector {
         var qualityInputCoverage = 0
         var imuCoverage = 0
         var opticsCoverage = 0
+        var headbandOnSeconds = 0
         var validSeconds = 0
         var eventCount = 0
+        var awakeEvidenceSum = 0.0
+        var awakeEvidenceSeconds = 0
         var lastEventSecond: Int64?
+        var decisions: [MuseSecondDecision] = []
+        decisions.reserveCapacity(totalSeconds)
 
         for (second, frame) in sortedFrames {
-            if hasQualityInputs(frame) {
+            let hasQualityInputs = hasQualityInputs(frame)
+            if hasQualityInputs {
                 qualityInputCoverage += 1
             }
-            if hasImuInputs(frame) {
+
+            let hasImuInputs = hasImuInputs(frame)
+            if hasImuInputs {
                 imuCoverage += 1
             }
-            if frame.opticsPeakToPeak != nil {
+
+            let hasOpticsInput = frame.opticsPeakToPeak != nil
+            if hasOpticsInput {
                 opticsCoverage += 1
+            }
+
+            let headbandOn = frame.headbandOn == true
+            if headbandOn {
+                headbandOnSeconds += 1
             }
 
             let qualityGateSatisfied = qualityGate(frame)
@@ -51,21 +102,69 @@ struct MuseArousalDetector {
                 validSeconds += 1
             }
 
-            guard isEvent(frame, qualityGateSatisfied: qualityGateSatisfied, sessionHasOptics: sessionHasOptics) else {
-                continue
+            let motionSpikeDetected = motionSpike(frame)
+            let fitDisturbanceDetected = fitDisturbance(frame)
+            let opticsSpikeDetected: Bool?
+            if sessionHasOptics {
+                opticsSpikeDetected = (frame.opticsPeakToPeak ?? 0) >= MuseArousalHeuristicConstants.opticsSpikeThresholdMicroamps
+            } else {
+                opticsSpikeDetected = nil
             }
 
-            if let lastEventSecond, second - lastEventSecond < MuseArousalHeuristicConstants.refractoryWindowSeconds {
-                continue
+            let eventDetected = isEvent(
+                frame,
+                qualityGateSatisfied: qualityGateSatisfied,
+                sessionHasOptics: sessionHasOptics
+            )
+
+            let eventCounted: Bool
+            if eventDetected {
+                if let lastEventSecond, second - lastEventSecond < MuseArousalHeuristicConstants.refractoryWindowSeconds {
+                    eventCounted = false
+                } else {
+                    eventCount += 1
+                    lastEventSecond = second
+                    eventCounted = true
+                }
+            } else {
+                eventCounted = false
             }
 
-            eventCount += 1
-            lastEventSecond = second
+            let awakeEvidence = awakeEvidence(frame, qualityGateSatisfied: qualityGateSatisfied)
+            if headbandOn {
+                awakeEvidenceSum += awakeEvidence
+                awakeEvidenceSeconds += 1
+            }
+
+            decisions.append(
+                MuseSecondDecision(
+                    secondEpoch: second,
+                    headbandOn: headbandOn,
+                    isGoodChannels: frame.isGoodChannels.map { Array($0.prefix(4)) },
+                    hsiPrecisionChannels: frame.hsiPrecisionChannels.map { Array($0.prefix(4)) },
+                    hasQualityInputs: hasQualityInputs,
+                    hasImuInputs: hasImuInputs,
+                    hasOpticsInput: hasOpticsInput,
+                    qualityGateSatisfied: qualityGateSatisfied,
+                    blinkDetected: frame.blinkDetected,
+                    jawClenchDetected: frame.jawClenchDetected,
+                    motionSpikeDetected: motionSpikeDetected,
+                    fitDisturbanceDetected: fitDisturbanceDetected,
+                    opticsSpikeDetected: opticsSpikeDetected,
+                    eventDetected: eventDetected,
+                    eventCounted: eventCounted,
+                    accelerometerMagnitude: frame.maxAccelerometerMagnitude,
+                    gyroMagnitude: frame.maxGyroMagnitude,
+                    opticsPeakToPeak: frame.opticsPeakToPeak,
+                    awakeEvidence: awakeEvidence
+                )
+            )
         }
 
         let qualityCoverage = Double(validSeconds) / Double(totalSeconds)
         let qualityInputRatio = Double(qualityInputCoverage) / Double(totalSeconds)
         let imuRatio = Double(imuCoverage) / Double(totalSeconds)
+        let headbandOnCoverage = Double(headbandOnSeconds) / Double(totalSeconds)
         let opticsRatio: Double
         if sessionHasOptics {
             opticsRatio = Double(opticsCoverage) / Double(totalSeconds)
@@ -80,10 +179,32 @@ struct MuseArousalDetector {
             maximum: MuseArousalHeuristicConstants.maximumConfidence
         )
 
+        let awakeLikelihood: Double
+        if awakeEvidenceSeconds == 0 {
+            awakeLikelihood = 0
+        } else {
+            awakeLikelihood = clamp(
+                awakeEvidenceSum / Double(awakeEvidenceSeconds),
+                minimum: 0,
+                maximum: 1
+            )
+        }
+
+        let fitGuidance = deriveFitGuidance(
+            qualityInputRatio: qualityInputRatio,
+            headbandOnCoverage: headbandOnCoverage,
+            qualityGateCoverage: qualityCoverage
+        )
+
         return MuseDetectionSummary(
             microArousalCount: eventCount,
             validSeconds: validSeconds,
-            confidence: confidence
+            confidence: confidence,
+            awakeLikelihood: awakeLikelihood,
+            headbandOnCoverage: headbandOnCoverage,
+            qualityGateCoverage: qualityCoverage,
+            fitGuidance: fitGuidance,
+            decisions: decisions
         )
     }
 
@@ -168,6 +289,39 @@ struct MuseArousalDetector {
 
         return badIsGoodChannels >= MuseArousalHeuristicConstants.minimumDisturbedChannels
             || poorHsiChannels >= MuseArousalHeuristicConstants.minimumDisturbedChannels
+    }
+
+    private func awakeEvidence(_ frame: MuseSecondFrame, qualityGateSatisfied: Bool) -> Double {
+        guard frame.headbandOn == true else {
+            return 0
+        }
+
+        let motionComponent = motionSpike(frame) ? 0.45 : 0
+        let artifactComponent = (frame.blinkDetected || frame.jawClenchDetected) ? 0.30 : 0
+        let fitComponent = fitDisturbance(frame) ? 0.20 : 0
+        let qualityDropComponent = qualityGateSatisfied ? 0 : 0.05
+
+        return clamp(
+            motionComponent + artifactComponent + fitComponent + qualityDropComponent,
+            minimum: 0,
+            maximum: 1
+        )
+    }
+
+    private func deriveFitGuidance(
+        qualityInputRatio: Double,
+        headbandOnCoverage: Double,
+        qualityGateCoverage: Double
+    ) -> MuseFitGuidance {
+        if qualityInputRatio < 0.5 {
+            return .insufficientSignal
+        }
+
+        if qualityGateCoverage < 0.6 || headbandOnCoverage < 0.8 {
+            return .adjustHeadband
+        }
+
+        return .good
     }
 
     private func clamp(_ value: Double, minimum: Double, maximum: Double) -> Double {

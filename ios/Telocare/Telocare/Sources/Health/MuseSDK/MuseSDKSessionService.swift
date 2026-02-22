@@ -11,6 +11,7 @@ actor MuseSDKSessionService: MuseSessionService {
     private var accumulator: MuseSessionAccumulator
     private let detector: MuseArousalDetector
     private let packetAdapter: MuseSDKPacketAdapter
+    private let diagnosticsRecorder: MuseDiagnosticsRecorder
 
     private let manager: IXNMuseManagerIos
     private var connectedMuse: IXNMuse?
@@ -20,6 +21,7 @@ actor MuseSDKSessionService: MuseSessionService {
     private var connectionListener: MuseSDKConnectionListenerBridge?
     private var dataListener: MuseSDKDataListenerBridge?
     private var errorListener: MuseSDKErrorListenerBridge?
+    private var sdkLogListener: MuseSDKLogListenerBridge?
 
     private var latestConnectionState: MuseConnectionStateCode
 
@@ -37,6 +39,7 @@ actor MuseSDKSessionService: MuseSessionService {
         accumulator = MuseSessionAccumulator()
         detector = MuseArousalDetector()
         packetAdapter = MuseSDKPacketAdapter()
+        diagnosticsRecorder = MuseDiagnosticsRecorder()
 
         self.manager = manager
         connectedMuse = nil
@@ -46,12 +49,14 @@ actor MuseSDKSessionService: MuseSessionService {
         connectionListener = nil
         dataListener = nil
         errorListener = nil
+        sdkLogListener = Self.makeSdkLogListener()
 
         latestConnectionState = .unknown
         self.manager.removeFromList(after: 0)
     }
 
     func scanForHeadbands() async throws -> [MuseHeadband] {
+        MuseDiagnosticsLogger.info("Muse scan started")
         for action in core.beginScan(at: Date()) {
             apply(action)
         }
@@ -63,6 +68,7 @@ actor MuseSDKSessionService: MuseSessionService {
             }
             if !discovered.isEmpty {
                 manager.stopListening()
+                MuseDiagnosticsLogger.info("Muse scan discovered \(discovered.count) device(s)")
                 return discovered
             }
 
@@ -70,10 +76,12 @@ actor MuseSDKSessionService: MuseSessionService {
         }
 
         manager.stopListening()
+        MuseDiagnosticsLogger.warn("Muse scan timed out")
         throw MuseSessionServiceError.noHeadbandFound
     }
 
     func connect(to headband: MuseHeadband, licenseData: Data?) async throws {
+        MuseDiagnosticsLogger.info("Muse connect requested for \(headband.name)")
         let muse = try resolveMuse(for: headband)
 
         core.resetPresetAttempts()
@@ -83,6 +91,9 @@ actor MuseSDKSessionService: MuseSessionService {
             guard let connectPreset = actions.compactMap(connectPreset(from:)).first else {
                 throw MuseSessionServiceError.unavailable
             }
+
+            diagnosticsRecorder.recordConnectPreset(connectPreset)
+            MuseDiagnosticsLogger.info("Muse connect attempt using \(connectPreset.diagnosticsLabel)")
 
             for action in actions {
                 switch action {
@@ -103,26 +114,37 @@ actor MuseSDKSessionService: MuseSessionService {
             muse.runAsynchronously()
 
             let outcome = await waitForConnectOutcome(muse)
+            diagnosticsRecorder.recordServiceEvent("connect_outcome=\(outcome.diagnosticsLabel)")
+
             switch core.registerConnectOutcome(outcome) {
             case .success:
                 guard muse.getModel() == .ms03 else {
                     cleanupConnectedMuse(muse)
+                    MuseDiagnosticsLogger.warn("Muse connect failed due to unsupported model")
                     throw MuseSessionServiceError.unsupportedHeadbandModel
                 }
 
                 connectedMuse = muse
+                MuseDiagnosticsLogger.info("Muse connected")
                 return
             case .retry:
+                MuseDiagnosticsLogger.warn("Muse connect retrying with fallback preset")
                 cleanupAfterFailedConnectAttempt(muse)
                 try await Task.sleep(nanoseconds: 700_000_000)
             case .fail(let error):
                 cleanupConnectedMuse(muse)
+                MuseDiagnosticsLogger.warn("Muse connect failed: \(error)")
                 throw error
             }
         }
     }
 
     func disconnect() async {
+        if recordingStartedAt != nil {
+            diagnosticsRecorder.recordServiceEvent("recording_cancelled_disconnect")
+            _ = diagnosticsRecorder.finishSession(endedAt: Date(), detectionSummary: nil)
+        }
+
         core.resetRecordingState()
         recordingStartedAt = nil
         accumulator.reset()
@@ -133,6 +155,7 @@ actor MuseSDKSessionService: MuseSessionService {
 
         cleanupConnectedMuse(muse)
         connectedMuse = nil
+        MuseDiagnosticsLogger.info("Muse disconnected")
     }
 
     func startRecording(at startDate: Date) async throws {
@@ -151,6 +174,8 @@ actor MuseSDKSessionService: MuseSessionService {
         try core.startRecording()
         recordingStartedAt = startDate
         accumulator.reset()
+        diagnosticsRecorder.beginSession(startedAt: startDate)
+        MuseDiagnosticsLogger.info("Muse recording started")
     }
 
     func stopRecording(at endDate: Date) async throws -> MuseRecordingSummary {
@@ -162,11 +187,24 @@ actor MuseSDKSessionService: MuseSessionService {
 
         self.recordingStartedAt = nil
 
-        return accumulator.buildSummary(
+        let summary = accumulator.buildSummary(
             startedAt: recordingStartedAt,
             endedAt: endDate,
-            detector: detector
+            detector: detector,
+            onDecision: { [diagnosticsRecorder] decision in
+                diagnosticsRecorder.recordDecision(decision)
+            }
         )
+
+        diagnosticsRecorder.recordServiceEvent("recording_stopped")
+        let diagnosticsFileURLs = diagnosticsRecorder.finishSession(
+            endedAt: endDate,
+            detectionSummary: summary.detectionSummary
+        )
+
+        MuseDiagnosticsLogger.info("Muse recording stopped")
+
+        return summary.recordingSummary.withDiagnosticsFileURLs(diagnosticsFileURLs)
     }
 
     private func apply(_ action: MuseServiceCoreAction) {
@@ -302,8 +340,10 @@ actor MuseSDKSessionService: MuseSessionService {
 
         if dataListener == nil {
             let packetAdapter = packetAdapter
+            let diagnosticsRecorder = diagnosticsRecorder
             dataListener = MuseSDKDataListenerBridge(
                 onDataPacket: { packet in
+                    diagnosticsRecorder.recordDataPacket(packet)
                     guard let packet, let parsed = packetAdapter.adapt(packet) else {
                         return
                     }
@@ -313,6 +353,7 @@ actor MuseSDKSessionService: MuseSessionService {
                     }
                 },
                 onArtifactPacket: { packet in
+                    diagnosticsRecorder.recordArtifactPacket(packet)
                     guard let parsed = packetAdapter.adapt(packet) else {
                         return
                     }
@@ -325,7 +366,11 @@ actor MuseSDKSessionService: MuseSessionService {
         }
 
         if errorListener == nil {
-            errorListener = MuseSDKErrorListenerBridge { _ in
+            let diagnosticsRecorder = diagnosticsRecorder
+            errorListener = MuseSDKErrorListenerBridge { error in
+                let message = "Muse SDK error code=\(error.code) info=\(error.info)"
+                diagnosticsRecorder.recordServiceEvent(message)
+                MuseDiagnosticsLogger.warn(message)
             }
         }
     }
@@ -335,6 +380,7 @@ actor MuseSDKSessionService: MuseSessionService {
 
     private func handleConnectionState(_ state: MuseConnectionStateCode) {
         latestConnectionState = state
+        diagnosticsRecorder.recordConnectionState(state)
     }
 
     private func handlePacket(_ packet: MusePacket) {
@@ -343,6 +389,45 @@ actor MuseSDKSessionService: MuseSessionService {
         }
 
         accumulator.ingest(packet)
+    }
+
+    nonisolated private static func makeSdkLogListener() -> MuseSDKLogListenerBridge? {
+        let listener = MuseSDKLogListenerBridge()
+        if let logManager = IXNLogManager.instance() {
+            logManager.setLogListener(listener)
+            logManager.setMinimumSeverity(.sevVerbose)
+            return listener
+        }
+
+        return nil
+    }
+}
+
+private extension MuseConnectPreset {
+    var diagnosticsLabel: String {
+        switch self {
+        case .preset1031:
+            return "preset1031"
+        case .preset1021:
+            return "preset1021"
+        }
+    }
+}
+
+private extension MuseConnectOutcome {
+    var diagnosticsLabel: String {
+        switch self {
+        case .connected:
+            return "connected"
+        case .needsLicense:
+            return "needs_license"
+        case .needsUpdate:
+            return "needs_update"
+        case .disconnected:
+            return "disconnected"
+        case .timeout:
+            return "timeout"
+        }
     }
 }
 #endif

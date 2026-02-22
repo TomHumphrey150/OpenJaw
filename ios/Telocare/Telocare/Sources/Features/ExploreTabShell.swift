@@ -138,6 +138,8 @@ private struct ExploreOutcomesScreen: View {
     @State private var isMorningCheckInExpanded: Bool
     @State private var selectedMorningMetric: MorningTrendMetric
     @State private var selectedNightMetric: NightTrendMetric
+    @State private var isMuseDiagnosticsSharePresented = false
+    @State private var museDiagnosticsShareURLs: [URL] = []
 
     init(
         outcomes: OutcomeSummary,
@@ -219,6 +221,9 @@ private struct ExploreOutcomesScreen: View {
         }
         .tint(TelocareTheme.coral)
         .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
+        .sheet(isPresented: $isMuseDiagnosticsSharePresented) {
+            MuseDiagnosticsShareSheet(fileURLs: museDiagnosticsShareURLs)
+        }
         .onChange(of: morningOutcomeSelection.isComplete) { _, isComplete in
             guard isComplete else { return }
             guard isMorningCheckInExpanded else { return }
@@ -547,6 +552,15 @@ private struct ExploreOutcomesScreen: View {
                         .font(TelocareTheme.Typography.caption)
                         .foregroundStyle(TelocareTheme.warmGray)
                         .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier(AccessibilityID.exploreMuseSummaryText)
+                }
+
+                if let fitGuidanceText = museFitGuidanceText {
+                    Text(fitGuidanceText)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier(AccessibilityID.exploreMuseFitGuidanceText)
                 }
 
                 VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
@@ -585,6 +599,12 @@ private struct ExploreOutcomesScreen: View {
                         accessibilityID: AccessibilityID.exploreMuseSaveNightOutcomeButton,
                         isEnabled: museCanSaveNightOutcome,
                         action: onSaveMuseNightOutcome
+                    )
+                    actionButton(
+                        title: "Export diagnostics",
+                        accessibilityID: AccessibilityID.exploreMuseExportDiagnosticsButton,
+                        isEnabled: museCanExportDiagnostics,
+                        action: exportMuseDiagnostics
                     )
                 }
 
@@ -655,7 +675,37 @@ private struct ExploreOutcomesScreen: View {
             rateText = "n/a"
         }
 
-        return "Microarousals \(Int(summary.microArousalCount.rounded())), rate \(rateText), confidence \(String(format: "%.2f", summary.confidence))."
+        let confidenceText = String(format: "%.2f", summary.confidence)
+        let awakeLikelihoodText = String(format: "%.2f", summary.awakeLikelihood)
+        return "Microarousals \(Int(summary.microArousalCount.rounded())), rate \(rateText), signal confidence \(confidenceText), awake likelihood (provisional) \(awakeLikelihoodText)."
+    }
+
+    private var museFitGuidanceText: String? {
+        guard let summary = museRecordingSummary else {
+            return nil
+        }
+
+        return summary.fitGuidance.guidanceText
+    }
+
+    private var museCanExportDiagnostics: Bool {
+        guard let summary = museRecordingSummary else {
+            return false
+        }
+
+        return !summary.diagnosticsFileURLs.isEmpty
+    }
+
+    private func exportMuseDiagnostics() {
+        guard let summary = museRecordingSummary else {
+            return
+        }
+        guard !summary.diagnosticsFileURLs.isEmpty else {
+            return
+        }
+
+        museDiagnosticsShareURLs = summary.diagnosticsFileURLs
+        isMuseDiagnosticsSharePresented = true
     }
 
     private func formattedMorningValue(_ value: Double) -> String {

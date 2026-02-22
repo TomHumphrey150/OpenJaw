@@ -53,6 +53,11 @@ private struct MuseSecondAggregation {
     }
 }
 
+struct MuseAccumulatorSummary: Sendable {
+    let recordingSummary: MuseRecordingSummary
+    let detectionSummary: MuseDetectionSummary
+}
+
 struct MuseSessionAccumulator: Sendable {
     private var framesBySecond: [Int64: MuseSecondAggregation] = [:]
 
@@ -103,17 +108,29 @@ struct MuseSessionAccumulator: Sendable {
     func buildSummary(
         startedAt: Date,
         endedAt: Date,
-        detector: MuseArousalDetector = MuseArousalDetector()
-    ) -> MuseRecordingSummary {
+        detector: MuseArousalDetector = MuseArousalDetector(),
+        onDecision: ((MuseSecondDecision) -> Void)? = nil
+    ) -> MuseAccumulatorSummary {
         let frames = framesBySecond.mapValues(\.frame)
-        let summary = detector.summarize(framesBySecond: frames)
+        let detectionSummary = detector.summarize(framesBySecond: frames)
+        for decision in detectionSummary.decisions {
+            onDecision?(decision)
+        }
 
-        return MuseRecordingSummary(
+        let recordingSummary = MuseRecordingSummary(
             startedAt: startedAt,
             endedAt: endedAt,
-            microArousalCount: Double(summary.microArousalCount),
-            confidence: summary.confidence,
-            totalSleepMinutes: Double(summary.validSeconds) / 60.0
+            microArousalCount: Double(detectionSummary.microArousalCount),
+            confidence: detectionSummary.confidence,
+            totalSleepMinutes: Double(detectionSummary.validSeconds) / 60.0,
+            awakeLikelihood: detectionSummary.awakeLikelihood,
+            fitGuidance: detectionSummary.fitGuidance,
+            diagnosticsFileURLs: []
+        )
+
+        return MuseAccumulatorSummary(
+            recordingSummary: recordingSummary,
+            detectionSummary: detectionSummary
         )
     }
 }

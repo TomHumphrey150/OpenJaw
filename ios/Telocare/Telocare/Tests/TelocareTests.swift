@@ -562,6 +562,56 @@ struct AppViewModelTests {
         #expect(await patchRecorder.count() == 0)
     }
 
+    @Test func museDiagnosticsExportRequiresStoppedSummaryWithFiles() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180,
+                        awakeLikelihood: 0.7,
+                        fitGuidance: .adjustHeadband,
+                        diagnosticsFileURLs: [
+                            URL(fileURLWithPath: "/tmp/session.muse"),
+                            URL(fileURLWithPath: "/tmp/decisions.ndjson"),
+                        ]
+                    )
+                }
+            )
+        )
+
+        #expect(harness.viewModel.museRecordingSummary == nil)
+        #expect(museCanExportDiagnostics(harness.viewModel) == false)
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+        #expect(museCanExportDiagnostics(harness.viewModel) == false)
+
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museRecordingSummary != nil }
+
+        #expect(museCanExportDiagnostics(harness.viewModel) == true)
+        #expect(harness.viewModel.museRecordingSummary?.diagnosticsFileURLs.count == 2)
+    }
+
+    @Test func museNightOutcomePersistenceIgnoresAwakeLikelihood() async {
+        let lowAwakeOutcome = await savedMuseOutcomeForPersistence(awakeLikelihood: 0.05)
+        let highAwakeOutcome = await savedMuseOutcomeForPersistence(awakeLikelihood: 0.95)
+
+        #expect(lowAwakeOutcome == highAwakeOutcome)
+        #expect(lowAwakeOutcome?.microArousalCount == 6)
+        #expect(lowAwakeOutcome?.microArousalRatePerHour == 2)
+        #expect(lowAwakeOutcome?.confidence == 0.8)
+        #expect(lowAwakeOutcome?.source == "muse_athena_heuristic_v1")
+    }
+
     @Test func museConnectNeedsLicenseSurfacesState() async {
         let harness = AppViewModelHarness(
             museSessionService: MockMuseSessionService(
@@ -679,6 +729,55 @@ struct AppViewModelTests {
 
             try? await Task.sleep(nanoseconds: 20_000_000)
         }
+    }
+
+    private func museCanExportDiagnostics(_ viewModel: AppViewModel) -> Bool {
+        guard let summary = viewModel.museRecordingSummary else {
+            return false
+        }
+
+        return !summary.diagnosticsFileURLs.isEmpty
+    }
+
+    private func savedMuseOutcomeForPersistence(awakeLikelihood: Double) async -> NightOutcome? {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            },
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180,
+                        awakeLikelihood: awakeLikelihood,
+                        fitGuidance: .adjustHeadband,
+                        diagnosticsFileURLs: [
+                            URL(fileURLWithPath: "/tmp/session.muse"),
+                            URL(fileURLWithPath: "/tmp/decisions.ndjson"),
+                        ]
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museCanSaveNightOutcome }
+        harness.viewModel.saveMuseNightOutcome()
+        await waitUntil { await patchRecorder.count() == 1 }
+
+        let patch = await patchRecorder.lastPatch()
+        return patch?.nightOutcomes?.first(where: { $0.nightId == "2026-02-21" })
     }
 
     private func doseSnapshot() -> DashboardSnapshot {

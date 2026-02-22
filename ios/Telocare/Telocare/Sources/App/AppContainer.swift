@@ -27,6 +27,7 @@ final class AppContainer {
         let snapshotBuilder = DashboardSnapshotBuilder()
         let initialSkinID = resolvedSkinID
 
+        MuseDiagnosticsLogger.bootstrap()
         TelocareTheme.configure(skinID: initialSkinID)
 
         if shouldUseMockServices {

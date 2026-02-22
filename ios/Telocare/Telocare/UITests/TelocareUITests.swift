@@ -162,6 +162,7 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseStartRecordingButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseStopRecordingButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseSaveNightOutcomeButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseExportDiagnosticsButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseFeedbackText, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseDisclaimerText, in: app).exists)
     }
@@ -183,8 +184,10 @@ final class TelocareUITests: XCTestCase {
         let startButton = element(withIdentifier: UIID.exploreMuseStartRecordingButton, in: app)
         let stopButton = element(withIdentifier: UIID.exploreMuseStopRecordingButton, in: app)
         let saveButton = element(withIdentifier: UIID.exploreMuseSaveNightOutcomeButton, in: app)
+        let exportButton = element(withIdentifier: UIID.exploreMuseExportDiagnosticsButton, in: app)
         let connectionStatus = element(withIdentifier: UIID.exploreMuseConnectionStatus, in: app)
         let recordingStatus = element(withIdentifier: UIID.exploreMuseRecordingStatus, in: app)
+        let summaryText = element(withIdentifier: UIID.exploreMuseSummaryText, in: app)
 
         XCTAssertTrue(scanButton.waitForExistence(timeout: 4))
         scanButton.tap()
@@ -198,6 +201,9 @@ final class TelocareUITests: XCTestCase {
 
         stopButton.tap()
         XCTAssertTrue(waitForLabelContaining("Stopped", of: recordingStatus, timeout: 4))
+        XCTAssertTrue(waitForLabelContaining("signal confidence", of: summaryText, timeout: 4))
+        XCTAssertTrue(waitForLabelContaining("awake likelihood (provisional)", of: summaryText, timeout: 4))
+        XCTAssertFalse(exportButton.isEnabled)
 
         XCTAssertTrue(saveButton.isEnabled)
         saveButton.tap()
@@ -649,6 +655,9 @@ private enum UIID {
     static let exploreMuseStartRecordingButton = "explore.outcomes.muse.start.button"
     static let exploreMuseStopRecordingButton = "explore.outcomes.muse.stop.button"
     static let exploreMuseSaveNightOutcomeButton = "explore.outcomes.muse.save.button"
+    static let exploreMuseExportDiagnosticsButton = "explore.outcomes.muse.export.button"
+    static let exploreMuseSummaryText = "explore.outcomes.muse.summary.text"
+    static let exploreMuseFitGuidanceText = "explore.outcomes.muse.fit.guidance.text"
     static let exploreMuseFeedbackText = "explore.outcomes.muse.feedback.text"
     static let exploreMuseDisclaimerText = "explore.outcomes.muse.disclaimer.text"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"

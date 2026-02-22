@@ -5,12 +5,52 @@ struct MuseHeadband: Equatable, Sendable {
     let name: String
 }
 
+enum MuseFitGuidance: String, Equatable, Sendable, Codable {
+    case good
+    case adjustHeadband
+    case insufficientSignal
+
+    var guidanceText: String? {
+        switch self {
+        case .good:
+            return nil
+        case .adjustHeadband:
+            return "Fit guidance: adjust the headband for better skin contact before the next session."
+        case .insufficientSignal:
+            return "Fit guidance: signal quality is insufficient. Reposition the headband and ensure all sensors contact skin."
+        }
+    }
+}
+
 struct MuseRecordingSummary: Equatable, Sendable {
     let startedAt: Date
     let endedAt: Date
     let microArousalCount: Double
     let confidence: Double
     let totalSleepMinutes: Double
+    let awakeLikelihood: Double
+    let fitGuidance: MuseFitGuidance
+    let diagnosticsFileURLs: [URL]
+
+    init(
+        startedAt: Date,
+        endedAt: Date,
+        microArousalCount: Double,
+        confidence: Double,
+        totalSleepMinutes: Double,
+        awakeLikelihood: Double = 0,
+        fitGuidance: MuseFitGuidance = .good,
+        diagnosticsFileURLs: [URL] = []
+    ) {
+        self.startedAt = startedAt
+        self.endedAt = endedAt
+        self.microArousalCount = microArousalCount
+        self.confidence = confidence
+        self.totalSleepMinutes = totalSleepMinutes
+        self.awakeLikelihood = awakeLikelihood
+        self.fitGuidance = fitGuidance
+        self.diagnosticsFileURLs = diagnosticsFileURLs
+    }
 
     var duration: TimeInterval {
         max(0, endedAt.timeIntervalSince(startedAt))
@@ -23,6 +63,19 @@ struct MuseRecordingSummary: Equatable, Sendable {
         }
 
         return microArousalCount / hours
+    }
+
+    func withDiagnosticsFileURLs(_ fileURLs: [URL]) -> MuseRecordingSummary {
+        MuseRecordingSummary(
+            startedAt: startedAt,
+            endedAt: endedAt,
+            microArousalCount: microArousalCount,
+            confidence: confidence,
+            totalSleepMinutes: totalSleepMinutes,
+            awakeLikelihood: awakeLikelihood,
+            fitGuidance: fitGuidance,
+            diagnosticsFileURLs: fileURLs
+        )
     }
 }
 
@@ -70,7 +123,10 @@ struct MockMuseSessionService: MuseSessionService {
                 endedAt: endDate,
                 microArousalCount: 12,
                 confidence: 0.72,
-                totalSleepMinutes: 8 * 60
+                totalSleepMinutes: 8 * 60,
+                awakeLikelihood: 0.25,
+                fitGuidance: .good,
+                diagnosticsFileURLs: []
             )
         }
     ) {
