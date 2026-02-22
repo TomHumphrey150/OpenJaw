@@ -158,10 +158,6 @@ final class AppContainer {
     }
 
     private var defaultMuseSessionService: MuseSessionService {
-#if targetEnvironment(simulator)
-        return MockMuseSessionService()
-#else
-        return UnavailableMuseSessionService()
-#endif
+        MuseSDKGuards.defaultSessionService
     }
 }

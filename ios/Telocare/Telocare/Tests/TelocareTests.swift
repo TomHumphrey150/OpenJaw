@@ -579,6 +579,23 @@ struct AppViewModelTests {
         #expect(harness.viewModel.museSessionFeedback.contains("license"))
     }
 
+    @Test func museConnectUnsupportedModelSurfacesState() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                connectHeadband: { _, _ in
+                    throw MuseSessionServiceError.unsupportedHeadbandModel
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+
+        await waitUntil { harness.viewModel.museConnectionStatusText.contains("not supported") }
+        #expect(harness.viewModel.museSessionFeedback.contains("MS-03"))
+    }
+
     @Test func museNightOutcomeSaveFailureRevertsOutcomeRecords() async {
         let harness = AppViewModelHarness(
             initialNightOutcomes: [

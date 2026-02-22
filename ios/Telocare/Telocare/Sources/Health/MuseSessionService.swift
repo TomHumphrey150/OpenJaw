@@ -32,6 +32,7 @@ enum MuseSessionServiceError: Error, Equatable {
     case notConnected
     case needsLicense
     case needsUpdate
+    case unsupportedHeadbandModel
     case alreadyRecording
     case notRecording
 }

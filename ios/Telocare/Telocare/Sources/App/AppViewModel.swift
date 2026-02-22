@@ -1353,6 +1353,9 @@ final class AppViewModel: ObservableObject {
         case .needsUpdate:
             message = "Muse headband firmware update is required."
             museConnectionState = .needsUpdate
+        case .unsupportedHeadbandModel:
+            message = "This Muse headband model is not supported. Use Muse S Athena (MS-03)."
+            museConnectionState = .failed(message)
         case .alreadyRecording:
             message = "Recording is already in progress."
         case .notRecording:

@@ -43,4 +43,14 @@ struct AppConfigurationTests {
 
         #expect(configuration.museLicenseData == nil)
     }
+
+    @Test func ignoresOptionalMuseLicenseWhenBase64IsEmpty() throws {
+        let configuration = try AppConfiguration(
+            supabaseURLString: "https://aocndwnnkffumisprifx.supabase.co",
+            supabasePublishableKey: "sb_publishable_test",
+            museLicenseBase64: "   "
+        )
+
+        #expect(configuration.museLicenseData == nil)
+    }
 }

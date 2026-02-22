@@ -7,6 +7,16 @@ let strictBaseSettings: SettingsDictionary = [
     "DEVELOPMENT_TEAM": "3CNMWUW4KY",
 ]
 
+let appBaseSettings = strictBaseSettings.merging(
+    [
+        "SWIFT_OBJC_BRIDGING_HEADER": "Telocare/Sources/Health/MuseSDK-Bridging-Header.h",
+        "HEADER_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(SRCROOT)/Vendor/MuseSDK/Muse.framework/Headers",
+        "FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(SRCROOT)/Vendor/MuseSDK",
+        "OTHER_LDFLAGS[sdk=iphoneos*]": "$(inherited) -framework Muse -framework CoreBluetooth -framework ExternalAccessory",
+    ],
+    uniquingKeysWith: { _, new in new }
+)
+
 let strictSettings = Settings.settings(
     configurations: [
         .debug(
@@ -17,6 +27,22 @@ let strictSettings = Settings.settings(
         .release(
             name: "Release",
             settings: strictBaseSettings,
+            xcconfig: .relativeToRoot("Configs/Release.xcconfig")
+        ),
+    ],
+    defaultSettings: .recommended
+)
+
+let appSettings = Settings.settings(
+    configurations: [
+        .debug(
+            name: "Debug",
+            settings: appBaseSettings,
+            xcconfig: .relativeToRoot("Configs/Debug.xcconfig")
+        ),
+        .release(
+            name: "Release",
+            settings: appBaseSettings,
             xcconfig: .relativeToRoot("Configs/Release.xcconfig")
         ),
     ],
@@ -55,7 +81,7 @@ let project = Project(
             dependencies: [
                 .external(name: "Supabase")
             ],
-            settings: strictSettings
+            settings: appSettings
         ),
         .target(
             name: "TelocareTests",
