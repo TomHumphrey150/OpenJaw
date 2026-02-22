@@ -9,6 +9,7 @@ struct UserDataDocumentDecodingTests {
 
         #expect(decoded.version == 1)
         #expect(decoded.dailyCheckIns["2026-02-21"] == ["PPI_TX"])
+        #expect(decoded.appleHealthConnections == [:])
         #expect(decoded.customCausalDiagram?.graphData.nodes.count == 1)
     }
 

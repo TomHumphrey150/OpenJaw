@@ -14,6 +14,25 @@ export interface DoseConfig {
   defaultIncrement: number;
 }
 
+export type AppleHealthIdentifier =
+  | "appleExerciseTime"
+  | "sleepAnalysis"
+  | "mindfulSession"
+  | "dietaryWater";
+
+export type AppleHealthAggregation =
+  | "cumulativeSum"
+  | "durationSum"
+  | "sleepAsleepDurationSum";
+
+export type AppleHealthDayAttribution = "localDay" | "previousNightNoonCutoff";
+
+export interface AppleHealthConfig {
+  identifier: AppleHealthIdentifier;
+  aggregation: AppleHealthAggregation;
+  dayAttribution: AppleHealthDayAttribution;
+}
+
 export interface Intervention {
   id: string;
   name: string;
@@ -27,6 +46,8 @@ export interface Intervention {
   legacyIds: string[];
   graphNodeId: string | null;
   doseConfig?: DoseConfig;
+  appleHealthAvailable?: boolean;
+  appleHealthConfig?: AppleHealthConfig;
   isRemindable: boolean;
   defaultReminderMinutes: number | null;
   externalLink: string | null;

@@ -28,13 +28,19 @@ final class AppContainer {
             let configuration = try AppConfiguration()
             let supabaseClient = SupabaseClient(
                 supabaseURL: configuration.supabaseURL,
-                supabaseKey: configuration.supabasePublishableKey
+                supabaseKey: configuration.supabasePublishableKey,
+                options: SupabaseClientOptions(
+                    auth: SupabaseClientOptions.AuthOptions(
+                        emitLocalSessionAsInitialSession: true
+                    )
+                )
             )
 
             return RootViewModel(
                 authClient: SupabaseAuthClient(client: supabaseClient),
                 userDataRepository: SupabaseUserDataRepository(client: supabaseClient),
                 snapshotBuilder: snapshotBuilder,
+                appleHealthDoseService: HealthKitAppleHealthDoseService(),
                 accessibilityAnnouncer: accessibilityAnnouncer
             )
         } catch {
@@ -42,6 +48,7 @@ final class AppContainer {
                 authClient: MockAuthClient(),
                 userDataRepository: MockUserDataRepository(document: .empty),
                 snapshotBuilder: snapshotBuilder,
+                appleHealthDoseService: MockAppleHealthDoseService(),
                 accessibilityAnnouncer: accessibilityAnnouncer,
                 bootstrapErrorMessage: error.localizedDescription
             )
@@ -77,6 +84,7 @@ final class AppContainer {
             authClient: authClient,
             userDataRepository: MockUserDataRepository(),
             snapshotBuilder: snapshotBuilder,
+            appleHealthDoseService: MockAppleHealthDoseService(),
             accessibilityAnnouncer: accessibilityAnnouncer
         )
     }

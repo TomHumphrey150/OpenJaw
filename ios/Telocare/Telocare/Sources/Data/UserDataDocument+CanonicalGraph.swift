@@ -12,6 +12,7 @@ extension UserDataDocument {
             dailyCheckIns: dailyCheckIns,
             dailyDoseProgress: dailyDoseProgress,
             interventionDoseSettings: interventionDoseSettings,
+            appleHealthConnections: appleHealthConnections,
             nightExposures: nightExposures,
             nightOutcomes: nightOutcomes,
             morningStates: morningStates,

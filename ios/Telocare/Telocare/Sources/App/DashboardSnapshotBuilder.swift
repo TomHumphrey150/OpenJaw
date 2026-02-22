@@ -147,6 +147,7 @@ struct DashboardSnapshotBuilder {
         return orderedInterventions.map { intervention in
             let graphNode = intervention.graphNodeID.flatMap { nodeByID[$0] } ?? nodeByID[intervention.id]
             let classificationText = classificationByID[intervention.id].map(humanizeClassification)
+            let appleHealthConnection = canonicalData.appleHealthConnections[intervention.id]
 
             switch intervention.trackingMode {
             case .binary:
@@ -184,7 +185,8 @@ struct DashboardSnapshotBuilder {
                     evidenceSummary: intervention.evidenceSummary ?? graphNode?.tooltip?.mechanism,
                     detailedDescription: intervention.detailedDescription,
                     citationIDs: intervention.citationIDs,
-                    externalLink: intervention.externalLink
+                    externalLink: intervention.externalLink,
+                    appleHealthState: nil
                 )
 
             case .dose:
@@ -204,22 +206,28 @@ struct DashboardSnapshotBuilder {
                         evidenceSummary: intervention.evidenceSummary ?? graphNode?.tooltip?.mechanism,
                         detailedDescription: intervention.detailedDescription,
                         citationIDs: intervention.citationIDs,
-                        externalLink: intervention.externalLink
+                        externalLink: intervention.externalLink,
+                        appleHealthState: nil
                     )
                 }
 
                 let settings = canonicalData.interventionDoseSettings[intervention.id]
                 let goal = max(1, settings?.dailyGoal ?? doseConfig.defaultDailyGoal)
                 let increment = max(1, settings?.increment ?? doseConfig.defaultIncrement)
-                let value = max(
+                let manualValue = max(
                     0,
                     latestDoseKey.flatMap { canonicalData.dailyDoseProgress[$0]?[intervention.id] } ?? 0
                 )
                 let doseState = InputDoseState(
-                    value: value,
+                    manualValue: manualValue,
+                    healthValue: nil,
                     goal: goal,
                     increment: increment,
                     unit: doseConfig.unit
+                )
+                let appleHealthState = inputAppleHealthState(
+                    intervention: intervention,
+                    connection: appleHealthConnection
                 )
 
                 return InputStatus(
@@ -237,10 +245,31 @@ struct DashboardSnapshotBuilder {
                     evidenceSummary: intervention.evidenceSummary ?? graphNode?.tooltip?.mechanism,
                     detailedDescription: intervention.detailedDescription,
                     citationIDs: intervention.citationIDs,
-                    externalLink: intervention.externalLink
+                    externalLink: intervention.externalLink,
+                    appleHealthState: appleHealthState
                 )
             }
         }
+    }
+
+    private func inputAppleHealthState(
+        intervention: InterventionItem,
+        connection: AppleHealthConnection?
+    ) -> InputAppleHealthState? {
+        guard intervention.appleHealthAvailable else {
+            return nil
+        }
+
+        let isConnected = connection?.isConnected ?? false
+        let status = connection?.lastSyncStatus ?? (isConnected ? .syncing : .disconnected)
+        return InputAppleHealthState(
+            available: true,
+            connected: isConnected,
+            syncStatus: status,
+            todayHealthValue: nil,
+            lastSyncAt: connection?.lastSyncAt,
+            config: intervention.appleHealthConfig
+        )
     }
 
     private func interventionInventory(
@@ -253,12 +282,14 @@ struct DashboardSnapshotBuilder {
         let ratingIDs = Set(canonicalData.interventionRatings.map { $0.interventionId })
         let doseProgressIDs = Set(canonicalData.dailyDoseProgress.values.flatMap { $0.keys })
         let settingsIDs = Set(canonicalData.interventionDoseSettings.keys)
+        let appleHealthConnectionIDs = Set(canonicalData.appleHealthConnections.keys)
 
         let additionalIDs = checkInIDs
             .union(classificationIDs)
             .union(ratingIDs)
             .union(doseProgressIDs)
             .union(settingsIDs)
+            .union(appleHealthConnectionIDs)
 
         if !interventionsCatalog.interventions.isEmpty {
             let fromCatalog = interventionsCatalog.interventions
@@ -274,7 +305,9 @@ struct DashboardSnapshotBuilder {
                         evidenceSummary: intervention.evidenceSummary,
                         detailedDescription: intervention.detailedDescription,
                         citationIDs: intervention.citations,
-                        externalLink: intervention.externalLink
+                        externalLink: intervention.externalLink,
+                        appleHealthAvailable: intervention.appleHealthAvailable ?? false,
+                        appleHealthConfig: intervention.appleHealthConfig
                     )
                 }
 
@@ -298,7 +331,9 @@ struct DashboardSnapshotBuilder {
                         evidenceSummary: nil,
                         detailedDescription: nil,
                         citationIDs: [],
-                        externalLink: nil
+                        externalLink: nil,
+                        appleHealthAvailable: false,
+                        appleHealthConfig: nil
                     )
                 )
             }
@@ -321,7 +356,9 @@ struct DashboardSnapshotBuilder {
                 evidenceSummary: node.data.tooltip?.mechanism,
                 detailedDescription: nil,
                 citationIDs: node.data.tooltip?.citation.map { [$0] } ?? [],
-                externalLink: nil
+                externalLink: nil,
+                appleHealthAvailable: false,
+                appleHealthConfig: nil
             )
         }
 
@@ -345,7 +382,9 @@ struct DashboardSnapshotBuilder {
                     evidenceSummary: nil,
                     detailedDescription: nil,
                     citationIDs: [],
-                    externalLink: nil
+                    externalLink: nil,
+                    appleHealthAvailable: false,
+                    appleHealthConfig: nil
                 )
             )
         }
@@ -429,6 +468,8 @@ private struct InterventionItem {
     let detailedDescription: String?
     let citationIDs: [String]
     let externalLink: String?
+    let appleHealthAvailable: Bool
+    let appleHealthConfig: AppleHealthConfig?
 }
 
 private struct CanonicalInterventionLookup {
@@ -461,6 +502,7 @@ private struct CanonicalizedInterventionData {
     let dailyCheckIns: [String: [String]]
     let dailyDoseProgress: [String: [String: Double]]
     let interventionDoseSettings: [String: DoseSettings]
+    let appleHealthConnections: [String: AppleHealthConnection]
     let hiddenInterventions: [String]
     let interventionRatings: [InterventionRating]
     let habitClassifications: [HabitClassification]
@@ -469,6 +511,7 @@ private struct CanonicalizedInterventionData {
         dailyCheckIns = Self.canonicalizedDailyCheckIns(document.dailyCheckIns, lookup: lookup)
         dailyDoseProgress = Self.canonicalizedDailyDoseProgress(document.dailyDoseProgress, lookup: lookup)
         interventionDoseSettings = Self.canonicalizedDoseSettings(document.interventionDoseSettings, lookup: lookup)
+        appleHealthConnections = Self.canonicalizedAppleHealthConnections(document.appleHealthConnections, lookup: lookup)
         hiddenInterventions = Self.canonicalizedIDs(document.hiddenInterventions, lookup: lookup)
         interventionRatings = Self.canonicalizedInterventionRatings(document.interventionRatings, lookup: lookup)
         habitClassifications = Self.canonicalizedHabitClassifications(document.habitClassifications, lookup: lookup)
@@ -512,6 +555,20 @@ private struct CanonicalizedInterventionData {
         for (id, settings) in current {
             let canonicalID = lookup.canonicalID(for: id)
             next[canonicalID] = settings
+        }
+
+        return next
+    }
+
+    private static func canonicalizedAppleHealthConnections(
+        _ current: [String: AppleHealthConnection],
+        lookup: CanonicalInterventionLookup
+    ) -> [String: AppleHealthConnection] {
+        var next: [String: AppleHealthConnection] = [:]
+
+        for (id, connection) in current {
+            let canonicalID = lookup.canonicalID(for: id)
+            next[canonicalID] = connection
         }
 
         return next

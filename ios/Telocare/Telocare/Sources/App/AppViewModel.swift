@@ -20,16 +20,20 @@ final class AppViewModel: ObservableObject {
     private var dailyCheckIns: [String: [String]]
     private var dailyDoseProgress: [String: [String: Double]]
     private var interventionDoseSettings: [String: DoseSettings]
+    private var appleHealthConnections: [String: AppleHealthConnection]
+    private var appleHealthValues: [String: Double]
     private var morningStates: [MorningState]
     private var hiddenInterventions: [String]
     private var inputCheckOperationToken: Int
     private var inputDoseOperationToken: Int
     private var inputDoseSettingsOperationToken: Int
     private var inputHiddenOperationToken: Int
+    private var appleHealthConnectionOperationToken: Int
     private var morningOutcomeOperationToken: Int
 
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
+    private let appleHealthDoseService: AppleHealthDoseService
     private let nowProvider: () -> Date
 
     convenience init(
@@ -43,9 +47,11 @@ final class AppViewModel: ObservableObject {
             initialDailyCheckIns: [:],
             initialDailyDoseProgress: [:],
             initialInterventionDoseSettings: [:],
+            initialAppleHealthConnections: [:],
             initialMorningStates: [],
             initialHiddenInterventions: [],
             persistUserDataPatch: { _ in true },
+            appleHealthDoseService: MockAppleHealthDoseService(),
             accessibilityAnnouncer: accessibilityAnnouncer
         )
     }
@@ -57,9 +63,11 @@ final class AppViewModel: ObservableObject {
         initialDailyCheckIns: [String: [String]] = [:],
         initialDailyDoseProgress: [String: [String: Double]] = [:],
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
+        initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialMorningStates: [MorningState] = [],
         initialHiddenInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
+        appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         nowProvider: @escaping () -> Date = Date.init,
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
@@ -86,6 +94,8 @@ final class AppViewModel: ObservableObject {
         dailyCheckIns = initialDailyCheckIns
         dailyDoseProgress = initialDailyDoseProgress
         interventionDoseSettings = initialInterventionDoseSettings
+        appleHealthConnections = initialAppleHealthConnections
+        appleHealthValues = [:]
         morningStates = initialMorningStates
         hiddenInterventions = initialHiddenInterventions
 
@@ -93,9 +103,11 @@ final class AppViewModel: ObservableObject {
         inputDoseOperationToken = 0
         inputDoseSettingsOperationToken = 0
         inputHiddenOperationToken = 0
+        appleHealthConnectionOperationToken = 0
         morningOutcomeOperationToken = 0
 
         self.persistUserDataPatch = persistUserDataPatch
+        self.appleHealthDoseService = appleHealthDoseService
         self.nowProvider = nowProvider
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
@@ -212,7 +224,8 @@ final class AppViewModel: ObservableObject {
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink
+            externalLink: currentInput.externalLink,
+            appleHealthState: currentInput.appleHealthState
         )
 
         let dateKey = Self.localDateKey(from: nowProvider())
@@ -262,6 +275,264 @@ final class AppViewModel: ObservableObject {
         updateDose(inputID: inputID, operation: .reset)
     }
 
+    func connectInputToAppleHealth(_ inputID: String) {
+        guard mode == .explore else { return }
+        guard appleHealthDoseService.isHealthDataAvailable() else {
+            let message = "Apple Health is unavailable on this device."
+            exploreFeedback = message
+            announce(message)
+            return
+        }
+
+        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+        let currentInput = snapshot.inputs[index]
+        guard let currentDoseState = currentInput.doseState else { return }
+        guard let currentAppleHealthState = currentInput.appleHealthState else { return }
+        guard currentAppleHealthState.available else { return }
+        guard let config = currentAppleHealthState.config else { return }
+
+        let previousSnapshot = snapshot
+        let previousConnections = appleHealthConnections
+        let timestamp = Self.timestampNow()
+        let connection = AppleHealthConnection(
+            isConnected: true,
+            connectedAt: appleHealthConnections[inputID]?.connectedAt ?? timestamp,
+            lastSyncAt: nil,
+            lastSyncStatus: .connecting,
+            lastErrorCode: nil
+        )
+
+        appleHealthConnections[inputID] = connection
+        let nextState = InputAppleHealthState(
+            available: true,
+            connected: true,
+            syncStatus: .connecting,
+            todayHealthValue: appleHealthValues[inputID],
+            lastSyncAt: connection.lastSyncAt,
+            config: config
+        )
+        let nextInput = doseInput(
+            from: currentInput,
+            manualValue: currentDoseState.manualValue,
+            goal: currentDoseState.goal,
+            increment: currentDoseState.increment,
+            unit: currentDoseState.unit,
+            healthValue: appleHealthValues[inputID],
+            appleHealthState: nextState
+        )
+        updateInput(nextInput, at: index)
+
+        let operationToken = nextAppleHealthConnectionOperationToken()
+        Task {
+            do {
+                try await appleHealthDoseService.requestReadAuthorization(for: [config])
+                try await persistPatch(.appleHealthConnections(appleHealthConnections))
+                guard operationToken == appleHealthConnectionOperationToken else { return }
+                let message = "Connected \(currentInput.name) to Apple Health."
+                exploreFeedback = message
+                announce(message)
+                await refreshAppleHealth(for: inputID)
+            } catch {
+                guard operationToken == appleHealthConnectionOperationToken else { return }
+                appleHealthConnections = previousConnections
+                snapshot = previousSnapshot
+                let message = "Could not connect \(currentInput.name) to Apple Health. Reverted."
+                exploreFeedback = message
+                announce(message)
+            }
+        }
+    }
+
+    func disconnectInputFromAppleHealth(_ inputID: String) {
+        guard mode == .explore else { return }
+        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+        let currentInput = snapshot.inputs[index]
+        guard let currentDoseState = currentInput.doseState else { return }
+        guard let currentAppleHealthState = currentInput.appleHealthState else { return }
+        guard let config = currentAppleHealthState.config else { return }
+
+        let previousSnapshot = snapshot
+        let previousConnections = appleHealthConnections
+        let previousHealthValues = appleHealthValues
+
+        appleHealthConnections.removeValue(forKey: inputID)
+        appleHealthValues.removeValue(forKey: inputID)
+
+        let nextState = InputAppleHealthState(
+            available: true,
+            connected: false,
+            syncStatus: .disconnected,
+            todayHealthValue: nil,
+            lastSyncAt: nil,
+            config: config
+        )
+        let nextInput = doseInput(
+            from: currentInput,
+            manualValue: currentDoseState.manualValue,
+            goal: currentDoseState.goal,
+            increment: currentDoseState.increment,
+            unit: currentDoseState.unit,
+            healthValue: nil,
+            appleHealthState: nextState
+        )
+        updateInput(nextInput, at: index)
+
+        let operationToken = nextAppleHealthConnectionOperationToken()
+        Task {
+            do {
+                try await persistPatch(.appleHealthConnections(appleHealthConnections))
+                guard operationToken == appleHealthConnectionOperationToken else { return }
+                let message = "Disconnected \(currentInput.name) from Apple Health."
+                exploreFeedback = message
+                announce(message)
+            } catch {
+                guard operationToken == appleHealthConnectionOperationToken else { return }
+                appleHealthConnections = previousConnections
+                appleHealthValues = previousHealthValues
+                snapshot = previousSnapshot
+                let message = "Could not disconnect \(currentInput.name) from Apple Health. Reverted."
+                exploreFeedback = message
+                announce(message)
+            }
+        }
+    }
+
+    func refreshAppleHealth(for inputID: String) async {
+        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+        let currentInput = snapshot.inputs[index]
+        guard let currentDoseState = currentInput.doseState else { return }
+        guard let currentAppleHealthState = currentInput.appleHealthState else { return }
+        guard currentAppleHealthState.connected else { return }
+        guard let config = currentAppleHealthState.config else { return }
+
+        let syncingState = InputAppleHealthState(
+            available: true,
+            connected: true,
+            syncStatus: .syncing,
+            todayHealthValue: appleHealthValues[inputID],
+            lastSyncAt: currentAppleHealthState.lastSyncAt,
+            config: config
+        )
+        let syncingInput = doseInput(
+            from: currentInput,
+            manualValue: currentDoseState.manualValue,
+            goal: currentDoseState.goal,
+            increment: currentDoseState.increment,
+            unit: currentDoseState.unit,
+            healthValue: appleHealthValues[inputID],
+            appleHealthState: syncingState
+        )
+        updateInput(syncingInput, at: index)
+
+        do {
+            let healthValue = try await appleHealthDoseService.fetchTodayValue(
+                for: config,
+                unit: currentDoseState.unit,
+                now: nowProvider()
+            )
+            if let healthValue {
+                appleHealthValues[inputID] = max(0, healthValue)
+            } else {
+                appleHealthValues.removeValue(forKey: inputID)
+            }
+
+            let status: AppleHealthSyncStatus = healthValue == nil ? .noData : .synced
+            let syncTimestamp = Self.timestampNow()
+            let updatedConnection = AppleHealthConnection(
+                isConnected: true,
+                connectedAt: appleHealthConnections[inputID]?.connectedAt ?? syncTimestamp,
+                lastSyncAt: syncTimestamp,
+                lastSyncStatus: status,
+                lastErrorCode: nil
+            )
+            appleHealthConnections[inputID] = updatedConnection
+
+            if let refreshedIndex = snapshot.inputs.firstIndex(where: { $0.id == inputID }) {
+                let refreshedInput = snapshot.inputs[refreshedIndex]
+                if let refreshedDoseState = refreshedInput.doseState {
+                    let nextAppleHealthState = InputAppleHealthState(
+                        available: true,
+                        connected: true,
+                        syncStatus: status,
+                        todayHealthValue: appleHealthValues[inputID],
+                        lastSyncAt: syncTimestamp,
+                        config: config
+                    )
+                    let nextInput = doseInput(
+                        from: refreshedInput,
+                        manualValue: refreshedDoseState.manualValue,
+                        goal: refreshedDoseState.goal,
+                        increment: refreshedDoseState.increment,
+                        unit: refreshedDoseState.unit,
+                        healthValue: appleHealthValues[inputID],
+                        appleHealthState: nextAppleHealthState
+                    )
+                    updateInput(nextInput, at: refreshedIndex)
+                }
+            }
+
+            try await persistPatch(.appleHealthConnections(appleHealthConnections))
+
+            let message = healthValue == nil
+                ? "No Apple Health data for \(currentInput.name) today. Using app entries."
+                : "Synced \(currentInput.name) from Apple Health."
+            exploreFeedback = message
+            announce(message)
+        } catch {
+            let syncTimestamp = Self.timestampNow()
+            let updatedConnection = AppleHealthConnection(
+                isConnected: true,
+                connectedAt: appleHealthConnections[inputID]?.connectedAt ?? syncTimestamp,
+                lastSyncAt: syncTimestamp,
+                lastSyncStatus: .failed,
+                lastErrorCode: Self.appleHealthErrorCode(for: error)
+            )
+            appleHealthConnections[inputID] = updatedConnection
+
+            if let refreshedIndex = snapshot.inputs.firstIndex(where: { $0.id == inputID }) {
+                let refreshedInput = snapshot.inputs[refreshedIndex]
+                if let refreshedDoseState = refreshedInput.doseState {
+                    let failedState = InputAppleHealthState(
+                        available: true,
+                        connected: true,
+                        syncStatus: .failed,
+                        todayHealthValue: appleHealthValues[inputID],
+                        lastSyncAt: syncTimestamp,
+                        config: config
+                    )
+                    let failedInput = doseInput(
+                        from: refreshedInput,
+                        manualValue: refreshedDoseState.manualValue,
+                        goal: refreshedDoseState.goal,
+                        increment: refreshedDoseState.increment,
+                        unit: refreshedDoseState.unit,
+                        healthValue: appleHealthValues[inputID],
+                        appleHealthState: failedState
+                    )
+                    updateInput(failedInput, at: refreshedIndex)
+                }
+            }
+
+            let message = "Could not refresh Apple Health for \(currentInput.name)."
+            exploreFeedback = message
+            announce(message)
+            try? await persistPatch(.appleHealthConnections(appleHealthConnections))
+        }
+    }
+
+    func refreshAllConnectedAppleHealth() async {
+        let connectedInputs = snapshot.inputs.compactMap { input -> String? in
+            guard input.appleHealthState?.connected == true else {
+                return nil
+            }
+            return input.id
+        }
+
+        for inputID in connectedInputs {
+            await refreshAppleHealth(for: inputID)
+        }
+    }
+
     func updateDoseSettings(_ inputID: String, dailyGoal: Double, increment: Double) {
         guard mode == .explore else { return }
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
@@ -276,7 +547,8 @@ final class AppViewModel: ObservableObject {
         let previousSettings = interventionDoseSettings
 
         let nextState = InputDoseState(
-            value: currentDoseState.value,
+            manualValue: currentDoseState.manualValue,
+            healthValue: currentDoseState.healthValue,
             goal: safeGoal,
             increment: safeIncrement,
             unit: currentDoseState.unit
@@ -296,7 +568,8 @@ final class AppViewModel: ObservableObject {
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink
+            externalLink: currentInput.externalLink,
+            appleHealthState: currentInput.appleHealthState
         )
 
         var nextSettings = interventionDoseSettings
@@ -348,7 +621,8 @@ final class AppViewModel: ObservableObject {
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink
+            externalLink: currentInput.externalLink,
+            appleHealthState: currentInput.appleHealthState
         )
 
         let nextHiddenInterventions = Self.updatedHiddenInterventions(
@@ -551,6 +825,11 @@ final class AppViewModel: ObservableObject {
         return inputHiddenOperationToken
     }
 
+    private func nextAppleHealthConnectionOperationToken() -> Int {
+        appleHealthConnectionOperationToken += 1
+        return appleHealthConnectionOperationToken
+    }
+
     private func nextMorningOutcomeOperationToken() -> Int {
         morningOutcomeOperationToken += 1
         return morningOutcomeOperationToken
@@ -594,15 +873,16 @@ final class AppViewModel: ObservableObject {
         let nextValue: Double
         switch operation {
         case .increment:
-            nextValue = doseState.value + doseState.increment
+            nextValue = doseState.manualValue + doseState.increment
         case .decrement:
-            nextValue = max(0, doseState.value - doseState.increment)
+            nextValue = max(0, doseState.manualValue - doseState.increment)
         case .reset:
             nextValue = 0
         }
 
         let nextDoseState = InputDoseState(
-            value: nextValue,
+            manualValue: nextValue,
+            healthValue: doseState.healthValue,
             goal: doseState.goal,
             increment: doseState.increment,
             unit: doseState.unit
@@ -623,7 +903,8 @@ final class AppViewModel: ObservableObject {
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink
+            externalLink: currentInput.externalLink,
+            appleHealthState: currentInput.appleHealthState
         )
 
         let dateKey = Self.localDateKey(from: nowProvider())
@@ -668,6 +949,43 @@ final class AppViewModel: ObservableObject {
     private func doseStatusText(for state: InputDoseState) -> String {
         let percent = Int((state.completionRaw * 100).rounded())
         return "\(formattedDoseValue(state.value))/\(formattedDoseValue(state.goal)) \(state.unit.displayName) today (\(percent)%)"
+    }
+
+    private func doseInput(
+        from currentInput: InputStatus,
+        manualValue: Double,
+        goal: Double,
+        increment: Double,
+        unit: DoseUnit,
+        healthValue: Double?,
+        appleHealthState: InputAppleHealthState?
+    ) -> InputStatus {
+        let nextDoseState = InputDoseState(
+            manualValue: manualValue,
+            healthValue: healthValue,
+            goal: goal,
+            increment: increment,
+            unit: unit
+        )
+
+        return InputStatus(
+            id: currentInput.id,
+            name: currentInput.name,
+            trackingMode: .dose,
+            statusText: doseStatusText(for: nextDoseState),
+            completion: nextDoseState.completionClamped,
+            isCheckedToday: nextDoseState.isGoalMet,
+            doseState: nextDoseState,
+            graphNodeID: currentInput.graphNodeID,
+            classificationText: currentInput.classificationText,
+            isHidden: currentInput.isHidden,
+            evidenceLevel: currentInput.evidenceLevel,
+            evidenceSummary: currentInput.evidenceSummary,
+            detailedDescription: currentInput.detailedDescription,
+            citationIDs: currentInput.citationIDs,
+            externalLink: currentInput.externalLink,
+            appleHealthState: appleHealthState
+        )
     }
 
     private func formattedDoseValue(_ value: Double) -> String {
@@ -797,6 +1115,11 @@ final class AppViewModel: ObservableObject {
 
     private static func timestampNow() -> String {
         ISO8601DateFormatter().string(from: Date())
+    }
+
+    private static func appleHealthErrorCode(for error: Error) -> String {
+        let nsError = error as NSError
+        return "\(nsError.domain)#\(nsError.code)"
     }
 }
 

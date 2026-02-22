@@ -44,6 +44,12 @@
         "unit": "milliliters",
         "defaultDailyGoal": 3000,
         "defaultIncrement": 100
+      },
+      "appleHealthAvailable": true,
+      "appleHealthConfig": {
+        "identifier": "dietaryWater",
+        "aggregation": "cumulativeSum",
+        "dayAttribution": "localDay"
       }
     },
     {
@@ -215,6 +221,12 @@
         "unit": "minutes",
         "defaultDailyGoal": 20,
         "defaultIncrement": 5
+      },
+      "appleHealthAvailable": true,
+      "appleHealthConfig": {
+        "identifier": "mindfulSession",
+        "aggregation": "durationSum",
+        "dayAttribution": "localDay"
       }
     },
     {
@@ -423,6 +435,12 @@
         "unit": "minutes",
         "defaultDailyGoal": 30,
         "defaultIncrement": 10
+      },
+      "appleHealthAvailable": true,
+      "appleHealthConfig": {
+        "identifier": "appleExerciseTime",
+        "aggregation": "cumulativeSum",
+        "dayAttribution": "localDay"
       }
     },
     {
@@ -1206,6 +1224,12 @@
         "unit": "hours",
         "defaultDailyGoal": 8,
         "defaultIncrement": 1
+      },
+      "appleHealthAvailable": true,
+      "appleHealthConfig": {
+        "identifier": "sleepAnalysis",
+        "aggregation": "sleepAsleepDurationSum",
+        "dayAttribution": "previousNightNoonCutoff"
       }
     },
     {

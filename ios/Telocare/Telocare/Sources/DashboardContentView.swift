@@ -26,6 +26,13 @@ struct DashboardContentView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
                 viewModel.handleAppMovedToBackground()
+                return
+            }
+
+            if newPhase == .active {
+                Task {
+                    await viewModel.refreshAllConnectedAppleHealth()
+                }
             }
         }
     }

@@ -131,6 +131,61 @@ struct AppViewModelTests {
         #expect(patch?.interventionDoseSettings?["water_intake"]?.increment == 150)
     }
 
+    @Test func connectAppleHealthPersistsConnectionPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshotWithAppleHealth(connected: false),
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            },
+            appleHealthDoseService: MockAppleHealthDoseService(
+                requestAuthorization: { _ in },
+                fetchValue: { _, _, _ in 900 }
+            )
+        )
+
+        harness.viewModel.connectInputToAppleHealth("water_intake")
+
+        await waitUntil { await patchRecorder.count() >= 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(patch?.appleHealthConnections?["water_intake"]?.isConnected == true)
+    }
+
+    @Test func refreshAppleHealthUsesMaxValueOverManualDose() async {
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshotWithAppleHealth(connected: true),
+            appleHealthDoseService: MockAppleHealthDoseService(
+                fetchValue: { _, _, _ in 1200 }
+            )
+        )
+
+        await harness.viewModel.refreshAppleHealth(for: "water_intake")
+
+        let input = harness.viewModel.snapshot.inputs.first(where: { $0.id == "water_intake" })
+        #expect(input?.doseState?.manualValue == 500)
+        #expect(input?.doseState?.healthValue == 1200)
+        #expect(input?.doseState?.value == 1200)
+        #expect(input?.appleHealthState?.syncStatus == .synced)
+    }
+
+    @Test func refreshAppleHealthNoDataKeepsManualDose() async {
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshotWithAppleHealth(connected: true),
+            appleHealthDoseService: MockAppleHealthDoseService(
+                fetchValue: { _, _, _ in nil }
+            )
+        )
+
+        await harness.viewModel.refreshAppleHealth(for: "water_intake")
+
+        let input = harness.viewModel.snapshot.inputs.first(where: { $0.id == "water_intake" })
+        #expect(input?.doseState?.manualValue == 500)
+        #expect(input?.doseState?.healthValue == nil)
+        #expect(input?.doseState?.value == 500)
+        #expect(input?.appleHealthState?.syncStatus == .noData)
+    }
+
     @Test func inputMuteTogglePersistsHiddenInterventionsPatch() async {
         let patchRecorder = PatchRecorder()
         let harness = AppViewModelHarness(
@@ -252,7 +307,65 @@ struct AppViewModelTests {
                     evidenceSummary: nil,
                     detailedDescription: nil,
                     citationIDs: [],
-                    externalLink: nil
+                    externalLink: nil,
+                    appleHealthState: nil
+                )
+            ]
+        )
+    }
+
+    private func doseSnapshotWithAppleHealth(connected: Bool) -> DashboardSnapshot {
+        DashboardSnapshot(
+            outcomes: OutcomeSummary(
+                shieldScore: 0,
+                burdenTrendPercent: 0,
+                topContributor: "None",
+                confidence: "Low",
+                burdenProgress: 0
+            ),
+            outcomeRecords: [],
+            outcomesMetadata: .empty,
+            situation: SituationSummary(
+                focusedNode: "RMMA",
+                tier: "Tier 7",
+                visibleHotspots: 1,
+                topSource: "None"
+            ),
+            inputs: [
+                InputStatus(
+                    id: "water_intake",
+                    name: "Water Intake",
+                    trackingMode: .dose,
+                    statusText: "500/3000 ml today (17%)",
+                    completion: 0.1667,
+                    isCheckedToday: false,
+                    doseState: InputDoseState(
+                        manualValue: 500,
+                        healthValue: nil,
+                        goal: 3000,
+                        increment: 100,
+                        unit: .milliliters
+                    ),
+                    graphNodeID: "HYDRATION",
+                    classificationText: nil,
+                    isHidden: false,
+                    evidenceLevel: nil,
+                    evidenceSummary: nil,
+                    detailedDescription: nil,
+                    citationIDs: [],
+                    externalLink: nil,
+                    appleHealthState: InputAppleHealthState(
+                        available: true,
+                        connected: connected,
+                        syncStatus: connected ? .synced : .disconnected,
+                        todayHealthValue: nil,
+                        lastSyncAt: nil,
+                        config: AppleHealthConfig(
+                            identifier: .dietaryWater,
+                            aggregation: .cumulativeSum,
+                            dayAttribution: .localDay
+                        )
+                    )
                 )
             ]
         )
@@ -270,9 +383,11 @@ private struct AppViewModelHarness {
         initialDailyCheckIns: [String: [String]] = [:],
         initialDailyDoseProgress: [String: [String: Double]] = [:],
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
+        initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialMorningStates: [MorningState] = [],
         initialHiddenInterventions: [String] = [],
-        persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true }
+        persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
+        appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService()
     ) {
         let recorder = AnnouncementRecorder()
         let announcer = AccessibilityAnnouncer { message in
@@ -286,9 +401,11 @@ private struct AppViewModelHarness {
             initialDailyCheckIns: initialDailyCheckIns,
             initialDailyDoseProgress: initialDailyDoseProgress,
             initialInterventionDoseSettings: initialInterventionDoseSettings,
+            initialAppleHealthConnections: initialAppleHealthConnections,
             initialMorningStates: initialMorningStates,
             initialHiddenInterventions: initialHiddenInterventions,
             persistUserDataPatch: persistUserDataPatch,
+            appleHealthDoseService: appleHealthDoseService,
             nowProvider: {
                 let calendar = Calendar(identifier: .gregorian)
                 return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()

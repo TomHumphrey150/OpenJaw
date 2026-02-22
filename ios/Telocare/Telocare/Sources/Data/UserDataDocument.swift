@@ -10,6 +10,7 @@ struct UserDataDocument: Codable, Equatable {
     let dailyCheckIns: [String: [String]]
     let dailyDoseProgress: [String: [String: Double]]
     let interventionDoseSettings: [String: DoseSettings]
+    let appleHealthConnections: [String: AppleHealthConnection]
     let nightExposures: [NightExposure]
     let nightOutcomes: [NightOutcome]
     let morningStates: [MorningState]
@@ -30,6 +31,7 @@ struct UserDataDocument: Codable, Equatable {
         dailyCheckIns: [:],
         dailyDoseProgress: [:],
         interventionDoseSettings: [:],
+        appleHealthConnections: [:],
         nightExposures: [],
         nightOutcomes: [],
         morningStates: [],
@@ -51,6 +53,7 @@ struct UserDataDocument: Codable, Equatable {
         dailyCheckIns: [String: [String]],
         dailyDoseProgress: [String: [String: Double]] = [:],
         interventionDoseSettings: [String: DoseSettings] = [:],
+        appleHealthConnections: [String: AppleHealthConnection] = [:],
         nightExposures: [NightExposure],
         nightOutcomes: [NightOutcome],
         morningStates: [MorningState],
@@ -70,6 +73,7 @@ struct UserDataDocument: Codable, Equatable {
         self.dailyCheckIns = dailyCheckIns
         self.dailyDoseProgress = dailyDoseProgress
         self.interventionDoseSettings = interventionDoseSettings
+        self.appleHealthConnections = appleHealthConnections
         self.nightExposures = nightExposures
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
@@ -91,6 +95,7 @@ struct UserDataDocument: Codable, Equatable {
         case dailyCheckIns
         case dailyDoseProgress
         case interventionDoseSettings
+        case appleHealthConnections
         case nightExposures
         case nightOutcomes
         case morningStates
@@ -113,6 +118,7 @@ struct UserDataDocument: Codable, Equatable {
         dailyCheckIns = try container.decodeIfPresent([String: [String]].self, forKey: .dailyCheckIns) ?? [:]
         dailyDoseProgress = try container.decodeIfPresent([String: [String: Double]].self, forKey: .dailyDoseProgress) ?? [:]
         interventionDoseSettings = try container.decodeIfPresent([String: DoseSettings].self, forKey: .interventionDoseSettings) ?? [:]
+        appleHealthConnections = try container.decodeIfPresent([String: AppleHealthConnection].self, forKey: .appleHealthConnections) ?? [:]
         nightExposures = try container.decodeIfPresent([NightExposure].self, forKey: .nightExposures) ?? []
         nightOutcomes = try container.decodeIfPresent([NightOutcome].self, forKey: .nightOutcomes) ?? []
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
@@ -308,6 +314,54 @@ struct InterventionRating: Codable, Equatable {
 struct DoseSettings: Codable, Equatable, Sendable {
     let dailyGoal: Double
     let increment: Double
+}
+
+enum AppleHealthSyncStatus: String, Codable, Equatable, Sendable {
+    case disconnected
+    case connecting
+    case syncing
+    case synced
+    case noData
+    case failed
+}
+
+struct AppleHealthConnection: Codable, Equatable, Sendable {
+    let isConnected: Bool
+    let connectedAt: String?
+    let lastSyncAt: String?
+    let lastSyncStatus: AppleHealthSyncStatus
+    let lastErrorCode: String?
+
+    init(
+        isConnected: Bool,
+        connectedAt: String?,
+        lastSyncAt: String?,
+        lastSyncStatus: AppleHealthSyncStatus,
+        lastErrorCode: String?
+    ) {
+        self.isConnected = isConnected
+        self.connectedAt = connectedAt
+        self.lastSyncAt = lastSyncAt
+        self.lastSyncStatus = lastSyncStatus
+        self.lastErrorCode = lastErrorCode
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isConnected
+        case connectedAt
+        case lastSyncAt
+        case lastSyncStatus
+        case lastErrorCode
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isConnected = try container.decodeIfPresent(Bool.self, forKey: .isConnected) ?? false
+        connectedAt = try container.decodeIfPresent(String.self, forKey: .connectedAt)
+        lastSyncAt = try container.decodeIfPresent(String.self, forKey: .lastSyncAt)
+        lastSyncStatus = try container.decodeIfPresent(AppleHealthSyncStatus.self, forKey: .lastSyncStatus) ?? .disconnected
+        lastErrorCode = try container.decodeIfPresent(String.self, forKey: .lastErrorCode)
+    }
 }
 
 struct NightExposure: Codable, Equatable {

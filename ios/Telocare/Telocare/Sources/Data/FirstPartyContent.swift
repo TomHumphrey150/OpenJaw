@@ -38,6 +38,30 @@ struct DoseConfig: Codable, Equatable, Sendable, Hashable {
     let defaultIncrement: Double
 }
 
+enum AppleHealthIdentifier: String, Codable, Equatable, Sendable, Hashable {
+    case appleExerciseTime
+    case sleepAnalysis
+    case mindfulSession
+    case dietaryWater
+}
+
+enum AppleHealthAggregation: String, Codable, Equatable, Sendable, Hashable {
+    case cumulativeSum
+    case durationSum
+    case sleepAsleepDurationSum
+}
+
+enum AppleHealthDayAttribution: String, Codable, Equatable, Sendable, Hashable {
+    case localDay
+    case previousNightNoonCutoff
+}
+
+struct AppleHealthConfig: Codable, Equatable, Sendable, Hashable {
+    let identifier: AppleHealthIdentifier
+    let aggregation: AppleHealthAggregation
+    let dayAttribution: AppleHealthDayAttribution
+}
+
 struct FirstPartyContentBundle: Equatable, Sendable {
     let graphData: CausalGraphData?
     let interventionsCatalog: InterventionsCatalog
@@ -70,6 +94,8 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
     let graphNodeId: String?
     let trackingType: InterventionTrackingType?
     let doseConfig: DoseConfig?
+    let appleHealthAvailable: Bool?
+    let appleHealthConfig: AppleHealthConfig?
 
     init(
         id: String,
@@ -84,7 +110,9 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         legacyIds: [String]? = nil,
         graphNodeId: String? = nil,
         trackingType: InterventionTrackingType? = nil,
-        doseConfig: DoseConfig? = nil
+        doseConfig: DoseConfig? = nil,
+        appleHealthAvailable: Bool? = nil,
+        appleHealthConfig: AppleHealthConfig? = nil
     ) {
         self.id = id
         self.name = name
@@ -99,6 +127,8 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         self.graphNodeId = graphNodeId
         self.trackingType = trackingType
         self.doseConfig = doseConfig
+        self.appleHealthAvailable = appleHealthAvailable
+        self.appleHealthConfig = appleHealthConfig
     }
 
     var citations: [String] {

@@ -9,7 +9,11 @@ struct SupabaseAuthClient: AuthClient {
     }
 
     func currentSession() async -> AuthSession? {
-        guard let session = client.auth.currentSession else {
+        let session: Session
+
+        do {
+            session = try await client.auth.session
+        } catch {
             return nil
         }
 

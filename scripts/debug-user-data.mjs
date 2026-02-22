@@ -206,6 +206,10 @@ const interventionDoseSettings =
   store.interventionDoseSettings && typeof store.interventionDoseSettings === 'object' && !Array.isArray(store.interventionDoseSettings)
     ? store.interventionDoseSettings
     : {};
+const appleHealthConnections =
+  store.appleHealthConnections && typeof store.appleHealthConnections === 'object' && !Array.isArray(store.appleHealthConnections)
+    ? store.appleHealthConnections
+    : {};
 const allKeysAsc = Object.keys(dailyCheckIns).sort((a, b) => a.localeCompare(b));
 const doseKeysAsc = Object.keys(dailyDoseProgress).sort((a, b) => a.localeCompare(b));
 
@@ -265,11 +269,30 @@ console.log('Store counts');
 console.log(`  dailyCheckIns keys: ${allKeysAsc.length}`);
 console.log(`  dailyDoseProgress keys: ${doseKeysAsc.length}`);
 console.log(`  interventionDoseSettings: ${Object.keys(interventionDoseSettings).length}`);
+console.log(`  appleHealthConnections: ${Object.keys(appleHealthConnections).length}`);
 console.log(`  interventionRatings: ${ratings.length}`);
 console.log(`  hiddenInterventions: ${hidden.length}`);
 console.log(`  notes: ${notes.length}`);
 console.log(`  personalStudies: ${studies.length}`);
 console.log(`  experiments: ${experiments.length}`);
+console.log('');
+
+const appleHealthEntries = Object.entries(appleHealthConnections);
+const connectedAppleHealth = appleHealthEntries.filter(([, value]) => value?.isConnected === true);
+console.log('Apple Health connections');
+if (appleHealthEntries.length === 0) {
+  console.log('  (none)');
+} else {
+  connectedAppleHealth.forEach(([interventionId, value]) => {
+    console.log(
+      `  ${interventionId} | connected=true | status=${value?.lastSyncStatus || 'unknown'} | lastSyncAt=${value?.lastSyncAt || '(never)'}`
+    );
+  });
+  const disconnected = appleHealthEntries.length - connectedAppleHealth.length;
+  if (disconnected > 0) {
+    console.log(`  disconnected entries: ${disconnected}`);
+  }
+}
 console.log('');
 
 console.log(`Recent check-in dates (latest ${Math.min(21, allKeysAsc.length)})`);

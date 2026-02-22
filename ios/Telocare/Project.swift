@@ -39,12 +39,15 @@ let project = Project(
                     ],
                     "SUPABASE_URL": "$(SUPABASE_URL)",
                     "SUPABASE_PUBLISHABLE_KEY": "$(SUPABASE_PUBLISHABLE_KEY)",
+                    "NSHealthShareUsageDescription": "Telocare reads selected Apple Health data to auto-update your intervention dose progress.",
+                    "NSHealthUpdateUsageDescription": "Telocare requests Health access setup for read-only intervention syncing.",
                 ]
             ),
             buildableFolders: [
                 "Telocare/Sources",
                 "Telocare/Resources",
             ],
+            entitlements: .file(path: .relativeToRoot("Telocare/Telocare.entitlements")),
             dependencies: [
                 .external(name: "Supabase")
             ],

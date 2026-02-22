@@ -51,6 +51,12 @@ struct DashboardSnapshotBuilderTests {
                             unit: .milliliters,
                             defaultDailyGoal: 3000,
                             defaultIncrement: 100
+                        ),
+                        appleHealthAvailable: true,
+                        appleHealthConfig: AppleHealthConfig(
+                            identifier: .dietaryWater,
+                            aggregation: .cumulativeSum,
+                            dayAttribution: .localDay
                         )
                     ),
                     InterventionDefinition(
@@ -87,6 +93,8 @@ struct DashboardSnapshotBuilderTests {
         #expect(water.doseState?.value == 2100)
         #expect(water.doseState?.goal == 3000)
         #expect(water.statusText == "2100/3000 ml today (70%)")
+        #expect(water.appleHealthState?.available == true)
+        #expect(water.appleHealthState?.connected == false)
 
         let exercise = snapshot.inputs[1]
         #expect(exercise.trackingMode == .dose)

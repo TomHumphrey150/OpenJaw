@@ -13,6 +13,10 @@ struct ExploreTabShell: View {
                 onDecrementDose: viewModel.decrementInputDose,
                 onResetDose: viewModel.resetInputDose,
                 onUpdateDoseSettings: viewModel.updateDoseSettings,
+                onConnectAppleHealth: viewModel.connectInputToAppleHealth,
+                onDisconnectAppleHealth: viewModel.disconnectInputFromAppleHealth,
+                onRefreshAppleHealth: viewModel.refreshAppleHealth,
+                onRefreshAllAppleHealth: viewModel.refreshAllConnectedAppleHealth,
                 onToggleHidden: viewModel.toggleInputHidden
             )
                 .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
@@ -957,6 +961,10 @@ private struct ExploreInputsScreen: View {
     let onDecrementDose: (String) -> Void
     let onResetDose: (String) -> Void
     let onUpdateDoseSettings: (String, Double, Double) -> Void
+    let onConnectAppleHealth: (String) -> Void
+    let onDisconnectAppleHealth: (String) -> Void
+    let onRefreshAppleHealth: (String) async -> Void
+    let onRefreshAllAppleHealth: () async -> Void
     let onToggleHidden: (String) -> Void
 
     @State private var navigationPath = NavigationPath()
@@ -981,6 +989,9 @@ private struct ExploreInputsScreen: View {
                         onDecrementDose: onDecrementDose,
                         onResetDose: onResetDose,
                         onUpdateDoseSettings: onUpdateDoseSettings,
+                        onConnectAppleHealth: onConnectAppleHealth,
+                        onDisconnectAppleHealth: onDisconnectAppleHealth,
+                        onRefreshAppleHealth: onRefreshAppleHealth,
                         onToggleHidden: onToggleHidden
                     )
                     .accessibilityIdentifier(AccessibilityID.exploreInputDetailSheet)
@@ -1090,6 +1101,9 @@ private struct ExploreInputsScreen: View {
                     }
                 }
                 .padding(TelocareTheme.Spacing.md)
+            }
+            .refreshable {
+                await onRefreshAllAppleHealth()
             }
         }
     }
@@ -1372,11 +1386,15 @@ private struct InputDetailView: View {
     let onDecrementDose: (String) -> Void
     let onResetDose: (String) -> Void
     let onUpdateDoseSettings: (String, Double, Double) -> Void
+    let onConnectAppleHealth: (String) -> Void
+    let onDisconnectAppleHealth: (String) -> Void
+    let onRefreshAppleHealth: (String) async -> Void
     let onToggleHidden: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var dailyGoalText: String = ""
     @State private var incrementText: String = ""
+    @State private var liveDoseState: InputDoseState?
 
     var body: some View {
         ScrollView {
@@ -1386,6 +1404,7 @@ private struct InputDetailView: View {
                     .foregroundStyle(TelocareTheme.charcoal)
                     .fixedSize(horizontal: false, vertical: true)
 
+                appleHealthCard
                 statusCard
                 doseCard
                 evidenceCard
@@ -1406,9 +1425,13 @@ private struct InputDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if let doseState = input.doseState {
+                liveDoseState = doseState
                 dailyGoalText = formattedDoseValue(doseState.goal)
                 incrementText = formattedDoseValue(doseState.increment)
             }
+        }
+        .onChange(of: input.doseState) { _, updatedDoseState in
+            liveDoseState = updatedDoseState
         }
     }
 
@@ -1438,8 +1461,88 @@ private struct InputDetailView: View {
     // MARK: - Dose Card
 
     @ViewBuilder
+    private var appleHealthCard: some View {
+        if input.trackingMode == .dose, let appleHealthState = input.appleHealthState, appleHealthState.available {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Apple Health")
+
+                    if appleHealthState.connected {
+                        DetailRow(label: "Connection", value: "Connected")
+                        DetailRow(label: "Sync status", value: appleHealthStatusText(appleHealthState.syncStatus))
+
+                        if let healthValue = appleHealthState.todayHealthValue, let doseState = currentDoseState {
+                            DetailRow(
+                                label: "Today in Apple Health",
+                                value: "\(formattedDoseValue(healthValue)) \(doseState.unit.displayName)"
+                            )
+                        } else {
+                            Text("No Apple Health data found today. Using app dose entries.")
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                        }
+
+                        if let lastSyncAt = appleHealthState.lastSyncAt {
+                            DetailRow(label: "Last sync", value: lastSyncAt)
+                        }
+
+                        HStack(spacing: TelocareTheme.Spacing.sm) {
+                            Button("Refresh Apple Health") {
+                                Task {
+                                    await onRefreshAppleHealth(input.id)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(TelocareTheme.coral)
+                            .accessibilityIdentifier(AccessibilityID.exploreInputAppleHealthRefresh)
+                            .accessibilityHint("Refreshes today's Apple Health value for this intervention.")
+
+                            Button("Disconnect") {
+                                onDisconnectAppleHealth(input.id)
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(TelocareTheme.warmGray)
+                            .accessibilityIdentifier(AccessibilityID.exploreInputAppleHealthDisconnect)
+                            .accessibilityHint("Stops Apple Health sync for this intervention.")
+                        }
+                    } else {
+                        Text("Connect to Apple Health to read today's value automatically.")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+
+                        Button("Connect to Apple Health") {
+                            onConnectAppleHealth(input.id)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(TelocareTheme.coral)
+                        .accessibilityIdentifier(AccessibilityID.exploreInputAppleHealthConnect)
+                        .accessibilityHint("Requests read access for this intervention's Apple Health data.")
+                    }
+                }
+            }
+        }
+    }
+
+    private func appleHealthStatusText(_ status: AppleHealthSyncStatus) -> String {
+        switch status {
+        case .disconnected:
+            return "Disconnected"
+        case .connecting:
+            return "Connecting"
+        case .syncing:
+            return "Syncing"
+        case .synced:
+            return "Synced"
+        case .noData:
+            return "No data today"
+        case .failed:
+            return "Sync failed"
+        }
+    }
+
+    @ViewBuilder
     private var doseCard: some View {
-        if input.trackingMode == .dose, let doseState = input.doseState {
+        if input.trackingMode == .dose, let doseState = currentDoseState {
             WarmCard {
                 VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                     WarmSectionHeader(title: "Dose Tracking")
@@ -1466,6 +1569,7 @@ private struct InputDetailView: View {
                             systemImage: "minus.circle.fill",
                             accessibilityID: AccessibilityID.exploreInputDoseDecrement
                         ) {
+                            applyLocalDoseDelta(-doseState.increment)
                             onDecrementDose(input.id)
                         }
                         doseActionButton(
@@ -1473,6 +1577,7 @@ private struct InputDetailView: View {
                             systemImage: "plus.circle.fill",
                             accessibilityID: AccessibilityID.exploreInputDoseIncrement
                         ) {
+                            applyLocalDoseDelta(doseState.increment)
                             onIncrementDose(input.id)
                         }
                         doseActionButton(
@@ -1480,6 +1585,7 @@ private struct InputDetailView: View {
                             systemImage: "arrow.counterclockwise.circle.fill",
                             accessibilityID: AccessibilityID.exploreInputDoseReset
                         ) {
+                            applyLocalDoseReset()
                             onResetDose(input.id)
                         }
                     }
@@ -1536,7 +1642,50 @@ private struct InputDetailView: View {
             return
         }
 
+        if let doseState = currentDoseState {
+            liveDoseState = InputDoseState(
+                manualValue: doseState.manualValue,
+                healthValue: doseState.healthValue,
+                goal: goal,
+                increment: increment,
+                unit: doseState.unit
+            )
+        }
+
         onUpdateDoseSettings(input.id, goal, increment)
+    }
+
+    private var currentDoseState: InputDoseState? {
+        liveDoseState ?? input.doseState
+    }
+
+    private func applyLocalDoseDelta(_ delta: Double) {
+        guard let doseState = currentDoseState else {
+            return
+        }
+
+        let nextManualValue = max(0, doseState.manualValue + delta)
+        liveDoseState = InputDoseState(
+            manualValue: nextManualValue,
+            healthValue: doseState.healthValue,
+            goal: doseState.goal,
+            increment: doseState.increment,
+            unit: doseState.unit
+        )
+    }
+
+    private func applyLocalDoseReset() {
+        guard let doseState = currentDoseState else {
+            return
+        }
+
+        liveDoseState = InputDoseState(
+            manualValue: 0,
+            healthValue: doseState.healthValue,
+            goal: doseState.goal,
+            increment: doseState.increment,
+            unit: doseState.unit
+        )
     }
 
     private func parsePositiveNumber(_ text: String) -> Double? {
@@ -1556,6 +1705,15 @@ private struct InputDetailView: View {
         return String(format: "%.1f", value)
     }
 
+    private var currentStatusText: String {
+        guard input.trackingMode == .dose, let doseState = currentDoseState else {
+            return input.statusText
+        }
+
+        let completionPercent = Int((doseState.completionRaw * 100).rounded())
+        return "\(formattedDoseValue(doseState.value)) of \(formattedDoseValue(doseState.goal)) \(doseState.unit.displayName) (\(completionPercent)%)"
+    }
+
     // MARK: - Status Card
 
     @ViewBuilder
@@ -1564,11 +1722,11 @@ private struct InputDetailView: View {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                 WarmSectionHeader(title: "Status")
 
-                DetailRow(label: "Status", value: input.statusText)
+                DetailRow(label: "Status", value: currentStatusText)
                 if input.trackingMode == .binary {
                     DetailRow(label: "7-day completion", value: "\(Int((input.completion * 100).rounded()))%")
                     DetailRow(label: "Checked today", value: input.isCheckedToday ? "Yes" : "No")
-                } else if let doseState = input.doseState {
+                } else if let doseState = currentDoseState {
                     DetailRow(label: "Goal reached", value: doseState.isGoalMet ? "Yes" : "No")
                     DetailRow(label: "Current dose", value: "\(formattedDoseValue(doseState.value)) \(doseState.unit.displayName)")
                     DetailRow(label: "Daily goal", value: "\(formattedDoseValue(doseState.goal)) \(doseState.unit.displayName)")

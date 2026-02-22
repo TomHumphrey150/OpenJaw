@@ -6,10 +6,44 @@ enum InputTrackingMode: String, Equatable, Hashable, Sendable {
 }
 
 struct InputDoseState: Equatable, Hashable, Sendable {
-    let value: Double
+    let manualValue: Double
+    let healthValue: Double?
     let goal: Double
     let increment: Double
     let unit: DoseUnit
+
+    init(
+        manualValue: Double,
+        healthValue: Double? = nil,
+        goal: Double,
+        increment: Double,
+        unit: DoseUnit
+    ) {
+        self.manualValue = manualValue
+        self.healthValue = healthValue
+        self.goal = goal
+        self.increment = increment
+        self.unit = unit
+    }
+
+    init(
+        value: Double,
+        goal: Double,
+        increment: Double,
+        unit: DoseUnit
+    ) {
+        self.init(
+            manualValue: value,
+            healthValue: nil,
+            goal: goal,
+            increment: increment,
+            unit: unit
+        )
+    }
+
+    var value: Double {
+        max(manualValue, healthValue ?? 0)
+    }
 
     var completionClamped: Double {
         guard goal > 0 else {
@@ -30,6 +64,15 @@ struct InputDoseState: Equatable, Hashable, Sendable {
     var isGoalMet: Bool {
         goal > 0 && value >= goal
     }
+}
+
+struct InputAppleHealthState: Equatable, Hashable, Sendable {
+    let available: Bool
+    let connected: Bool
+    let syncStatus: AppleHealthSyncStatus
+    let todayHealthValue: Double?
+    let lastSyncAt: String?
+    let config: AppleHealthConfig?
 }
 
 struct DashboardSnapshot: Equatable {
@@ -79,6 +122,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
     let detailedDescription: String?
     let citationIDs: [String]
     let externalLink: String?
+    let appleHealthState: InputAppleHealthState?
 
     init(
         id: String,
@@ -95,7 +139,8 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         evidenceSummary: String?,
         detailedDescription: String?,
         citationIDs: [String],
-        externalLink: String?
+        externalLink: String?,
+        appleHealthState: InputAppleHealthState? = nil
     ) {
         self.id = id
         self.name = name
@@ -112,5 +157,6 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         self.detailedDescription = detailedDescription
         self.citationIDs = citationIDs
         self.externalLink = externalLink
+        self.appleHealthState = appleHealthState
     }
 }

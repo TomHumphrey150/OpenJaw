@@ -15,6 +15,7 @@ final class RootViewModel: ObservableObject {
     private let authClient: AuthClient
     private let userDataRepository: UserDataRepository
     private let snapshotBuilder: DashboardSnapshotBuilder
+    private let appleHealthDoseService: AppleHealthDoseService
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let bootstrapSession: AuthSession?
     private let bootstrapErrorMessage: String?
@@ -23,6 +24,7 @@ final class RootViewModel: ObservableObject {
         authClient: AuthClient,
         userDataRepository: UserDataRepository,
         snapshotBuilder: DashboardSnapshotBuilder,
+        appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         accessibilityAnnouncer: AccessibilityAnnouncer,
         bootstrapSession: AuthSession? = nil,
         bootstrapErrorMessage: String? = nil
@@ -30,6 +32,7 @@ final class RootViewModel: ObservableObject {
         self.authClient = authClient
         self.userDataRepository = userDataRepository
         self.snapshotBuilder = snapshotBuilder
+        self.appleHealthDoseService = appleHealthDoseService
         self.accessibilityAnnouncer = accessibilityAnnouncer
         self.bootstrapSession = bootstrapSession
         self.bootstrapErrorMessage = bootstrapErrorMessage
@@ -167,11 +170,13 @@ final class RootViewModel: ObservableObject {
                 initialDailyCheckIns: document.dailyCheckIns,
                 initialDailyDoseProgress: document.dailyDoseProgress,
                 initialInterventionDoseSettings: document.interventionDoseSettings,
+                initialAppleHealthConnections: document.appleHealthConnections,
                 initialMorningStates: document.morningStates,
                 initialHiddenInterventions: document.hiddenInterventions,
                 persistUserDataPatch: { patch in
                     try await repository.upsertUserDataPatch(patch)
                 },
+                appleHealthDoseService: appleHealthDoseService,
                 accessibilityAnnouncer: accessibilityAnnouncer
             )
             currentUserEmail = session.email

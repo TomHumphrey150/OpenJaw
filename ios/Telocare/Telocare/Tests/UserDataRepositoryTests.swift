@@ -236,6 +236,26 @@ struct UserDataRepositoryTests {
         #expect(decoded.interventionDoseSettings?["water_intake"]?.increment == 100)
     }
 
+    @Test func userDataPatchCanEncodeAppleHealthConnections() throws {
+        let patch = UserDataPatch.appleHealthConnections(
+            [
+                "water_intake": AppleHealthConnection(
+                    isConnected: true,
+                    connectedAt: "2026-02-22T10:00:00Z",
+                    lastSyncAt: "2026-02-22T10:05:00Z",
+                    lastSyncStatus: .synced,
+                    lastErrorCode: nil
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.appleHealthConnections?["water_intake"]?.isConnected == true)
+        #expect(decoded.appleHealthConnections?["water_intake"]?.lastSyncStatus == .synced)
+    }
+
     @Test func userDataPatchCanEncodeHiddenInterventions() throws {
         let patch = UserDataPatch.hiddenInterventions(["PPI_TX", "BED_ELEV_TX"])
 
@@ -260,6 +280,7 @@ private struct DecodedPatch: Decodable {
     let dailyCheckIns: [String: [String]]?
     let dailyDoseProgress: [String: [String: Double]]?
     let interventionDoseSettings: [String: DoseSettings]?
+    let appleHealthConnections: [String: AppleHealthConnection]?
     let morningStates: [MorningState]?
     let hiddenInterventions: [String]?
 }

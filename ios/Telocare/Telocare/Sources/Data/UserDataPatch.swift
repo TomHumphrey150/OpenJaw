@@ -5,6 +5,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let dailyCheckIns: [String: [String]]?
     let dailyDoseProgress: [String: [String: Double]]?
     let interventionDoseSettings: [String: DoseSettings]?
+    let appleHealthConnections: [String: AppleHealthConnection]?
     let morningStates: [MorningState]?
     let hiddenInterventions: [String]?
 
@@ -14,6 +15,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             dailyCheckIns: nil,
             dailyDoseProgress: nil,
             interventionDoseSettings: nil,
+            appleHealthConnections: nil,
             morningStates: nil,
             hiddenInterventions: nil
         )
@@ -25,6 +27,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             dailyCheckIns: value,
             dailyDoseProgress: nil,
             interventionDoseSettings: nil,
+            appleHealthConnections: nil,
             morningStates: nil,
             hiddenInterventions: nil
         )
@@ -36,6 +39,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             dailyCheckIns: nil,
             dailyDoseProgress: value,
             interventionDoseSettings: nil,
+            appleHealthConnections: nil,
             morningStates: nil,
             hiddenInterventions: nil
         )
@@ -47,6 +51,19 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             dailyCheckIns: nil,
             dailyDoseProgress: nil,
             interventionDoseSettings: value,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            hiddenInterventions: nil
+        )
+    }
+
+    static func appleHealthConnections(_ value: [String: AppleHealthConnection]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: value,
             morningStates: nil,
             hiddenInterventions: nil
         )
@@ -58,6 +75,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             dailyCheckIns: nil,
             dailyDoseProgress: nil,
             interventionDoseSettings: nil,
+            appleHealthConnections: nil,
             morningStates: value,
             hiddenInterventions: nil
         )
@@ -69,6 +87,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             dailyCheckIns: nil,
             dailyDoseProgress: nil,
             interventionDoseSettings: nil,
+            appleHealthConnections: nil,
             morningStates: nil,
             hiddenInterventions: value
         )
