@@ -160,7 +160,7 @@ struct RootViewModelTests {
         #expect(includesIntervention == true)
     }
 
-    @Test func togglingInputMutePersistsPatch() async {
+    @Test func togglingInputActivationPersistsPatch() async {
         let repository = TrackingUserDataRepository(document: .empty)
         let viewModel = RootViewModel(
             authClient: MockAuthClient(),
@@ -176,10 +176,10 @@ struct RootViewModelTests {
         viewModel.submitSignIn()
 
         await waitUntil { viewModel.state == .ready }
-        viewModel.dashboardViewModel?.toggleInputHidden("PPI_TX")
+        viewModel.dashboardViewModel?.toggleInputActive("PPI_TX")
 
         await waitUntil { await repository.patchCallCount() == 1 }
-        #expect(await repository.lastPatch()?.hiddenInterventions?.contains("PPI_TX") == true)
+        #expect(await repository.lastPatch()?.activeInterventions?.contains("PPI_TX") == true)
     }
 
     @Test func selectingMorningOutcomePersistsPatch() async {

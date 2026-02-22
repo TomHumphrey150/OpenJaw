@@ -18,6 +18,7 @@ extension UserDataDocument {
             morningStates: morningStates,
             habitTrials: habitTrials,
             habitClassifications: habitClassifications,
+            activeInterventions: activeInterventions,
             hiddenInterventions: hiddenInterventions,
             unlockedAchievements: unlockedAchievements,
             customCausalDiagram: customCausalDiagram,

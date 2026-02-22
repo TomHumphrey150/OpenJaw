@@ -16,6 +16,7 @@ struct UserDataDocument: Codable, Equatable {
     let morningStates: [MorningState]
     let habitTrials: [HabitTrialWindow]
     let habitClassifications: [HabitClassification]
+    let activeInterventions: [String]
     let hiddenInterventions: [String]
     let unlockedAchievements: [String]
     let customCausalDiagram: CustomCausalDiagram?
@@ -37,6 +38,7 @@ struct UserDataDocument: Codable, Equatable {
         morningStates: [],
         habitTrials: [],
         habitClassifications: [],
+        activeInterventions: [],
         hiddenInterventions: [],
         unlockedAchievements: [],
         customCausalDiagram: nil,
@@ -59,6 +61,7 @@ struct UserDataDocument: Codable, Equatable {
         morningStates: [MorningState],
         habitTrials: [HabitTrialWindow],
         habitClassifications: [HabitClassification],
+        activeInterventions: [String] = [],
         hiddenInterventions: [String],
         unlockedAchievements: [String],
         customCausalDiagram: CustomCausalDiagram?,
@@ -79,6 +82,7 @@ struct UserDataDocument: Codable, Equatable {
         self.morningStates = morningStates
         self.habitTrials = habitTrials
         self.habitClassifications = habitClassifications
+        self.activeInterventions = activeInterventions
         self.hiddenInterventions = hiddenInterventions
         self.unlockedAchievements = unlockedAchievements
         self.customCausalDiagram = customCausalDiagram
@@ -101,6 +105,7 @@ struct UserDataDocument: Codable, Equatable {
         case morningStates
         case habitTrials
         case habitClassifications
+        case activeInterventions
         case hiddenInterventions
         case unlockedAchievements
         case customCausalDiagram
@@ -124,6 +129,7 @@ struct UserDataDocument: Codable, Equatable {
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
         habitTrials = try container.decodeIfPresent([HabitTrialWindow].self, forKey: .habitTrials) ?? []
         habitClassifications = try container.decodeIfPresent([HabitClassification].self, forKey: .habitClassifications) ?? []
+        activeInterventions = try container.decodeIfPresent([String].self, forKey: .activeInterventions) ?? []
         hiddenInterventions = try container.decodeIfPresent([String].self, forKey: .hiddenInterventions) ?? []
         unlockedAchievements = try container.decodeIfPresent([String].self, forKey: .unlockedAchievements) ?? []
         customCausalDiagram = try container.decodeIfPresent(CustomCausalDiagram.self, forKey: .customCausalDiagram)

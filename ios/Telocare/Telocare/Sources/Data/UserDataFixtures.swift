@@ -50,6 +50,7 @@ extension UserDataDocument {
         habitClassifications: [
             HabitClassification(interventionId: "PPI_TX", status: .helpful, nightsOn: 5, nightsOff: 5, microArousalDeltaPct: -18, morningStateDelta: -1.1, windowQuality: .cleanOneVariable, updatedAt: "2026-02-21T08:15:00.000Z")
         ],
+        activeInterventions: ["PPI_TX", "REFLUX_DIET_TX", "BED_ELEV_TX"],
         hiddenInterventions: [],
         unlockedAchievements: [],
         customCausalDiagram: CustomCausalDiagram(graphData: .defaultGraph, lastModified: "2026-02-21T08:10:00.000Z"),

@@ -18,7 +18,7 @@ struct ExploreTabShell: View {
                 onDisconnectAppleHealth: viewModel.disconnectInputFromAppleHealth,
                 onRefreshAppleHealth: viewModel.refreshAppleHealth,
                 onRefreshAllAppleHealth: viewModel.refreshAllConnectedAppleHealth,
-                onToggleHidden: viewModel.toggleInputHidden
+                onToggleActive: viewModel.toggleInputActive
             )
                 .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
                 .tag(ExploreTab.inputs)
@@ -1263,10 +1263,39 @@ private struct ExploreInputsScreen: View {
     let onDisconnectAppleHealth: (String) -> Void
     let onRefreshAppleHealth: (String) async -> Void
     let onRefreshAllAppleHealth: () async -> Void
-    let onToggleHidden: (String) -> Void
+    let onToggleActive: (String) -> Void
 
     @State private var navigationPath = NavigationPath()
-    @State private var filterMode: InputFilterMode = .all
+    @State private var filterMode: InputFilterMode
+
+    init(
+        inputs: [InputStatus],
+        graphData: CausalGraphData,
+        onToggleCheckedToday: @escaping (String) -> Void,
+        onIncrementDose: @escaping (String) -> Void,
+        onDecrementDose: @escaping (String) -> Void,
+        onResetDose: @escaping (String) -> Void,
+        onUpdateDoseSettings: @escaping (String, Double, Double) -> Void,
+        onConnectAppleHealth: @escaping (String) -> Void,
+        onDisconnectAppleHealth: @escaping (String) -> Void,
+        onRefreshAppleHealth: @escaping (String) async -> Void,
+        onRefreshAllAppleHealth: @escaping () async -> Void,
+        onToggleActive: @escaping (String) -> Void
+    ) {
+        self.inputs = inputs
+        self.graphData = graphData
+        self.onToggleCheckedToday = onToggleCheckedToday
+        self.onIncrementDose = onIncrementDose
+        self.onDecrementDose = onDecrementDose
+        self.onResetDose = onResetDose
+        self.onUpdateDoseSettings = onUpdateDoseSettings
+        self.onConnectAppleHealth = onConnectAppleHealth
+        self.onDisconnectAppleHealth = onDisconnectAppleHealth
+        self.onRefreshAppleHealth = onRefreshAppleHealth
+        self.onRefreshAllAppleHealth = onRefreshAllAppleHealth
+        self.onToggleActive = onToggleActive
+        _filterMode = State(initialValue: inputs.contains(where: \.isActive) ? .pending : .available)
+    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -1290,7 +1319,7 @@ private struct ExploreInputsScreen: View {
                         onConnectAppleHealth: onConnectAppleHealth,
                         onDisconnectAppleHealth: onDisconnectAppleHealth,
                         onRefreshAppleHealth: onRefreshAppleHealth,
-                        onToggleHidden: onToggleHidden
+                        onToggleActive: onToggleActive
                     )
                     .accessibilityIdentifier(AccessibilityID.exploreInputDetailSheet)
                 } else {
@@ -1369,14 +1398,12 @@ private struct ExploreInputsScreen: View {
 
     private func countFor(_ mode: InputFilterMode) -> Int {
         switch mode {
-        case .all:
-            return inputs.filter { !$0.isHidden }.count
         case .pending:
-            return inputs.filter { !$0.isHidden && !$0.isCheckedToday }.count
+            return inputs.filter { $0.isActive && !$0.isCheckedToday }.count
         case .completed:
-            return inputs.filter { !$0.isHidden && $0.isCheckedToday }.count
-        case .hidden:
-            return inputs.filter(\.isHidden).count
+            return inputs.filter { $0.isActive && $0.isCheckedToday }.count
+        case .available:
+            return inputs.filter { !$0.isActive }.count
         }
     }
 
@@ -1394,6 +1421,7 @@ private struct ExploreInputsScreen: View {
                             input: input,
                             onToggle: { onToggleCheckedToday(input.id) },
                             onIncrementDose: { onIncrementDose(input.id) },
+                            onToggleActive: { onToggleActive(input.id) },
                             onShowDetails: { showInputDetail(input) }
                         )
                     }
@@ -1413,19 +1441,17 @@ private struct ExploreInputsScreen: View {
 
     private var filteredInputs: [InputStatus] {
         switch filterMode {
-        case .all:
-            return sortedInputs.filter { !$0.isHidden }
         case .pending:
-            return sortedInputs.filter { !$0.isHidden && !$0.isCheckedToday }
+            return sortedInputs.filter { $0.isActive && !$0.isCheckedToday }
         case .completed:
-            return sortedInputs.filter { !$0.isHidden && $0.isCheckedToday }
-        case .hidden:
-            return sortedInputs.filter(\.isHidden)
+            return sortedInputs.filter { $0.isActive && $0.isCheckedToday }
+        case .available:
+            return sortedInputs.filter { !$0.isActive }
         }
     }
 
     private var visibleInputs: [InputStatus] {
-        sortedInputs.filter { !$0.isHidden }
+        sortedInputs.filter(\.isActive)
     }
 
     @ViewBuilder
@@ -1446,12 +1472,12 @@ private struct ExploreInputsScreen: View {
 
     private var emptyStateMessage: String {
         switch filterMode {
-        case .all, .pending:
-            return "No interventions to show.\nThey'll appear as you add them."
+        case .pending:
+            return "No active interventions left for today."
         case .completed:
             return "Nothing completed yet today.\nTap an intervention to make progress."
-        case .hidden:
-            return "No hidden interventions."
+        case .available:
+            return "No available interventions."
         }
     }
 }
@@ -1459,18 +1485,16 @@ private struct ExploreInputsScreen: View {
 // MARK: - Filter Mode
 
 private enum InputFilterMode: CaseIterable {
-    case all, pending, completed, hidden
+    case pending, completed, available
 
     var title: String {
         switch self {
-        case .all:
-            return "All"
         case .pending:
             return "To do"
         case .completed:
             return "Done"
-        case .hidden:
-            return "Hidden"
+        case .available:
+            return "Available"
         }
     }
 }
@@ -1512,6 +1536,7 @@ private struct InputCard: View {
     let input: InputStatus
     let onToggle: () -> Void
     let onIncrementDose: () -> Void
+    let onToggleActive: () -> Void
     let onShowDetails: () -> Void
 
     var body: some View {
@@ -1526,8 +1551,8 @@ private struct InputCard: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(input.name)
                                 .font(TelocareTheme.Typography.headline)
-                                .foregroundStyle(input.isCheckedToday && input.trackingMode == .binary ? TelocareTheme.muted : TelocareTheme.charcoal)
-                                .strikethrough(input.isCheckedToday && input.trackingMode == .binary)
+                                .foregroundStyle(input.isActive && input.isCheckedToday && input.trackingMode == .binary ? TelocareTheme.muted : TelocareTheme.charcoal)
+                                .strikethrough(input.isActive && input.isCheckedToday && input.trackingMode == .binary)
 
                             HStack(spacing: TelocareTheme.Spacing.sm) {
                                 if input.trackingMode == .binary {
@@ -1561,34 +1586,52 @@ private struct InputCard: View {
 
     @ViewBuilder
     private var primaryControl: some View {
-        switch input.trackingMode {
-        case .binary:
-            Button(action: onToggle) {
+        if !input.isActive {
+            Button(action: onToggleActive) {
                 ZStack {
                     RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
-                        .fill(input.isCheckedToday ? TelocareTheme.coral : TelocareTheme.peach)
-                    if input.isCheckedToday {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
+                        .fill(TelocareTheme.cream)
+                    RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                        .stroke(TelocareTheme.coral, lineWidth: 1.5)
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(TelocareTheme.coral)
                 }
                 .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(input.isCheckedToday ? "Uncheck \(input.name)" : "Check \(input.name)")
-            .accessibilityHint("Marks this intervention as done for today.")
-
-        case .dose:
-            if let doseState = input.doseState {
-                Button(action: onIncrementDose) {
-                    DoseCompletionRing(state: doseState, size: 34, lineWidth: 4)
+            .accessibilityLabel("Start tracking \(input.name)")
+            .accessibilityHint("Adds this intervention to your active list.")
+        } else {
+            switch input.trackingMode {
+            case .binary:
+                Button(action: onToggle) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                            .fill(input.isCheckedToday ? TelocareTheme.coral : TelocareTheme.peach)
+                        if input.isCheckedToday {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier(AccessibilityID.exploreInputDoseIncrement)
-                .accessibilityLabel("Increment \(input.name)")
-                .accessibilityValue("\(doseSummaryText(for: doseState)).")
-                .accessibilityHint("Adds one increment toward today's goal.")
+                .accessibilityLabel(input.isCheckedToday ? "Uncheck \(input.name)" : "Check \(input.name)")
+                .accessibilityHint("Marks this intervention as done for today.")
+
+            case .dose:
+                if let doseState = input.doseState {
+                    Button(action: onIncrementDose) {
+                        DoseCompletionRing(state: doseState, size: 34, lineWidth: 4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier(AccessibilityID.exploreInputDoseIncrement)
+                    .accessibilityLabel("Increment \(input.name)")
+                    .accessibilityValue("\(doseSummaryText(for: doseState)).")
+                    .accessibilityHint("Adds one increment toward today's goal.")
+                }
             }
         }
     }
@@ -1687,7 +1730,7 @@ private struct InputDetailView: View {
     let onConnectAppleHealth: (String) -> Void
     let onDisconnectAppleHealth: (String) -> Void
     let onRefreshAppleHealth: (String) async -> Void
-    let onToggleHidden: (String) -> Void
+    let onToggleActive: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var dailyGoalText: String = ""
@@ -1715,7 +1758,7 @@ private struct InputDetailView: View {
                     linkCard
                 }
 
-                muteCard
+                trackingCard
             }
             .padding(TelocareTheme.Spacing.md)
         }
@@ -1733,23 +1776,23 @@ private struct InputDetailView: View {
         }
     }
 
-    // MARK: - Mute Card
+    // MARK: - Tracking Card
 
     @ViewBuilder
-    private var muteCard: some View {
+    private var trackingCard: some View {
         WarmCard {
             Button {
-                onToggleHidden(input.id)
+                onToggleActive(input.id)
                 dismiss()
             } label: {
                 HStack {
-                    Image(systemName: input.isHidden ? "bell" : "bell.slash")
+                    Image(systemName: input.isActive ? "minus.circle" : "plus.circle")
                         .font(.system(size: 16))
-                    Text(input.isHidden ? "Unmute this intervention" : "Mute this intervention")
+                    Text(input.isActive ? "Stop tracking this intervention" : "Start tracking this intervention")
                         .font(TelocareTheme.Typography.body)
                     Spacer()
                 }
-                .foregroundStyle(input.isHidden ? TelocareTheme.coral : TelocareTheme.warmGray)
+                .foregroundStyle(input.isActive ? TelocareTheme.warmGray : TelocareTheme.coral)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -2020,6 +2063,7 @@ private struct InputDetailView: View {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                 WarmSectionHeader(title: "Status")
 
+                DetailRow(label: "Tracking", value: input.isActive ? "Active" : "Available")
                 DetailRow(label: "Status", value: currentStatusText)
                 if input.trackingMode == .binary {
                     DetailRow(label: "7-day completion", value: "\(Int((input.completion * 100).rounded()))%")
@@ -2032,17 +2076,6 @@ private struct InputDetailView: View {
 
                 if let classification = input.classificationText {
                     DetailRow(label: "Classification", value: classification)
-                }
-
-                if input.isHidden {
-                    HStack {
-                        Image(systemName: "eye.slash")
-                            .foregroundStyle(TelocareTheme.warmGray)
-                        Text("Hidden on web")
-                            .font(TelocareTheme.Typography.caption)
-                            .foregroundStyle(TelocareTheme.warmGray)
-                    }
-                    .padding(.top, TelocareTheme.Spacing.xs)
                 }
             }
         }

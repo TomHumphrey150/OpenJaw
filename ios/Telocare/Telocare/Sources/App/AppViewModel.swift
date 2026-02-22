@@ -23,11 +23,11 @@ final class AppViewModel: ObservableObject {
     private var appleHealthConnections: [String: AppleHealthConnection]
     private var appleHealthValues: [String: Double]
     private var morningStates: [MorningState]
-    private var hiddenInterventions: [String]
+    private var activeInterventions: [String]
     private var inputCheckOperationToken: Int
     private var inputDoseOperationToken: Int
     private var inputDoseSettingsOperationToken: Int
-    private var inputHiddenOperationToken: Int
+    private var inputActiveOperationToken: Int
     private var appleHealthConnectionOperationToken: Int
     private var morningOutcomeOperationToken: Int
 
@@ -49,7 +49,7 @@ final class AppViewModel: ObservableObject {
             initialInterventionDoseSettings: [:],
             initialAppleHealthConnections: [:],
             initialMorningStates: [],
-            initialHiddenInterventions: [],
+            initialActiveInterventions: [],
             persistUserDataPatch: { _ in true },
             appleHealthDoseService: MockAppleHealthDoseService(),
             accessibilityAnnouncer: accessibilityAnnouncer
@@ -65,7 +65,7 @@ final class AppViewModel: ObservableObject {
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialMorningStates: [MorningState] = [],
-        initialHiddenInterventions: [String] = [],
+        initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         nowProvider: @escaping () -> Date = Date.init,
@@ -97,12 +97,15 @@ final class AppViewModel: ObservableObject {
         appleHealthConnections = initialAppleHealthConnections
         appleHealthValues = [:]
         morningStates = initialMorningStates
-        hiddenInterventions = initialHiddenInterventions
+        let snapshotActiveInterventions = snapshot.inputs.compactMap { input -> String? in
+            input.isActive ? input.id : nil
+        }
+        activeInterventions = snapshotActiveInterventions.isEmpty ? initialActiveInterventions : snapshotActiveInterventions
 
         inputCheckOperationToken = 0
         inputDoseOperationToken = 0
         inputDoseSettingsOperationToken = 0
-        inputHiddenOperationToken = 0
+        inputActiveOperationToken = 0
         appleHealthConnectionOperationToken = 0
         morningOutcomeOperationToken = 0
 
@@ -223,7 +226,7 @@ final class AppViewModel: ObservableObject {
             doseState: nil,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
-            isHidden: currentInput.isHidden,
+            isActive: currentInput.isActive,
             evidenceLevel: currentInput.evidenceLevel,
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
@@ -567,7 +570,7 @@ final class AppViewModel: ObservableObject {
             doseState: nextState,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
-            isHidden: currentInput.isHidden,
+            isActive: currentInput.isActive,
             evidenceLevel: currentInput.evidenceLevel,
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
@@ -601,14 +604,14 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    func toggleInputHidden(_ inputID: String) {
+    func toggleInputActive(_ inputID: String) {
         guard mode == .explore else { return }
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
 
         let currentInput = snapshot.inputs[index]
         let previousSnapshot = snapshot
-        let previousHiddenInterventions = hiddenInterventions
-        let nextHidden = !currentInput.isHidden
+        let previousActiveInterventions = activeInterventions
+        let nextActive = !currentInput.isActive
 
         let nextInput = InputStatus(
             id: currentInput.id,
@@ -620,7 +623,7 @@ final class AppViewModel: ObservableObject {
             doseState: currentInput.doseState,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
-            isHidden: nextHidden,
+            isActive: nextActive,
             evidenceLevel: currentInput.evidenceLevel,
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
@@ -629,30 +632,33 @@ final class AppViewModel: ObservableObject {
             appleHealthState: currentInput.appleHealthState
         )
 
-        let nextHiddenInterventions = Self.updatedHiddenInterventions(
-            from: hiddenInterventions,
+        let currentActiveInterventions = snapshot.inputs.compactMap { input -> String? in
+            input.isActive ? input.id : nil
+        }
+        let nextActiveInterventions = Self.updatedActiveInterventions(
+            from: currentActiveInterventions,
             interventionID: currentInput.id,
-            isHidden: nextHidden
+            isActive: nextActive
         )
 
         updateInput(nextInput, at: index)
-        hiddenInterventions = nextHiddenInterventions
+        activeInterventions = nextActiveInterventions
 
-        let successMessage = nextHidden
-            ? "\(currentInput.name) muted."
-            : "\(currentInput.name) unmuted."
+        let successMessage = nextActive
+            ? "\(currentInput.name) started tracking."
+            : "\(currentInput.name) stopped tracking."
         exploreFeedback = successMessage
         announce(successMessage)
 
-        let operationToken = nextInputHiddenOperationToken()
+        let operationToken = nextInputActiveOperationToken()
         Task {
             do {
-                try await persistPatch(.hiddenInterventions(nextHiddenInterventions))
+                try await persistPatch(.activeInterventions(nextActiveInterventions))
             } catch {
-                guard operationToken == inputHiddenOperationToken else { return }
-                hiddenInterventions = previousHiddenInterventions
+                guard operationToken == inputActiveOperationToken else { return }
+                activeInterventions = previousActiveInterventions
                 snapshot = previousSnapshot
-                let failureMessage = "Could not save mute state for \(currentInput.name). Reverted."
+                let failureMessage = "Could not save tracking state for \(currentInput.name). Reverted."
                 exploreFeedback = failureMessage
                 announce(failureMessage)
             }
@@ -824,9 +830,9 @@ final class AppViewModel: ObservableObject {
         return inputDoseSettingsOperationToken
     }
 
-    private func nextInputHiddenOperationToken() -> Int {
-        inputHiddenOperationToken += 1
-        return inputHiddenOperationToken
+    private func nextInputActiveOperationToken() -> Int {
+        inputActiveOperationToken += 1
+        return inputActiveOperationToken
     }
 
     private func nextAppleHealthConnectionOperationToken() -> Int {
@@ -902,7 +908,7 @@ final class AppViewModel: ObservableObject {
             doseState: nextDoseState,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
-            isHidden: currentInput.isHidden,
+            isActive: currentInput.isActive,
             evidenceLevel: currentInput.evidenceLevel,
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
@@ -982,7 +988,7 @@ final class AppViewModel: ObservableObject {
             doseState: nextDoseState,
             graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
-            isHidden: currentInput.isHidden,
+            isActive: currentInput.isActive,
             evidenceLevel: currentInput.evidenceLevel,
             evidenceSummary: currentInput.evidenceSummary,
             detailedDescription: currentInput.detailedDescription,
@@ -1041,22 +1047,29 @@ final class AppViewModel: ObservableObject {
         return next
     }
 
-    private static func updatedHiddenInterventions(
+    private static func updatedActiveInterventions(
         from current: [String],
         interventionID: String,
-        isHidden: Bool
+        isActive: Bool
     ) -> [String] {
-        var next = current
+        var deduped: [String] = []
+        var seen = Set<String>()
 
-        if isHidden {
-            if !next.contains(interventionID) {
-                next.append(interventionID)
+        for id in current {
+            if id.isEmpty {
+                continue
             }
-            return next
+            if seen.insert(id).inserted {
+                deduped.append(id)
+            }
         }
 
-        next.removeAll { $0 == interventionID }
-        return next
+        deduped.removeAll { $0 == interventionID }
+        if isActive {
+            deduped.append(interventionID)
+        }
+
+        return deduped
     }
 
     private static func resolveNodeID(from graphData: CausalGraphData, focusedNodeLabel: String) -> String? {

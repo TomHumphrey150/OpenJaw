@@ -116,7 +116,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
     let doseState: InputDoseState?
     let graphNodeID: String?
     let classificationText: String?
-    let isHidden: Bool
+    let isActive: Bool
     let evidenceLevel: String?
     let evidenceSummary: String?
     let detailedDescription: String?
@@ -134,7 +134,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         doseState: InputDoseState? = nil,
         graphNodeID: String? = nil,
         classificationText: String?,
-        isHidden: Bool,
+        isActive: Bool,
         evidenceLevel: String?,
         evidenceSummary: String?,
         detailedDescription: String?,
@@ -151,7 +151,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         self.doseState = doseState
         self.graphNodeID = graphNodeID
         self.classificationText = classificationText
-        self.isHidden = isHidden
+        self.isActive = isActive
         self.evidenceLevel = evidenceLevel
         self.evidenceSummary = evidenceSummary
         self.detailedDescription = detailedDescription

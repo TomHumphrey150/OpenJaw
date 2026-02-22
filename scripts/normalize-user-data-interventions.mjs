@@ -303,6 +303,12 @@ function normalizeStore(store, canonicalByAlias, doseDefaults, counters) {
     counters
   );
 
+  normalized.activeInterventions = canonicalizeIDs(
+    Array.isArray(normalized.activeInterventions) ? normalized.activeInterventions : [],
+    canonicalByAlias,
+    counters
+  );
+
   normalized.interventionRatings = canonicalizeInterventionArray(
     normalized.interventionRatings,
     'interventionId',

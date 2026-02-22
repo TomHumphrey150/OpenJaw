@@ -9,6 +9,7 @@ struct UserDataDocumentDecodingTests {
 
         #expect(decoded.version == 1)
         #expect(decoded.dailyCheckIns["2026-02-21"] == ["PPI_TX"])
+        #expect(decoded.activeInterventions.isEmpty)
         #expect(decoded.appleHealthConnections == [:])
         #expect(decoded.customCausalDiagram?.graphData.nodes.count == 1)
     }
@@ -19,6 +20,14 @@ struct UserDataDocumentDecodingTests {
 
         #expect(decoded.customCausalDiagram?.graphData.nodes.first?.data.id == "RMMA")
         #expect(decoded.customCausalDiagram?.graphData.edges.first?.data.source == "RMMA")
+        #expect(decoded.activeInterventions.isEmpty)
+    }
+
+    @Test func decodesActiveInterventionsWhenPresent() throws {
+        let data = try jsonData(from: activeInterventionsJSON)
+        let decoded = try JSONDecoder().decode(UserDataDocument.self, from: data)
+
+        #expect(decoded.activeInterventions == ["PPI_TX", "BED_ELEV_TX"])
     }
 
     @Test func failsToDecodeInvalidGraphPayload() throws {
@@ -129,6 +138,38 @@ private let invalidGraphJSON = """
     "lastGuidedStatus": "not_started"
   },
   "customCausalDiagram": {
+    "lastModified": "2026-02-21T00:00:00.000Z"
+  }
+}
+"""
+
+private let activeInterventionsJSON = """
+{
+  "version": 1,
+  "personalStudies": [],
+  "notes": [],
+  "experiments": [],
+  "interventionRatings": [],
+  "dailyCheckIns": {},
+  "nightExposures": [],
+  "nightOutcomes": [],
+  "morningStates": [],
+  "habitTrials": [],
+  "habitClassifications": [],
+  "activeInterventions": ["PPI_TX", "BED_ELEV_TX"],
+  "hiddenInterventions": [],
+  "unlockedAchievements": [],
+  "experienceFlow": {
+    "hasCompletedInitialGuidedFlow": false,
+    "lastGuidedEntryDate": null,
+    "lastGuidedCompletedDate": null,
+    "lastGuidedStatus": "not_started"
+  },
+  "customCausalDiagram": {
+    "graphData": {
+      "nodes": [],
+      "edges": []
+    },
     "lastModified": "2026-02-21T00:00:00.000Z"
   }
 }

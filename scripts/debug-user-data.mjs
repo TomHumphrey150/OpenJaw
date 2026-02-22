@@ -252,6 +252,7 @@ const skewedRows = strengthRows
   .sort((a, b) => Math.abs(b.utcDays - b.localDays) - Math.abs(a.utcDays - a.localDays));
 
 const ratings = Array.isArray(store.interventionRatings) ? store.interventionRatings : [];
+const active = Array.isArray(store.activeInterventions) ? store.activeInterventions : [];
 const hidden = Array.isArray(store.hiddenInterventions) ? store.hiddenInterventions : [];
 const notes = Array.isArray(store.notes) ? store.notes : [];
 const studies = Array.isArray(store.personalStudies) ? store.personalStudies : [];
@@ -271,6 +272,7 @@ console.log(`  dailyDoseProgress keys: ${doseKeysAsc.length}`);
 console.log(`  interventionDoseSettings: ${Object.keys(interventionDoseSettings).length}`);
 console.log(`  appleHealthConnections: ${Object.keys(appleHealthConnections).length}`);
 console.log(`  interventionRatings: ${ratings.length}`);
+console.log(`  activeInterventions: ${active.length}`);
 console.log(`  hiddenInterventions: ${hidden.length}`);
 console.log(`  notes: ${notes.length}`);
 console.log(`  personalStudies: ${studies.length}`);

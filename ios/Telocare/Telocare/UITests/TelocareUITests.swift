@@ -185,6 +185,55 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(app.textFields[UIID.authEmailInput].waitForExistence(timeout: 2))
     }
 
+    func testInputsDefaultToAvailableAndSupportsCommitAndUncommit() {
+        let app = configuredApp(authState: .authenticated, useEmptyMockData: true)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let inputsTab = app.tabBars.buttons["Inputs"]
+        XCTAssertTrue(inputsTab.waitForExistence(timeout: 4))
+        inputsTab.tap()
+
+        let startButtonQuery = app.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH %@", "Start tracking ")
+        )
+        let startButton = startButtonQuery.firstMatch
+        XCTAssertTrue(startButton.waitForExistence(timeout: 4))
+
+        let startLabel = startButton.label
+        let interventionName = startLabel.replacingOccurrences(of: "Start tracking ", with: "")
+        startButton.tap()
+
+        let todoFilter = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "To do")
+        ).firstMatch
+        XCTAssertTrue(todoFilter.waitForExistence(timeout: 2))
+        todoFilter.tap()
+
+        let checkButton = app.buttons["Check \(interventionName)"]
+        let incrementButton = app.buttons["Increment \(interventionName)"]
+        let foundInTodo = checkButton.waitForExistence(timeout: 2) || incrementButton.waitForExistence(timeout: 2)
+        XCTAssertTrue(foundInTodo)
+
+        let interventionTitle = app.staticTexts[interventionName]
+        XCTAssertTrue(interventionTitle.waitForExistence(timeout: 2))
+        interventionTitle.tap()
+
+        let stopTrackingButton = app.buttons["Stop tracking this intervention"]
+        XCTAssertTrue(stopTrackingButton.waitForExistence(timeout: 2))
+        stopTrackingButton.tap()
+
+        let availableFilter = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "Available")
+        ).firstMatch
+        XCTAssertTrue(availableFilter.waitForExistence(timeout: 2))
+        availableFilter.tap()
+
+        let startAgainButton = app.buttons["Start tracking \(interventionName)"]
+        XCTAssertTrue(startAgainButton.waitForExistence(timeout: 2))
+    }
+
     private func configuredApp(
         authState: UITestAuthState,
         signUpNeedsConfirmation: Bool = false,

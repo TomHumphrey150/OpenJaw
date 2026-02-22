@@ -126,7 +126,7 @@ struct DashboardSnapshotBuilder {
         let recentWindow = Array(recentKeys.prefix(7))
         let latestDoseKey = canonicalData.dailyDoseProgress.keys.sorted(by: >).first
 
-        let hiddenInterventionIDs = Set(canonicalData.hiddenInterventions)
+        let activeInterventionIDs = Set(canonicalData.activeInterventions)
         let classificationByID = Dictionary(
             uniqueKeysWithValues: canonicalData.habitClassifications.map {
                 ($0.interventionId, $0.status)
@@ -180,7 +180,7 @@ struct DashboardSnapshotBuilder {
                     doseState: nil,
                     graphNodeID: intervention.graphNodeID ?? intervention.id,
                     classificationText: classificationText,
-                    isHidden: hiddenInterventionIDs.contains(intervention.id),
+                    isActive: activeInterventionIDs.contains(intervention.id),
                     evidenceLevel: intervention.evidenceLevel ?? graphNode?.tooltip?.evidence,
                     evidenceSummary: intervention.evidenceSummary ?? graphNode?.tooltip?.mechanism,
                     detailedDescription: intervention.detailedDescription,
@@ -201,7 +201,7 @@ struct DashboardSnapshotBuilder {
                         doseState: nil,
                         graphNodeID: intervention.graphNodeID ?? intervention.id,
                         classificationText: classificationText,
-                        isHidden: hiddenInterventionIDs.contains(intervention.id),
+                        isActive: activeInterventionIDs.contains(intervention.id),
                         evidenceLevel: intervention.evidenceLevel ?? graphNode?.tooltip?.evidence,
                         evidenceSummary: intervention.evidenceSummary ?? graphNode?.tooltip?.mechanism,
                         detailedDescription: intervention.detailedDescription,
@@ -240,7 +240,7 @@ struct DashboardSnapshotBuilder {
                     doseState: doseState,
                     graphNodeID: intervention.graphNodeID ?? intervention.id,
                     classificationText: classificationText,
-                    isHidden: hiddenInterventionIDs.contains(intervention.id),
+                    isActive: activeInterventionIDs.contains(intervention.id),
                     evidenceLevel: intervention.evidenceLevel ?? graphNode?.tooltip?.evidence,
                     evidenceSummary: intervention.evidenceSummary ?? graphNode?.tooltip?.mechanism,
                     detailedDescription: intervention.detailedDescription,
@@ -283,6 +283,7 @@ struct DashboardSnapshotBuilder {
         let doseProgressIDs = Set(canonicalData.dailyDoseProgress.values.flatMap { $0.keys })
         let settingsIDs = Set(canonicalData.interventionDoseSettings.keys)
         let appleHealthConnectionIDs = Set(canonicalData.appleHealthConnections.keys)
+        let activeIDs = Set(canonicalData.activeInterventions)
 
         let additionalIDs = checkInIDs
             .union(classificationIDs)
@@ -290,6 +291,7 @@ struct DashboardSnapshotBuilder {
             .union(doseProgressIDs)
             .union(settingsIDs)
             .union(appleHealthConnectionIDs)
+            .union(activeIDs)
 
         if !interventionsCatalog.interventions.isEmpty {
             let fromCatalog = interventionsCatalog.interventions
@@ -503,6 +505,7 @@ private struct CanonicalizedInterventionData {
     let dailyDoseProgress: [String: [String: Double]]
     let interventionDoseSettings: [String: DoseSettings]
     let appleHealthConnections: [String: AppleHealthConnection]
+    let activeInterventions: [String]
     let hiddenInterventions: [String]
     let interventionRatings: [InterventionRating]
     let habitClassifications: [HabitClassification]
@@ -512,6 +515,7 @@ private struct CanonicalizedInterventionData {
         dailyDoseProgress = Self.canonicalizedDailyDoseProgress(document.dailyDoseProgress, lookup: lookup)
         interventionDoseSettings = Self.canonicalizedDoseSettings(document.interventionDoseSettings, lookup: lookup)
         appleHealthConnections = Self.canonicalizedAppleHealthConnections(document.appleHealthConnections, lookup: lookup)
+        activeInterventions = Self.canonicalizedIDs(document.activeInterventions, lookup: lookup)
         hiddenInterventions = Self.canonicalizedIDs(document.hiddenInterventions, lookup: lookup)
         interventionRatings = Self.canonicalizedInterventionRatings(document.interventionRatings, lookup: lookup)
         habitClassifications = Self.canonicalizedHabitClassifications(document.habitClassifications, lookup: lookup)

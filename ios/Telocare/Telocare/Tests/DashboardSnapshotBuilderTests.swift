@@ -174,6 +174,7 @@ struct DashboardSnapshotBuilderTests {
                     updatedAt: "2026-02-21T09:00:00Z"
                 )
             ],
+            activeInterventions: ["BED_ELEV_TX"],
             hiddenInterventions: ["BED_ELEV_TX"],
             unlockedAchievements: [],
             customCausalDiagram: CustomCausalDiagram(
@@ -189,7 +190,7 @@ struct DashboardSnapshotBuilderTests {
         #expect(snapshot.inputs.map { $0.id } == ["PPI_TX", "BED_ELEV_TX", "UNTRACKED_TX"])
         #expect(snapshot.inputs[0].statusText == "Checked today")
         #expect(snapshot.inputs[1].classificationText == "Helpful")
-        #expect(snapshot.inputs[1].isHidden)
+        #expect(snapshot.inputs[1].isActive)
         #expect(snapshot.inputs[2].statusText == "1/7 days")
     }
 

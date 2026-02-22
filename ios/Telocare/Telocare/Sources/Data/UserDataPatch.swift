@@ -7,6 +7,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let interventionDoseSettings: [String: DoseSettings]?
     let appleHealthConnections: [String: AppleHealthConnection]?
     let morningStates: [MorningState]?
+    let activeInterventions: [String]?
     let hiddenInterventions: [String]?
 
     static func experienceFlow(_ value: ExperienceFlow) -> UserDataPatch {
@@ -17,6 +18,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: nil,
             appleHealthConnections: nil,
             morningStates: nil,
+            activeInterventions: nil,
             hiddenInterventions: nil
         )
     }
@@ -29,6 +31,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: nil,
             appleHealthConnections: nil,
             morningStates: nil,
+            activeInterventions: nil,
             hiddenInterventions: nil
         )
     }
@@ -41,6 +44,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: nil,
             appleHealthConnections: nil,
             morningStates: nil,
+            activeInterventions: nil,
             hiddenInterventions: nil
         )
     }
@@ -53,6 +57,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: value,
             appleHealthConnections: nil,
             morningStates: nil,
+            activeInterventions: nil,
             hiddenInterventions: nil
         )
     }
@@ -65,6 +70,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: nil,
             appleHealthConnections: value,
             morningStates: nil,
+            activeInterventions: nil,
             hiddenInterventions: nil
         )
     }
@@ -77,6 +83,20 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: nil,
             appleHealthConnections: nil,
             morningStates: value,
+            activeInterventions: nil,
+            hiddenInterventions: nil
+        )
+    }
+
+    static func activeInterventions(_ value: [String]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: value,
             hiddenInterventions: nil
         )
     }
@@ -89,6 +109,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             interventionDoseSettings: nil,
             appleHealthConnections: nil,
             morningStates: nil,
+            activeInterventions: nil,
             hiddenInterventions: value
         )
     }

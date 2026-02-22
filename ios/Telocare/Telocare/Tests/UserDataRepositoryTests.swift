@@ -162,6 +162,7 @@ struct UserDataRepositoryTests {
         #expect(decoded.experienceFlow?.hasCompletedInitialGuidedFlow == true)
         #expect(decoded.dailyCheckIns == nil)
         #expect(decoded.morningStates == nil)
+        #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
     }
 
@@ -188,6 +189,7 @@ struct UserDataRepositoryTests {
         #expect(decoded.morningStates?.count == 1)
         #expect(decoded.morningStates?.first?.nightId == "2026-02-21")
         #expect(decoded.morningStates?.first?.globalSensation == 6)
+        #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
     }
 
@@ -204,6 +206,7 @@ struct UserDataRepositoryTests {
         #expect(decoded.experienceFlow == nil)
         #expect(decoded.dailyCheckIns?["2026-02-21"] == ["PPI_TX", "REFLUX_DIET_TX"])
         #expect(decoded.morningStates == nil)
+        #expect(decoded.activeInterventions == nil)
         #expect(decoded.hiddenInterventions == nil)
     }
 
@@ -256,6 +259,19 @@ struct UserDataRepositoryTests {
         #expect(decoded.appleHealthConnections?["water_intake"]?.lastSyncStatus == .synced)
     }
 
+    @Test func userDataPatchCanEncodeActiveInterventions() throws {
+        let patch = UserDataPatch.activeInterventions(["PPI_TX", "BED_ELEV_TX"])
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.experienceFlow == nil)
+        #expect(decoded.dailyCheckIns == nil)
+        #expect(decoded.morningStates == nil)
+        #expect(decoded.activeInterventions == ["PPI_TX", "BED_ELEV_TX"])
+        #expect(decoded.hiddenInterventions == nil)
+    }
+
     @Test func userDataPatchCanEncodeHiddenInterventions() throws {
         let patch = UserDataPatch.hiddenInterventions(["PPI_TX", "BED_ELEV_TX"])
 
@@ -282,5 +298,6 @@ private struct DecodedPatch: Decodable {
     let interventionDoseSettings: [String: DoseSettings]?
     let appleHealthConnections: [String: AppleHealthConnection]?
     let morningStates: [MorningState]?
+    let activeInterventions: [String]?
     let hiddenInterventions: [String]?
 }

@@ -71,6 +71,7 @@ struct AppViewModelTests {
         let patch = await patchRecorder.lastPatch()
 
         #expect(patch?.dailyCheckIns?["2026-02-21"]?.contains("bed_elevation") == true)
+        #expect(patch?.activeInterventions == nil)
         #expect(patch?.hiddenInterventions == nil)
         #expect(patch?.morningStates == nil)
     }
@@ -186,7 +187,7 @@ struct AppViewModelTests {
         #expect(input?.appleHealthState?.syncStatus == .noData)
     }
 
-    @Test func inputMuteTogglePersistsHiddenInterventionsPatch() async {
+    @Test func inputActivationTogglePersistsActiveInterventionsPatch() async {
         let patchRecorder = PatchRecorder()
         let harness = AppViewModelHarness(
             persistUserDataPatch: { patch in
@@ -195,17 +196,17 @@ struct AppViewModelTests {
             }
         )
 
-        harness.viewModel.toggleInputHidden("ppi")
+        harness.viewModel.toggleInputActive("ppi")
 
         await waitUntil { await patchRecorder.count() == 1 }
         let patch = await patchRecorder.lastPatch()
 
-        #expect(patch?.hiddenInterventions?.contains("ppi") == true)
+        #expect(patch?.activeInterventions?.contains("ppi") == true)
         #expect(patch?.dailyCheckIns == nil)
         #expect(patch?.morningStates == nil)
     }
 
-    @Test func inputMuteToggleFailureRevertsState() async {
+    @Test func inputActivationToggleFailureRevertsState() async {
         let harness = AppViewModelHarness(
             persistUserDataPatch: { _ in
                 throw PatchFailure.writeFailed
@@ -213,14 +214,14 @@ struct AppViewModelTests {
         )
 
         let before = harness.viewModel.snapshot.inputs.first(where: { $0.id == "ppi" })
-        harness.viewModel.toggleInputHidden("ppi")
+        harness.viewModel.toggleInputActive("ppi")
 
-        await waitUntil { harness.viewModel.exploreFeedback.contains("Could not save mute state") }
+        await waitUntil { harness.viewModel.exploreFeedback.contains("Could not save tracking state") }
         let after = harness.viewModel.snapshot.inputs.first(where: { $0.id == "ppi" })
 
-        #expect(before?.isHidden == after?.isHidden)
-        #expect(harness.viewModel.exploreFeedback == "Could not save mute state for PPI. Reverted.")
-        #expect(harness.recorder.messages.last == "Could not save mute state for PPI. Reverted.")
+        #expect(before?.isActive == after?.isActive)
+        #expect(harness.viewModel.exploreFeedback == "Could not save tracking state for PPI. Reverted.")
+        #expect(harness.recorder.messages.last == "Could not save tracking state for PPI. Reverted.")
     }
 
     @Test func morningOutcomeTapPersistsPatch() async {
@@ -240,6 +241,7 @@ struct AppViewModelTests {
         #expect(patch?.morningStates?.first?.nightId == "2026-02-21")
         #expect(patch?.morningStates?.first?.globalSensation == 7)
         #expect(patch?.dailyCheckIns == nil)
+        #expect(patch?.activeInterventions == nil)
         #expect(patch?.hiddenInterventions == nil)
     }
 
@@ -302,7 +304,7 @@ struct AppViewModelTests {
                     ),
                     graphNodeID: "HYDRATION",
                     classificationText: nil,
-                    isHidden: false,
+                    isActive: false,
                     evidenceLevel: nil,
                     evidenceSummary: nil,
                     detailedDescription: nil,
@@ -348,7 +350,7 @@ struct AppViewModelTests {
                     ),
                     graphNodeID: "HYDRATION",
                     classificationText: nil,
-                    isHidden: false,
+                    isActive: false,
                     evidenceLevel: nil,
                     evidenceSummary: nil,
                     detailedDescription: nil,
@@ -385,7 +387,7 @@ private struct AppViewModelHarness {
         initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialMorningStates: [MorningState] = [],
-        initialHiddenInterventions: [String] = [],
+        initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService()
     ) {
@@ -403,7 +405,7 @@ private struct AppViewModelHarness {
             initialInterventionDoseSettings: initialInterventionDoseSettings,
             initialAppleHealthConnections: initialAppleHealthConnections,
             initialMorningStates: initialMorningStates,
-            initialHiddenInterventions: initialHiddenInterventions,
+            initialActiveInterventions: initialActiveInterventions,
             persistUserDataPatch: persistUserDataPatch,
             appleHealthDoseService: appleHealthDoseService,
             nowProvider: {

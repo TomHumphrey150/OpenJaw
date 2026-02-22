@@ -172,7 +172,7 @@ final class RootViewModel: ObservableObject {
                 initialInterventionDoseSettings: document.interventionDoseSettings,
                 initialAppleHealthConnections: document.appleHealthConnections,
                 initialMorningStates: document.morningStates,
-                initialHiddenInterventions: document.hiddenInterventions,
+                initialActiveInterventions: document.activeInterventions,
                 persistUserDataPatch: { patch in
                     try await repository.upsertUserDataPatch(patch)
                 },
