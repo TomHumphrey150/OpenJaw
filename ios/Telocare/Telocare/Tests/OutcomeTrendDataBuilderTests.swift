@@ -125,6 +125,27 @@ struct OutcomeTrendDataBuilderTests {
         #expect(confidencePoints.first?.value == 0.73)
     }
 
+    @Test func morningStressMetricExtractionSupportsStressLevel() {
+        let builder = OutcomeTrendDataBuilder(calendar: fixedCalendar, now: nowDate)
+        let states = [
+            MorningState(
+                nightId: "2026-02-22",
+                globalSensation: nil,
+                neckTightness: nil,
+                jawSoreness: nil,
+                earFullness: nil,
+                healthAnxiety: nil,
+                stressLevel: 8,
+                createdAt: "2026-02-22T08:00:00Z"
+            ),
+        ]
+
+        let points = builder.morningPoints(from: states, metric: .stressLevel)
+
+        #expect(points.count == 1)
+        #expect(points.first?.value == 8)
+    }
+
     private var fixedCalendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current

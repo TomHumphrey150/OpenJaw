@@ -112,6 +112,7 @@ final class TelocareUITests: XCTestCase {
         selectMorningRating(in: app, pickerID: UIID.exploreMorningJawPicker)
         selectMorningRating(in: app, pickerID: UIID.exploreMorningEarPicker)
         selectMorningRating(in: app, pickerID: UIID.exploreMorningAnxietyPicker)
+        selectMorningRating(in: app, pickerID: UIID.exploreMorningStressPicker)
 
         XCTAssertTrue(waitForValue("Collapsed", of: toggle, timeout: 4))
 
@@ -350,4 +351,5 @@ private enum UIID {
     static let exploreMorningJawPicker = "explore.outcomes.morning.jaw.picker"
     static let exploreMorningEarPicker = "explore.outcomes.morning.ear.picker"
     static let exploreMorningAnxietyPicker = "explore.outcomes.morning.anxiety.picker"
+    static let exploreMorningStressPicker = "explore.outcomes.morning.stress.picker"
 }

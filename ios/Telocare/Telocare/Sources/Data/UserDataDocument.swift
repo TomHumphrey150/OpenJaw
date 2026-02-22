@@ -396,7 +396,28 @@ struct MorningState: Codable, Equatable, Sendable {
     let jawSoreness: Double?
     let earFullness: Double?
     let healthAnxiety: Double?
+    let stressLevel: Double?
     let createdAt: String
+
+    init(
+        nightId: String,
+        globalSensation: Double?,
+        neckTightness: Double?,
+        jawSoreness: Double?,
+        earFullness: Double?,
+        healthAnxiety: Double?,
+        stressLevel: Double? = nil,
+        createdAt: String
+    ) {
+        self.nightId = nightId
+        self.globalSensation = globalSensation
+        self.neckTightness = neckTightness
+        self.jawSoreness = jawSoreness
+        self.earFullness = earFullness
+        self.healthAnxiety = healthAnxiety
+        self.stressLevel = stressLevel
+        self.createdAt = createdAt
+    }
 }
 
 struct HabitTrialWindow: Codable, Equatable, Identifiable {

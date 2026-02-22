@@ -1106,7 +1106,8 @@ final class AppViewModel: ObservableObject {
             neckTightness: state.neckTightness.map { Int($0.rounded()) },
             jawSoreness: state.jawSoreness.map { Int($0.rounded()) },
             earFullness: state.earFullness.map { Int($0.rounded()) },
-            healthAnxiety: state.healthAnxiety.map { Int($0.rounded()) }
+            healthAnxiety: state.healthAnxiety.map { Int($0.rounded()) },
+            stressLevel: state.stressLevel.map { Int($0.rounded()) }
         )
     }
 
@@ -1125,6 +1126,7 @@ final class AppViewModel: ObservableObject {
             jawSoreness: morningState.jawSoreness,
             earFullness: morningState.earFullness,
             healthAnxiety: morningState.healthAnxiety,
+            stressLevel: morningState.stressLevel,
             createdAt: existingCreatedAt
         )
         return mutableStates

@@ -61,8 +61,8 @@ From `ios/Telocare`:
 
 - Generate/open Tuist files: `mise x tuist@latest -- tuist install && mise x tuist@latest -- tuist generate --no-open`
 - Visualize dependency graph: `mise x tuist@latest -- tuist graph`
-- Build app: `xcodebuild -workspace Telocare.xcworkspace -scheme Telocare -destination 'platform=iOS Simulator,name=iPhone 16' build`
-- Run tests: `xcodebuild -workspace Telocare.xcworkspace -scheme Telocare -destination 'platform=iOS Simulator,name=iPhone 16' test`
+- Build app: `xcodebuild -workspace Telocare.xcworkspace -scheme Telocare -destination 'platform=iOS Simulator,name=iPhone 17' build`
+- Run tests: `xcodebuild -workspace Telocare.xcworkspace -scheme Telocare -destination 'platform=iOS Simulator,name=iPhone 17' test`
 
 ## Library
 

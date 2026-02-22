@@ -9,7 +9,8 @@ struct MorningOutcomeSelectionTests {
             neckTightness: 4,
             jawSoreness: nil,
             earFullness: 3,
-            healthAnxiety: 5
+            healthAnxiety: 5,
+            stressLevel: 4
         )
 
         #expect(selection.isComplete == false)
@@ -22,7 +23,8 @@ struct MorningOutcomeSelectionTests {
             neckTightness: 4,
             jawSoreness: 3,
             earFullness: 3,
-            healthAnxiety: 5
+            healthAnxiety: 5,
+            stressLevel: 4
         )
 
         #expect(selection.isComplete == true)

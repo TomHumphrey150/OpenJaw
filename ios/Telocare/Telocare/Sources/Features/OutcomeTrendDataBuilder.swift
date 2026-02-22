@@ -16,6 +16,7 @@ enum MorningTrendMetric: String, CaseIterable, Identifiable {
     case jawSoreness
     case earFullness
     case healthAnxiety
+    case stressLevel
 
     var id: String {
         rawValue
@@ -35,6 +36,8 @@ enum MorningTrendMetric: String, CaseIterable, Identifiable {
             return "Ear fullness"
         case .healthAnxiety:
             return "Worry level"
+        case .stressLevel:
+            return "Stress level"
         }
     }
 }
@@ -178,6 +181,7 @@ struct OutcomeTrendDataBuilder {
                 state.jawSoreness,
                 state.earFullness,
                 state.healthAnxiety,
+                state.stressLevel,
             ].compactMap { $0 }
 
             guard !values.isEmpty else {
@@ -195,6 +199,8 @@ struct OutcomeTrendDataBuilder {
             return state.earFullness
         case .healthAnxiety:
             return state.healthAnxiety
+        case .stressLevel:
+            return state.stressLevel
         }
     }
 

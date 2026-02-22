@@ -7,6 +7,25 @@ struct MorningOutcomeSelection: Equatable {
     let jawSoreness: Int?
     let earFullness: Int?
     let healthAnxiety: Int?
+    let stressLevel: Int?
+
+    init(
+        nightID: String,
+        globalSensation: Int?,
+        neckTightness: Int?,
+        jawSoreness: Int?,
+        earFullness: Int?,
+        healthAnxiety: Int?,
+        stressLevel: Int? = nil
+    ) {
+        self.nightID = nightID
+        self.globalSensation = globalSensation
+        self.neckTightness = neckTightness
+        self.jawSoreness = jawSoreness
+        self.earFullness = earFullness
+        self.healthAnxiety = healthAnxiety
+        self.stressLevel = stressLevel
+    }
 
     static func empty(nightID: String) -> MorningOutcomeSelection {
         MorningOutcomeSelection(
@@ -15,7 +34,8 @@ struct MorningOutcomeSelection: Equatable {
             neckTightness: nil,
             jawSoreness: nil,
             earFullness: nil,
-            healthAnxiety: nil
+            healthAnxiety: nil,
+            stressLevel: nil
         )
     }
 
@@ -25,6 +45,7 @@ struct MorningOutcomeSelection: Equatable {
             || jawSoreness != nil
             || earFullness != nil
             || healthAnxiety != nil
+            || stressLevel != nil
     }
 
     var isComplete: Bool {
@@ -33,6 +54,7 @@ struct MorningOutcomeSelection: Equatable {
             && jawSoreness != nil
             && earFullness != nil
             && healthAnxiety != nil
+            && stressLevel != nil
     }
 
     func value(for field: MorningOutcomeField) -> Int? {
@@ -47,6 +69,8 @@ struct MorningOutcomeSelection: Equatable {
             return earFullness
         case .healthAnxiety:
             return healthAnxiety
+        case .stressLevel:
+            return stressLevel
         }
     }
 
@@ -59,7 +83,8 @@ struct MorningOutcomeSelection: Equatable {
                 neckTightness: neckTightness,
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
-                healthAnxiety: healthAnxiety
+                healthAnxiety: healthAnxiety,
+                stressLevel: stressLevel
             )
         case .neckTightness:
             return MorningOutcomeSelection(
@@ -68,7 +93,8 @@ struct MorningOutcomeSelection: Equatable {
                 neckTightness: value,
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
-                healthAnxiety: healthAnxiety
+                healthAnxiety: healthAnxiety,
+                stressLevel: stressLevel
             )
         case .jawSoreness:
             return MorningOutcomeSelection(
@@ -77,7 +103,8 @@ struct MorningOutcomeSelection: Equatable {
                 neckTightness: neckTightness,
                 jawSoreness: value,
                 earFullness: earFullness,
-                healthAnxiety: healthAnxiety
+                healthAnxiety: healthAnxiety,
+                stressLevel: stressLevel
             )
         case .earFullness:
             return MorningOutcomeSelection(
@@ -86,7 +113,8 @@ struct MorningOutcomeSelection: Equatable {
                 neckTightness: neckTightness,
                 jawSoreness: jawSoreness,
                 earFullness: value,
-                healthAnxiety: healthAnxiety
+                healthAnxiety: healthAnxiety,
+                stressLevel: stressLevel
             )
         case .healthAnxiety:
             return MorningOutcomeSelection(
@@ -95,7 +123,18 @@ struct MorningOutcomeSelection: Equatable {
                 neckTightness: neckTightness,
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
-                healthAnxiety: value
+                healthAnxiety: value,
+                stressLevel: stressLevel
+            )
+        case .stressLevel:
+            return MorningOutcomeSelection(
+                nightID: nightID,
+                globalSensation: globalSensation,
+                neckTightness: neckTightness,
+                jawSoreness: jawSoreness,
+                earFullness: earFullness,
+                healthAnxiety: healthAnxiety,
+                stressLevel: value
             )
         }
     }
@@ -108,6 +147,7 @@ struct MorningOutcomeSelection: Equatable {
             jawSoreness: jawSoreness.map(Double.init),
             earFullness: earFullness.map(Double.init),
             healthAnxiety: healthAnxiety.map(Double.init),
+            stressLevel: stressLevel.map(Double.init),
             createdAt: createdAt
         )
     }
@@ -119,6 +159,7 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
     case jawSoreness
     case earFullness
     case healthAnxiety
+    case stressLevel
 
     var id: String {
         rawValue
@@ -136,6 +177,8 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return "Ear"
         case .healthAnxiety:
             return "Anxiety"
+        case .stressLevel:
+            return "Stress"
         }
     }
 
@@ -151,6 +194,8 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return AccessibilityID.exploreMorningEarPicker
         case .healthAnxiety:
             return AccessibilityID.exploreMorningAnxietyPicker
+        case .stressLevel:
+            return AccessibilityID.exploreMorningStressPicker
         }
     }
 
@@ -166,6 +211,8 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return "Ear fullness"
         case .healthAnxiety:
             return "Worry level"
+        case .stressLevel:
+            return "Stress level"
         }
     }
 
@@ -181,6 +228,8 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return "ear"
         case .healthAnxiety:
             return "brain.head.profile"
+        case .stressLevel:
+            return "bolt.heart"
         }
     }
 }
