@@ -8,6 +8,8 @@ struct UserDataDocument: Codable, Equatable {
     let experiments: [PersonalExperiment]
     let interventionRatings: [InterventionRating]
     let dailyCheckIns: [String: [String]]
+    let dailyDoseProgress: [String: [String: Double]]
+    let interventionDoseSettings: [String: DoseSettings]
     let nightExposures: [NightExposure]
     let nightOutcomes: [NightOutcome]
     let morningStates: [MorningState]
@@ -26,6 +28,8 @@ struct UserDataDocument: Codable, Equatable {
         experiments: [],
         interventionRatings: [],
         dailyCheckIns: [:],
+        dailyDoseProgress: [:],
+        interventionDoseSettings: [:],
         nightExposures: [],
         nightOutcomes: [],
         morningStates: [],
@@ -45,6 +49,8 @@ struct UserDataDocument: Codable, Equatable {
         experiments: [PersonalExperiment],
         interventionRatings: [InterventionRating],
         dailyCheckIns: [String: [String]],
+        dailyDoseProgress: [String: [String: Double]] = [:],
+        interventionDoseSettings: [String: DoseSettings] = [:],
         nightExposures: [NightExposure],
         nightOutcomes: [NightOutcome],
         morningStates: [MorningState],
@@ -62,6 +68,8 @@ struct UserDataDocument: Codable, Equatable {
         self.experiments = experiments
         self.interventionRatings = interventionRatings
         self.dailyCheckIns = dailyCheckIns
+        self.dailyDoseProgress = dailyDoseProgress
+        self.interventionDoseSettings = interventionDoseSettings
         self.nightExposures = nightExposures
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
@@ -81,6 +89,8 @@ struct UserDataDocument: Codable, Equatable {
         case experiments
         case interventionRatings
         case dailyCheckIns
+        case dailyDoseProgress
+        case interventionDoseSettings
         case nightExposures
         case nightOutcomes
         case morningStates
@@ -101,6 +111,8 @@ struct UserDataDocument: Codable, Equatable {
         experiments = try container.decodeIfPresent([PersonalExperiment].self, forKey: .experiments) ?? []
         interventionRatings = try container.decodeIfPresent([InterventionRating].self, forKey: .interventionRatings) ?? []
         dailyCheckIns = try container.decodeIfPresent([String: [String]].self, forKey: .dailyCheckIns) ?? [:]
+        dailyDoseProgress = try container.decodeIfPresent([String: [String: Double]].self, forKey: .dailyDoseProgress) ?? [:]
+        interventionDoseSettings = try container.decodeIfPresent([String: DoseSettings].self, forKey: .interventionDoseSettings) ?? [:]
         nightExposures = try container.decodeIfPresent([NightExposure].self, forKey: .nightExposures) ?? []
         nightOutcomes = try container.decodeIfPresent([NightOutcome].self, forKey: .nightOutcomes) ?? []
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
@@ -291,6 +303,11 @@ struct InterventionRating: Codable, Equatable {
     let effectiveness: String
     let notes: String?
     let lastUpdated: String
+}
+
+struct DoseSettings: Codable, Equatable, Sendable {
+    let dailyGoal: Double
+    let increment: Double
 }
 
 struct NightExposure: Codable, Equatable {

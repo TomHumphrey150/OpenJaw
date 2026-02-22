@@ -1,3 +1,19 @@
+export type InterventionTrackingType =
+  | "binary"
+  | "timer"
+  | "counter"
+  | "checklist"
+  | "appointment"
+  | "dose";
+
+export type DoseUnit = "minutes" | "hours" | "milliliters" | "reps" | "breaths";
+
+export interface DoseConfig {
+  unit: DoseUnit;
+  defaultDailyGoal: number;
+  defaultIncrement: number;
+}
+
 export interface Intervention {
   id: string;
   name: string;
@@ -7,7 +23,10 @@ export interface Intervention {
   detailedDescription: string;
   tier: number;
   frequency: "daily" | "weekly" | "hourly" | "asNeeded" | "quarterly" | "continuous";
-  trackingType: "binary" | "timer" | "counter" | "checklist" | "appointment";
+  trackingType: InterventionTrackingType;
+  legacyIds: string[];
+  graphNodeId: string | null;
+  doseConfig?: DoseConfig;
   isRemindable: boolean;
   defaultReminderMinutes: number | null;
   externalLink: string | null;

@@ -2,6 +2,99 @@ import Testing
 @testable import Telocare
 
 struct DashboardSnapshotBuilderTests {
+    @Test func canonicalizesLegacyInterventionIDsAndBuildsDoseState() {
+        let builder = DashboardSnapshotBuilder()
+        let document = UserDataDocument(
+            version: 1,
+            lastExport: nil,
+            personalStudies: [],
+            notes: [],
+            experiments: [],
+            interventionRatings: [],
+            dailyCheckIns: [
+                "2026-02-22": ["hydration_target", "HYDRATION", "exercise_timing", "EXERCISE_TX"],
+            ],
+            dailyDoseProgress: [
+                "2026-02-22": ["hydration_target": 1200, "HYDRATION": 900],
+            ],
+            interventionDoseSettings: [
+                "water_intake": DoseSettings(dailyGoal: 3000, increment: 100),
+            ],
+            nightExposures: [],
+            nightOutcomes: [],
+            morningStates: [],
+            habitTrials: [],
+            habitClassifications: [],
+            hiddenInterventions: [],
+            unlockedAchievements: [],
+            customCausalDiagram: nil,
+            experienceFlow: .empty
+        )
+        let firstPartyContent = FirstPartyContentBundle(
+            graphData: CausalGraphData(nodes: [], edges: []),
+            interventionsCatalog: InterventionsCatalog(
+                interventions: [
+                    InterventionDefinition(
+                        id: "water_intake",
+                        name: "Water Intake",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: nil,
+                        evidenceSummary: nil,
+                        citationIds: [],
+                        externalLink: nil,
+                        defaultOrder: 1,
+                        legacyIds: ["hydration_target", "HYDRATION"],
+                        graphNodeId: "HYDRATION",
+                        trackingType: .dose,
+                        doseConfig: DoseConfig(
+                            unit: .milliliters,
+                            defaultDailyGoal: 3000,
+                            defaultIncrement: 100
+                        )
+                    ),
+                    InterventionDefinition(
+                        id: "exercise_minutes",
+                        name: "Exercise",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: nil,
+                        evidenceSummary: nil,
+                        citationIds: [],
+                        externalLink: nil,
+                        defaultOrder: 2,
+                        legacyIds: ["exercise_timing", "EXERCISE_TX"],
+                        graphNodeId: "EXERCISE_TX",
+                        trackingType: .dose,
+                        doseConfig: DoseConfig(
+                            unit: .minutes,
+                            defaultDailyGoal: 30,
+                            defaultIncrement: 10
+                        )
+                    ),
+                ]
+            ),
+            outcomesMetadata: .empty
+        )
+
+        let snapshot = builder.build(from: document, firstPartyContent: firstPartyContent)
+
+        #expect(snapshot.inputs.map { $0.id } == ["water_intake", "exercise_minutes"])
+
+        let water = snapshot.inputs[0]
+        #expect(water.trackingMode == .dose)
+        #expect(water.isCheckedToday == false)
+        #expect(water.doseState?.value == 2100)
+        #expect(water.doseState?.goal == 3000)
+        #expect(water.statusText == "2100/3000 ml today (70%)")
+
+        let exercise = snapshot.inputs[1]
+        #expect(exercise.trackingMode == .dose)
+        #expect(exercise.doseState?.value == 0)
+        #expect(exercise.doseState?.goal == 30)
+        #expect(exercise.doseState?.increment == 10)
+    }
+
     @Test func buildsInputInventoryFromGraphWithPersistedState() {
         let builder = DashboardSnapshotBuilder()
         let customGraph = CausalGraphData(

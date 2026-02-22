@@ -165,6 +165,8 @@ final class RootViewModel: ObservableObject {
                 graphData: graphData,
                 initialExperienceFlow: document.experienceFlow,
                 initialDailyCheckIns: document.dailyCheckIns,
+                initialDailyDoseProgress: document.dailyDoseProgress,
+                initialInterventionDoseSettings: document.interventionDoseSettings,
                 initialMorningStates: document.morningStates,
                 initialHiddenInterventions: document.hiddenInterventions,
                 persistUserDataPatch: { patch in

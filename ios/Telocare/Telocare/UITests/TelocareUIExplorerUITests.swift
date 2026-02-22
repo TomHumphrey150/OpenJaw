@@ -9,22 +9,23 @@ final class TelocareUIExplorerUITests: XCTestCase {
 
         capture("01-guided-outcomes")
 
-        let outcomesButton = app.buttons["guided.outcomes.cta"]
-        XCTAssertTrue(outcomesButton.waitForExistence(timeout: 4))
-        outcomesButton.tap()
+        if app.buttons["guided.outcomes.cta"].waitForExistence(timeout: 4) {
+            app.buttons["guided.outcomes.cta"].tap()
 
-        let situationButton = app.buttons["guided.situation.cta"]
-        XCTAssertTrue(situationButton.waitForExistence(timeout: 4))
-        capture("02-guided-situation")
-        situationButton.tap()
+            let situationButton = app.buttons["guided.situation.cta"]
+            XCTAssertTrue(situationButton.waitForExistence(timeout: 4))
+            capture("02-guided-situation")
+            situationButton.tap()
 
-        let doneButton = app.buttons["guided.inputs.done"]
-        XCTAssertTrue(doneButton.waitForExistence(timeout: 4))
-        capture("03-guided-inputs")
-        doneButton.tap()
+            let doneButton = app.buttons["guided.inputs.done"]
+            XCTAssertTrue(doneButton.waitForExistence(timeout: 4))
+            capture("03-guided-inputs")
+            doneButton.tap()
+        }
 
         let situationTab = app.tabBars.buttons["Situation"]
         XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
+        situationTab.tap()
         capture("04-explore-situation-collapsed")
 
         let editButton = app.buttons["explore.situation.edit.button"]

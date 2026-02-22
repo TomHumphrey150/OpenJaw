@@ -18,9 +18,13 @@ final class AppViewModel: ObservableObject {
 
     private var experienceFlow: ExperienceFlow
     private var dailyCheckIns: [String: [String]]
+    private var dailyDoseProgress: [String: [String: Double]]
+    private var interventionDoseSettings: [String: DoseSettings]
     private var morningStates: [MorningState]
     private var hiddenInterventions: [String]
     private var inputCheckOperationToken: Int
+    private var inputDoseOperationToken: Int
+    private var inputDoseSettingsOperationToken: Int
     private var inputHiddenOperationToken: Int
     private var morningOutcomeOperationToken: Int
 
@@ -37,6 +41,8 @@ final class AppViewModel: ObservableObject {
             graphData: CanonicalGraphLoader.loadGraphOrFallback(),
             initialExperienceFlow: .empty,
             initialDailyCheckIns: [:],
+            initialDailyDoseProgress: [:],
+            initialInterventionDoseSettings: [:],
             initialMorningStates: [],
             initialHiddenInterventions: [],
             persistUserDataPatch: { _ in true },
@@ -49,6 +55,8 @@ final class AppViewModel: ObservableObject {
         graphData: CausalGraphData,
         initialExperienceFlow: ExperienceFlow = .empty,
         initialDailyCheckIns: [String: [String]] = [:],
+        initialDailyDoseProgress: [String: [String: Double]] = [:],
+        initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialMorningStates: [MorningState] = [],
         initialHiddenInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
@@ -76,10 +84,14 @@ final class AppViewModel: ObservableObject {
 
         experienceFlow = initialExperienceFlow
         dailyCheckIns = initialDailyCheckIns
+        dailyDoseProgress = initialDailyDoseProgress
+        interventionDoseSettings = initialInterventionDoseSettings
         morningStates = initialMorningStates
         hiddenInterventions = initialHiddenInterventions
 
         inputCheckOperationToken = 0
+        inputDoseOperationToken = 0
+        inputDoseSettingsOperationToken = 0
         inputHiddenOperationToken = 0
         morningOutcomeOperationToken = 0
 
@@ -170,6 +182,7 @@ final class AppViewModel: ObservableObject {
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
 
         let currentInput = snapshot.inputs[index]
+        guard currentInput.trackingMode == .binary else { return }
         let previousSnapshot = snapshot
         let previousDailyCheckIns = dailyCheckIns
 
@@ -187,9 +200,12 @@ final class AppViewModel: ObservableObject {
         let nextInput = InputStatus(
             id: currentInput.id,
             name: currentInput.name,
+            trackingMode: .binary,
             statusText: nextStatusText,
             completion: Double(nextDayCount) / 7.0,
             isCheckedToday: nextCheckedToday,
+            doseState: nil,
+            graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isHidden: currentInput.isHidden,
             evidenceLevel: currentInput.evidenceLevel,
@@ -231,6 +247,83 @@ final class AppViewModel: ObservableObject {
         }
     }
 
+    func incrementInputDose(_ inputID: String) {
+        guard mode == .explore else { return }
+        updateDose(inputID: inputID, operation: .increment)
+    }
+
+    func decrementInputDose(_ inputID: String) {
+        guard mode == .explore else { return }
+        updateDose(inputID: inputID, operation: .decrement)
+    }
+
+    func resetInputDose(_ inputID: String) {
+        guard mode == .explore else { return }
+        updateDose(inputID: inputID, operation: .reset)
+    }
+
+    func updateDoseSettings(_ inputID: String, dailyGoal: Double, increment: Double) {
+        guard mode == .explore else { return }
+        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+
+        let currentInput = snapshot.inputs[index]
+        guard currentInput.trackingMode == .dose else { return }
+        guard let currentDoseState = currentInput.doseState else { return }
+
+        let safeGoal = max(1, dailyGoal)
+        let safeIncrement = max(1, increment)
+        let previousSnapshot = snapshot
+        let previousSettings = interventionDoseSettings
+
+        let nextState = InputDoseState(
+            value: currentDoseState.value,
+            goal: safeGoal,
+            increment: safeIncrement,
+            unit: currentDoseState.unit
+        )
+        let nextInput = InputStatus(
+            id: currentInput.id,
+            name: currentInput.name,
+            trackingMode: .dose,
+            statusText: doseStatusText(for: nextState),
+            completion: nextState.completionClamped,
+            isCheckedToday: nextState.isGoalMet,
+            doseState: nextState,
+            graphNodeID: currentInput.graphNodeID,
+            classificationText: currentInput.classificationText,
+            isHidden: currentInput.isHidden,
+            evidenceLevel: currentInput.evidenceLevel,
+            evidenceSummary: currentInput.evidenceSummary,
+            detailedDescription: currentInput.detailedDescription,
+            citationIDs: currentInput.citationIDs,
+            externalLink: currentInput.externalLink
+        )
+
+        var nextSettings = interventionDoseSettings
+        nextSettings[inputID] = DoseSettings(dailyGoal: safeGoal, increment: safeIncrement)
+
+        updateInput(nextInput, at: index)
+        interventionDoseSettings = nextSettings
+
+        let successMessage = "Saved dose settings for \(currentInput.name)."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextInputDoseSettingsOperationToken()
+        Task {
+            do {
+                try await persistPatch(.interventionDoseSettings(nextSettings))
+            } catch {
+                guard operationToken == inputDoseSettingsOperationToken else { return }
+                interventionDoseSettings = previousSettings
+                snapshot = previousSnapshot
+                let failureMessage = "Could not save dose settings for \(currentInput.name). Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
+    }
+
     func toggleInputHidden(_ inputID: String) {
         guard mode == .explore else { return }
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
@@ -243,9 +336,12 @@ final class AppViewModel: ObservableObject {
         let nextInput = InputStatus(
             id: currentInput.id,
             name: currentInput.name,
+            trackingMode: currentInput.trackingMode,
             statusText: currentInput.statusText,
             completion: currentInput.completion,
             isCheckedToday: currentInput.isCheckedToday,
+            doseState: currentInput.doseState,
+            graphNodeID: currentInput.graphNodeID,
             classificationText: currentInput.classificationText,
             isHidden: nextHidden,
             evidenceLevel: currentInput.evidenceLevel,
@@ -440,6 +536,16 @@ final class AppViewModel: ObservableObject {
         return inputCheckOperationToken
     }
 
+    private func nextInputDoseOperationToken() -> Int {
+        inputDoseOperationToken += 1
+        return inputDoseOperationToken
+    }
+
+    private func nextInputDoseSettingsOperationToken() -> Int {
+        inputDoseSettingsOperationToken += 1
+        return inputDoseSettingsOperationToken
+    }
+
     private func nextInputHiddenOperationToken() -> Int {
         inputHiddenOperationToken += 1
         return inputHiddenOperationToken
@@ -475,6 +581,104 @@ final class AppViewModel: ObservableObject {
         return "Not checked yet"
     }
 
+    private func updateDose(inputID: String, operation: DoseOperation) {
+        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+
+        let currentInput = snapshot.inputs[index]
+        guard currentInput.trackingMode == .dose else { return }
+        guard let doseState = currentInput.doseState else { return }
+
+        let previousSnapshot = snapshot
+        let previousDailyDoseProgress = dailyDoseProgress
+
+        let nextValue: Double
+        switch operation {
+        case .increment:
+            nextValue = doseState.value + doseState.increment
+        case .decrement:
+            nextValue = max(0, doseState.value - doseState.increment)
+        case .reset:
+            nextValue = 0
+        }
+
+        let nextDoseState = InputDoseState(
+            value: nextValue,
+            goal: doseState.goal,
+            increment: doseState.increment,
+            unit: doseState.unit
+        )
+
+        let nextInput = InputStatus(
+            id: currentInput.id,
+            name: currentInput.name,
+            trackingMode: .dose,
+            statusText: doseStatusText(for: nextDoseState),
+            completion: nextDoseState.completionClamped,
+            isCheckedToday: nextDoseState.isGoalMet,
+            doseState: nextDoseState,
+            graphNodeID: currentInput.graphNodeID,
+            classificationText: currentInput.classificationText,
+            isHidden: currentInput.isHidden,
+            evidenceLevel: currentInput.evidenceLevel,
+            evidenceSummary: currentInput.evidenceSummary,
+            detailedDescription: currentInput.detailedDescription,
+            citationIDs: currentInput.citationIDs,
+            externalLink: currentInput.externalLink
+        )
+
+        let dateKey = Self.localDateKey(from: nowProvider())
+        let nextDailyDoseProgress = Self.updatedDailyDoseProgress(
+            from: dailyDoseProgress,
+            dateKey: dateKey,
+            interventionID: currentInput.id,
+            value: nextValue
+        )
+
+        updateInput(nextInput, at: index)
+        dailyDoseProgress = nextDailyDoseProgress
+
+        let successMessage: String
+        switch operation {
+        case .increment:
+            successMessage = "\(currentInput.name) progress increased."
+        case .decrement:
+            successMessage = "\(currentInput.name) progress decreased."
+        case .reset:
+            successMessage = "\(currentInput.name) progress reset."
+        }
+
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextInputDoseOperationToken()
+        Task {
+            do {
+                try await persistPatch(.dailyDoseProgress(nextDailyDoseProgress))
+            } catch {
+                guard operationToken == inputDoseOperationToken else { return }
+                dailyDoseProgress = previousDailyDoseProgress
+                snapshot = previousSnapshot
+                let failureMessage = "Could not save dose progress for \(currentInput.name). Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
+    }
+
+    private func doseStatusText(for state: InputDoseState) -> String {
+        let percent = Int((state.completionRaw * 100).rounded())
+        return "\(formattedDoseValue(state.value))/\(formattedDoseValue(state.goal)) \(state.unit.displayName) today (\(percent)%)"
+    }
+
+    private func formattedDoseValue(_ value: Double) -> String {
+        let roundedValue = value.rounded()
+        if abs(roundedValue - value) < 0.0001 {
+            return String(Int(roundedValue))
+        }
+
+        return String(format: "%.1f", value)
+    }
+
     private static func updatedDailyCheckIns(
         from current: [String: [String]],
         dateKey: String,
@@ -493,6 +697,25 @@ final class AppViewModel: ObservableObject {
         }
 
         next[dateKey] = interventionIDs
+        return next
+    }
+
+    private static func updatedDailyDoseProgress(
+        from current: [String: [String: Double]],
+        dateKey: String,
+        interventionID: String,
+        value: Double
+    ) -> [String: [String: Double]] {
+        var next = current
+        var progress = next[dateKey] ?? [:]
+
+        if value <= 0 {
+            progress.removeValue(forKey: interventionID)
+        } else {
+            progress[interventionID] = value
+        }
+
+        next[dateKey] = progress
         return next
     }
 
@@ -579,4 +802,10 @@ final class AppViewModel: ObservableObject {
 
 private enum PersistenceError: Error {
     case writeRejected
+}
+
+private enum DoseOperation {
+    case increment
+    case decrement
+    case reset
 }

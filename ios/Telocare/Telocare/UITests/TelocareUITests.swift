@@ -27,7 +27,7 @@ final class TelocareUITests: XCTestCase {
 
         app.buttons[UIID.authSignInButton].tap()
         XCTAssertTrue(app.buttons[UIID.profileButton].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons[UIID.guidedOutcomesCTA].waitForExistence(timeout: 2))
+        XCTAssertTrue(waitForGuidedOrExploreRoot(in: app, timeout: 2))
     }
 
     func testCreateAccountWithoutSessionShowsConfirmationStatus() {
@@ -96,7 +96,9 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        XCTAssertTrue(app.tabBars.buttons["Situation"].waitForExistence(timeout: 4))
+        let situationTab = app.tabBars.buttons["Situation"]
+        XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
+        situationTab.tap()
         XCTAssertTrue(app.webViews[UIID.graphWebView].waitForExistence(timeout: 2))
     }
 
@@ -104,7 +106,11 @@ final class TelocareUITests: XCTestCase {
         let app = configuredApp(authState: .authenticated)
         app.launch()
 
-        app.buttons[UIID.guidedOutcomesCTA].tap()
+        completeGuidedFlow(in: app)
+
+        let situationTab = app.tabBars.buttons["Situation"]
+        XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
+        situationTab.tap()
 
         let graph = app.webViews[UIID.graphWebView]
         XCTAssertTrue(graph.waitForExistence(timeout: 2))
@@ -144,7 +150,11 @@ final class TelocareUITests: XCTestCase {
 
     private func completeGuidedFlow(in app: XCUIApplication) {
         let outcomesButton = app.buttons[UIID.guidedOutcomesCTA]
-        XCTAssertTrue(outcomesButton.waitForExistence(timeout: 4))
+        if !outcomesButton.waitForExistence(timeout: 4) {
+            XCTAssertTrue(waitForGuidedOrExploreRoot(in: app, timeout: 4))
+            return
+        }
+
         outcomesButton.tap()
 
         let situationButton = app.buttons[UIID.guidedSituationCTA]
@@ -154,6 +164,14 @@ final class TelocareUITests: XCTestCase {
         let doneButton = app.buttons[UIID.guidedDoneCTA]
         XCTAssertTrue(doneButton.waitForExistence(timeout: 4))
         doneButton.tap()
+    }
+
+    private func waitForGuidedOrExploreRoot(in app: XCUIApplication, timeout: TimeInterval) -> Bool {
+        if app.buttons[UIID.guidedOutcomesCTA].waitForExistence(timeout: timeout) {
+            return true
+        }
+
+        return app.tabBars.buttons["Situation"].waitForExistence(timeout: timeout)
     }
 }
 

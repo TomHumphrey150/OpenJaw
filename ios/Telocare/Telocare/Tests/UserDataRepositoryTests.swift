@@ -207,6 +207,35 @@ struct UserDataRepositoryTests {
         #expect(decoded.hiddenInterventions == nil)
     }
 
+    @Test func userDataPatchCanEncodeDailyDoseProgress() throws {
+        let patch = UserDataPatch.dailyDoseProgress(
+            [
+                "2026-02-21": ["water_intake": 1200]
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 1200)
+        #expect(decoded.interventionDoseSettings == nil)
+    }
+
+    @Test func userDataPatchCanEncodeInterventionDoseSettings() throws {
+        let patch = UserDataPatch.interventionDoseSettings(
+            [
+                "water_intake": DoseSettings(dailyGoal: 3000, increment: 100)
+            ]
+        )
+
+        let data = try JSONEncoder().encode(patch)
+        let decoded = try JSONDecoder().decode(DecodedPatch.self, from: data)
+
+        #expect(decoded.dailyDoseProgress == nil)
+        #expect(decoded.interventionDoseSettings?["water_intake"]?.dailyGoal == 3000)
+        #expect(decoded.interventionDoseSettings?["water_intake"]?.increment == 100)
+    }
+
     @Test func userDataPatchCanEncodeHiddenInterventions() throws {
         let patch = UserDataPatch.hiddenInterventions(["PPI_TX", "BED_ELEV_TX"])
 
@@ -229,6 +258,8 @@ private enum RepositoryFailure: Error {
 private struct DecodedPatch: Decodable {
     let experienceFlow: ExperienceFlow?
     let dailyCheckIns: [String: [String]]?
+    let dailyDoseProgress: [String: [String: Double]]?
+    let interventionDoseSettings: [String: DoseSettings]?
     let morningStates: [MorningState]?
     let hiddenInterventions: [String]?
 }

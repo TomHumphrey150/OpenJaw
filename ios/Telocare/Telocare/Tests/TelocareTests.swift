@@ -94,6 +94,43 @@ struct AppViewModelTests {
         #expect(harness.recorder.messages.last == "Could not save Bed Elevation check-in. Reverted.")
     }
 
+    @Test func doseIncrementPersistsDailyDoseProgressPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshot(),
+            initialDailyDoseProgress: ["2026-02-21": ["water_intake": 500]],
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.incrementInputDose("water_intake")
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(patch?.dailyDoseProgress?["2026-02-21"]?["water_intake"] == 600)
+    }
+
+    @Test func doseUpdateSettingsPersistsPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            snapshot: doseSnapshot(),
+            initialInterventionDoseSettings: ["water_intake": DoseSettings(dailyGoal: 3000, increment: 100)],
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.updateDoseSettings("water_intake", dailyGoal: 3500, increment: 150)
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(patch?.interventionDoseSettings?["water_intake"]?.dailyGoal == 3500)
+        #expect(patch?.interventionDoseSettings?["water_intake"]?.increment == 150)
+    }
+
     @Test func inputMuteTogglePersistsHiddenInterventionsPatch() async {
         let patchRecorder = PatchRecorder()
         let harness = AppViewModelHarness(
@@ -176,6 +213,50 @@ struct AppViewModelTests {
             try? await Task.sleep(nanoseconds: 20_000_000)
         }
     }
+
+    private func doseSnapshot() -> DashboardSnapshot {
+        DashboardSnapshot(
+            outcomes: OutcomeSummary(
+                shieldScore: 0,
+                burdenTrendPercent: 0,
+                topContributor: "None",
+                confidence: "Low",
+                burdenProgress: 0
+            ),
+            outcomeRecords: [],
+            outcomesMetadata: .empty,
+            situation: SituationSummary(
+                focusedNode: "RMMA",
+                tier: "Tier 7",
+                visibleHotspots: 1,
+                topSource: "None"
+            ),
+            inputs: [
+                InputStatus(
+                    id: "water_intake",
+                    name: "Water Intake",
+                    trackingMode: .dose,
+                    statusText: "500/3000 ml today (17%)",
+                    completion: 0.1667,
+                    isCheckedToday: false,
+                    doseState: InputDoseState(
+                        value: 500,
+                        goal: 3000,
+                        increment: 100,
+                        unit: .milliliters
+                    ),
+                    graphNodeID: "HYDRATION",
+                    classificationText: nil,
+                    isHidden: false,
+                    evidenceLevel: nil,
+                    evidenceSummary: nil,
+                    detailedDescription: nil,
+                    citationIDs: [],
+                    externalLink: nil
+                )
+            ]
+        )
+    }
 }
 
 @MainActor
@@ -184,8 +265,11 @@ private struct AppViewModelHarness {
     let recorder: AnnouncementRecorder
 
     init(
+        snapshot: DashboardSnapshot = InMemoryDashboardRepository().loadDashboardSnapshot(),
         initialExperienceFlow: ExperienceFlow = .empty,
         initialDailyCheckIns: [String: [String]] = [:],
+        initialDailyDoseProgress: [String: [String: Double]] = [:],
+        initialInterventionDoseSettings: [String: DoseSettings] = [:],
         initialMorningStates: [MorningState] = [],
         initialHiddenInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true }
@@ -196,10 +280,12 @@ private struct AppViewModelHarness {
         }
         self.recorder = recorder
         viewModel = AppViewModel(
-            snapshot: InMemoryDashboardRepository().loadDashboardSnapshot(),
+            snapshot: snapshot,
             graphData: CanonicalGraphLoader.loadGraphOrFallback(),
             initialExperienceFlow: initialExperienceFlow,
             initialDailyCheckIns: initialDailyCheckIns,
+            initialDailyDoseProgress: initialDailyDoseProgress,
+            initialInterventionDoseSettings: initialInterventionDoseSettings,
             initialMorningStates: initialMorningStates,
             initialHiddenInterventions: initialHiddenInterventions,
             persistUserDataPatch: persistUserDataPatch,

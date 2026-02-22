@@ -9,6 +9,10 @@ struct ExploreTabShell: View {
                 inputs: viewModel.snapshot.inputs,
                 graphData: viewModel.graphData,
                 onToggleCheckedToday: viewModel.toggleInputCheckedToday,
+                onIncrementDose: viewModel.incrementInputDose,
+                onDecrementDose: viewModel.decrementInputDose,
+                onResetDose: viewModel.resetInputDose,
+                onUpdateDoseSettings: viewModel.updateDoseSettings,
                 onToggleHidden: viewModel.toggleInputHidden
             )
                 .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
@@ -949,6 +953,10 @@ private struct ExploreInputsScreen: View {
     let inputs: [InputStatus]
     let graphData: CausalGraphData
     let onToggleCheckedToday: (String) -> Void
+    let onIncrementDose: (String) -> Void
+    let onDecrementDose: (String) -> Void
+    let onResetDose: (String) -> Void
+    let onUpdateDoseSettings: (String, Double, Double) -> Void
     let onToggleHidden: (String) -> Void
 
     @State private var navigationPath = NavigationPath()
@@ -964,15 +972,31 @@ private struct ExploreInputsScreen: View {
             .background(TelocareTheme.sand.ignoresSafeArea())
             .navigationTitle("Interventions")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(for: InputStatus.self) { input in
-                InputDetailView(input: input, graphData: graphData, onToggleHidden: onToggleHidden)
+            .navigationDestination(for: String.self) { inputID in
+                if let input = inputStatus(for: inputID) {
+                    InputDetailView(
+                        input: input,
+                        graphData: graphData,
+                        onIncrementDose: onIncrementDose,
+                        onDecrementDose: onDecrementDose,
+                        onResetDose: onResetDose,
+                        onUpdateDoseSettings: onUpdateDoseSettings,
+                        onToggleHidden: onToggleHidden
+                    )
                     .accessibilityIdentifier(AccessibilityID.exploreInputDetailSheet)
+                } else {
+                    ContentUnavailableView("Intervention unavailable", systemImage: "exclamationmark.triangle")
+                }
             }
         }
     }
 
     private func showInputDetail(_ input: InputStatus) {
-        navigationPath.append(input)
+        navigationPath.append(input.id)
+    }
+
+    private func inputStatus(for inputID: String) -> InputStatus? {
+        inputs.first { $0.id == inputID }
     }
 
     // MARK: - Progress Overview Header
@@ -1060,6 +1084,7 @@ private struct ExploreInputsScreen: View {
                         InputCard(
                             input: input,
                             onToggle: { onToggleCheckedToday(input.id) },
+                            onIncrementDose: { onIncrementDose(input.id) },
                             onShowDetails: { showInputDetail(input) }
                         )
                     }
@@ -1112,7 +1137,7 @@ private struct ExploreInputsScreen: View {
         case .all, .pending:
             return "No interventions to show.\nThey'll appear as you add them."
         case .completed:
-            return "Nothing completed yet today.\nTap an intervention to check it off!"
+            return "Nothing completed yet today.\nTap an intervention to make progress."
         case .hidden:
             return "No hidden interventions."
         }
@@ -1174,38 +1199,32 @@ private struct FilterPill: View {
 private struct InputCard: View {
     let input: InputStatus
     let onToggle: () -> Void
+    let onIncrementDose: () -> Void
     let onShowDetails: () -> Void
 
     var body: some View {
         WarmCard(padding: 0) {
             HStack(spacing: 0) {
-                Button(action: onToggle) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
-                            .fill(input.isCheckedToday ? TelocareTheme.coral : TelocareTheme.peach)
-                        if input.isCheckedToday {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .frame(width: 28, height: 28)
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, TelocareTheme.Spacing.sm)
-                .padding(.vertical, TelocareTheme.Spacing.sm)
-                .accessibilityLabel(input.isCheckedToday ? "Uncheck \(input.name)" : "Check \(input.name)")
+                primaryControl
+                    .padding(.leading, TelocareTheme.Spacing.sm)
+                    .padding(.vertical, TelocareTheme.Spacing.sm)
 
                 Button(action: onShowDetails) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(input.name)
                                 .font(TelocareTheme.Typography.headline)
-                                .foregroundStyle(input.isCheckedToday ? TelocareTheme.muted : TelocareTheme.charcoal)
-                                .strikethrough(input.isCheckedToday)
+                                .foregroundStyle(input.isCheckedToday && input.trackingMode == .binary ? TelocareTheme.muted : TelocareTheme.charcoal)
+                                .strikethrough(input.isCheckedToday && input.trackingMode == .binary)
 
                             HStack(spacing: TelocareTheme.Spacing.sm) {
-                                WeeklyProgressBar(completion: input.completion)
+                                if input.trackingMode == .binary {
+                                    WeeklyProgressBar(completion: input.completion)
+                                } else if let doseState = input.doseState {
+                                    Text(doseSummaryText(for: doseState))
+                                        .font(TelocareTheme.Typography.caption)
+                                        .foregroundStyle(TelocareTheme.warmGray)
+                                }
 
                                 if let evidence = input.evidenceLevel {
                                     EvidenceBadge(level: evidence)
@@ -1226,6 +1245,80 @@ private struct InputCard: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    @ViewBuilder
+    private var primaryControl: some View {
+        switch input.trackingMode {
+        case .binary:
+            Button(action: onToggle) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                        .fill(input.isCheckedToday ? TelocareTheme.coral : TelocareTheme.peach)
+                    if input.isCheckedToday {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(input.isCheckedToday ? "Uncheck \(input.name)" : "Check \(input.name)")
+            .accessibilityHint("Marks this intervention as done for today.")
+
+        case .dose:
+            if let doseState = input.doseState {
+                Button(action: onIncrementDose) {
+                    DoseCompletionRing(state: doseState, size: 34, lineWidth: 4)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier(AccessibilityID.exploreInputDoseIncrement)
+                .accessibilityLabel("Increment \(input.name)")
+                .accessibilityValue("\(doseSummaryText(for: doseState)).")
+                .accessibilityHint("Adds one increment toward today's goal.")
+            }
+        }
+    }
+
+    private func doseSummaryText(for state: InputDoseState) -> String {
+        "\(formatted(state.value))/\(formatted(state.goal)) \(state.unit.displayName)"
+    }
+
+    private func formatted(_ value: Double) -> String {
+        let rounded = value.rounded()
+        if abs(rounded - value) < 0.0001 {
+            return String(Int(rounded))
+        }
+
+        return String(format: "%.1f", value)
+    }
+}
+
+private struct DoseCompletionRing: View {
+    let state: InputDoseState
+    let size: CGFloat
+    let lineWidth: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(TelocareTheme.peach, lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: state.completionClamped)
+                .stroke(
+                    state.isGoalMet ? TelocareTheme.success : TelocareTheme.coral,
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+
+            Text("\(Int((state.completionRaw * 100).rounded()))%")
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(TelocareTheme.charcoal)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+        }
+        .frame(width: size, height: size)
     }
 }
 
@@ -1275,9 +1368,15 @@ private struct EvidenceBadge: View {
 private struct InputDetailView: View {
     let input: InputStatus
     let graphData: CausalGraphData
+    let onIncrementDose: (String) -> Void
+    let onDecrementDose: (String) -> Void
+    let onResetDose: (String) -> Void
+    let onUpdateDoseSettings: (String, Double, Double) -> Void
     let onToggleHidden: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var dailyGoalText: String = ""
+    @State private var incrementText: String = ""
 
     var body: some View {
         ScrollView {
@@ -1288,6 +1387,7 @@ private struct InputDetailView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 statusCard
+                doseCard
                 evidenceCard
 
                 if input.detailedDescription != nil {
@@ -1304,6 +1404,12 @@ private struct InputDetailView: View {
         }
         .background(TelocareTheme.sand.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if let doseState = input.doseState {
+                dailyGoalText = formattedDoseValue(doseState.goal)
+                incrementText = formattedDoseValue(doseState.increment)
+            }
+        }
     }
 
     // MARK: - Mute Card
@@ -1329,6 +1435,127 @@ private struct InputDetailView: View {
         }
     }
 
+    // MARK: - Dose Card
+
+    @ViewBuilder
+    private var doseCard: some View {
+        if input.trackingMode == .dose, let doseState = input.doseState {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    WarmSectionHeader(title: "Dose Tracking")
+
+                    HStack(spacing: TelocareTheme.Spacing.md) {
+                        DoseCompletionRing(state: doseState, size: 60, lineWidth: 6)
+                        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                            Text("Today")
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                            Text("\(formattedDoseValue(doseState.value)) / \(formattedDoseValue(doseState.goal)) \(doseState.unit.displayName)")
+                                .font(TelocareTheme.Typography.body)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                            Text("Increment: \(formattedDoseValue(doseState.increment)) \(doseState.unit.displayName)")
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                        }
+                        Spacer()
+                    }
+
+                    HStack(spacing: TelocareTheme.Spacing.sm) {
+                        doseActionButton(
+                            title: "−",
+                            systemImage: "minus.circle.fill",
+                            accessibilityID: AccessibilityID.exploreInputDoseDecrement
+                        ) {
+                            onDecrementDose(input.id)
+                        }
+                        doseActionButton(
+                            title: "+",
+                            systemImage: "plus.circle.fill",
+                            accessibilityID: AccessibilityID.exploreInputDoseIncrement
+                        ) {
+                            onIncrementDose(input.id)
+                        }
+                        doseActionButton(
+                            title: "Reset",
+                            systemImage: "arrow.counterclockwise.circle.fill",
+                            accessibilityID: AccessibilityID.exploreInputDoseReset
+                        ) {
+                            onResetDose(input.id)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                        Text("Daily Goal and Increment")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+
+                        HStack(spacing: TelocareTheme.Spacing.sm) {
+                            TextField("Goal", text: $dailyGoalText)
+                                .textFieldStyle(.roundedBorder)
+                                .keyboardType(.decimalPad)
+                                .accessibilityLabel("Daily goal")
+
+                            TextField("Increment", text: $incrementText)
+                                .textFieldStyle(.roundedBorder)
+                                .keyboardType(.decimalPad)
+                                .accessibilityLabel("Dose increment")
+                        }
+
+                        Button("Save Dose Settings") {
+                            saveDoseSettings()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(TelocareTheme.coral)
+                        .accessibilityIdentifier(AccessibilityID.exploreInputDoseSaveSettings)
+                        .accessibilityHint("Saves this intervention goal and increment.")
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func doseActionButton(
+        title: String,
+        systemImage: String,
+        accessibilityID: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(TelocareTheme.Typography.caption)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .tint(TelocareTheme.coral)
+        .accessibilityIdentifier(accessibilityID)
+    }
+
+    private func saveDoseSettings() {
+        guard let goal = parsePositiveNumber(dailyGoalText), let increment = parsePositiveNumber(incrementText) else {
+            return
+        }
+
+        onUpdateDoseSettings(input.id, goal, increment)
+    }
+
+    private func parsePositiveNumber(_ text: String) -> Double? {
+        guard let value = Double(text.trimmingCharacters(in: .whitespacesAndNewlines)), value > 0 else {
+            return nil
+        }
+
+        return value
+    }
+
+    private func formattedDoseValue(_ value: Double) -> String {
+        let rounded = value.rounded()
+        if abs(rounded - value) < 0.0001 {
+            return String(Int(rounded))
+        }
+
+        return String(format: "%.1f", value)
+    }
+
     // MARK: - Status Card
 
     @ViewBuilder
@@ -1338,8 +1565,14 @@ private struct InputDetailView: View {
                 WarmSectionHeader(title: "Status")
 
                 DetailRow(label: "Status", value: input.statusText)
-                DetailRow(label: "7-day completion", value: "\(Int((input.completion * 100).rounded()))%")
-                DetailRow(label: "Checked today", value: input.isCheckedToday ? "Yes" : "No")
+                if input.trackingMode == .binary {
+                    DetailRow(label: "7-day completion", value: "\(Int((input.completion * 100).rounded()))%")
+                    DetailRow(label: "Checked today", value: input.isCheckedToday ? "Yes" : "No")
+                } else if let doseState = input.doseState {
+                    DetailRow(label: "Goal reached", value: doseState.isGoalMet ? "Yes" : "No")
+                    DetailRow(label: "Current dose", value: "\(formattedDoseValue(doseState.value)) \(doseState.unit.displayName)")
+                    DetailRow(label: "Daily goal", value: "\(formattedDoseValue(doseState.goal)) \(doseState.unit.displayName)")
+                }
 
                 if let classification = input.classificationText {
                     DetailRow(label: "Classification", value: classification)
@@ -1446,7 +1679,8 @@ private struct InputDetailView: View {
     }
 
     private var graphNodeData: GraphNodeData? {
-        graphData.nodes.first { $0.data.id == input.id }?.data
+        let nodeID = input.graphNodeID ?? input.id
+        return graphData.nodes.first { $0.data.id == nodeID }?.data
     }
 }
 

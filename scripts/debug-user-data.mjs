@@ -74,8 +74,17 @@ function makeRatingMap(store) {
 function summarizeRecentKeys(dailyCheckIns, limit) {
   const keys = Object.keys(dailyCheckIns).sort((a, b) => b.localeCompare(a)).slice(0, limit);
   return keys.map((key) => {
-    const ids = Array.isArray(dailyCheckIns[key]) ? dailyCheckIns[key] : [];
-    return { key, count: new Set(ids).size };
+    const value = dailyCheckIns[key];
+
+    if (Array.isArray(value)) {
+      return { key, count: new Set(value).size };
+    }
+
+    if (value && typeof value === 'object') {
+      return { key, count: Object.keys(value).length };
+    }
+
+    return { key, count: 0 };
   });
 }
 
@@ -189,7 +198,16 @@ const dailyCheckIns =
   store.dailyCheckIns && typeof store.dailyCheckIns === 'object' && !Array.isArray(store.dailyCheckIns)
     ? store.dailyCheckIns
     : {};
+const dailyDoseProgress =
+  store.dailyDoseProgress && typeof store.dailyDoseProgress === 'object' && !Array.isArray(store.dailyDoseProgress)
+    ? store.dailyDoseProgress
+    : {};
+const interventionDoseSettings =
+  store.interventionDoseSettings && typeof store.interventionDoseSettings === 'object' && !Array.isArray(store.interventionDoseSettings)
+    ? store.interventionDoseSettings
+    : {};
 const allKeysAsc = Object.keys(dailyCheckIns).sort((a, b) => a.localeCompare(b));
+const doseKeysAsc = Object.keys(dailyDoseProgress).sort((a, b) => a.localeCompare(b));
 
 const now = new Date();
 const todayUtc = utcDateKey(now);
@@ -245,6 +263,8 @@ console.log('');
 
 console.log('Store counts');
 console.log(`  dailyCheckIns keys: ${allKeysAsc.length}`);
+console.log(`  dailyDoseProgress keys: ${doseKeysAsc.length}`);
+console.log(`  interventionDoseSettings: ${Object.keys(interventionDoseSettings).length}`);
 console.log(`  interventionRatings: ${ratings.length}`);
 console.log(`  hiddenInterventions: ${hidden.length}`);
 console.log(`  notes: ${notes.length}`);
@@ -257,6 +277,15 @@ summarizeRecentKeys(dailyCheckIns, 21).forEach((item) => {
   console.log(`  ${item.key}: ${item.count} interventions`);
 });
 if (allKeysAsc.length === 0) {
+  console.log('  (none)');
+}
+console.log('');
+
+console.log(`Recent dose dates (latest ${Math.min(21, doseKeysAsc.length)})`);
+summarizeRecentKeys(dailyDoseProgress, 21).forEach((item) => {
+  console.log(`  ${item.key}: ${item.count} dose-tracked interventions`);
+});
+if (doseKeysAsc.length === 0) {
   console.log('  (none)');
 }
 console.log('');

@@ -10,6 +10,8 @@ extension UserDataDocument {
             experiments: experiments,
             interventionRatings: interventionRatings,
             dailyCheckIns: dailyCheckIns,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionDoseSettings: interventionDoseSettings,
             nightExposures: nightExposures,
             nightOutcomes: nightOutcomes,
             morningStates: morningStates,
