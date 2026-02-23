@@ -16,6 +16,7 @@ let package = Package(
     name: "Telocare",
     dependencies: [
         .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.9.0"),
+        .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
         .package(url: "https://github.com/supabase/supabase-swift.git", exact: "2.39.0"),
     ]
 )

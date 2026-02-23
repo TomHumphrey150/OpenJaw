@@ -80,6 +80,7 @@ let project = Project(
             entitlements: .file(path: .relativeToRoot("Telocare/Telocare.entitlements")),
             dependencies: [
                 .external(name: "CocoaLumberjackSwift"),
+                .external(name: "ZIPFoundation"),
                 .external(name: "Supabase")
             ],
             settings: appSettings

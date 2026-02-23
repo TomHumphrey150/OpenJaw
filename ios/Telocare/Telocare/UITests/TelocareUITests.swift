@@ -188,6 +188,7 @@ final class TelocareUITests: XCTestCase {
         let connectionStatus = element(withIdentifier: UIID.exploreMuseConnectionStatus, in: app)
         let recordingStatus = element(withIdentifier: UIID.exploreMuseRecordingStatus, in: app)
         let summaryText = element(withIdentifier: UIID.exploreMuseSummaryText, in: app)
+        let liveStatusText = element(withIdentifier: UIID.exploreMuseLiveStatusText, in: app)
 
         XCTAssertTrue(scanButton.waitForExistence(timeout: 4))
         scanButton.tap()
@@ -198,6 +199,7 @@ final class TelocareUITests: XCTestCase {
 
         startButton.tap()
         XCTAssertTrue(waitForLabelContaining("Recording", of: recordingStatus, timeout: 4))
+        XCTAssertTrue(waitForLabelContaining("Live status", of: liveStatusText, timeout: 4))
 
         stopButton.tap()
         XCTAssertTrue(waitForLabelContaining("Stopped", of: recordingStatus, timeout: 4))
@@ -657,7 +659,9 @@ private enum UIID {
     static let exploreMuseSaveNightOutcomeButton = "explore.outcomes.muse.save.button"
     static let exploreMuseExportDiagnosticsButton = "explore.outcomes.muse.export.button"
     static let exploreMuseSummaryText = "explore.outcomes.muse.summary.text"
+    static let exploreMuseLiveStatusText = "explore.outcomes.muse.live.status.text"
     static let exploreMuseFitGuidanceText = "explore.outcomes.muse.fit.guidance.text"
+    static let exploreMuseExportFeedbackText = "explore.outcomes.muse.export.feedback.text"
     static let exploreMuseFeedbackText = "explore.outcomes.muse.feedback.text"
     static let exploreMuseDisclaimerText = "explore.outcomes.muse.disclaimer.text"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"

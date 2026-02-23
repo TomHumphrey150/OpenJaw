@@ -46,7 +46,10 @@ struct MuseDetectionSummary: Equatable, Sendable {
 }
 
 struct MuseArousalDetector {
-    func summarize(framesBySecond: [Int64: MuseSecondFrame]) -> MuseDetectionSummary {
+    func summarize(
+        framesBySecond: [Int64: MuseSecondFrame],
+        includeDecisions: Bool = true
+    ) -> MuseDetectionSummary {
         let sortedFrames = framesBySecond.sorted { $0.key < $1.key }
         guard !sortedFrames.isEmpty else {
             return MuseDetectionSummary(
@@ -74,7 +77,9 @@ struct MuseArousalDetector {
         var awakeEvidenceSeconds = 0
         var lastEventSecond: Int64?
         var decisions: [MuseSecondDecision] = []
-        decisions.reserveCapacity(totalSeconds)
+        if includeDecisions {
+            decisions.reserveCapacity(totalSeconds)
+        }
 
         for (second, frame) in sortedFrames {
             let hasQualityInputs = hasQualityInputs(frame)
@@ -136,29 +141,31 @@ struct MuseArousalDetector {
                 awakeEvidenceSeconds += 1
             }
 
-            decisions.append(
-                MuseSecondDecision(
-                    secondEpoch: second,
-                    headbandOn: headbandOn,
-                    isGoodChannels: frame.isGoodChannels.map { Array($0.prefix(4)) },
-                    hsiPrecisionChannels: frame.hsiPrecisionChannels.map { Array($0.prefix(4)) },
-                    hasQualityInputs: hasQualityInputs,
-                    hasImuInputs: hasImuInputs,
-                    hasOpticsInput: hasOpticsInput,
-                    qualityGateSatisfied: qualityGateSatisfied,
-                    blinkDetected: frame.blinkDetected,
-                    jawClenchDetected: frame.jawClenchDetected,
-                    motionSpikeDetected: motionSpikeDetected,
-                    fitDisturbanceDetected: fitDisturbanceDetected,
-                    opticsSpikeDetected: opticsSpikeDetected,
-                    eventDetected: eventDetected,
-                    eventCounted: eventCounted,
-                    accelerometerMagnitude: frame.maxAccelerometerMagnitude,
-                    gyroMagnitude: frame.maxGyroMagnitude,
-                    opticsPeakToPeak: frame.opticsPeakToPeak,
-                    awakeEvidence: awakeEvidence
+            if includeDecisions {
+                decisions.append(
+                    MuseSecondDecision(
+                        secondEpoch: second,
+                        headbandOn: headbandOn,
+                        isGoodChannels: frame.isGoodChannels.map { Array($0.prefix(4)) },
+                        hsiPrecisionChannels: frame.hsiPrecisionChannels.map { Array($0.prefix(4)) },
+                        hasQualityInputs: hasQualityInputs,
+                        hasImuInputs: hasImuInputs,
+                        hasOpticsInput: hasOpticsInput,
+                        qualityGateSatisfied: qualityGateSatisfied,
+                        blinkDetected: frame.blinkDetected,
+                        jawClenchDetected: frame.jawClenchDetected,
+                        motionSpikeDetected: motionSpikeDetected,
+                        fitDisturbanceDetected: fitDisturbanceDetected,
+                        opticsSpikeDetected: opticsSpikeDetected,
+                        eventDetected: eventDetected,
+                        eventCounted: eventCounted,
+                        accelerometerMagnitude: frame.maxAccelerometerMagnitude,
+                        gyroMagnitude: frame.maxGyroMagnitude,
+                        opticsPeakToPeak: frame.opticsPeakToPeak,
+                        awakeEvidence: awakeEvidence
+                    )
                 )
-            )
+            }
         }
 
         let qualityCoverage = Double(validSeconds) / Double(totalSeconds)

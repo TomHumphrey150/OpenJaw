@@ -22,6 +22,7 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var morningOutcomeSelection: MorningOutcomeSelection
     @Published private(set) var museConnectionState: MuseConnectionState
     @Published private(set) var museRecordingState: MuseRecordingState
+    @Published private(set) var museLiveDiagnostics: MuseLiveDiagnostics?
     @Published private(set) var museSessionFeedback: String
     @Published var chatDraft: String
 
@@ -44,6 +45,7 @@ final class AppViewModel: ObservableObject {
     private var graphDeactivationOperationToken: Int
     private var museSessionOperationToken: Int
     private var museOutcomeSaveOperationToken: Int
+    private var museDiagnosticsPollingTask: Task<Void, Never>?
 
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
@@ -117,6 +119,7 @@ final class AppViewModel: ObservableObject {
         morningOutcomeSelection = Self.morningOutcomeSelection(for: todayKey, from: initialMorningStates)
         museConnectionState = .disconnected
         museRecordingState = .idle
+        museLiveDiagnostics = nil
         museSessionFeedback = "Muse session idle."
         chatDraft = ""
 
@@ -146,6 +149,7 @@ final class AppViewModel: ObservableObject {
         graphDeactivationOperationToken = 0
         museSessionOperationToken = 0
         museOutcomeSaveOperationToken = 0
+        museDiagnosticsPollingTask = nil
 
         self.persistUserDataPatch = persistUserDataPatch
         self.appleHealthDoseService = appleHealthDoseService
@@ -242,6 +246,14 @@ final class AppViewModel: ObservableObject {
         return false
     }
 
+    var museIsRecording: Bool {
+        if case .recording = museRecordingState {
+            return true
+        }
+
+        return false
+    }
+
     var museCanSaveNightOutcome: Bool {
         guard case .stopped(let summary) = museRecordingState else {
             return false
@@ -326,6 +338,7 @@ final class AppViewModel: ObservableObject {
     func disconnectMuseHeadband() {
         guard mode == .explore else { return }
 
+        stopMuseDiagnosticsPolling(clearDiagnostics: true)
         let operationToken = nextMuseSessionOperationToken()
         Task {
             await museSessionService.disconnect()
@@ -350,6 +363,7 @@ final class AppViewModel: ObservableObject {
         museRecordingState = .recording(startedAt: startDate)
         let message = "Recording started. Keep Telocare open in the foreground."
         museSessionFeedback = message
+        startMuseDiagnosticsPolling()
         announce(message)
 
         Task {
@@ -358,6 +372,7 @@ final class AppViewModel: ObservableObject {
                 guard operationToken == museSessionOperationToken else { return }
             } catch {
                 guard operationToken == museSessionOperationToken else { return }
+                stopMuseDiagnosticsPolling(clearDiagnostics: true)
                 museRecordingState = .idle
                 applyMuseSessionError(error, fallback: "Could not start recording.")
             }
@@ -1200,6 +1215,40 @@ final class AppViewModel: ObservableObject {
         accessibilityAnnouncer.announce(message)
     }
 
+    private func startMuseDiagnosticsPolling() {
+        stopMuseDiagnosticsPolling(clearDiagnostics: true)
+        museDiagnosticsPollingTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+
+            while !Task.isCancelled {
+                guard case .recording = museRecordingState else {
+                    return
+                }
+
+                let diagnostics = await museSessionService.recordingDiagnostics(at: nowProvider())
+                guard !Task.isCancelled else {
+                    return
+                }
+                guard case .recording = museRecordingState else {
+                    return
+                }
+
+                museLiveDiagnostics = diagnostics
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+    }
+
+    private func stopMuseDiagnosticsPolling(clearDiagnostics: Bool) {
+        museDiagnosticsPollingTask?.cancel()
+        museDiagnosticsPollingTask = nil
+        if clearDiagnostics {
+            museLiveDiagnostics = nil
+        }
+    }
+
     private func updateInput(_ nextInput: InputStatus, at index: Int) {
         var inputs = snapshot.inputs
         inputs[index] = nextInput
@@ -1297,6 +1346,7 @@ final class AppViewModel: ObservableObject {
             do {
                 let summary = try await museSessionService.stopRecording(at: endDate)
                 guard operationToken == museSessionOperationToken else { return }
+                stopMuseDiagnosticsPolling(clearDiagnostics: true)
                 museRecordingState = .stopped(summary)
 
                 let durationText = Self.formattedMinutes(summary.totalSleepMinutes)
@@ -1319,6 +1369,7 @@ final class AppViewModel: ObservableObject {
                 announce(message)
             } catch {
                 guard operationToken == museSessionOperationToken else { return }
+                stopMuseDiagnosticsPolling(clearDiagnostics: true)
                 museRecordingState = .idle
                 let fallback = triggeredByBackground
                     ? "Recording ended because Telocare moved to background."

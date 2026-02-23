@@ -79,6 +79,29 @@ struct MuseRecordingSummary: Equatable, Sendable {
     }
 }
 
+struct MuseLiveDiagnostics: Equatable, Sendable {
+    let elapsedSeconds: Int
+    let signalConfidence: Double
+    let awakeLikelihood: Double
+    let headbandOnCoverage: Double
+    let qualityGateCoverage: Double
+    let fitGuidance: MuseFitGuidance
+    let rawDataPacketCount: Int
+    let rawArtifactPacketCount: Int
+    let parsedPacketCount: Int
+    let droppedPacketCount: Int
+    let droppedDataPacketTypeCounts: [Int: Int]
+    let lastPacketAgeSeconds: Double?
+
+    var isReceivingData: Bool {
+        guard let lastPacketAgeSeconds else {
+            return false
+        }
+
+        return lastPacketAgeSeconds <= 3
+    }
+}
+
 enum MuseSessionServiceError: Error, Equatable {
     case unavailable
     case noHeadbandFound
@@ -96,6 +119,7 @@ protocol MuseSessionService: Sendable {
     func disconnect() async
     func startRecording(at startDate: Date) async throws
     func stopRecording(at endDate: Date) async throws -> MuseRecordingSummary
+    func recordingDiagnostics(at now: Date) async -> MuseLiveDiagnostics?
 }
 
 struct MockMuseSessionService: MuseSessionService {
@@ -104,6 +128,7 @@ struct MockMuseSessionService: MuseSessionService {
     let disconnectHeadband: @Sendable () async -> Void
     let startSession: @Sendable (Date) async throws -> Void
     let stopSession: @Sendable (Date) async throws -> MuseRecordingSummary
+    let recordingDiagnosticsSnapshot: @Sendable (Date) async -> MuseLiveDiagnostics?
 
     init(
         scan: @escaping @Sendable () async throws -> [MuseHeadband] = {
@@ -128,13 +153,15 @@ struct MockMuseSessionService: MuseSessionService {
                 fitGuidance: .good,
                 diagnosticsFileURLs: []
             )
-        }
+        },
+        recordingDiagnosticsSnapshot: @escaping @Sendable (Date) async -> MuseLiveDiagnostics? = { _ in nil }
     ) {
         self.scan = scan
         self.connectHeadband = connectHeadband
         self.disconnectHeadband = disconnectHeadband
         self.startSession = startSession
         self.stopSession = stopSession
+        self.recordingDiagnosticsSnapshot = recordingDiagnosticsSnapshot
     }
 
     func scanForHeadbands() async throws -> [MuseHeadband] {
@@ -155,6 +182,10 @@ struct MockMuseSessionService: MuseSessionService {
 
     func stopRecording(at endDate: Date) async throws -> MuseRecordingSummary {
         try await stopSession(endDate)
+    }
+
+    func recordingDiagnostics(at now: Date) async -> MuseLiveDiagnostics? {
+        await recordingDiagnosticsSnapshot(now)
     }
 }
 
@@ -180,5 +211,10 @@ struct UnavailableMuseSessionService: MuseSessionService {
     func stopRecording(at endDate: Date) async throws -> MuseRecordingSummary {
         _ = endDate
         throw MuseSessionServiceError.unavailable
+    }
+
+    func recordingDiagnostics(at now: Date) async -> MuseLiveDiagnostics? {
+        _ = now
+        return nil
     }
 }

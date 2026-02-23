@@ -601,6 +601,53 @@ struct AppViewModelTests {
         #expect(harness.viewModel.museRecordingSummary?.diagnosticsFileURLs.count == 2)
     }
 
+    @Test func museRecordingPublishesLiveDiagnosticsWhileRecording() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180
+                    )
+                },
+                recordingDiagnosticsSnapshot: { _ in
+                    MuseLiveDiagnostics(
+                        elapsedSeconds: 20,
+                        signalConfidence: 0.44,
+                        awakeLikelihood: 0.63,
+                        headbandOnCoverage: 0.91,
+                        qualityGateCoverage: 0.67,
+                        fitGuidance: .adjustHeadband,
+                        rawDataPacketCount: 820,
+                        rawArtifactPacketCount: 120,
+                        parsedPacketCount: 710,
+                        droppedPacketCount: 230,
+                        droppedDataPacketTypeCounts: [41: 210, 2: 20],
+                        lastPacketAgeSeconds: 0.3
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+        await waitUntil { harness.viewModel.museLiveDiagnostics != nil }
+
+        #expect(harness.viewModel.museLiveDiagnostics?.isReceivingData == true)
+        #expect(harness.viewModel.museLiveDiagnostics?.fitGuidance == .adjustHeadband)
+
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museRecordingSummary != nil }
+        #expect(harness.viewModel.museLiveDiagnostics == nil)
+    }
+
     @Test func museNightOutcomePersistenceIgnoresAwakeLikelihood() async {
         let lowAwakeOutcome = await savedMuseOutcomeForPersistence(awakeLikelihood: 0.05)
         let highAwakeOutcome = await savedMuseOutcomeForPersistence(awakeLikelihood: 0.95)

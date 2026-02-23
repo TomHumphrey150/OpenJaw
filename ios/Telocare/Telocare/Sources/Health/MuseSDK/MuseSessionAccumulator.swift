@@ -105,14 +105,21 @@ struct MuseSessionAccumulator: Sendable {
         framesBySecond[second] = aggregation
     }
 
+    func detectionSummary(
+        detector: MuseArousalDetector = MuseArousalDetector(),
+        includeDecisions: Bool = false
+    ) -> MuseDetectionSummary {
+        let frames = framesBySecond.mapValues(\.frame)
+        return detector.summarize(framesBySecond: frames, includeDecisions: includeDecisions)
+    }
+
     func buildSummary(
         startedAt: Date,
         endedAt: Date,
         detector: MuseArousalDetector = MuseArousalDetector(),
         onDecision: ((MuseSecondDecision) -> Void)? = nil
     ) -> MuseAccumulatorSummary {
-        let frames = framesBySecond.mapValues(\.frame)
-        let detectionSummary = detector.summarize(framesBySecond: frames)
+        let detectionSummary = detectionSummary(detector: detector, includeDecisions: true)
         for decision in detectionSummary.decisions {
             onDecision?(decision)
         }

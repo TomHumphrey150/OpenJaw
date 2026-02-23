@@ -71,8 +71,10 @@ struct ExploreTabShell: View {
                 museCanDisconnect: viewModel.museCanDisconnect,
                 museCanStartRecording: viewModel.museCanStartRecording,
                 museCanStopRecording: viewModel.museCanStopRecording,
+                museIsRecording: viewModel.museIsRecording,
                 museCanSaveNightOutcome: viewModel.museCanSaveNightOutcome,
                 museRecordingSummary: viewModel.museRecordingSummary,
+                museLiveDiagnostics: viewModel.museLiveDiagnostics,
                 onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue,
                 onScanForMuse: viewModel.scanForMuseHeadband,
                 onConnectToMuse: viewModel.connectToMuseHeadband,
@@ -123,8 +125,10 @@ private struct ExploreOutcomesScreen: View {
     let museCanDisconnect: Bool
     let museCanStartRecording: Bool
     let museCanStopRecording: Bool
+    let museIsRecording: Bool
     let museCanSaveNightOutcome: Bool
     let museRecordingSummary: MuseRecordingSummary?
+    let museLiveDiagnostics: MuseLiveDiagnostics?
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
     let onScanForMuse: () -> Void
     let onConnectToMuse: () -> Void
@@ -140,6 +144,7 @@ private struct ExploreOutcomesScreen: View {
     @State private var selectedNightMetric: NightTrendMetric
     @State private var isMuseDiagnosticsSharePresented = false
     @State private var museDiagnosticsShareURLs: [URL] = []
+    @State private var museDiagnosticsExportFeedback: String?
 
     init(
         outcomes: OutcomeSummary,
@@ -156,8 +161,10 @@ private struct ExploreOutcomesScreen: View {
         museCanDisconnect: Bool,
         museCanStartRecording: Bool,
         museCanStopRecording: Bool,
+        museIsRecording: Bool,
         museCanSaveNightOutcome: Bool,
         museRecordingSummary: MuseRecordingSummary?,
+        museLiveDiagnostics: MuseLiveDiagnostics?,
         onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void,
         onScanForMuse: @escaping () -> Void,
         onConnectToMuse: @escaping () -> Void,
@@ -181,8 +188,10 @@ private struct ExploreOutcomesScreen: View {
         self.museCanDisconnect = museCanDisconnect
         self.museCanStartRecording = museCanStartRecording
         self.museCanStopRecording = museCanStopRecording
+        self.museIsRecording = museIsRecording
         self.museCanSaveNightOutcome = museCanSaveNightOutcome
         self.museRecordingSummary = museRecordingSummary
+        self.museLiveDiagnostics = museLiveDiagnostics
         self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
         self.onScanForMuse = onScanForMuse
         self.onConnectToMuse = onConnectToMuse
@@ -555,6 +564,14 @@ private struct ExploreOutcomesScreen: View {
                         .accessibilityIdentifier(AccessibilityID.exploreMuseSummaryText)
                 }
 
+                if let liveStatusText = museLiveStatusText {
+                    Text(liveStatusText)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier(AccessibilityID.exploreMuseLiveStatusText)
+                }
+
                 if let fitGuidanceText = museFitGuidanceText {
                     Text(fitGuidanceText)
                         .font(TelocareTheme.Typography.caption)
@@ -601,11 +618,19 @@ private struct ExploreOutcomesScreen: View {
                         action: onSaveMuseNightOutcome
                     )
                     actionButton(
-                        title: "Export diagnostics",
+                        title: "Export diagnostics (full zip)",
                         accessibilityID: AccessibilityID.exploreMuseExportDiagnosticsButton,
                         isEnabled: museCanExportDiagnostics,
                         action: exportMuseDiagnostics
                     )
+                }
+
+                if let museDiagnosticsExportFeedback {
+                    Text(museDiagnosticsExportFeedback)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier(AccessibilityID.exploreMuseExportFeedbackText)
                 }
 
                 Text(museSessionFeedback)
@@ -680,12 +705,44 @@ private struct ExploreOutcomesScreen: View {
         return "Microarousals \(Int(summary.microArousalCount.rounded())), rate \(rateText), signal confidence \(confidenceText), awake likelihood (provisional) \(awakeLikelihoodText)."
     }
 
-    private var museFitGuidanceText: String? {
-        guard let summary = museRecordingSummary else {
+    private var museLiveStatusText: String? {
+        if let diagnostics = museLiveDiagnostics {
+            let streamStatus: String
+            if diagnostics.isReceivingData {
+                streamStatus = "receiving live packets"
+            } else {
+                streamStatus = "not receiving recent packets"
+            }
+
+            let packetTimingText: String
+            if let lastPacketAgeSeconds = diagnostics.lastPacketAgeSeconds {
+                packetTimingText = String(format: "%.1fs ago", lastPacketAgeSeconds)
+            } else {
+                packetTimingText = "never"
+            }
+
+            let confidenceText = String(format: "%.2f", diagnostics.signalConfidence)
+            let awakeLikelihoodText = String(format: "%.2f", diagnostics.awakeLikelihood)
+            let headbandCoverageText = String(format: "%.2f", diagnostics.headbandOnCoverage)
+            let qualityCoverageText = String(format: "%.2f", diagnostics.qualityGateCoverage)
+            let droppedTypeText = droppedPacketTypeText(diagnostics.droppedDataPacketTypeCounts)
+
+            return "Live status: \(streamStatus), last packet \(packetTimingText), elapsed \(diagnostics.elapsedSeconds)s. Parsed \(diagnostics.parsedPacketCount) packets from \(diagnostics.rawDataPacketCount) data and \(diagnostics.rawArtifactPacketCount) artifact packets. Dropped \(diagnostics.droppedPacketCount) packets (\(droppedTypeText)). Signal confidence \(confidenceText), awake likelihood (provisional) \(awakeLikelihoodText), headband-on coverage \(headbandCoverageText), quality-gate coverage \(qualityCoverageText)."
+        }
+
+        guard museIsRecording else {
             return nil
         }
 
-        return summary.fitGuidance.guidanceText
+        return "Live status: waiting for packet telemetry. Keep the phone near the headband and adjust fit if this persists."
+    }
+
+    private var museFitGuidanceText: String? {
+        if let guidanceText = museLiveDiagnostics?.fitGuidance.guidanceText {
+            return guidanceText
+        }
+
+        return museRecordingSummary?.fitGuidance.guidanceText
     }
 
     private var museCanExportDiagnostics: Bool {
@@ -704,8 +761,27 @@ private struct ExploreOutcomesScreen: View {
             return
         }
 
-        museDiagnosticsShareURLs = summary.diagnosticsFileURLs
-        isMuseDiagnosticsSharePresented = true
+        do {
+            let exportArchiveURL = try MuseDiagnosticsExportBundle.make(fileURLs: summary.diagnosticsFileURLs)
+            MuseDiagnosticsLogger.info("Prepared diagnostics export archive at \(exportArchiveURL.path)")
+            museDiagnosticsExportFeedback = "Prepared full diagnostics zip archive for sharing."
+            museDiagnosticsShareURLs = [exportArchiveURL]
+            isMuseDiagnosticsSharePresented = true
+        } catch {
+            MuseDiagnosticsLogger.error("Diagnostics export failed: \(error.localizedDescription)")
+            museDiagnosticsExportFeedback = "Could not prepare diagnostics files for sharing."
+        }
+    }
+
+    private func droppedPacketTypeText(_ typeCounts: [Int: Int]) -> String {
+        if typeCounts.isEmpty {
+            return "none"
+        }
+
+        return typeCounts
+            .sorted { $0.key < $1.key }
+            .map { "type \($0.key): \($0.value)" }
+            .joined(separator: ", ")
     }
 
     private func formattedMorningValue(_ value: Double) -> String {

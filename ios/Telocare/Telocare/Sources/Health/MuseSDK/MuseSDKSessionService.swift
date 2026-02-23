@@ -24,6 +24,7 @@ actor MuseSDKSessionService: MuseSessionService {
     private var sdkLogListener: MuseSDKLogListenerBridge?
 
     private var latestConnectionState: MuseConnectionStateCode
+    private var recordingTelemetry: RecordingTelemetry
 
     init(
         scanTimeoutSeconds: TimeInterval = 8,
@@ -52,6 +53,7 @@ actor MuseSDKSessionService: MuseSessionService {
         sdkLogListener = Self.makeSdkLogListener()
 
         latestConnectionState = .unknown
+        recordingTelemetry = RecordingTelemetry()
         self.manager.removeFromList(after: 0)
     }
 
@@ -147,6 +149,7 @@ actor MuseSDKSessionService: MuseSessionService {
 
         core.resetRecordingState()
         recordingStartedAt = nil
+        recordingTelemetry.reset()
         accumulator.reset()
 
         guard let muse = connectedMuse else {
@@ -173,6 +176,7 @@ actor MuseSDKSessionService: MuseSessionService {
 
         try core.startRecording()
         recordingStartedAt = startDate
+        recordingTelemetry.reset()
         accumulator.reset()
         diagnosticsRecorder.beginSession(startedAt: startDate)
         MuseDiagnosticsLogger.info("Muse recording started")
@@ -197,14 +201,43 @@ actor MuseSDKSessionService: MuseSessionService {
         )
 
         diagnosticsRecorder.recordServiceEvent("recording_stopped")
+        diagnosticsRecorder.recordServiceEvent(
+            "ingest_counts raw_data=\(recordingTelemetry.rawDataPacketCount) raw_artifact=\(recordingTelemetry.rawArtifactPacketCount) parsed=\(recordingTelemetry.parsedPacketCount) dropped=\(recordingTelemetry.droppedPacketCount) dropped_types=\(recordingTelemetry.droppedTypeSummary)"
+        )
         let diagnosticsFileURLs = diagnosticsRecorder.finishSession(
             endedAt: endDate,
             detectionSummary: summary.detectionSummary
         )
 
         MuseDiagnosticsLogger.info("Muse recording stopped")
+        recordingTelemetry.reset()
 
         return summary.recordingSummary.withDiagnosticsFileURLs(diagnosticsFileURLs)
+    }
+
+    func recordingDiagnostics(at now: Date) async -> MuseLiveDiagnostics? {
+        guard let recordingStartedAt else {
+            return nil
+        }
+
+        let detectionSummary = accumulator.detectionSummary(detector: detector)
+        let elapsedSeconds = max(0, Int(now.timeIntervalSince(recordingStartedAt)))
+        let lastPacketAgeSeconds = recordingTelemetry.lastPacketAt.map { max(0, now.timeIntervalSince($0)) }
+
+        return MuseLiveDiagnostics(
+            elapsedSeconds: elapsedSeconds,
+            signalConfidence: detectionSummary.confidence,
+            awakeLikelihood: detectionSummary.awakeLikelihood,
+            headbandOnCoverage: detectionSummary.headbandOnCoverage,
+            qualityGateCoverage: detectionSummary.qualityGateCoverage,
+            fitGuidance: detectionSummary.fitGuidance,
+            rawDataPacketCount: recordingTelemetry.rawDataPacketCount,
+            rawArtifactPacketCount: recordingTelemetry.rawArtifactPacketCount,
+            parsedPacketCount: recordingTelemetry.parsedPacketCount,
+            droppedPacketCount: recordingTelemetry.droppedPacketCount,
+            droppedDataPacketTypeCounts: recordingTelemetry.droppedDataPacketTypeCounts,
+            lastPacketAgeSeconds: lastPacketAgeSeconds
+        )
     }
 
     private func apply(_ action: MuseServiceCoreAction) {
@@ -344,22 +377,20 @@ actor MuseSDKSessionService: MuseSessionService {
             dataListener = MuseSDKDataListenerBridge(
                 onDataPacket: { packet in
                     diagnosticsRecorder.recordDataPacket(packet)
-                    guard let packet, let parsed = packetAdapter.adapt(packet) else {
-                        return
-                    }
-
+                    let packetTypeCode = packet.map { Int($0.packetType().rawValue) }
+                    let parsed = packet.flatMap(packetAdapter.adapt)
                     Task { [weak self] in
-                        await self?.handlePacket(parsed)
+                        await self?.handleDataPacket(
+                            parsedPacket: parsed,
+                            packetTypeCode: packetTypeCode
+                        )
                     }
                 },
                 onArtifactPacket: { packet in
                     diagnosticsRecorder.recordArtifactPacket(packet)
-                    guard let parsed = packetAdapter.adapt(packet) else {
-                        return
-                    }
-
+                    let parsed = packetAdapter.adapt(packet)
                     Task { [weak self] in
-                        await self?.handlePacket(parsed)
+                        await self?.handleArtifactPacket(parsedPacket: parsed)
                     }
                 }
             )
@@ -383,12 +414,39 @@ actor MuseSDKSessionService: MuseSessionService {
         diagnosticsRecorder.recordConnectionState(state)
     }
 
-    private func handlePacket(_ packet: MusePacket) {
+    private func handleDataPacket(
+        parsedPacket: MusePacket?,
+        packetTypeCode: Int?
+    ) {
         guard recordingStartedAt != nil else {
             return
         }
 
-        accumulator.ingest(packet)
+        recordingTelemetry.recordDataPacket(
+            now: Date(),
+            packetTypeCode: packetTypeCode,
+            parsed: parsedPacket != nil
+        )
+
+        guard let parsedPacket else {
+            return
+        }
+
+        accumulator.ingest(parsedPacket)
+    }
+
+    private func handleArtifactPacket(parsedPacket: MusePacket?) {
+        guard recordingStartedAt != nil else {
+            return
+        }
+
+        recordingTelemetry.recordArtifactPacket(now: Date(), parsed: parsedPacket != nil)
+
+        guard let parsedPacket else {
+            return
+        }
+
+        accumulator.ingest(parsedPacket)
     }
 
     nonisolated private static func makeSdkLogListener() -> MuseSDKLogListenerBridge? {
@@ -400,6 +458,73 @@ actor MuseSDKSessionService: MuseSessionService {
         }
 
         return nil
+    }
+}
+
+private struct RecordingTelemetry: Sendable {
+    var rawDataPacketCount: Int
+    var rawArtifactPacketCount: Int
+    var parsedPacketCount: Int
+    var droppedPacketCount: Int
+    var droppedDataPacketTypeCounts: [Int: Int]
+    var lastPacketAt: Date?
+
+    init() {
+        rawDataPacketCount = 0
+        rawArtifactPacketCount = 0
+        parsedPacketCount = 0
+        droppedPacketCount = 0
+        droppedDataPacketTypeCounts = [:]
+        lastPacketAt = nil
+    }
+
+    mutating func reset() {
+        rawDataPacketCount = 0
+        rawArtifactPacketCount = 0
+        parsedPacketCount = 0
+        droppedPacketCount = 0
+        droppedDataPacketTypeCounts = [:]
+        lastPacketAt = nil
+    }
+
+    mutating func recordDataPacket(
+        now: Date,
+        packetTypeCode: Int?,
+        parsed: Bool
+    ) {
+        rawDataPacketCount += 1
+        lastPacketAt = now
+        if parsed {
+            parsedPacketCount += 1
+            return
+        }
+
+        droppedPacketCount += 1
+        if let packetTypeCode {
+            droppedDataPacketTypeCounts[packetTypeCode, default: 0] += 1
+        }
+    }
+
+    mutating func recordArtifactPacket(now: Date, parsed: Bool) {
+        rawArtifactPacketCount += 1
+        lastPacketAt = now
+        if parsed {
+            parsedPacketCount += 1
+            return
+        }
+
+        droppedPacketCount += 1
+    }
+
+    var droppedTypeSummary: String {
+        if droppedDataPacketTypeCounts.isEmpty {
+            return "none"
+        }
+
+        return droppedDataPacketTypeCounts
+            .sorted { $0.key < $1.key }
+            .map { "\($0.key):\($0.value)" }
+            .joined(separator: ",")
     }
 }
 
