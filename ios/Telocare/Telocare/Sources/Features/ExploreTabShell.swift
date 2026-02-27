@@ -1,9 +1,11 @@
 import Charts
 import SwiftUI
+import UIKit
 
 struct ExploreTabShell: View {
     @ObservedObject var viewModel: AppViewModel
     let selectedSkinID: TelocareSkinID
+    let isMuseSessionEnabled: Bool
 
     var body: some View {
         TabView(selection: selectedTabBinding) {
@@ -42,6 +44,9 @@ struct ExploreTabShell: View {
                 onShowFeedbackEdgesChanged: viewModel.setShowFeedbackEdges,
                 onShowProtectiveEdgesChanged: viewModel.setShowProtectiveEdges,
                 onToggleNodeDeactivated: viewModel.toggleGraphNodeDeactivated,
+                onToggleNodeExpanded: { nodeID in
+                    _ = viewModel.toggleGraphNodeExpanded(nodeID)
+                },
                 onToggleEdgeDeactivated: { sourceID, targetID, label, edgeType in
                     viewModel.toggleGraphEdgeDeactivated(
                         sourceID: sourceID,
@@ -62,6 +67,9 @@ struct ExploreTabShell: View {
                 outcomesMetadata: viewModel.snapshot.outcomesMetadata,
                 morningStates: viewModel.morningStateHistory,
                 morningOutcomeSelection: viewModel.morningOutcomeSelection,
+                morningCheckInFields: viewModel.morningCheckInFields,
+                requiredMorningCheckInFields: viewModel.requiredMorningCheckInFields,
+                morningTrendMetrics: viewModel.morningTrendMetricOptions,
                 museConnectionStatusText: viewModel.museConnectionStatusText,
                 museRecordingStatusText: viewModel.museRecordingStatusText,
                 museSessionFeedback: viewModel.museSessionFeedback,
@@ -75,13 +83,28 @@ struct ExploreTabShell: View {
                 museCanSaveNightOutcome: viewModel.museCanSaveNightOutcome,
                 museRecordingSummary: viewModel.museRecordingSummary,
                 museLiveDiagnostics: viewModel.museLiveDiagnostics,
+                museSetupDiagnosticsFileURLs: viewModel.museSetupDiagnosticsFileURLs,
+                isMuseFitCalibrationPresented: viewModel.isMuseFitCalibrationPresented,
+                museFitDiagnostics: viewModel.museFitDiagnostics,
+                museFitPrimaryBlockerText: viewModel.museFitPrimaryBlockerText,
+                museFitReadyStreakSeconds: viewModel.museFitReadyStreakSeconds,
+                museFitReadyRequiredSeconds: viewModel.museFitReadyRequiredSeconds,
+                museCanStartRecordingFromFitCalibration: viewModel.museCanStartRecordingFromFitCalibration,
+                museCanStartRecordingWithFitOverride: viewModel.museCanStartRecordingWithFitOverride,
                 onSetMorningOutcomeValue: viewModel.setMorningOutcomeValue,
                 onScanForMuse: viewModel.scanForMuseHeadband,
                 onConnectToMuse: viewModel.connectToMuseHeadband,
                 onDisconnectMuse: viewModel.disconnectMuseHeadband,
                 onStartMuseRecording: viewModel.startMuseRecording,
+                onDismissMuseFitCalibration: viewModel.dismissMuseFitCalibration,
+                onStartMuseRecordingFromFitCalibration: viewModel.startMuseRecordingFromFitCalibration,
+                onStartMuseRecordingWithFitOverride: viewModel.startMuseRecordingWithFitOverride,
+                onExportMuseSetupDiagnosticsSnapshot: {
+                    await viewModel.exportMuseSetupDiagnosticsSnapshot()
+                },
                 onStopMuseRecording: viewModel.stopMuseRecording,
                 onSaveMuseNightOutcome: viewModel.saveMuseNightOutcome,
+                isMuseSessionEnabled: isMuseSessionEnabled,
                 selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
@@ -116,6 +139,9 @@ private struct ExploreOutcomesScreen: View {
     let outcomesMetadata: OutcomesMetadata
     let morningStates: [MorningState]
     let morningOutcomeSelection: MorningOutcomeSelection
+    let morningCheckInFields: [MorningOutcomeField]
+    let requiredMorningCheckInFields: [MorningOutcomeField]
+    let morningTrendMetrics: [MorningTrendMetric]
     let museConnectionStatusText: String
     let museRecordingStatusText: String
     let museSessionFeedback: String
@@ -129,13 +155,26 @@ private struct ExploreOutcomesScreen: View {
     let museCanSaveNightOutcome: Bool
     let museRecordingSummary: MuseRecordingSummary?
     let museLiveDiagnostics: MuseLiveDiagnostics?
+    let museSetupDiagnosticsFileURLs: [URL]
+    let isMuseFitCalibrationPresented: Bool
+    let museFitDiagnostics: MuseLiveDiagnostics?
+    let museFitPrimaryBlockerText: String?
+    let museFitReadyStreakSeconds: Int
+    let museFitReadyRequiredSeconds: Int
+    let museCanStartRecordingFromFitCalibration: Bool
+    let museCanStartRecordingWithFitOverride: Bool
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
     let onScanForMuse: () -> Void
     let onConnectToMuse: () -> Void
     let onDisconnectMuse: () -> Void
     let onStartMuseRecording: () -> Void
+    let onDismissMuseFitCalibration: () -> Void
+    let onStartMuseRecordingFromFitCalibration: () -> Void
+    let onStartMuseRecordingWithFitOverride: () -> Void
+    let onExportMuseSetupDiagnosticsSnapshot: () async -> [URL]
     let onStopMuseRecording: () -> Void
     let onSaveMuseNightOutcome: () -> Void
+    let isMuseSessionEnabled: Bool
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
@@ -152,6 +191,9 @@ private struct ExploreOutcomesScreen: View {
         outcomesMetadata: OutcomesMetadata,
         morningStates: [MorningState],
         morningOutcomeSelection: MorningOutcomeSelection,
+        morningCheckInFields: [MorningOutcomeField],
+        requiredMorningCheckInFields: [MorningOutcomeField],
+        morningTrendMetrics: [MorningTrendMetric],
         museConnectionStatusText: String,
         museRecordingStatusText: String,
         museSessionFeedback: String,
@@ -165,13 +207,26 @@ private struct ExploreOutcomesScreen: View {
         museCanSaveNightOutcome: Bool,
         museRecordingSummary: MuseRecordingSummary?,
         museLiveDiagnostics: MuseLiveDiagnostics?,
+        museSetupDiagnosticsFileURLs: [URL],
+        isMuseFitCalibrationPresented: Bool,
+        museFitDiagnostics: MuseLiveDiagnostics?,
+        museFitPrimaryBlockerText: String?,
+        museFitReadyStreakSeconds: Int,
+        museFitReadyRequiredSeconds: Int,
+        museCanStartRecordingFromFitCalibration: Bool,
+        museCanStartRecordingWithFitOverride: Bool,
         onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void,
         onScanForMuse: @escaping () -> Void,
         onConnectToMuse: @escaping () -> Void,
         onDisconnectMuse: @escaping () -> Void,
         onStartMuseRecording: @escaping () -> Void,
+        onDismissMuseFitCalibration: @escaping () -> Void,
+        onStartMuseRecordingFromFitCalibration: @escaping () -> Void,
+        onStartMuseRecordingWithFitOverride: @escaping () -> Void,
+        onExportMuseSetupDiagnosticsSnapshot: @escaping () async -> [URL],
         onStopMuseRecording: @escaping () -> Void,
         onSaveMuseNightOutcome: @escaping () -> Void,
+        isMuseSessionEnabled: Bool,
         selectedSkinID: TelocareSkinID
     ) {
         self.outcomes = outcomes
@@ -179,6 +234,9 @@ private struct ExploreOutcomesScreen: View {
         self.outcomesMetadata = outcomesMetadata
         self.morningStates = morningStates
         self.morningOutcomeSelection = morningOutcomeSelection
+        self.morningCheckInFields = morningCheckInFields
+        self.requiredMorningCheckInFields = requiredMorningCheckInFields
+        self.morningTrendMetrics = morningTrendMetrics
         self.museConnectionStatusText = museConnectionStatusText
         self.museRecordingStatusText = museRecordingStatusText
         self.museSessionFeedback = museSessionFeedback
@@ -192,16 +250,31 @@ private struct ExploreOutcomesScreen: View {
         self.museCanSaveNightOutcome = museCanSaveNightOutcome
         self.museRecordingSummary = museRecordingSummary
         self.museLiveDiagnostics = museLiveDiagnostics
+        self.museSetupDiagnosticsFileURLs = museSetupDiagnosticsFileURLs
+        self.isMuseFitCalibrationPresented = isMuseFitCalibrationPresented
+        self.museFitDiagnostics = museFitDiagnostics
+        self.museFitPrimaryBlockerText = museFitPrimaryBlockerText
+        self.museFitReadyStreakSeconds = museFitReadyStreakSeconds
+        self.museFitReadyRequiredSeconds = museFitReadyRequiredSeconds
+        self.museCanStartRecordingFromFitCalibration = museCanStartRecordingFromFitCalibration
+        self.museCanStartRecordingWithFitOverride = museCanStartRecordingWithFitOverride
         self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
         self.onScanForMuse = onScanForMuse
         self.onConnectToMuse = onConnectToMuse
         self.onDisconnectMuse = onDisconnectMuse
         self.onStartMuseRecording = onStartMuseRecording
+        self.onDismissMuseFitCalibration = onDismissMuseFitCalibration
+        self.onStartMuseRecordingFromFitCalibration = onStartMuseRecordingFromFitCalibration
+        self.onStartMuseRecordingWithFitOverride = onStartMuseRecordingWithFitOverride
+        self.onExportMuseSetupDiagnosticsSnapshot = onExportMuseSetupDiagnosticsSnapshot
         self.onStopMuseRecording = onStopMuseRecording
         self.onSaveMuseNightOutcome = onSaveMuseNightOutcome
+        self.isMuseSessionEnabled = isMuseSessionEnabled
         self.selectedSkinID = selectedSkinID
-        _isMorningCheckInExpanded = State(initialValue: !morningOutcomeSelection.isComplete)
-        _selectedMorningMetric = State(initialValue: .composite)
+        _isMorningCheckInExpanded = State(
+            initialValue: !morningOutcomeSelection.isComplete(requiredFields: requiredMorningCheckInFields)
+        )
+        _selectedMorningMetric = State(initialValue: morningTrendMetrics.first ?? .composite)
         _selectedNightMetric = State(initialValue: .microArousalRatePerHour)
     }
 
@@ -212,16 +285,15 @@ private struct ExploreOutcomesScreen: View {
                     morningGreetingCard
                     morningCheckInSection
                     morningTrendSection
-                    nightTrendSection
-                    museSessionSection
-                    insightsSummaryCard
-                    nightRecordsSection
+                    if isMuseSessionEnabled {
+                        museSessionSection
+                    }
                 }
                 .padding(.horizontal, TelocareTheme.Spacing.md)
                 .padding(.vertical, TelocareTheme.Spacing.lg)
             }
             .background(TelocareTheme.sand.ignoresSafeArea())
-            .navigationTitle("")
+            .navigationTitle("Progress")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: OutcomeRecord.self) { record in
                 OutcomeDetailView(record: record, outcomesMetadata: outcomesMetadata)
@@ -233,8 +305,23 @@ private struct ExploreOutcomesScreen: View {
         .sheet(isPresented: $isMuseDiagnosticsSharePresented) {
             MuseDiagnosticsShareSheet(fileURLs: museDiagnosticsShareURLs)
         }
-        .onChange(of: morningOutcomeSelection.isComplete) { _, isComplete in
-            guard isComplete else { return }
+        .fullScreenCover(isPresented: museFitCalibrationBinding) {
+            MuseFitCalibrationSheet(
+                diagnostics: museFitDiagnostics,
+                readyStreakSeconds: museFitReadyStreakSeconds,
+                requiredReadySeconds: museFitReadyRequiredSeconds,
+                primaryBlockerText: museFitPrimaryBlockerText,
+                canStartWhenReady: museCanStartRecordingFromFitCalibration,
+                canStartWithOverride: museCanStartRecordingWithFitOverride,
+                canExportSetupDiagnostics: isMuseFitCalibrationPresented || !museSetupDiagnosticsFileURLs.isEmpty,
+                onClose: onDismissMuseFitCalibration,
+                onStartWhenReady: onStartMuseRecordingFromFitCalibration,
+                onStartWithOverride: onStartMuseRecordingWithFitOverride,
+                onExportSetupDiagnostics: exportMuseSetupDiagnostics
+            )
+        }
+        .onChange(of: morningOutcomeSelection) { _, selection in
+            guard selection.isComplete(requiredFields: requiredMorningCheckInFields) else { return }
             guard isMorningCheckInExpanded else { return }
             withAnimation(.spring(response: 0.3)) {
                 isMorningCheckInExpanded = false
@@ -246,6 +333,17 @@ private struct ExploreOutcomesScreen: View {
         navigationPath.append(record)
     }
 
+    private var museFitCalibrationBinding: Binding<Bool> {
+        Binding(
+            get: { isMuseSessionEnabled && isMuseFitCalibrationPresented },
+            set: { isPresented in
+                if !isPresented {
+                    onDismissMuseFitCalibration()
+                }
+            }
+        )
+    }
+
     // MARK: - Morning Greeting Card
 
     @ViewBuilder
@@ -255,7 +353,7 @@ private struct ExploreOutcomesScreen: View {
                 Text(greetingText)
                     .font(TelocareTheme.Typography.largeTitle)
                     .foregroundStyle(TelocareTheme.charcoal)
-                Text("How are you feeling this morning?")
+                Text(greetingPrompt)
                     .font(TelocareTheme.Typography.body)
                     .foregroundStyle(TelocareTheme.warmGray)
             }
@@ -272,6 +370,18 @@ private struct ExploreOutcomesScreen: View {
             return "Good afternoon"
         default:
             return "Good evening"
+        }
+    }
+
+    private var greetingPrompt: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:
+            return "How are you feeling this morning?"
+        case 12..<17:
+            return "How are you feeling?"
+        default:
+            return "Checking in on your day."
         }
     }
 
@@ -303,7 +413,7 @@ private struct ExploreOutcomesScreen: View {
 
             if isMorningCheckInExpanded {
                 VStack(spacing: TelocareTheme.Spacing.md) {
-                    ForEach(MorningOutcomeField.allCases) { field in
+                    ForEach(morningCheckInFields) { field in
                         EmojiRatingPicker(
                             field: field,
                             value: bindingForField(field)
@@ -325,7 +435,11 @@ private struct ExploreOutcomesScreen: View {
 
     private var morningTrendPoints: [OutcomeTrendPoint] {
         OutcomeTrendDataBuilder()
-            .morningPoints(from: morningStates, metric: selectedMorningMetric)
+            .morningPoints(
+                from: morningStates,
+                metric: selectedMorningMetric,
+                compositeComponents: morningTrendMetrics.filter { $0 != .composite }
+            )
     }
 
     private var nightTrendPoints: [OutcomeTrendPoint] {
@@ -405,7 +519,7 @@ private struct ExploreOutcomesScreen: View {
                     WarmSectionHeader(title: "Morning trend", subtitle: "Last 14 days")
                     Spacer()
                     Picker("Morning metric", selection: $selectedMorningMetric) {
-                        ForEach(MorningTrendMetric.allCases) { metric in
+                        ForEach(morningTrendMetrics) { metric in
                             Text(metric.title).tag(metric)
                         }
                     }
@@ -436,7 +550,8 @@ private struct ExploreOutcomesScreen: View {
                     .chartYScale(domain: 0...10)
                     .chartYAxis {
                         AxisMarks(position: .leading, values: morningYAxisValues) { value in
-                            AxisGridLine()
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
+                                .foregroundStyle(Color.gray.opacity(0.15))
                             AxisTick()
                             AxisValueLabel {
                                 if let rawValue = value.as(Double.self) {
@@ -447,7 +562,8 @@ private struct ExploreOutcomesScreen: View {
                     }
                     .chartXAxis {
                         AxisMarks(values: .stride(by: .day, count: 2)) {
-                            AxisGridLine()
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
+                                .foregroundStyle(Color.gray.opacity(0.15))
                             AxisTick()
                             AxisValueLabel(format: .dateTime.month(.abbreviated).day())
                         }
@@ -564,6 +680,14 @@ private struct ExploreOutcomesScreen: View {
                         .accessibilityIdentifier(AccessibilityID.exploreMuseSummaryText)
                 }
 
+                if let reliabilityText = museRecordingReliabilityText {
+                    Text(reliabilityText)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier(AccessibilityID.exploreMuseReliabilityText)
+                }
+
                 if let liveStatusText = museLiveStatusText {
                     Text(liveStatusText)
                         .font(TelocareTheme.Typography.caption)
@@ -616,6 +740,12 @@ private struct ExploreOutcomesScreen: View {
                         accessibilityID: AccessibilityID.exploreMuseSaveNightOutcomeButton,
                         isEnabled: museCanSaveNightOutcome,
                         action: onSaveMuseNightOutcome
+                    )
+                    actionButton(
+                        title: "Export setup diagnostics (full zip)",
+                        accessibilityID: AccessibilityID.exploreMuseExportSetupDiagnosticsButton,
+                        isEnabled: museCanExportSetupDiagnostics,
+                        action: exportMuseSetupDiagnostics
                     )
                     actionButton(
                         title: "Export diagnostics (full zip)",
@@ -725,7 +855,7 @@ private struct ExploreOutcomesScreen: View {
             let awakeLikelihoodText = String(format: "%.2f", diagnostics.awakeLikelihood)
             let headbandCoverageText = String(format: "%.2f", diagnostics.headbandOnCoverage)
             let qualityCoverageText = String(format: "%.2f", diagnostics.qualityGateCoverage)
-            let droppedTypeText = droppedPacketTypeText(diagnostics.droppedDataPacketTypeCounts)
+            let droppedTypeText = droppedPacketTypeText(diagnostics.droppedPacketTypes)
 
             return "Live status: \(streamStatus), last packet \(packetTimingText), elapsed \(diagnostics.elapsedSeconds)s. Parsed \(diagnostics.parsedPacketCount) packets from \(diagnostics.rawDataPacketCount) data and \(diagnostics.rawArtifactPacketCount) artifact packets. Dropped \(diagnostics.droppedPacketCount) packets (\(droppedTypeText)). Signal confidence \(confidenceText), awake likelihood (provisional) \(awakeLikelihoodText), headband-on coverage \(headbandCoverageText), quality-gate coverage \(qualityCoverageText)."
         }
@@ -745,12 +875,29 @@ private struct ExploreOutcomesScreen: View {
         return museRecordingSummary?.fitGuidance.guidanceText
     }
 
+    private var museRecordingReliabilityText: String? {
+        guard let summary = museRecordingSummary else {
+            return nil
+        }
+
+        let baseText = "Recording reliability: \(summary.recordingReliability.displayText)."
+        if summary.startedWithFitOverride {
+            return "\(baseText) Started with fit override."
+        }
+
+        return baseText
+    }
+
     private var museCanExportDiagnostics: Bool {
         guard let summary = museRecordingSummary else {
             return false
         }
 
         return !summary.diagnosticsFileURLs.isEmpty
+    }
+
+    private var museCanExportSetupDiagnostics: Bool {
+        !museSetupDiagnosticsFileURLs.isEmpty
     }
 
     private func exportMuseDiagnostics() {
@@ -773,14 +920,38 @@ private struct ExploreOutcomesScreen: View {
         }
     }
 
-    private func droppedPacketTypeText(_ typeCounts: [Int: Int]) -> String {
-        if typeCounts.isEmpty {
+    private func exportMuseSetupDiagnostics() {
+        Task {
+            let setupDiagnosticsFileURLs = await onExportMuseSetupDiagnosticsSnapshot()
+            if setupDiagnosticsFileURLs.isEmpty {
+                MuseDiagnosticsLogger.warn("Setup diagnostics export requested but no files were available")
+                museDiagnosticsExportFeedback = "No setup diagnostics files are available yet."
+                return
+            }
+
+            do {
+                let archiveURL = try MuseDiagnosticsExportBundle.make(
+                    fileURLs: setupDiagnosticsFileURLs,
+                    capturePhase: .setup
+                )
+                MuseDiagnosticsLogger.info("Prepared setup diagnostics export archive at \(archiveURL.path)")
+                museDiagnosticsExportFeedback = "Prepared setup diagnostics zip archive for sharing."
+                museDiagnosticsShareURLs = [archiveURL]
+                isMuseDiagnosticsSharePresented = true
+            } catch {
+                MuseDiagnosticsLogger.error("Setup diagnostics export failed: \(error.localizedDescription)")
+                museDiagnosticsExportFeedback = "Could not prepare setup diagnostics files for sharing."
+            }
+        }
+    }
+
+    private func droppedPacketTypeText(_ droppedPacketTypes: [MuseDroppedPacketTypeCount]) -> String {
+        if droppedPacketTypes.isEmpty {
             return "none"
         }
 
-        return typeCounts
-            .sorted { $0.key < $1.key }
-            .map { "type \($0.key): \($0.value)" }
+        return droppedPacketTypes
+            .map { "\($0.label) (\($0.code)): \($0.count)" }
             .joined(separator: ", ")
     }
 
@@ -1107,6 +1278,7 @@ private struct ExploreSituationScreen: View {
     let onShowFeedbackEdgesChanged: (Bool) -> Void
     let onShowProtectiveEdgesChanged: (Bool) -> Void
     let onToggleNodeDeactivated: (String) -> Void
+    let onToggleNodeExpanded: (String) -> Void
     let onToggleEdgeDeactivated: (String, String, String?, String?) -> Void
     let selectedSkinID: TelocareSkinID
 
@@ -1142,7 +1314,7 @@ private struct ExploreSituationScreen: View {
             }
             .overlay(alignment: .bottomLeading) {
                 Text(graphSelectionText)
-                    .font(.footnote)
+                    .font(TelocareTheme.Typography.caption)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
@@ -1152,7 +1324,7 @@ private struct ExploreSituationScreen: View {
                     .allowsHitTesting(false)
                     .accessibilityIdentifier(AccessibilityID.graphSelectionText)
             }
-            .navigationTitle("Situation")
+            .navigationTitle("My Map")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -1178,7 +1350,8 @@ private struct ExploreSituationScreen: View {
                 SituationGraphDetailSheet(
                     detail: detail(for: selection),
                     onToggleNodeDeactivated: onToggleNodeDeactivated,
-                    onToggleEdgeDeactivated: onToggleEdgeDeactivated
+                    onToggleEdgeDeactivated: onToggleEdgeDeactivated,
+                    onToggleNodeExpanded: onToggleNodeExpanded
                 )
                     .presentationDetents([.fraction(0.5)])
                     .presentationDragIndicator(.visible)
@@ -1217,7 +1390,7 @@ private struct ExploreSituationScreen: View {
                     edgeType: detail.edgeType
                 )
             )
-        case .graphReady, .viewportChanged, .renderError:
+        case .graphReady, .nodeDoubleTapped, .viewportChanged, .renderError:
             return
         }
     }
@@ -1241,6 +1414,12 @@ private struct ExploreSituationScreen: View {
     }
 
     private func nodeDetail(forNodeID id: String, fallbackLabel: String) -> SituationNodeDetail {
+        let childNodeCount = graphData.nodes.reduce(into: 0) { count, node in
+            if node.data.parentIds?.contains(id) == true {
+                count += 1
+            }
+        }
+
         guard let node = graphData.nodes.first(where: { $0.data.id == id })?.data else {
             return SituationNodeDetail(
                 id: id,
@@ -1251,7 +1430,9 @@ private struct ExploreSituationScreen: View {
                 statistic: nil,
                 citation: nil,
                 mechanism: nil,
-                isDeactivated: false
+                isDeactivated: false,
+                childNodeCount: childNodeCount,
+                isExpanded: true
             )
         }
 
@@ -1264,7 +1445,9 @@ private struct ExploreSituationScreen: View {
             statistic: node.tooltip?.stat,
             citation: node.tooltip?.citation,
             mechanism: node.tooltip?.mechanism,
-            isDeactivated: node.isDeactivated == true
+            isDeactivated: node.isDeactivated == true,
+            childNodeCount: childNodeCount,
+            isExpanded: node.isExpanded ?? true
         )
     }
 
@@ -1392,6 +1575,8 @@ private struct SituationNodeDetail: Equatable {
     let citation: String?
     let mechanism: String?
     let isDeactivated: Bool
+    let childNodeCount: Int
+    let isExpanded: Bool
 }
 
 private struct SituationEdgeDetail: Equatable {
@@ -1411,6 +1596,7 @@ private struct SituationGraphDetailSheet: View {
     let detail: SituationGraphDetail
     let onToggleNodeDeactivated: (String) -> Void
     let onToggleEdgeDeactivated: (String, String, String?, String?) -> Void
+    let onToggleNodeExpanded: (String) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -1446,7 +1632,7 @@ private struct SituationGraphDetailSheet: View {
                 .fill(accentColor(for: node.styleClass))
                 .frame(width: 12, height: 12)
             Text(node.label)
-                .font(.title2.bold())
+                .font(TelocareTheme.Typography.title.weight(.bold))
                 .foregroundStyle(TelocareTheme.charcoal)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -1458,6 +1644,7 @@ private struct SituationGraphDetailSheet: View {
                 if let tier = node.tier {
                     DetailRow(label: "Tier", value: String(tier))
                 }
+                DetailRow(label: "Branch", value: branchStatusText(node))
                 DetailRow(
                     label: "Status",
                     value: node.isDeactivated ? "Deactivated" : "Active"
@@ -1470,13 +1657,46 @@ private struct SituationGraphDetailSheet: View {
                 .stroke(accentColor(for: node.styleClass), lineWidth: 2)
         )
 
-        WarmCard {
-            Button(node.isDeactivated ? "Reactivate node" : "Deactivate node") {
-                onToggleNodeDeactivated(node.id)
+        if node.childNodeCount > 0 {
+            WarmCard {
+                Button {
+                    onToggleNodeExpanded(node.id)
+                } label: {
+                    HStack(spacing: TelocareTheme.Spacing.sm) {
+                        Text(
+                            node.isExpanded
+                                ? "Collapse branch (\(node.childNodeCount) nodes)"
+                                : "Expand branch (\(node.childNodeCount) nodes)"
+                        )
+                        .font(TelocareTheme.Typography.body.weight(.semibold))
+                        .foregroundStyle(TelocareTheme.charcoal)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, TelocareTheme.Spacing.xs)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier(AccessibilityID.exploreDetailsNodeBranchToggleButton)
+                .accessibilityValue(node.isExpanded ? "Expanded" : "Collapsed")
             }
-            .font(TelocareTheme.Typography.body.weight(.semibold))
-            .foregroundStyle(TelocareTheme.charcoal)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
+        WarmCard {
+            Button {
+                onToggleNodeDeactivated(node.id)
+            } label: {
+                HStack(spacing: TelocareTheme.Spacing.sm) {
+                    Text(node.isDeactivated ? "Reactivate node" : "Deactivate node")
+                        .font(TelocareTheme.Typography.body.weight(.semibold))
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, TelocareTheme.Spacing.xs)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             .accessibilityIdentifier(AccessibilityID.exploreDetailsNodeDeactivationButton)
             .accessibilityValue(node.isDeactivated ? "Deactivated" : "Active")
         }
@@ -1520,7 +1740,7 @@ private struct SituationGraphDetailSheet: View {
                     .fill(edgeAccent)
                     .frame(width: 24, height: 4)
                 Text("Link")
-                    .font(.title2.bold())
+                    .font(TelocareTheme.Typography.title.weight(.bold))
                     .foregroundStyle(TelocareTheme.charcoal)
             }
             Text("\(edge.sourceLabel) → \(edge.targetLabel)")
@@ -1551,17 +1771,25 @@ private struct SituationGraphDetailSheet: View {
         )
 
         WarmCard {
-            Button(edge.isExplicitlyDeactivated ? "Reactivate link" : "Deactivate link") {
+            Button {
                 onToggleEdgeDeactivated(
                     edge.sourceID,
                     edge.targetID,
                     edge.label,
                     edge.edgeType
                 )
+            } label: {
+                HStack(spacing: TelocareTheme.Spacing.sm) {
+                    Text(edge.isExplicitlyDeactivated ? "Reactivate link" : "Deactivate link")
+                        .font(TelocareTheme.Typography.body.weight(.semibold))
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, TelocareTheme.Spacing.xs)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .font(TelocareTheme.Typography.body.weight(.semibold))
-            .foregroundStyle(TelocareTheme.charcoal)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.plain)
             .accessibilityIdentifier(AccessibilityID.exploreDetailsEdgeDeactivationButton)
             .accessibilityValue(edgeStatusText(edge))
         }
@@ -1583,6 +1811,15 @@ private struct SituationGraphDetailSheet: View {
         }
 
         return "Active"
+    }
+
+    private func branchStatusText(_ node: SituationNodeDetail) -> String {
+        if node.childNodeCount == 0 {
+            return "Leaf node"
+        }
+
+        let state = node.isExpanded ? "Expanded" : "Collapsed"
+        return "\(state), \(node.childNodeCount) direct children (some shared across branches)"
     }
 
     private func accentColor(for styleClass: String?) -> Color {
@@ -1706,7 +1943,7 @@ private struct SituationOptionsSheet: View {
                         .foregroundStyle(TelocareTheme.charcoal)
                 } header: {
                     Text("Selection")
-                        .font(.subheadline)
+                        .font(TelocareTheme.Typography.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
                         .textCase(nil)
@@ -1744,7 +1981,7 @@ private struct SituationOptionsSheet: View {
                     .accessibilityIdentifier(AccessibilityID.exploreToggleProtectiveEdges)
                 } header: {
                     Text("Display")
-                        .font(.subheadline)
+                        .font(TelocareTheme.Typography.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
                         .textCase(nil)
@@ -1760,7 +1997,7 @@ private struct SituationOptionsSheet: View {
                     }
                 } header: {
                     Text("Actions")
-                        .font(.subheadline)
+                        .font(TelocareTheme.Typography.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
                         .textCase(nil)
@@ -1769,7 +2006,7 @@ private struct SituationOptionsSheet: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(TelocareTheme.sand)
-            .navigationTitle("Situation Options")
+            .navigationTitle("Map Options")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -1800,6 +2037,17 @@ private struct ExploreInputsScreen: View {
 
     @State private var navigationPath = NavigationPath()
     @State private var filterMode: InputFilterMode
+    @State private var selectedGarden: GardenPathway?
+    private static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    private static let iso8601WithoutFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
 
     init(
         inputs: [InputStatus],
@@ -1835,12 +2083,12 @@ private struct ExploreInputsScreen: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                progressOverviewHeader
+                gardenOverview
                 filterPillsSection
                 inputsContent
             }
             .background(TelocareTheme.sand.ignoresSafeArea())
-            .navigationTitle("Interventions")
+            .navigationTitle("Habits")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: String.self) { inputID in
                 if let input = inputStatus(for: inputID) {
@@ -1874,43 +2122,55 @@ private struct ExploreInputsScreen: View {
         inputs.first { $0.id == inputID }
     }
 
-    // MARK: - Progress Overview Header
+    // MARK: - Garden Overview
+
+    private var gardenSnapshots: [GardenSnapshot] {
+        GardenSnapshotBuilder().build(from: inputs)
+    }
 
     @ViewBuilder
-    private var progressOverviewHeader: some View {
-        WarmCard {
-            HStack(spacing: TelocareTheme.Spacing.lg) {
-                WarmProgressRing(progress: overallCompletion, size: 64, lineWidth: 8)
+    private var gardenOverview: some View {
+        VStack(spacing: TelocareTheme.Spacing.sm) {
+            GardenStripView(
+                gardens: gardenSnapshots,
+                selectedPathway: $selectedGarden
+            )
 
-                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
-                    Text("Today's progress")
-                        .font(TelocareTheme.Typography.headline)
-                        .foregroundStyle(TelocareTheme.charcoal)
-                    Text("\(checkedTodayCount) of \(visibleInputs.count) completed")
+            HStack(spacing: TelocareTheme.Spacing.xs) {
+                Text("\(checkedTodayCount) of \(gardenAwareActiveInputs.count) habits completed today")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+
+                if checkedTodayCount == gardenAwareActiveInputs.count && !gardenAwareActiveInputs.isEmpty {
+                    Label("All done!", systemImage: "checkmark.circle.fill")
                         .font(TelocareTheme.Typography.caption)
-                        .foregroundStyle(TelocareTheme.warmGray)
-
-                    if checkedTodayCount == visibleInputs.count && !visibleInputs.isEmpty {
-                        Label("All done!", systemImage: "checkmark.circle.fill")
-                            .font(TelocareTheme.Typography.caption)
-                            .foregroundStyle(TelocareTheme.success)
-                    }
+                        .foregroundStyle(TelocareTheme.success)
                 }
-
-                Spacer()
             }
         }
         .padding(.horizontal, TelocareTheme.Spacing.md)
         .padding(.top, TelocareTheme.Spacing.md)
     }
 
+    private var gardenAwareInputs: [InputStatus] {
+        guard let selectedGarden else { return inputs }
+        let gardenInputIDs = Set(
+            gardenSnapshots.first(where: { $0.pathway == selectedGarden })?.inputIDs ?? []
+        )
+        return inputs.filter { gardenInputIDs.contains($0.id) }
+    }
+
+    private var gardenAwareActiveInputs: [InputStatus] {
+        gardenAwareInputs.filter(\.isActive)
+    }
+
     private var checkedTodayCount: Int {
-        visibleInputs.filter(\.isCheckedToday).count
+        gardenAwareActiveInputs.filter(\.isCheckedToday).count
     }
 
     private var overallCompletion: Double {
-        guard !visibleInputs.isEmpty else { return 0 }
-        return Double(checkedTodayCount) / Double(visibleInputs.count)
+        guard !gardenAwareActiveInputs.isEmpty else { return 0 }
+        return Double(checkedTodayCount) / Double(gardenAwareActiveInputs.count)
     }
 
     // MARK: - Filter Pills
@@ -1934,13 +2194,14 @@ private struct ExploreInputsScreen: View {
     }
 
     private func countFor(_ mode: InputFilterMode) -> Int {
+        let source = gardenAwareInputs
         switch mode {
         case .pending:
-            return inputs.filter { $0.isActive && !$0.isCheckedToday }.count
+            return source.filter { $0.isActive && !$0.isCheckedToday }.count
         case .completed:
-            return inputs.filter { $0.isActive && $0.isCheckedToday }.count
+            return source.filter { $0.isActive && $0.isCheckedToday }.count
         case .available:
-            return inputs.filter { !$0.isActive }.count
+            return source.filter { !$0.isActive }.count
         }
     }
 
@@ -1953,10 +2214,15 @@ private struct ExploreInputsScreen: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: TelocareTheme.Spacing.sm) {
+                    if filterMode != .available && !nextBestActions.isEmpty {
+                        nextBestActionsSection
+                            .accessibilityIdentifier(AccessibilityID.exploreInputsNextBestActions)
+                    }
+
                     ForEach(filteredInputs) { input in
                         InputCard(
                             input: input,
-                            onToggle: { onToggleCheckedToday(input.id) },
+                            onToggle: { toggleInputCheckedToday(input.id) },
                             onIncrementDose: { onIncrementDose(input.id) },
                             onToggleActive: { onToggleActive(input.id) },
                             onShowDetails: { showInputDetail(input) }
@@ -1971,9 +2237,9 @@ private struct ExploreInputsScreen: View {
         }
     }
 
-    /// Inputs sorted by impact score (most useful first)
+    /// Inputs sorted by impact score (most useful first), filtered by selected garden
     private var sortedInputs: [InputStatus] {
-        InputScoring.sortedByImpact(inputs: inputs, graphData: graphData)
+        InputScoring.sortedByImpact(inputs: gardenAwareInputs, graphData: graphData)
     }
 
     private var filteredInputs: [InputStatus] {
@@ -1989,6 +2255,302 @@ private struct ExploreInputsScreen: View {
 
     private var visibleInputs: [InputStatus] {
         sortedInputs.filter(\.isActive)
+    }
+
+    private var shouldShowStreakBadge: Bool {
+        visibleInputs.contains { currentStreakLength(for: $0) >= 2 }
+    }
+
+    private var nextBestActions: [InputStatus] {
+        let source = gardenAwareInputs
+        let defaultOrderByID = Dictionary(uniqueKeysWithValues: source.enumerated().map { ($1.id, $0) })
+        return source
+            .filter { $0.isActive && !$0.isCheckedToday }
+            .sorted { lhs, rhs in
+                let lhsDueNow = isDueNow(lhs)
+                let rhsDueNow = isDueNow(rhs)
+                if lhsDueNow != rhsDueNow {
+                    return lhsDueNow && !rhsDueNow
+                }
+
+                let lhsEvidenceRank = evidenceRank(for: lhs.evidenceLevel)
+                let rhsEvidenceRank = evidenceRank(for: rhs.evidenceLevel)
+                if lhsEvidenceRank != rhsEvidenceRank {
+                    return lhsEvidenceRank > rhsEvidenceRank
+                }
+
+                let lhsOrder = defaultOrderByID[lhs.id] ?? Int.max
+                let rhsOrder = defaultOrderByID[rhs.id] ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
+
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+            .prefix(3)
+            .map { $0 }
+    }
+
+    @ViewBuilder
+    private var nextBestActionsSection: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                WarmSectionHeader(
+                    title: "Next Best Actions",
+                    subtitle: "Top priorities right now"
+                )
+                Text("Selected from active habits not completed today. Ranking: due now, stronger evidence, then your default habit order.")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ForEach(nextBestActions) { input in
+                    nextBestActionRow(for: input)
+
+                    if input.id != nextBestActions.last?.id {
+                        Divider()
+                            .background(TelocareTheme.peach)
+                    }
+                }
+            }
+        }
+    }
+
+    private func toggleInputCheckedToday(_ inputID: String) {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            onToggleCheckedToday(inputID)
+        }
+    }
+
+    @ViewBuilder
+    private func nextBestActionRow(for input: InputStatus) -> some View {
+        HStack(spacing: TelocareTheme.Spacing.sm) {
+            nextBestActionPrimaryControl(for: input)
+
+            Button {
+                showInputDetail(input)
+            } label: {
+                HStack(spacing: TelocareTheme.Spacing.sm) {
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Text(input.name)
+                            .font(TelocareTheme.Typography.headline)
+                            .foregroundStyle(TelocareTheme.charcoal)
+                        Text(nextBestActionReason(for: input))
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundStyle(TelocareTheme.muted)
+                }
+                .padding(.vertical, TelocareTheme.Spacing.xs)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private func nextBestActionPrimaryControl(for input: InputStatus) -> some View {
+        switch input.trackingMode {
+        case .binary:
+            Button {
+                toggleInputCheckedToday(input.id)
+            } label: {
+                ZStack {
+                    RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                        .fill(input.isCheckedToday ? TelocareTheme.coral : TelocareTheme.peach)
+                    if input.isCheckedToday {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Check \(input.name)")
+            .accessibilityHint("Marks this habit as done for today.")
+        case .dose:
+            if let doseState = input.doseState {
+                Button {
+                    onIncrementDose(input.id)
+                } label: {
+                    DoseCompletionRing(state: doseState, size: 34, lineWidth: 4)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Increment \(input.name)")
+                .accessibilityValue("\(doseSummaryText(for: doseState)).")
+                .accessibilityHint("Adds one increment toward today's goal.")
+            }
+        }
+    }
+
+    private func nextBestActionReason(for input: InputStatus) -> String {
+        let priority = priorityRank(for: input)
+        let dueText = isDueNow(input) ? "due now" : "scheduled for \(scheduleDescription(for: input))"
+        let evidenceText = evidenceDescription(for: input.evidenceLevel)
+        return "Priority \(priority): \(dueText); \(evidenceText)."
+    }
+
+    private func isDueNow(_ input: InputStatus) -> Bool {
+        let schedule = Set(input.timeOfDay)
+        if schedule.isEmpty || schedule.contains(.anytime) {
+            return true
+        }
+
+        return schedule.contains(currentDaySegment)
+    }
+
+    private func priorityRank(for input: InputStatus) -> Int {
+        guard let index = nextBestActions.firstIndex(where: { $0.id == input.id }) else {
+            return 0
+        }
+
+        return index + 1
+    }
+
+    private func scheduleDescription(for input: InputStatus) -> String {
+        let schedule = Set(input.timeOfDay)
+        if schedule.isEmpty || schedule.contains(.anytime) {
+            return "any time"
+        }
+
+        let orderedSegments: [InterventionTimeOfDay] = [.morning, .afternoon, .evening, .preBed]
+        let labels = orderedSegments
+            .filter { schedule.contains($0) }
+            .map(daySegmentLabel(for:))
+
+        return labels.joined(separator: ", ")
+    }
+
+    private func daySegmentLabel(for segment: InterventionTimeOfDay) -> String {
+        switch segment {
+        case .morning:
+            return "morning"
+        case .afternoon:
+            return "afternoon"
+        case .evening:
+            return "evening"
+        case .preBed:
+            return "pre-bed"
+        case .anytime:
+            return "any time"
+        }
+    }
+
+    private func evidenceDescription(for evidenceLevel: String?) -> String {
+        switch evidenceRank(for: evidenceLevel) {
+        case 3:
+            return "high evidence"
+        case 2:
+            return "moderate evidence"
+        case 1:
+            return "emerging evidence"
+        default:
+            return "no evidence rating"
+        }
+    }
+
+    private func doseSummaryText(for state: InputDoseState) -> String {
+        "\(formattedDoseValue(state.value))/\(formattedDoseValue(state.goal)) \(state.unit.displayName)"
+    }
+
+    private func formattedDoseValue(_ value: Double) -> String {
+        let roundedValue = value.rounded()
+        if abs(roundedValue - value) < 0.0001 {
+            return String(Int(roundedValue))
+        }
+
+        return String(format: "%.1f", value)
+    }
+
+    private var currentDaySegment: InterventionTimeOfDay {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:
+            return .morning
+        case 12..<17:
+            return .afternoon
+        case 17..<21:
+            return .evening
+        default:
+            return .preBed
+        }
+    }
+
+    private func evidenceRank(for evidenceLevel: String?) -> Int {
+        guard let normalized = evidenceLevel?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() else {
+            return 0
+        }
+
+        if normalized.contains("robust") || normalized.contains("strong") || normalized.contains("high") {
+            return 3
+        }
+        if normalized.contains("moderate") || normalized.contains("medium") {
+            return 2
+        }
+        if normalized.contains("preliminary") || normalized.contains("emerging") || normalized.contains("low") {
+            return 1
+        }
+
+        return 0
+    }
+
+    private func currentStreakLength(for input: InputStatus) -> Int {
+        guard input.isActive else {
+            return 0
+        }
+        guard input.isCheckedToday else {
+            return 0
+        }
+
+        var completedDays = Set(input.completionEvents.compactMap { completionDayKey(for: $0.occurredAt) })
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
+        let todayKey = localDayKey(for: startOfToday, calendar: calendar)
+        completedDays.insert(todayKey)
+
+        var streakLength = 0
+        var dayOffset = 0
+        while let date = calendar.date(byAdding: .day, value: -dayOffset, to: startOfToday) {
+            let dayKey = localDayKey(for: date, calendar: calendar)
+            guard completedDays.contains(dayKey) else {
+                break
+            }
+
+            streakLength += 1
+            dayOffset += 1
+        }
+
+        return streakLength
+    }
+
+    private func completionDayKey(for timestamp: String) -> String? {
+        if let date = Self.iso8601WithFractionalSeconds.date(from: timestamp) {
+            return localDayKey(for: date, calendar: .current)
+        }
+        if let date = Self.iso8601WithoutFractionalSeconds.date(from: timestamp) {
+            return localDayKey(for: date, calendar: .current)
+        }
+        return nil
+    }
+
+    private func localDayKey(for date: Date, calendar: Calendar) -> String {
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        guard
+            let year = components.year,
+            let month = components.month,
+            let day = components.day
+        else {
+            return ""
+        }
+
+        return String(format: "%04d-%02d-%02d", year, month, day)
     }
 
     @ViewBuilder
@@ -2352,9 +2914,19 @@ private struct InputDetailView: View {
 
                         if let healthValue = appleHealthState.todayHealthValue, let doseState = currentDoseState {
                             DetailRow(
-                                label: "Today in Apple Health",
+                                label: primaryAppleHealthValueLabel(for: appleHealthState),
                                 value: "\(formattedDoseValue(healthValue)) \(doseState.unit.displayName)"
                             )
+
+                            if
+                                let referenceHealthValue = appleHealthState.referenceTodayHealthValue,
+                                let referenceLabel = appleHealthState.referenceTodayHealthValueLabel
+                            {
+                                DetailRow(
+                                    label: referenceLabel,
+                                    value: "\(formattedDoseValue(referenceHealthValue)) \(doseState.unit.displayName)"
+                                )
+                            }
                         } else {
                             Text("No Apple Health data found today. Using app dose entries.")
                                 .font(TelocareTheme.Typography.caption)
@@ -2417,6 +2989,14 @@ private struct InputDetailView: View {
         case .failed:
             return "Sync failed"
         }
+    }
+
+    private func primaryAppleHealthValueLabel(for state: InputAppleHealthState) -> String {
+        guard state.config?.identifier == .moderateWorkoutMinutes else {
+            return "Today in Apple Health"
+        }
+
+        return "Moderate minutes (goal metric)"
     }
 
     @ViewBuilder
@@ -2773,7 +3353,7 @@ private struct ExploreChatScreen: View {
                 chatInputBar
             }
             .background(TelocareTheme.sand.ignoresSafeArea())
-            .navigationTitle("Chat")
+            .navigationTitle("Guide")
             .navigationBarTitleDisplayMode(.inline)
         }
         .tint(TelocareTheme.coral)

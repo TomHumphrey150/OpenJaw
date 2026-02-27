@@ -9,6 +9,14 @@ enum InterventionTrackingType: String, Codable, Equatable, Sendable, Hashable {
     case dose
 }
 
+enum InterventionTimeOfDay: String, Codable, Equatable, Sendable, Hashable {
+    case morning
+    case afternoon
+    case evening
+    case preBed
+    case anytime
+}
+
 enum DoseUnit: String, Codable, Equatable, Sendable, Hashable {
     case minutes
     case hours
@@ -40,6 +48,7 @@ struct DoseConfig: Codable, Equatable, Sendable, Hashable {
 
 enum AppleHealthIdentifier: String, Codable, Equatable, Sendable, Hashable {
     case appleExerciseTime
+    case moderateWorkoutMinutes
     case sleepAnalysis
     case mindfulSession
     case dietaryWater
@@ -94,8 +103,10 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
     let graphNodeId: String?
     let trackingType: InterventionTrackingType?
     let doseConfig: DoseConfig?
+    let timeOfDay: [InterventionTimeOfDay]?
     let appleHealthAvailable: Bool?
     let appleHealthConfig: AppleHealthConfig?
+    let causalPathway: String?
 
     init(
         id: String,
@@ -111,8 +122,10 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         graphNodeId: String? = nil,
         trackingType: InterventionTrackingType? = nil,
         doseConfig: DoseConfig? = nil,
+        timeOfDay: [InterventionTimeOfDay]? = nil,
         appleHealthAvailable: Bool? = nil,
-        appleHealthConfig: AppleHealthConfig? = nil
+        appleHealthConfig: AppleHealthConfig? = nil,
+        causalPathway: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -127,8 +140,10 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         self.graphNodeId = graphNodeId
         self.trackingType = trackingType
         self.doseConfig = doseConfig
+        self.timeOfDay = timeOfDay
         self.appleHealthAvailable = appleHealthAvailable
         self.appleHealthConfig = appleHealthConfig
+        self.causalPathway = causalPathway
     }
 
     var citations: [String] {

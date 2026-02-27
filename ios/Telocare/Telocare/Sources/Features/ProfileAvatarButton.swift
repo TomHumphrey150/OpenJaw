@@ -7,7 +7,7 @@ struct ProfileAvatarButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "person.fill")
-                .font(.headline)
+                .font(TelocareTheme.Typography.headline)
                 .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(TelocareTheme.coral))

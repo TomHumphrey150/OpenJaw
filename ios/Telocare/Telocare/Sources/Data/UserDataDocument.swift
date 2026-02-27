@@ -15,6 +15,7 @@ struct UserDataDocument: Codable, Equatable {
     let nightExposures: [NightExposure]
     let nightOutcomes: [NightOutcome]
     let morningStates: [MorningState]
+    let morningQuestionnaire: MorningQuestionnaire?
     let wakeDaySleepAttributionMigrated: Bool
     let habitTrials: [HabitTrialWindow]
     let habitClassifications: [HabitClassification]
@@ -39,6 +40,7 @@ struct UserDataDocument: Codable, Equatable {
         nightExposures: [],
         nightOutcomes: [],
         morningStates: [],
+        morningQuestionnaire: nil,
         wakeDaySleepAttributionMigrated: false,
         habitTrials: [],
         habitClassifications: [],
@@ -64,6 +66,7 @@ struct UserDataDocument: Codable, Equatable {
         nightExposures: [NightExposure],
         nightOutcomes: [NightOutcome],
         morningStates: [MorningState],
+        morningQuestionnaire: MorningQuestionnaire? = nil,
         wakeDaySleepAttributionMigrated: Bool = false,
         habitTrials: [HabitTrialWindow],
         habitClassifications: [HabitClassification],
@@ -87,6 +90,7 @@ struct UserDataDocument: Codable, Equatable {
         self.nightExposures = nightExposures
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
+        self.morningQuestionnaire = morningQuestionnaire
         self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
         self.habitTrials = habitTrials
         self.habitClassifications = habitClassifications
@@ -112,6 +116,7 @@ struct UserDataDocument: Codable, Equatable {
         case nightExposures
         case nightOutcomes
         case morningStates
+        case morningQuestionnaire
         case wakeDaySleepAttributionMigrated
         case habitTrials
         case habitClassifications
@@ -138,6 +143,7 @@ struct UserDataDocument: Codable, Equatable {
         nightExposures = try container.decodeIfPresent([NightExposure].self, forKey: .nightExposures) ?? []
         nightOutcomes = try container.decodeIfPresent([NightOutcome].self, forKey: .nightOutcomes) ?? []
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
+        morningQuestionnaire = try container.decodeIfPresent(MorningQuestionnaire.self, forKey: .morningQuestionnaire)
         wakeDaySleepAttributionMigrated = try container.decodeIfPresent(Bool.self, forKey: .wakeDaySleepAttributionMigrated) ?? false
         habitTrials = try container.decodeIfPresent([HabitTrialWindow].self, forKey: .habitTrials) ?? []
         habitClassifications = try container.decodeIfPresent([HabitClassification].self, forKey: .habitClassifications) ?? []
@@ -420,6 +426,8 @@ struct MorningState: Codable, Equatable, Sendable {
     let earFullness: Double?
     let healthAnxiety: Double?
     let stressLevel: Double?
+    let morningHeadache: Double?
+    let dryMouth: Double?
     let createdAt: String
 
     init(
@@ -430,6 +438,8 @@ struct MorningState: Codable, Equatable, Sendable {
         earFullness: Double?,
         healthAnxiety: Double?,
         stressLevel: Double? = nil,
+        morningHeadache: Double? = nil,
+        dryMouth: Double? = nil,
         createdAt: String
     ) {
         self.nightId = nightId
@@ -439,8 +449,26 @@ struct MorningState: Codable, Equatable, Sendable {
         self.earFullness = earFullness
         self.healthAnxiety = healthAnxiety
         self.stressLevel = stressLevel
+        self.morningHeadache = morningHeadache
+        self.dryMouth = dryMouth
         self.createdAt = createdAt
     }
+}
+
+enum MorningQuestionField: String, Codable, Equatable, Sendable {
+    case globalSensation
+    case neckTightness
+    case jawSoreness
+    case earFullness
+    case healthAnxiety
+    case stressLevel
+    case morningHeadache
+    case dryMouth
+}
+
+struct MorningQuestionnaire: Codable, Equatable, Sendable {
+    let enabledFields: [MorningQuestionField]
+    let requiredFields: [MorningQuestionField]?
 }
 
 struct HabitTrialWindow: Codable, Equatable, Identifiable {
@@ -553,6 +581,19 @@ struct GraphNodeElement: Codable, Equatable, Sendable {
 }
 
 struct GraphNodeData: Codable, Equatable, Sendable {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case label
+        case styleClass
+        case confirmed
+        case tier
+        case tooltip
+        case isDeactivated
+        case parentId
+        case parentIds
+        case isExpanded
+    }
+
     let id: String
     let label: String
     let styleClass: String
@@ -560,6 +601,9 @@ struct GraphNodeData: Codable, Equatable, Sendable {
     let tier: Int?
     let tooltip: GraphTooltip?
     let isDeactivated: Bool?
+    let parentIds: [String]?
+    let parentId: String?
+    let isExpanded: Bool?
 
     init(
         id: String,
@@ -568,8 +612,20 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         confirmed: String?,
         tier: Int?,
         tooltip: GraphTooltip?,
-        isDeactivated: Bool? = nil
+        isDeactivated: Bool? = nil,
+        parentIds: [String]? = nil,
+        parentId: String? = nil,
+        isExpanded: Bool? = nil
     ) {
+        let resolvedParentIDs: [String]?
+        if let parentIds, !parentIds.isEmpty {
+            resolvedParentIDs = parentIds
+        } else if let parentId, !parentId.isEmpty {
+            resolvedParentIDs = [parentId]
+        } else {
+            resolvedParentIDs = nil
+        }
+
         self.id = id
         self.label = label
         self.styleClass = styleClass
@@ -577,6 +633,50 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         self.tier = tier
         self.tooltip = tooltip
         self.isDeactivated = isDeactivated
+        self.parentIds = resolvedParentIDs
+        self.parentId = resolvedParentIDs?.first
+        self.isExpanded = isExpanded
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let id = try container.decode(String.self, forKey: .id)
+        let label = try container.decode(String.self, forKey: .label)
+        let styleClass = try container.decode(String.self, forKey: .styleClass)
+        let confirmed = try container.decodeIfPresent(String.self, forKey: .confirmed)
+        let tier = try container.decodeIfPresent(Int.self, forKey: .tier)
+        let tooltip = try container.decodeIfPresent(GraphTooltip.self, forKey: .tooltip)
+        let isDeactivated = try container.decodeIfPresent(Bool.self, forKey: .isDeactivated)
+        let decodedParentIDs = try container.decodeIfPresent([String].self, forKey: .parentIds)
+        let decodedParentID = try container.decodeIfPresent(String.self, forKey: .parentId)
+        let isExpanded = try container.decodeIfPresent(Bool.self, forKey: .isExpanded)
+
+        self.init(
+            id: id,
+            label: label,
+            styleClass: styleClass,
+            confirmed: confirmed,
+            tier: tier,
+            tooltip: tooltip,
+            isDeactivated: isDeactivated,
+            parentIds: decodedParentIDs,
+            parentId: decodedParentID,
+            isExpanded: isExpanded
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(label, forKey: .label)
+        try container.encode(styleClass, forKey: .styleClass)
+        try container.encodeIfPresent(confirmed, forKey: .confirmed)
+        try container.encodeIfPresent(tier, forKey: .tier)
+        try container.encodeIfPresent(tooltip, forKey: .tooltip)
+        try container.encodeIfPresent(isDeactivated, forKey: .isDeactivated)
+        try container.encodeIfPresent(parentIds, forKey: .parentIds)
+        try container.encodeIfPresent(parentIds?.first, forKey: .parentId)
+        try container.encodeIfPresent(isExpanded, forKey: .isExpanded)
     }
 }
 

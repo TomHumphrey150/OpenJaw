@@ -24,7 +24,9 @@ struct ContentView: View {
                 DashboardContentView(
                     viewModel: dashboardViewModel,
                     selectedSkinID: rootViewModel.selectedSkinID,
+                    isMuseEnabled: rootViewModel.isMuseEnabled,
                     onSelectSkin: rootViewModel.setSkin,
+                    onSetMuseEnabled: rootViewModel.setMuseEnabled,
                     accountDescription: accountDescription,
                     onSignOut: rootViewModel.signOut
                 )

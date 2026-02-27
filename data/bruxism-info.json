@@ -371,6 +371,46 @@
       "year": 2024,
       "url": "https://www.mouthhealthy.org/all-topics-a-z/teeth-grinding",
       "type": "guideline"
+    },
+    {
+      "id": "intranasal_steroids_osa_meta",
+      "title": "Intranasal corticosteroid therapy for obstructive sleep apnoea in patients with co-existing rhinitis: a systematic review and meta-analysis",
+      "source": "Sleep Med",
+      "year": 2016,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27216353/",
+      "type": "metaAnalysis"
+    },
+    {
+      "id": "intranasal_steroid_cpap_compliance",
+      "title": "Effects of intranasal steroids on continuous positive airway pressure compliance among patients with obstructive sleep apnea",
+      "source": "J Clin Sleep Med",
+      "year": 2020,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/33104981/",
+      "type": "rct"
+    },
+    {
+      "id": "azeflu_osa_pap_adherence_trial",
+      "title": "Azelastine hydrochloride and fluticasone propionate for obstructive sleep apnea and PAP adherence (pilot randomized trial)",
+      "source": "J Clin Sleep Med",
+      "year": 2025,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12033272/",
+      "type": "rct"
+    },
+    {
+      "id": "azeflu_allergic_rhinitis_rct",
+      "title": "Azelastine hydrochloride/fluticasone propionate in moderate-to-severe perennial allergic rhinitis: randomized controlled trial",
+      "source": "Allergy Asthma Proc",
+      "year": 2025,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40051423/",
+      "type": "rct"
+    },
+    {
+      "id": "nasal_dilator_meta_osa",
+      "title": "Nasal dilators for snoring and obstructive sleep apnea: a systematic review and meta-analysis",
+      "source": "Sleep Breath",
+      "year": 2016,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5187471/",
+      "type": "metaAnalysis"
     }
   ],
   "disclaimer": "This information is for educational purposes only and is not a substitute for professional medical advice. Please consult with a healthcare provider or dentist for diagnosis and treatment of bruxism."

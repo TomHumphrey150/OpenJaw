@@ -9,7 +9,7 @@ struct OutcomeTrendPoint: Equatable, Identifiable {
     }
 }
 
-enum MorningTrendMetric: String, CaseIterable, Identifiable {
+enum MorningTrendMetric: String, CaseIterable, Identifiable, Hashable {
     case composite
     case globalSensation
     case neckTightness
@@ -17,10 +17,21 @@ enum MorningTrendMetric: String, CaseIterable, Identifiable {
     case earFullness
     case healthAnxiety
     case stressLevel
+    case morningHeadache
+    case dryMouth
 
     var id: String {
         rawValue
     }
+
+    static let legacyFieldMetrics: [MorningTrendMetric] = [
+        .globalSensation,
+        .neckTightness,
+        .jawSoreness,
+        .earFullness,
+        .healthAnxiety,
+        .stressLevel,
+    ]
 
     var title: String {
         switch self {
@@ -38,6 +49,10 @@ enum MorningTrendMetric: String, CaseIterable, Identifiable {
             return "Worry level"
         case .stressLevel:
             return "Stress level"
+        case .morningHeadache:
+            return "Morning headache"
+        case .dryMouth:
+            return "Dry mouth on waking"
         }
     }
 }
@@ -82,6 +97,7 @@ struct OutcomeTrendDataBuilder {
     func morningPoints(
         from morningStates: [MorningState],
         metric: MorningTrendMetric,
+        compositeComponents: [MorningTrendMetric]? = nil,
         windowDays: Int = 14
     ) -> [OutcomeTrendPoint] {
         guard let dateWindow = dateWindow(windowDays: windowDays) else {
@@ -92,7 +108,11 @@ struct OutcomeTrendDataBuilder {
             guard
                 let date = localDayDate(for: state.nightId),
                 dateWindow.contains(date),
-                let value = morningValue(for: state, metric: metric)
+                let value = morningValue(
+                    for: state,
+                    metric: metric,
+                    compositeComponents: compositeComponents
+                )
             else {
                 return nil
             }
@@ -172,17 +192,22 @@ struct OutcomeTrendDataBuilder {
         return calendar.startOfDay(for: parsed)
     }
 
-    private func morningValue(for state: MorningState, metric: MorningTrendMetric) -> Double? {
+    private func morningValue(
+        for state: MorningState,
+        metric: MorningTrendMetric,
+        compositeComponents: [MorningTrendMetric]?
+    ) -> Double? {
         switch metric {
         case .composite:
-            let values = [
-                state.globalSensation,
-                state.neckTightness,
-                state.jawSoreness,
-                state.earFullness,
-                state.healthAnxiety,
-                state.stressLevel,
-            ].compactMap { $0 }
+            let components = (compositeComponents ?? MorningTrendMetric.legacyFieldMetrics)
+                .filter { $0 != .composite }
+            let values = components.compactMap { component in
+                morningValue(
+                    for: state,
+                    metric: component,
+                    compositeComponents: nil
+                )
+            }
 
             guard !values.isEmpty else {
                 return nil
@@ -201,6 +226,10 @@ struct OutcomeTrendDataBuilder {
             return state.healthAnxiety
         case .stressLevel:
             return state.stressLevel
+        case .morningHeadache:
+            return state.morningHeadache
+        case .dryMouth:
+            return state.dryMouth
         }
     }
 

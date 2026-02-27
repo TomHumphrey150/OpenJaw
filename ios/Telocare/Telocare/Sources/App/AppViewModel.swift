@@ -1,6 +1,8 @@
 import Combine
 import Foundation
 
+private let defaultMuseDiagnosticsPollingIntervalNanoseconds: UInt64 = 1_000_000_000
+
 enum AppleHealthRefreshTrigger: Sendable {
     case manual
     case automatic
@@ -23,6 +25,11 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var museConnectionState: MuseConnectionState
     @Published private(set) var museRecordingState: MuseRecordingState
     @Published private(set) var museLiveDiagnostics: MuseLiveDiagnostics?
+    @Published private(set) var isMuseFitCalibrationPresented: Bool
+    @Published private(set) var museFitDiagnostics: MuseLiveDiagnostics?
+    @Published private(set) var museFitReadyStreakSeconds: Int
+    @Published private(set) var museFitPrimaryBlockerText: String?
+    @Published private(set) var museSetupDiagnosticsFileURLs: [URL]
     @Published private(set) var museSessionFeedback: String
     @Published var chatDraft: String
 
@@ -33,6 +40,7 @@ final class AppViewModel: ObservableObject {
     private var interventionDoseSettings: [String: DoseSettings]
     private var appleHealthConnections: [String: AppleHealthConnection]
     private var appleHealthValues: [String: Double]
+    private var appleHealthReferenceValues: [String: Double]
     private var nightOutcomes: [NightOutcome]
     private var morningStates: [MorningState]
     private var activeInterventions: [String]
@@ -46,6 +54,11 @@ final class AppViewModel: ObservableObject {
     private var museSessionOperationToken: Int
     private var museOutcomeSaveOperationToken: Int
     private var museDiagnosticsPollingTask: Task<Void, Never>?
+    private var museFitDiagnosticsPollingTask: Task<Void, Never>?
+    private var museRecordingStartedWithFitOverride: Bool
+    private let configuredMorningOutcomeFields: [MorningOutcomeField]
+    private let requiredMorningOutcomeFields: [MorningOutcomeField]
+    private let configuredMorningTrendMetrics: [MorningTrendMetric]
 
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistUserDataPatch: @Sendable (UserDataPatch) async throws -> Bool
@@ -53,9 +66,104 @@ final class AppViewModel: ObservableObject {
     private let museSessionService: MuseSessionService
     private let museLicenseData: Data?
     private let nowProvider: () -> Date
+    private let museDiagnosticsPollingIntervalNanoseconds: UInt64
     private static let maxCompletionEventsPerIntervention = 200
     private static let minimumMuseRecordingMinutes = 120.0
     private static let museOutcomeSource = "muse_athena_heuristic_v1"
+    private static let requiredMuseFitReadySeconds = 20
+    private static let museFitMinimumHeadbandCoverage = 0.80
+    private static let museFitMinimumQualityGateCoverage = 0.60
+    private static let defaultCollapsedHierarchyParents: Set<String> = ["STRESS", "GERD", "EXTERNAL_TRIGGERS", "RMMA", "GABA_DEF"]
+    private static let defaultExpandedHierarchyParents: Set<String> = ["OSA", "SLEEP_DEP", "MICRO"]
+    private typealias HierarchyLegacyParentRemap = (from: String, to: [String]?)
+    private static let hierarchyLegacyParentRemapsByNodeID: [String: [HierarchyLegacyParentRemap]] = [
+        "OSA": [(from: "GERD", to: nil)],
+        "AIRWAY_OBS": [(from: "GERD", to: ["OSA"])],
+        "NEG_PRESSURE": [(from: "GERD", to: ["AIRWAY_OBS"])],
+        "SLEEP_DEP": [(from: "STRESS", to: nil)],
+        "CAFFEINE": [(from: "STRESS", to: ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"])],
+        "ALCOHOL": [(from: "STRESS", to: ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"])],
+        "SMOKING": [(from: "STRESS", to: ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"])],
+        "SSRI": [(from: "STRESS", to: ["EXTERNAL_TRIGGERS", "RMMA"])],
+        "GENETICS": [(from: "STRESS", to: ["MICRO"])],
+        "MICRO": [(from: "RMMA", to: nil)],
+        "FHP": [(from: "RMMA", to: ["TMD"])],
+        "CERVICAL": [(from: "RMMA", to: ["TMD"])],
+        "HYOID": [(from: "RMMA", to: ["TMD"])],
+        "CS": [(from: "RMMA", to: ["TMD"])],
+        "WINDUP": [(from: "RMMA", to: ["CS"])],
+        "HEADACHES": [(from: "RMMA", to: ["CS"])],
+        "NECK_TIGHTNESS": [(from: "RMMA", to: ["CS"])],
+        "GLOBUS": [(from: "RMMA", to: ["CS"])],
+        "EAR": [(from: "RMMA", to: ["TMD"])],
+    ]
+    private static let hierarchyParentIDsMap: [String: [String]] = [
+        "HEALTH_ANXIETY": ["STRESS"],
+        "CORTISOL": ["STRESS"],
+        "CATECHOL": ["STRESS"],
+        "SYMPATHETIC": ["STRESS"],
+        "CAFFEINE": ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"],
+        "ALCOHOL": ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"],
+        "SMOKING": ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"],
+        "SSRI": ["EXTERNAL_TRIGGERS", "RMMA"],
+        "GENETICS": ["MICRO"],
+        "AIRWAY_OBS": ["OSA"],
+        "NEG_PRESSURE": ["AIRWAY_OBS"],
+        "TLESR": ["GERD"],
+        "ACID": ["GERD"],
+        "VAGAL": ["ACID"],
+        "PEPSIN": ["GERD"],
+        "DOPAMINE": ["GABA_DEF"],
+        "MG_DEF": ["GABA_DEF"],
+        "VIT_D": ["GABA_DEF"],
+        "RMMA": ["MICRO"],
+        "GRINDING": ["RMMA"],
+        "TOOTH": ["GRINDING"],
+        "SALIVA": ["RMMA"],
+        "TMD": ["RMMA"],
+        "FHP": ["TMD"],
+        "CERVICAL": ["TMD"],
+        "HYOID": ["TMD"],
+        "EAR": ["TMD"],
+        "CS": ["TMD"],
+        "WINDUP": ["CS"],
+        "NECK_TIGHTNESS": ["CS"],
+        "HEADACHES": ["CS"],
+        "GLOBUS": ["CS"],
+        "OSA_TX": ["OSA"],
+        "TONGUE_TX": ["OSA"],
+        "PPI_TX": ["GERD"],
+        "MORNING_FAST_TX": ["GERD"],
+        "REFLUX_DIET_TX": ["GERD"],
+        "MEAL_TIMING_TX": ["GERD"],
+        "BED_ELEV_TX": ["GERD"],
+        "CIRCADIAN_TX": ["SLEEP_DEP"],
+        "SLEEP_HYG_TX": ["SLEEP_DEP"],
+        "SCREENS_TX": ["SLEEP_DEP"],
+        "EXERCISE_TX": ["SLEEP_DEP"],
+        "MINDFULNESS_TX": ["STRESS"],
+        "NATURE_TX": ["STRESS"],
+        "CBT_TX": ["STRESS"],
+        "BREATHING_TX": ["STRESS"],
+        "WARM_SHOWER_TX": ["STRESS"],
+        "NEUROSYM_TX": ["STRESS"],
+        "MG_SUPP": ["GABA_DEF"],
+        "THEANINE_TX": ["GABA_DEF"],
+        "GLYCINE_TX": ["GABA_DEF"],
+        "YOGA_TX": ["GABA_DEF"],
+        "VIT_D_TX": ["VIT_D"],
+        "MULTI_TX": ["MG_DEF"],
+        "JAW_RELAX_TX": ["RMMA"],
+        "BIOFEEDBACK_TX": ["RMMA"],
+        "BOTOX_TX": ["RMMA"],
+        "PHYSIO_TX": ["TMD"],
+        "POSTURE_TX": ["TMD"],
+        "MASSAGE_TX": ["TMD"],
+        "HEAT_TX": ["TMD"],
+        "HYDRATION": ["SALIVA"],
+        "SPLINT": ["GRINDING"],
+        "SSRI_TX": ["SSRI"],
+    ]
 
     convenience init(
         loadDashboardSnapshotUseCase: LoadDashboardSnapshotUseCase,
@@ -72,11 +180,13 @@ final class AppViewModel: ObservableObject {
             initialAppleHealthConnections: [:],
             initialNightOutcomes: [],
             initialMorningStates: [],
+            initialMorningQuestionnaire: nil,
             initialActiveInterventions: [],
             persistUserDataPatch: { _ in true },
             appleHealthDoseService: MockAppleHealthDoseService(),
             museSessionService: MockMuseSessionService(),
             museLicenseData: nil,
+            museDiagnosticsPollingIntervalNanoseconds: defaultMuseDiagnosticsPollingIntervalNanoseconds,
             accessibilityAnnouncer: accessibilityAnnouncer
         )
     }
@@ -92,15 +202,24 @@ final class AppViewModel: ObservableObject {
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
+        initialMorningQuestionnaire: MorningQuestionnaire? = nil,
         initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         museSessionService: MuseSessionService = MockMuseSessionService(),
         museLicenseData: Data? = nil,
         nowProvider: @escaping () -> Date = Date.init,
+        museDiagnosticsPollingIntervalNanoseconds: UInt64 = defaultMuseDiagnosticsPollingIntervalNanoseconds,
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
         let todayKey = Self.localDateKey(from: nowProvider())
+        let seededGraphData = Self.seedHierarchyIfNeeded(graphData)
+        let resolvedMorningOutcomeFields = Self.resolveMorningOutcomeFields(from: initialMorningQuestionnaire)
+        let resolvedRequiredMorningOutcomeFields = Self.resolveRequiredMorningOutcomeFields(
+            enabledFields: resolvedMorningOutcomeFields,
+            questionnaire: initialMorningQuestionnaire
+        )
+        let resolvedMorningTrendMetrics = Self.resolveMorningTrendMetrics(from: resolvedMorningOutcomeFields)
 
         mode = .explore
         guidedStep = .outcomes
@@ -108,20 +227,28 @@ final class AppViewModel: ObservableObject {
         isProfileSheetPresented = false
         selectedExploreTab = .inputs
         exploreFeedback = "AI chat backend is not connected yet."
-        self.graphData = graphData
+        self.graphData = seededGraphData
         graphDisplayFlags = GraphDisplayFlags(
             showFeedbackEdges: false,
             showProtectiveEdges: false,
             showInterventionNodes: false
         )
-        focusedNodeID = Self.resolveNodeID(from: graphData, focusedNodeLabel: snapshot.situation.focusedNode)
+        focusedNodeID = Self.resolveNodeID(from: seededGraphData, focusedNodeLabel: snapshot.situation.focusedNode)
         graphSelectionText = "Graph ready."
         morningOutcomeSelection = Self.morningOutcomeSelection(for: todayKey, from: initialMorningStates)
         museConnectionState = .disconnected
         museRecordingState = .idle
         museLiveDiagnostics = nil
+        isMuseFitCalibrationPresented = false
+        museFitDiagnostics = nil
+        museFitReadyStreakSeconds = 0
+        museFitPrimaryBlockerText = nil
+        museSetupDiagnosticsFileURLs = []
         museSessionFeedback = "Muse session idle."
         chatDraft = ""
+        configuredMorningOutcomeFields = resolvedMorningOutcomeFields
+        requiredMorningOutcomeFields = resolvedRequiredMorningOutcomeFields
+        configuredMorningTrendMetrics = resolvedMorningTrendMetrics
 
         experienceFlow = initialExperienceFlow
         dailyCheckIns = initialDailyCheckIns
@@ -133,6 +260,7 @@ final class AppViewModel: ObservableObject {
         interventionDoseSettings = initialInterventionDoseSettings
         appleHealthConnections = initialAppleHealthConnections
         appleHealthValues = [:]
+        appleHealthReferenceValues = [:]
         nightOutcomes = initialNightOutcomes
         morningStates = initialMorningStates
         let snapshotActiveInterventions = snapshot.inputs.compactMap { input -> String? in
@@ -150,12 +278,15 @@ final class AppViewModel: ObservableObject {
         museSessionOperationToken = 0
         museOutcomeSaveOperationToken = 0
         museDiagnosticsPollingTask = nil
+        museFitDiagnosticsPollingTask = nil
+        museRecordingStartedWithFitOverride = false
 
         self.persistUserDataPatch = persistUserDataPatch
         self.appleHealthDoseService = appleHealthDoseService
         self.museSessionService = museSessionService
         self.museLicenseData = museLicenseData
         self.nowProvider = nowProvider
+        self.museDiagnosticsPollingIntervalNanoseconds = museDiagnosticsPollingIntervalNanoseconds
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
 
@@ -165,6 +296,18 @@ final class AppViewModel: ObservableObject {
 
     var morningStateHistory: [MorningState] {
         morningStates
+    }
+
+    var morningCheckInFields: [MorningOutcomeField] {
+        configuredMorningOutcomeFields
+    }
+
+    var requiredMorningCheckInFields: [MorningOutcomeField] {
+        requiredMorningOutcomeFields
+    }
+
+    var morningTrendMetricOptions: [MorningTrendMetric] {
+        configuredMorningTrendMetrics
     }
 
     var museConnectionStatusText: String {
@@ -231,11 +374,33 @@ final class AppViewModel: ObservableObject {
             return false
         }
 
-        if case .recording = museRecordingState {
+        guard case .idle = museRecordingState else {
             return false
         }
 
         return true
+    }
+
+    var museFitReadyRequiredSeconds: Int {
+        Self.requiredMuseFitReadySeconds
+    }
+
+    var museCanStartRecordingFromFitCalibration: Bool {
+        museFitReadyStreakSeconds >= Self.requiredMuseFitReadySeconds
+    }
+
+    var museCanStartRecordingWithFitOverride: Bool {
+        guard isMuseFitCalibrationPresented else {
+            return false
+        }
+        guard case .connected = museConnectionState else {
+            return false
+        }
+        guard case .idle = museRecordingState else {
+            return false
+        }
+
+        return !museCanStartRecordingFromFitCalibration
     }
 
     var museCanStopRecording: Bool {
@@ -325,6 +490,10 @@ final class AppViewModel: ObservableObject {
                 try await museSessionService.connect(to: headband, licenseData: museLicenseData)
                 guard operationToken == museSessionOperationToken else { return }
                 museConnectionState = .connected(headband)
+                if isMuseFitCalibrationPresented {
+                    startMuseFitDiagnosticsPolling()
+                }
+                await refreshMuseSetupDiagnosticsAvailability()
                 let successMessage = "Connected to \(headband.name)."
                 museSessionFeedback = successMessage
                 announce(successMessage)
@@ -339,10 +508,15 @@ final class AppViewModel: ObservableObject {
         guard mode == .explore else { return }
 
         stopMuseDiagnosticsPolling(clearDiagnostics: true)
+        stopMuseFitDiagnosticsPolling(clearDiagnostics: true)
+        isMuseFitCalibrationPresented = false
+        museRecordingStartedWithFitOverride = false
+        museFitPrimaryBlockerText = nil
         let operationToken = nextMuseSessionOperationToken()
         Task {
             await museSessionService.disconnect()
             guard operationToken == museSessionOperationToken else { return }
+            await refreshMuseSetupDiagnosticsAvailability()
             if case .recording = museRecordingState {
                 museRecordingState = .idle
             }
@@ -358,10 +532,89 @@ final class AppViewModel: ObservableObject {
         guard case .connected = museConnectionState else { return }
         guard case .idle = museRecordingState else { return }
 
+        isMuseFitCalibrationPresented = true
+        museFitReadyStreakSeconds = 0
+        museFitDiagnostics = nil
+        startMuseFitDiagnosticsPolling()
+        MuseDiagnosticsLogger.info("Muse fit calibration opened")
+        let message = "Fit calibration opened. Adjust fit until ready, or start anyway with low reliability."
+        museSessionFeedback = message
+        announce(message)
+    }
+
+    func dismissMuseFitCalibration() {
+        guard isMuseFitCalibrationPresented else { return }
+        isMuseFitCalibrationPresented = false
+        stopMuseFitDiagnosticsPolling(clearDiagnostics: true)
+        Task {
+            _ = await exportMuseSetupDiagnosticsSnapshot()
+        }
+        MuseDiagnosticsLogger.info("Muse fit calibration closed")
+    }
+
+    func exportMuseSetupDiagnosticsSnapshot() async -> [URL] {
+        let setupFileURLs = await museSessionService.snapshotSetupDiagnostics(at: nowProvider())
+        museSetupDiagnosticsFileURLs = setupFileURLs
+        return setupFileURLs
+    }
+
+    func refreshMuseSetupDiagnosticsAvailability() async {
+        museSetupDiagnosticsFileURLs = await museSessionService.latestSetupDiagnosticsFileURLs()
+    }
+
+    func startMuseRecordingFromFitCalibration() {
+        guard museCanStartRecordingFromFitCalibration else {
+            return
+        }
+
+        beginMuseRecording(startedWithFitOverride: false)
+    }
+
+    func startMuseRecordingWithFitOverride() {
+        guard museCanStartRecordingWithFitOverride else {
+            return
+        }
+
+        beginMuseRecording(startedWithFitOverride: true)
+    }
+
+    func stopMuseRecording() {
+        guard mode == .explore else { return }
+        guard case .recording = museRecordingState else { return }
+        stopMuseRecordingForCurrentState()
+    }
+
+    private func beginMuseRecording(startedWithFitOverride: Bool) {
+        guard mode == .explore else { return }
+        guard case .connected = museConnectionState else { return }
+        guard case .idle = museRecordingState else { return }
+
         let operationToken = nextMuseSessionOperationToken()
         let startDate = nowProvider()
+        let fitSnapshot = museFitDiagnostics
+
+        museRecordingStartedWithFitOverride = startedWithFitOverride
+        isMuseFitCalibrationPresented = false
+        stopMuseFitDiagnosticsPolling(clearDiagnostics: true)
         museRecordingState = .recording(startedAt: startDate)
-        let message = "Recording started. Keep Telocare open in the foreground."
+
+        if let fitSnapshot {
+            MuseDiagnosticsLogger.info(
+                "Muse fit start snapshot confidence=\(fitSnapshot.signalConfidence) awake=\(fitSnapshot.awakeLikelihood) headband=\(fitSnapshot.headbandOnCoverage) quality=\(fitSnapshot.qualityGateCoverage) guidance=\(fitSnapshot.fitGuidance.rawValue)"
+            )
+        } else {
+            MuseDiagnosticsLogger.info("Muse fit start snapshot unavailable")
+        }
+
+        let message: String
+        if startedWithFitOverride {
+            MuseDiagnosticsLogger.warn("Muse fit override start used")
+            message = "Recording started with low reliability warning. Keep Telocare open in the foreground."
+            announce("Starting with low reliability warning")
+        } else {
+            message = "Recording started. Keep Telocare open in the foreground."
+        }
+
         museSessionFeedback = message
         startMuseDiagnosticsPolling()
         announce(message)
@@ -370,19 +623,16 @@ final class AppViewModel: ObservableObject {
             do {
                 try await museSessionService.startRecording(at: startDate)
                 guard operationToken == museSessionOperationToken else { return }
+                await refreshMuseSetupDiagnosticsAvailability()
             } catch {
                 guard operationToken == museSessionOperationToken else { return }
                 stopMuseDiagnosticsPolling(clearDiagnostics: true)
                 museRecordingState = .idle
+                museRecordingStartedWithFitOverride = false
+                await refreshMuseSetupDiagnosticsAvailability()
                 applyMuseSessionError(error, fallback: "Could not start recording.")
             }
         }
-    }
-
-    func stopMuseRecording() {
-        guard mode == .explore else { return }
-        guard case .recording = museRecordingState else { return }
-        stopMuseRecordingForCurrentState()
     }
 
     func saveMuseNightOutcome() {
@@ -523,7 +773,10 @@ final class AppViewModel: ObservableObject {
                 confirmed: currentNode.confirmed,
                 tier: currentNode.tier,
                 tooltip: currentNode.tooltip,
-                isDeactivated: nextIsDeactivated
+                isDeactivated: nextIsDeactivated,
+                parentIds: currentNode.parentIds,
+                parentId: currentNode.parentId,
+                isExpanded: currentNode.isExpanded
             )
         )
 
@@ -615,6 +868,67 @@ final class AppViewModel: ObservableObject {
         }
     }
 
+    @discardableResult
+    func toggleGraphNodeExpanded(_ nodeID: String) -> Bool {
+        guard mode == .explore else { return false }
+        guard let nodeIndex = graphData.nodes.firstIndex(where: { $0.data.id == nodeID }) else { return false }
+
+        let childCount = graphData.nodes.reduce(into: 0) { count, node in
+            if node.data.parentIds?.contains(nodeID) == true {
+                count += 1
+            }
+        }
+        guard childCount > 0 else { return false }
+
+        let previousGraphData = graphData
+        let currentNode = graphData.nodes[nodeIndex].data
+        let nextIsExpanded = !(currentNode.isExpanded ?? true)
+
+        var nextNodes = graphData.nodes
+        nextNodes[nodeIndex] = GraphNodeElement(
+            data: GraphNodeData(
+                id: currentNode.id,
+                label: currentNode.label,
+                styleClass: currentNode.styleClass,
+                confirmed: currentNode.confirmed,
+                tier: currentNode.tier,
+                tooltip: currentNode.tooltip,
+                isDeactivated: currentNode.isDeactivated,
+                parentIds: currentNode.parentIds,
+                parentId: currentNode.parentId,
+                isExpanded: nextIsExpanded
+            )
+        )
+
+        let nextGraphData = CausalGraphData(
+            nodes: nextNodes,
+            edges: graphData.edges
+        )
+        graphData = nextGraphData
+
+        let nodeLabel = Self.firstLine(for: currentNode.label)
+        let successMessage = nextIsExpanded
+            ? "\(nodeLabel) branch expanded."
+            : "\(nodeLabel) branch collapsed."
+        exploreFeedback = successMessage
+        announce(successMessage)
+
+        let operationToken = nextGraphDeactivationOperationToken()
+        Task {
+            do {
+                try await persistPatch(graphDeactivationPatch(for: nextGraphData))
+            } catch {
+                guard operationToken == graphDeactivationOperationToken else { return }
+                graphData = previousGraphData
+                let failureMessage = "Could not save \(nodeLabel) branch state. Reverted."
+                exploreFeedback = failureMessage
+                announce(failureMessage)
+            }
+        }
+
+        return true
+    }
+
     func toggleInputCheckedToday(_ inputID: String) {
         guard mode == .explore else { return }
         guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
@@ -672,7 +986,8 @@ final class AppViewModel: ObservableObject {
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
             externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState
+            appleHealthState: currentInput.appleHealthState,
+            timeOfDay: currentInput.timeOfDay
         )
 
         let dateKey = Self.localDateKey(from: nowProvider())
@@ -762,6 +1077,8 @@ final class AppViewModel: ObservableObject {
             connected: true,
             syncStatus: .connecting,
             todayHealthValue: appleHealthValues[inputID],
+            referenceTodayHealthValue: appleHealthReferenceValues[inputID],
+            referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
             lastSyncAt: connection.lastSyncAt,
             config: config
         )
@@ -808,15 +1125,19 @@ final class AppViewModel: ObservableObject {
         let previousSnapshot = snapshot
         let previousConnections = appleHealthConnections
         let previousHealthValues = appleHealthValues
+        let previousReferenceValues = appleHealthReferenceValues
 
         appleHealthConnections.removeValue(forKey: inputID)
         appleHealthValues.removeValue(forKey: inputID)
+        appleHealthReferenceValues.removeValue(forKey: inputID)
 
         let nextState = InputAppleHealthState(
             available: true,
             connected: false,
             syncStatus: .disconnected,
             todayHealthValue: nil,
+            referenceTodayHealthValue: nil,
+            referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
             lastSyncAt: nil,
             config: config
         )
@@ -843,6 +1164,7 @@ final class AppViewModel: ObservableObject {
                 guard operationToken == appleHealthConnectionOperationToken else { return }
                 appleHealthConnections = previousConnections
                 appleHealthValues = previousHealthValues
+                appleHealthReferenceValues = previousReferenceValues
                 snapshot = previousSnapshot
                 let message = "Could not disconnect \(currentInput.name) from Apple Health. Reverted."
                 exploreFeedback = message
@@ -867,6 +1189,8 @@ final class AppViewModel: ObservableObject {
             connected: true,
             syncStatus: .syncing,
             todayHealthValue: appleHealthValues[inputID],
+            referenceTodayHealthValue: appleHealthReferenceValues[inputID],
+            referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
             lastSyncAt: currentAppleHealthState.lastSyncAt,
             config: config
         )
@@ -888,6 +1212,10 @@ final class AppViewModel: ObservableObject {
                 unit: currentDoseState.unit,
                 now: nowProvider()
             )
+            let referenceValue = await fetchAppleHealthReferenceValue(
+                config: config,
+                unit: currentDoseState.unit
+            )
             var nextDailyDoseProgressForPatch: [String: [String: Double]]?
             if let healthValue {
                 let sanitizedHealthValue = max(0, healthValue)
@@ -903,6 +1231,12 @@ final class AppViewModel: ObservableObject {
                 nextDailyDoseProgressForPatch = nextDailyDoseProgress
             } else {
                 appleHealthValues.removeValue(forKey: inputID)
+            }
+
+            if let referenceValue {
+                appleHealthReferenceValues[inputID] = referenceValue
+            } else {
+                appleHealthReferenceValues.removeValue(forKey: inputID)
             }
 
             let status: AppleHealthSyncStatus = healthValue == nil ? .noData : .synced
@@ -924,6 +1258,8 @@ final class AppViewModel: ObservableObject {
                         connected: true,
                         syncStatus: status,
                         todayHealthValue: appleHealthValues[inputID],
+                        referenceTodayHealthValue: appleHealthReferenceValues[inputID],
+                        referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
                         lastSyncAt: syncTimestamp,
                         config: config
                     )
@@ -977,6 +1313,8 @@ final class AppViewModel: ObservableObject {
                         connected: true,
                         syncStatus: .failed,
                         todayHealthValue: appleHealthValues[inputID],
+                        referenceTodayHealthValue: appleHealthReferenceValues[inputID],
+                        referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
                         lastSyncAt: syncTimestamp,
                         config: config
                     )
@@ -1050,7 +1388,8 @@ final class AppViewModel: ObservableObject {
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
             externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState
+            appleHealthState: currentInput.appleHealthState,
+            timeOfDay: currentInput.timeOfDay
         )
 
         var nextSettings = interventionDoseSettings
@@ -1104,7 +1443,8 @@ final class AppViewModel: ObservableObject {
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
             externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState
+            appleHealthState: currentInput.appleHealthState,
+            timeOfDay: currentInput.timeOfDay
         )
 
         let currentActiveInterventions = snapshot.inputs.compactMap { input -> String? in
@@ -1142,6 +1482,7 @@ final class AppViewModel: ObservableObject {
 
     func setMorningOutcomeValue(_ value: Int?, for field: MorningOutcomeField) {
         guard mode == .explore else { return }
+        guard configuredMorningOutcomeFields.contains(field) else { return }
 
         let clampedValue = value.map { max(0, min(10, $0)) }
         let nextSelection = morningOutcomeSelection.updating(field: field, value: clampedValue)
@@ -1178,6 +1519,14 @@ final class AppViewModel: ObservableObject {
         if case .recording = museRecordingState {
             stopMuseRecordingForCurrentState(triggeredByBackground: true)
         }
+        if isMuseFitCalibrationPresented {
+            isMuseFitCalibrationPresented = false
+            stopMuseFitDiagnosticsPolling(clearDiagnostics: true)
+            Task {
+                _ = await exportMuseSetupDiagnosticsSnapshot()
+            }
+            MuseDiagnosticsLogger.info("Muse fit calibration closed due to app backgrounding")
+        }
 
         guard mode == .guided else { return }
         guard experienceFlow.lastGuidedStatus == .inProgress else { return }
@@ -1193,6 +1542,13 @@ final class AppViewModel: ObservableObject {
             graphSelectionText = "Selected node: \(label)."
             updateFocusedNode(label)
             announce(graphSelectionText)
+        case .nodeDoubleTapped(let id, let label):
+            focusedNodeID = id
+            if toggleGraphNodeExpanded(id) {
+                graphSelectionText = "Toggled branch: \(label)."
+            } else {
+                graphSelectionText = "Selected node: \(label)."
+            }
         case .edgeSelected(_, _, let sourceLabel, let targetLabel, _, _):
             graphSelectionText = "Selected link: \(sourceLabel) to \(targetLabel)."
             announce(graphSelectionText)
@@ -1236,7 +1592,7 @@ final class AppViewModel: ObservableObject {
                 }
 
                 museLiveDiagnostics = diagnostics
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                try? await Task.sleep(nanoseconds: museDiagnosticsPollingIntervalNanoseconds)
             }
         }
     }
@@ -1247,6 +1603,84 @@ final class AppViewModel: ObservableObject {
         if clearDiagnostics {
             museLiveDiagnostics = nil
         }
+    }
+
+    private func startMuseFitDiagnosticsPolling() {
+        stopMuseFitDiagnosticsPolling(clearDiagnostics: true)
+        museFitDiagnosticsPollingTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+
+            while !Task.isCancelled {
+                guard isMuseFitCalibrationPresented else {
+                    return
+                }
+                guard case .connected = museConnectionState else {
+                    return
+                }
+                guard case .idle = museRecordingState else {
+                    return
+                }
+
+                let diagnostics = await museSessionService.fitDiagnostics(at: nowProvider())
+                guard !Task.isCancelled else {
+                    return
+                }
+                guard isMuseFitCalibrationPresented else {
+                    return
+                }
+                guard case .connected = museConnectionState else {
+                    return
+                }
+                guard case .idle = museRecordingState else {
+                    return
+                }
+
+                updateMuseFitReadiness(with: diagnostics)
+                museFitDiagnostics = diagnostics
+                museFitPrimaryBlockerText = diagnostics?.fitReadiness.primaryBlocker?.displayText
+                try? await Task.sleep(nanoseconds: museDiagnosticsPollingIntervalNanoseconds)
+            }
+        }
+    }
+
+    private func stopMuseFitDiagnosticsPolling(clearDiagnostics: Bool) {
+        museFitDiagnosticsPollingTask?.cancel()
+        museFitDiagnosticsPollingTask = nil
+        if clearDiagnostics {
+            museFitDiagnostics = nil
+            museFitReadyStreakSeconds = 0
+            museFitPrimaryBlockerText = nil
+        }
+    }
+
+    private func updateMuseFitReadiness(with diagnostics: MuseLiveDiagnostics?) {
+        let wasReady = museCanStartRecordingFromFitCalibration
+        if let diagnostics, isGoodFitSample(diagnostics) {
+            museFitReadyStreakSeconds = min(
+                Self.requiredMuseFitReadySeconds,
+                museFitReadyStreakSeconds + 1
+            )
+        } else {
+            museFitReadyStreakSeconds = 0
+        }
+
+        let isReady = museCanStartRecordingFromFitCalibration
+        if !wasReady && isReady {
+            MuseDiagnosticsLogger.info("Muse fit calibration reached ready threshold at \(nowProvider())")
+            announce("Fit ready for recording")
+        } else if wasReady && !isReady {
+            MuseDiagnosticsLogger.warn("Muse fit calibration dropped below threshold")
+            announce("Fit dropped below threshold")
+        }
+    }
+
+    private func isGoodFitSample(_ diagnostics: MuseLiveDiagnostics) -> Bool {
+        diagnostics.fitReadiness.isReady
+            && diagnostics.fitGuidance == .good
+            && diagnostics.headbandOnCoverage >= Self.museFitMinimumHeadbandCoverage
+            && diagnostics.qualityGateCoverage >= Self.museFitMinimumQualityGateCoverage
     }
 
     private func updateInput(_ nextInput: InputStatus, at index: Int) {
@@ -1347,10 +1781,19 @@ final class AppViewModel: ObservableObject {
                 let summary = try await museSessionService.stopRecording(at: endDate)
                 guard operationToken == museSessionOperationToken else { return }
                 stopMuseDiagnosticsPolling(clearDiagnostics: true)
-                museRecordingState = .stopped(summary)
+                let recordingReliability = deriveRecordingReliability(
+                    fitGuidance: summary.fitGuidance,
+                    startedWithFitOverride: museRecordingStartedWithFitOverride
+                )
+                let completedSummary = summary.withFitRecordingContext(
+                    startedWithFitOverride: museRecordingStartedWithFitOverride,
+                    recordingReliability: recordingReliability
+                )
+                museRecordingState = .stopped(completedSummary)
+                museRecordingStartedWithFitOverride = false
 
-                let durationText = Self.formattedMinutes(summary.totalSleepMinutes)
-                let isLongEnough = summary.totalSleepMinutes >= Self.minimumMuseRecordingMinutes
+                let durationText = Self.formattedMinutes(completedSummary.totalSleepMinutes)
+                let isLongEnough = completedSummary.totalSleepMinutes >= Self.minimumMuseRecordingMinutes
 
                 let message: String
                 if triggeredByBackground {
@@ -1367,16 +1810,33 @@ final class AppViewModel: ObservableObject {
 
                 museSessionFeedback = message
                 announce(message)
+                await refreshMuseSetupDiagnosticsAvailability()
             } catch {
                 guard operationToken == museSessionOperationToken else { return }
                 stopMuseDiagnosticsPolling(clearDiagnostics: true)
                 museRecordingState = .idle
+                museRecordingStartedWithFitOverride = false
+                await refreshMuseSetupDiagnosticsAvailability()
                 let fallback = triggeredByBackground
                     ? "Recording ended because Telocare moved to background."
                     : "Could not stop recording."
                 applyMuseSessionError(error, fallback: fallback)
             }
         }
+    }
+
+    private func deriveRecordingReliability(
+        fitGuidance: MuseFitGuidance,
+        startedWithFitOverride: Bool
+    ) -> MuseRecordingReliability {
+        if fitGuidance == .insufficientSignal {
+            return .insufficientSignal
+        }
+        if startedWithFitOverride || fitGuidance == .adjustHeadband {
+            return .limitedFit
+        }
+
+        return .verifiedFit
     }
 
     private func applyMuseSessionError(_ error: Error, fallback: String) {
@@ -1413,6 +1873,12 @@ final class AppViewModel: ObservableObject {
             message = "No active recording to stop."
         }
 
+        isMuseFitCalibrationPresented = false
+        stopMuseFitDiagnosticsPolling(clearDiagnostics: true)
+        museRecordingStartedWithFitOverride = false
+        Task {
+            await refreshMuseSetupDiagnosticsAvailability()
+        }
         museSessionFeedback = message
         announce(message)
     }
@@ -1552,7 +2018,8 @@ final class AppViewModel: ObservableObject {
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
             externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState
+            appleHealthState: currentInput.appleHealthState,
+            timeOfDay: currentInput.timeOfDay
         )
 
         let dateKey = Self.localDateKey(from: nowProvider())
@@ -1606,6 +2073,44 @@ final class AppViewModel: ObservableObject {
         return "\(formattedDoseValue(state.value))/\(formattedDoseValue(state.goal)) \(state.unit.displayName) today (\(percent)%)"
     }
 
+    private func appleHealthReferenceLabel(for config: AppleHealthConfig) -> String? {
+        guard config.identifier == .moderateWorkoutMinutes else {
+            return nil
+        }
+
+        return "Apple Exercise ring minutes (reference)"
+    }
+
+    private func fetchAppleHealthReferenceValue(
+        config: AppleHealthConfig,
+        unit: DoseUnit
+    ) async -> Double? {
+        guard config.identifier == .moderateWorkoutMinutes else {
+            return nil
+        }
+
+        let referenceConfig = AppleHealthConfig(
+            identifier: .appleExerciseTime,
+            aggregation: .cumulativeSum,
+            dayAttribution: config.dayAttribution
+        )
+
+        do {
+            let value = try await appleHealthDoseService.fetchTodayValue(
+                for: referenceConfig,
+                unit: unit,
+                now: nowProvider()
+            )
+            guard let value else {
+                return nil
+            }
+
+            return max(0, value)
+        } catch {
+            return nil
+        }
+    }
+
     private func doseInput(
         from currentInput: InputStatus,
         manualValue: Double,
@@ -1640,7 +2145,8 @@ final class AppViewModel: ObservableObject {
             detailedDescription: currentInput.detailedDescription,
             citationIDs: currentInput.citationIDs,
             externalLink: currentInput.externalLink,
-            appleHealthState: appleHealthState
+            appleHealthState: appleHealthState,
+            timeOfDay: currentInput.timeOfDay
         )
     }
 
@@ -1660,6 +2166,99 @@ final class AppViewModel: ObservableObject {
                 lastModified: Self.timestamp(from: nowProvider())
             )
         )
+    }
+
+    private static func seedHierarchyIfNeeded(_ graphData: CausalGraphData) -> CausalGraphData {
+        var didChange = false
+        let nextNodes = graphData.nodes.map { element in
+            let node = element.data
+
+            let existingParentIDs = node.parentIds ?? node.parentId.map { [$0] }
+            let normalizedParentIDs = normalizedParentIDs(for: node.id, existingParentIDs: existingParentIDs)
+            let seededParentIDs = normalizedParentIDs ?? hierarchyParentIDsMap[node.id]
+            let seededParentID = seededParentIDs?.first
+            let seededIsExpanded: Bool?
+            if let existingExpansion = node.isExpanded {
+                seededIsExpanded = existingExpansion
+            } else if defaultCollapsedHierarchyParents.contains(node.id) {
+                seededIsExpanded = false
+            } else if defaultExpandedHierarchyParents.contains(node.id) {
+                seededIsExpanded = true
+            } else {
+                seededIsExpanded = nil
+            }
+
+            guard seededParentIDs != node.parentIds || seededParentID != node.parentId || seededIsExpanded != node.isExpanded else {
+                return element
+            }
+
+            didChange = true
+            return GraphNodeElement(
+                data: GraphNodeData(
+                    id: node.id,
+                    label: node.label,
+                    styleClass: node.styleClass,
+                    confirmed: node.confirmed,
+                    tier: node.tier,
+                    tooltip: node.tooltip,
+                    isDeactivated: node.isDeactivated,
+                    parentIds: seededParentIDs,
+                    parentId: seededParentID,
+                    isExpanded: seededIsExpanded
+                )
+            )
+        }
+
+        guard didChange else {
+            return graphData
+        }
+
+        return CausalGraphData(
+            nodes: nextNodes,
+            edges: graphData.edges
+        )
+    }
+
+    private static func normalizedParentIDs(for nodeID: String, existingParentIDs: [String]?) -> [String]? {
+        guard let existingParentIDs else {
+            return nil
+        }
+
+        guard let remaps = hierarchyLegacyParentRemapsByNodeID[nodeID] else {
+            return deduplicatedParentIDs(existingParentIDs)
+        }
+
+        var nextParentIDs: [String] = []
+        for parentID in existingParentIDs {
+            if let remap = remaps.first(where: { $0.from == parentID }) {
+                guard let replacementParentIDs = remap.to else {
+                    continue
+                }
+
+                nextParentIDs.append(contentsOf: replacementParentIDs)
+                continue
+            }
+
+            nextParentIDs.append(parentID)
+        }
+
+        return deduplicatedParentIDs(nextParentIDs)
+    }
+
+    private static func deduplicatedParentIDs(_ parentIDs: [String]) -> [String]? {
+        var seenParentIDs = Set<String>()
+        var uniqueParentIDs: [String] = []
+
+        for parentID in parentIDs where !parentID.isEmpty {
+            guard !seenParentIDs.contains(parentID) else {
+                continue
+            }
+
+            seenParentIDs.insert(parentID)
+            uniqueParentIDs.append(parentID)
+        }
+
+        return uniqueParentIDs.isEmpty ? nil : uniqueParentIDs
     }
 
     private func edgeDescription(sourceID: String, targetID: String) -> String {
@@ -1847,6 +2446,122 @@ final class AppViewModel: ObservableObject {
         return String(format: "%04d-%02d-%02d", year, month, day)
     }
 
+    private static func resolveMorningOutcomeFields(
+        from questionnaire: MorningQuestionnaire?
+    ) -> [MorningOutcomeField] {
+        guard let questionnaire else {
+            return MorningOutcomeField.legacyFields
+        }
+
+        let mappedEnabledFields = questionnaire.enabledFields.map(Self.morningOutcomeField)
+        let dedupedEnabledFields = deduplicatedMorningOutcomeFields(mappedEnabledFields)
+        if dedupedEnabledFields.isEmpty {
+            return MorningOutcomeField.legacyFields
+        }
+
+        return dedupedEnabledFields
+    }
+
+    private static func resolveRequiredMorningOutcomeFields(
+        enabledFields: [MorningOutcomeField],
+        questionnaire: MorningQuestionnaire?
+    ) -> [MorningOutcomeField] {
+        guard let questionnaire else {
+            return enabledFields
+        }
+
+        let mappedRequiredFields = (questionnaire.requiredFields ?? questionnaire.enabledFields)
+            .map(Self.morningOutcomeField)
+        let dedupedRequiredFields = deduplicatedMorningOutcomeFields(mappedRequiredFields)
+        let enabledFieldSet = Set(enabledFields)
+        let filteredRequiredFields = dedupedRequiredFields.filter { enabledFieldSet.contains($0) }
+        if filteredRequiredFields.isEmpty {
+            return enabledFields
+        }
+
+        return filteredRequiredFields
+    }
+
+    private static func resolveMorningTrendMetrics(
+        from enabledFields: [MorningOutcomeField]
+    ) -> [MorningTrendMetric] {
+        let mappedMetrics = enabledFields.map(Self.morningTrendMetric)
+        let dedupedMetrics = deduplicatedMorningTrendMetrics(mappedMetrics)
+        return [.composite] + dedupedMetrics
+    }
+
+    private static func deduplicatedMorningOutcomeFields(
+        _ fields: [MorningOutcomeField]
+    ) -> [MorningOutcomeField] {
+        var dedupedFields: [MorningOutcomeField] = []
+        var seenFields = Set<MorningOutcomeField>()
+
+        for field in fields where seenFields.insert(field).inserted {
+            dedupedFields.append(field)
+        }
+
+        return dedupedFields
+    }
+
+    private static func deduplicatedMorningTrendMetrics(
+        _ metrics: [MorningTrendMetric]
+    ) -> [MorningTrendMetric] {
+        var dedupedMetrics: [MorningTrendMetric] = []
+        var seenMetrics = Set<MorningTrendMetric>()
+
+        for metric in metrics where seenMetrics.insert(metric).inserted {
+            dedupedMetrics.append(metric)
+        }
+
+        return dedupedMetrics
+    }
+
+    private static func morningOutcomeField(
+        from questionField: MorningQuestionField
+    ) -> MorningOutcomeField {
+        switch questionField {
+        case .globalSensation:
+            return .globalSensation
+        case .neckTightness:
+            return .neckTightness
+        case .jawSoreness:
+            return .jawSoreness
+        case .earFullness:
+            return .earFullness
+        case .healthAnxiety:
+            return .healthAnxiety
+        case .stressLevel:
+            return .stressLevel
+        case .morningHeadache:
+            return .morningHeadache
+        case .dryMouth:
+            return .dryMouth
+        }
+    }
+
+    private static func morningTrendMetric(
+        from outcomeField: MorningOutcomeField
+    ) -> MorningTrendMetric {
+        switch outcomeField {
+        case .globalSensation:
+            return .globalSensation
+        case .neckTightness:
+            return .neckTightness
+        case .jawSoreness:
+            return .jawSoreness
+        case .earFullness:
+            return .earFullness
+        case .healthAnxiety:
+            return .healthAnxiety
+        case .stressLevel:
+            return .stressLevel
+        case .morningHeadache:
+            return .morningHeadache
+        case .dryMouth:
+            return .dryMouth
+        }
+    }
+
     private static func morningOutcomeSelection(for dateKey: String, from morningStates: [MorningState]) -> MorningOutcomeSelection {
         guard let state = morningStates.first(where: { $0.nightId == dateKey }) else {
             return MorningOutcomeSelection.empty(nightID: dateKey)
@@ -1859,7 +2574,9 @@ final class AppViewModel: ObservableObject {
             jawSoreness: state.jawSoreness.map { Int($0.rounded()) },
             earFullness: state.earFullness.map { Int($0.rounded()) },
             healthAnxiety: state.healthAnxiety.map { Int($0.rounded()) },
-            stressLevel: state.stressLevel.map { Int($0.rounded()) }
+            stressLevel: state.stressLevel.map { Int($0.rounded()) },
+            morningHeadache: state.morningHeadache.map { Int($0.rounded()) },
+            dryMouth: state.dryMouth.map { Int($0.rounded()) }
         )
     }
 
@@ -1879,6 +2596,8 @@ final class AppViewModel: ObservableObject {
             earFullness: morningState.earFullness,
             healthAnxiety: morningState.healthAnxiety,
             stressLevel: morningState.stressLevel,
+            morningHeadache: morningState.morningHeadache,
+            dryMouth: morningState.dryMouth,
             createdAt: existingCreatedAt
         )
         return mutableStates

@@ -3,22 +3,31 @@ import Foundation
 struct DashboardSnapshotBuilder {
     func build(
         from document: UserDataDocument,
-        firstPartyContent: FirstPartyContentBundle = .empty
+        firstPartyContent: FirstPartyContentBundle = .empty,
+        now: Date = Date()
     ) -> DashboardSnapshot {
+        let todayKey = Self.localDateKey(from: now)
+        let recentLocalDayKeys = Self.recentLocalDateKeys(endingAt: now, days: 7)
         let graphData = graphData(
             from: document,
             fallbackGraph: firstPartyContent.graphData
         )
         let canonicalLookup = CanonicalInterventionLookup(catalog: firstPartyContent.interventionsCatalog)
         let canonicalData = CanonicalizedInterventionData(document: document, lookup: canonicalLookup)
-        let outcomes = outcomeSummary(from: document, canonicalData: canonicalData)
+        let outcomes = outcomeSummary(
+            from: document,
+            canonicalData: canonicalData,
+            recentLocalDayKeys: recentLocalDayKeys
+        )
         let outcomeRecords = outcomeRecords(from: document)
         let outcomesMetadata = firstPartyContent.outcomesMetadata
         let situation = situationSummary(from: graphData)
         let inputs = inputStatus(
             canonicalData: canonicalData,
             graphData: graphData,
-            interventionsCatalog: firstPartyContent.interventionsCatalog
+            interventionsCatalog: firstPartyContent.interventionsCatalog,
+            todayKey: todayKey,
+            recentLocalDayKeys: recentLocalDayKeys
         )
 
         return DashboardSnapshot(
@@ -38,7 +47,8 @@ struct DashboardSnapshotBuilder {
 
     private func outcomeSummary(
         from document: UserDataDocument,
-        canonicalData: CanonicalizedInterventionData
+        canonicalData: CanonicalizedInterventionData,
+        recentLocalDayKeys: [String]
     ) -> OutcomeSummary {
         let sortedNights = document.nightOutcomes.sorted { $0.nightId > $1.nightId }
         let currentRate = sortedNights.first?.microArousalRatePerHour
@@ -46,8 +56,7 @@ struct DashboardSnapshotBuilder {
 
         let burdenTrendPercent = Self.burdenTrendPercent(current: currentRate, previous: previousRate)
 
-        let recentKeys = canonicalData.dailyCheckIns.keys.sorted(by: >).prefix(7)
-        let activeDays = recentKeys.filter { !(canonicalData.dailyCheckIns[$0] ?? []).isEmpty }.count
+        let activeDays = recentLocalDayKeys.filter { !(canonicalData.dailyCheckIns[$0] ?? []).isEmpty }.count
         let shieldScore = Int((Double(activeDays) / 7.0) * 100.0)
 
         let topContributor = canonicalData.habitClassifications.first(where: { $0.status == .harmful })?.interventionId
@@ -119,13 +128,10 @@ struct DashboardSnapshotBuilder {
     private func inputStatus(
         canonicalData: CanonicalizedInterventionData,
         graphData: CausalGraphData,
-        interventionsCatalog: InterventionsCatalog
+        interventionsCatalog: InterventionsCatalog,
+        todayKey: String,
+        recentLocalDayKeys: [String]
     ) -> [InputStatus] {
-        let recentKeys = canonicalData.dailyCheckIns.keys.sorted(by: >)
-        let latestBinaryKey = recentKeys.first
-        let recentWindow = Array(recentKeys.prefix(7))
-        let latestDoseKey = canonicalData.dailyDoseProgress.keys.sorted(by: >).first
-
         let activeInterventionIDs = Set(canonicalData.activeInterventions)
         let classificationByID = Dictionary(
             uniqueKeysWithValues: canonicalData.habitClassifications.map {
@@ -155,18 +161,16 @@ struct DashboardSnapshotBuilder {
 
             switch intervention.trackingMode {
             case .binary:
-                let daysOn = recentWindow.reduce(into: 0) { count, key in
+                let daysOn = recentLocalDayKeys.reduce(into: 0) { count, key in
                     if canonicalData.dailyCheckIns[key]?.contains(intervention.id) == true {
                         count += 1
                     }
                 }
 
-                let latestIncludes = latestBinaryKey.flatMap {
-                    canonicalData.dailyCheckIns[$0]?.contains(intervention.id)
-                } ?? false
+                let checkedToday = canonicalData.dailyCheckIns[todayKey]?.contains(intervention.id) ?? false
 
                 let statusText: String
-                if latestIncludes {
+                if checkedToday {
                     statusText = "Checked today"
                 } else if daysOn > 0 {
                     statusText = "\(daysOn)/7 days"
@@ -180,7 +184,7 @@ struct DashboardSnapshotBuilder {
                     trackingMode: .binary,
                     statusText: statusText,
                     completion: min(1.0, Double(daysOn) / 7.0),
-                    isCheckedToday: latestIncludes,
+                    isCheckedToday: checkedToday,
                     doseState: nil,
                     completionEvents: completionEvents,
                     graphNodeID: intervention.graphNodeID ?? intervention.id,
@@ -191,7 +195,9 @@ struct DashboardSnapshotBuilder {
                     detailedDescription: intervention.detailedDescription,
                     citationIDs: intervention.citationIDs,
                     externalLink: intervention.externalLink,
-                    appleHealthState: nil
+                    appleHealthState: nil,
+                    timeOfDay: intervention.timeOfDay,
+                    causalPathway: intervention.causalPathway
                 )
 
             case .dose:
@@ -213,17 +219,16 @@ struct DashboardSnapshotBuilder {
                         detailedDescription: intervention.detailedDescription,
                         citationIDs: intervention.citationIDs,
                         externalLink: intervention.externalLink,
-                        appleHealthState: nil
+                        appleHealthState: nil,
+                        timeOfDay: intervention.timeOfDay,
+                        causalPathway: intervention.causalPathway
                     )
                 }
 
                 let settings = canonicalData.interventionDoseSettings[intervention.id]
                 let goal = max(1, settings?.dailyGoal ?? doseConfig.defaultDailyGoal)
                 let increment = max(1, settings?.increment ?? doseConfig.defaultIncrement)
-                let manualValue = max(
-                    0,
-                    latestDoseKey.flatMap { canonicalData.dailyDoseProgress[$0]?[intervention.id] } ?? 0
-                )
+                let manualValue = max(0, canonicalData.dailyDoseProgress[todayKey]?[intervention.id] ?? 0)
                 let doseState = InputDoseState(
                     manualValue: manualValue,
                     healthValue: nil,
@@ -253,7 +258,9 @@ struct DashboardSnapshotBuilder {
                     detailedDescription: intervention.detailedDescription,
                     citationIDs: intervention.citationIDs,
                     externalLink: intervention.externalLink,
-                    appleHealthState: appleHealthState
+                    appleHealthState: appleHealthState,
+                    timeOfDay: intervention.timeOfDay,
+                    causalPathway: intervention.causalPathway
                 )
             }
         }
@@ -269,11 +276,20 @@ struct DashboardSnapshotBuilder {
 
         let isConnected = connection?.isConnected ?? false
         let status = connection?.lastSyncStatus ?? (isConnected ? .syncing : .disconnected)
+        let referenceLabel: String?
+        if intervention.appleHealthConfig?.identifier == .moderateWorkoutMinutes {
+            referenceLabel = "Apple Exercise ring minutes (reference)"
+        } else {
+            referenceLabel = nil
+        }
+
         return InputAppleHealthState(
             available: true,
             connected: isConnected,
             syncStatus: status,
             todayHealthValue: nil,
+            referenceTodayHealthValue: nil,
+            referenceTodayHealthValueLabel: referenceLabel,
             lastSyncAt: connection?.lastSyncAt,
             config: intervention.appleHealthConfig
         )
@@ -311,6 +327,7 @@ struct DashboardSnapshotBuilder {
                         name: intervention.name,
                         trackingMode: intervention.trackingType == .dose ? .dose : .binary,
                         doseConfig: intervention.doseConfig,
+                        timeOfDay: intervention.timeOfDay ?? [.anytime],
                         graphNodeID: intervention.graphNodeId,
                         evidenceLevel: intervention.evidenceLevel,
                         evidenceSummary: intervention.evidenceSummary,
@@ -318,7 +335,8 @@ struct DashboardSnapshotBuilder {
                         citationIDs: intervention.citations,
                         externalLink: intervention.externalLink,
                         appleHealthAvailable: intervention.appleHealthAvailable ?? false,
-                        appleHealthConfig: intervention.appleHealthConfig
+                        appleHealthConfig: intervention.appleHealthConfig,
+                        causalPathway: intervention.causalPathway
                     )
                 }
 
@@ -337,6 +355,7 @@ struct DashboardSnapshotBuilder {
                         name: humanizeInterventionID(id),
                         trackingMode: .binary,
                         doseConfig: nil,
+                        timeOfDay: [.anytime],
                         graphNodeID: id,
                         evidenceLevel: nil,
                         evidenceSummary: nil,
@@ -344,7 +363,8 @@ struct DashboardSnapshotBuilder {
                         citationIDs: [],
                         externalLink: nil,
                         appleHealthAvailable: false,
-                        appleHealthConfig: nil
+                        appleHealthConfig: nil,
+                        causalPathway: nil
                     )
                 )
             }
@@ -362,6 +382,7 @@ struct DashboardSnapshotBuilder {
                 name: Self.firstLine(in: node.data.label),
                 trackingMode: .binary,
                 doseConfig: nil,
+                timeOfDay: [.anytime],
                 graphNodeID: node.data.id,
                 evidenceLevel: node.data.tooltip?.evidence,
                 evidenceSummary: node.data.tooltip?.mechanism,
@@ -369,7 +390,8 @@ struct DashboardSnapshotBuilder {
                 citationIDs: node.data.tooltip?.citation.map { [$0] } ?? [],
                 externalLink: nil,
                 appleHealthAvailable: false,
-                appleHealthConfig: nil
+                appleHealthConfig: nil,
+                causalPathway: nil
             )
         }
 
@@ -388,6 +410,7 @@ struct DashboardSnapshotBuilder {
                     name: humanizeInterventionID(id),
                     trackingMode: .binary,
                     doseConfig: nil,
+                    timeOfDay: [.anytime],
                     graphNodeID: id,
                     evidenceLevel: nil,
                     evidenceSummary: nil,
@@ -395,7 +418,8 @@ struct DashboardSnapshotBuilder {
                     citationIDs: [],
                     externalLink: nil,
                     appleHealthAvailable: false,
-                    appleHealthConfig: nil
+                    appleHealthConfig: nil,
+                    causalPathway: nil
                 )
             )
         }
@@ -444,6 +468,38 @@ struct DashboardSnapshotBuilder {
         return Int(delta.rounded())
     }
 
+    private static func recentLocalDateKeys(
+        endingAt date: Date,
+        days: Int,
+        calendar: Calendar = .current
+    ) -> [String] {
+        guard days > 0 else {
+            return []
+        }
+
+        let startOfToday = calendar.startOfDay(for: date)
+        return (0..<days).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: startOfToday) else {
+                return nil
+            }
+
+            return localDateKey(from: day, calendar: calendar)
+        }
+    }
+
+    private static func localDateKey(from date: Date, calendar: Calendar = .current) -> String {
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        guard
+            let year = components.year,
+            let month = components.month,
+            let day = components.day
+        else {
+            return ""
+        }
+
+        return String(format: "%04d-%02d-%02d", year, month, day)
+    }
+
     private static func firstLine(in text: String) -> String {
         text.components(separatedBy: "\n").first ?? text
     }
@@ -489,6 +545,7 @@ private struct InterventionItem {
     let name: String
     let trackingMode: InputTrackingMode
     let doseConfig: DoseConfig?
+    let timeOfDay: [InterventionTimeOfDay]
     let graphNodeID: String?
     let evidenceLevel: String?
     let evidenceSummary: String?
@@ -497,6 +554,7 @@ private struct InterventionItem {
     let externalLink: String?
     let appleHealthAvailable: Bool
     let appleHealthConfig: AppleHealthConfig?
+    let causalPathway: String?
 }
 
 private struct CanonicalInterventionLookup {

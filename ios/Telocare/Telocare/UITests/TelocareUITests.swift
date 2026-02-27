@@ -57,8 +57,8 @@ final class TelocareUITests: XCTestCase {
         app.launch()
 
         completeGuidedFlow(in: app)
-        XCTAssertTrue(app.tabBars.buttons["Situation"].waitForExistence(timeout: 4))
-        XCTAssertTrue(app.tabBars.buttons["Chat"].exists)
+        XCTAssertTrue(app.tabBars.buttons["My Map"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.tabBars.buttons["Guide"].exists)
     }
 
     func testExploreChatTabIsReachable() {
@@ -67,7 +67,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let chatTab = app.tabBars.buttons["Chat"]
+        let chatTab = app.tabBars.buttons["Guide"]
         XCTAssertTrue(chatTab.waitForExistence(timeout: 4))
         chatTab.tap()
 
@@ -83,7 +83,7 @@ final class TelocareUITests: XCTestCase {
             completeGuidedFlow(in: app)
         }
 
-        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        let outcomesTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
         outcomesTab.tap()
 
@@ -96,7 +96,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        let outcomesTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
         outcomesTab.tap()
 
@@ -124,30 +124,43 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(waitForValueContaining("Compact", of: morningChart, timeout: 4))
     }
 
-    func testOutcomesNightChartShowsPlaceholderWhenNoData() {
+    func testOutcomesHidesNightTrendProgressAndRecentNights() {
         let app = configuredApp(authState: .authenticated, useEmptyMockData: true)
         app.launch()
 
         completeGuidedFlow(in: app)
 
-        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        let outcomesTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
         outcomesTab.tap()
 
-        XCTAssertTrue(element(withIdentifier: UIID.exploreOutcomesNightChart, in: app).waitForExistence(timeout: 4))
-        XCTAssertTrue(
-            app.staticTexts["No night outcome data yet. This chart will populate when night outcomes are recorded."]
-                .waitForExistence(timeout: 4)
-        )
+        XCTAssertFalse(element(withIdentifier: UIID.exploreOutcomesNightChart, in: app).exists)
+        XCTAssertFalse(app.staticTexts["Your progress"].exists)
+        XCTAssertFalse(app.staticTexts["Recent nights"].exists)
+        XCTAssertFalse(app.staticTexts["No night data yet"].exists)
     }
 
-    func testOutcomesMuseSectionShowsTextFirstControls() {
-        let app = configuredApp(authState: .authenticated)
+    func testOutcomesMuseSectionHiddenByDefault() {
+        let app = configuredApp(authState: .authenticated, museEnabled: false)
         app.launch()
 
         completeGuidedFlow(in: app)
 
-        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        let outcomesTab = app.tabBars.buttons["Progress"]
+        XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
+        outcomesTab.tap()
+
+        scrollPastPotentialMuseSection(in: app)
+        XCTAssertFalse(element(withIdentifier: UIID.exploreMuseSessionSection, in: app).exists)
+    }
+
+    func testOutcomesMuseSectionShowsTextFirstControls() {
+        let app = configuredApp(authState: .authenticated, museEnabled: true)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let outcomesTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
         outcomesTab.tap()
 
@@ -162,18 +175,19 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseStartRecordingButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseStopRecordingButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseSaveNightOutcomeButton, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreMuseExportSetupDiagnosticsButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseExportDiagnosticsButton, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseFeedbackText, in: app).exists)
         XCTAssertTrue(element(withIdentifier: UIID.exploreMuseDisclaimerText, in: app).exists)
     }
 
     func testOutcomesMuseSessionFlowEnablesSaveAction() {
-        let app = configuredApp(authState: .authenticated)
+        let app = configuredApp(authState: .authenticated, museEnabled: true)
         app.launch()
 
         completeGuidedFlow(in: app)
 
-        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        let outcomesTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(outcomesTab.waitForExistence(timeout: 4))
         outcomesTab.tap()
 
@@ -184,11 +198,27 @@ final class TelocareUITests: XCTestCase {
         let startButton = element(withIdentifier: UIID.exploreMuseStartRecordingButton, in: app)
         let stopButton = element(withIdentifier: UIID.exploreMuseStopRecordingButton, in: app)
         let saveButton = element(withIdentifier: UIID.exploreMuseSaveNightOutcomeButton, in: app)
+        let setupExportButton = element(withIdentifier: UIID.exploreMuseExportSetupDiagnosticsButton, in: app)
         let exportButton = element(withIdentifier: UIID.exploreMuseExportDiagnosticsButton, in: app)
         let connectionStatus = element(withIdentifier: UIID.exploreMuseConnectionStatus, in: app)
         let recordingStatus = element(withIdentifier: UIID.exploreMuseRecordingStatus, in: app)
         let summaryText = element(withIdentifier: UIID.exploreMuseSummaryText, in: app)
+        let reliabilityText = element(withIdentifier: UIID.exploreMuseReliabilityText, in: app)
         let liveStatusText = element(withIdentifier: UIID.exploreMuseLiveStatusText, in: app)
+        let fitModal = element(withIdentifier: UIID.exploreMuseFitModal, in: app)
+        let fitStatusText = element(withIdentifier: UIID.exploreMuseFitModalStatusText, in: app)
+        let fitPrimaryBlockerText = element(withIdentifier: UIID.exploreMuseFitModalPrimaryBlockerText, in: app)
+        let fitReadyStreakText = element(withIdentifier: UIID.exploreMuseFitModalReadyStreakText, in: app)
+        let fitDiagnosisText = element(withIdentifier: UIID.exploreMuseFitModalDiagnosisText, in: app)
+        let fitConnectionHealthText = element(withIdentifier: UIID.exploreMuseFitModalConnectionHealthText, in: app)
+        let fitSignalHealthText = element(withIdentifier: UIID.exploreMuseFitModalSignalHealthText, in: app)
+        let fitTroubleshootingSummaryText = element(withIdentifier: UIID.exploreMuseFitModalTroubleshootingSummaryText, in: app)
+        let fitTroubleshootingActionsText = element(withIdentifier: UIID.exploreMuseFitModalTroubleshootingActionsText, in: app)
+        let fitOvernightTipsText = element(withIdentifier: UIID.exploreMuseFitModalOvernightTipsText, in: app)
+        let fitReadinessChecksText = element(withIdentifier: UIID.exploreMuseFitModalReadinessChecksText, in: app)
+        let fitSensorStatusText = element(withIdentifier: UIID.exploreMuseFitModalSensorStatusText, in: app)
+        let fitSetupExportButton = element(withIdentifier: UIID.exploreMuseFitModalExportSetupButton, in: app)
+        let startOverrideButton = element(withIdentifier: UIID.exploreMuseFitModalStartOverrideButton, in: app)
 
         XCTAssertTrue(scanButton.waitForExistence(timeout: 4))
         scanButton.tap()
@@ -198,6 +228,25 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(waitForLabelContaining("Connected", of: connectionStatus, timeout: 4))
 
         startButton.tap()
+        XCTAssertTrue(fitModal.waitForExistence(timeout: 4))
+        XCTAssertTrue(fitStatusText.exists)
+        XCTAssertTrue(fitPrimaryBlockerText.exists)
+        XCTAssertTrue(fitReadyStreakText.exists)
+        XCTAssertTrue(fitDiagnosisText.exists)
+        XCTAssertTrue(fitConnectionHealthText.exists)
+        XCTAssertTrue(fitSignalHealthText.exists)
+        XCTAssertTrue(fitTroubleshootingSummaryText.exists)
+        XCTAssertTrue(fitTroubleshootingActionsText.exists)
+        XCTAssertTrue(fitOvernightTipsText.exists)
+        XCTAssertTrue(fitReadinessChecksText.exists)
+        XCTAssertTrue(fitSensorStatusText.exists)
+        XCTAssertTrue(fitSetupExportButton.exists)
+        XCTAssertTrue(startOverrideButton.isEnabled)
+        XCTAssertTrue(waitForLabelContaining("Likely issue", of: fitDiagnosisText, timeout: 2))
+        XCTAssertTrue(waitForLabelContaining("Plain-English summary", of: fitTroubleshootingSummaryText, timeout: 2))
+        XCTAssertTrue(waitForLabelContaining("Try this now", of: fitTroubleshootingActionsText, timeout: 2))
+        XCTAssertTrue(waitForLabelContaining("Overnight tips", of: fitOvernightTipsText, timeout: 2))
+        startOverrideButton.tap()
         XCTAssertTrue(waitForLabelContaining("Recording", of: recordingStatus, timeout: 4))
         XCTAssertTrue(waitForLabelContaining("Live status", of: liveStatusText, timeout: 4))
 
@@ -205,6 +254,8 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(waitForLabelContaining("Stopped", of: recordingStatus, timeout: 4))
         XCTAssertTrue(waitForLabelContaining("signal confidence", of: summaryText, timeout: 4))
         XCTAssertTrue(waitForLabelContaining("awake likelihood (provisional)", of: summaryText, timeout: 4))
+        XCTAssertTrue(waitForLabelContaining("Recording reliability", of: reliabilityText, timeout: 4))
+        XCTAssertTrue(setupExportButton.isEnabled)
         XCTAssertFalse(exportButton.isEnabled)
 
         XCTAssertTrue(saveButton.isEnabled)
@@ -218,7 +269,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let situationTab = app.tabBars.buttons["Situation"]
+        let situationTab = app.tabBars.buttons["My Map"]
         XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
         situationTab.tap()
         XCTAssertTrue(app.webViews[UIID.graphWebView].waitForExistence(timeout: 2))
@@ -230,7 +281,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let situationTab = app.tabBars.buttons["Situation"]
+        let situationTab = app.tabBars.buttons["My Map"]
         XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
         situationTab.tap()
 
@@ -250,7 +301,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let situationTab = app.tabBars.buttons["Situation"]
+        let situationTab = app.tabBars.buttons["My Map"]
         XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
         situationTab.tap()
 
@@ -323,6 +374,7 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(element(withIdentifier: UIID.profileThemeSection, in: app).exists)
         XCTAssertTrue(app.buttons[UIID.profileThemeWarmCoralOption].exists)
         XCTAssertTrue(app.buttons[UIID.profileThemeGardenOption].exists)
+        XCTAssertTrue(app.switches[UIID.profileMuseFeatureToggle].exists)
         XCTAssertTrue(app.buttons[UIID.profileSignOutEntry].exists)
         app.buttons[UIID.profileSignOutEntry].tap()
         XCTAssertTrue(app.textFields[UIID.authEmailInput].waitForExistence(timeout: 2))
@@ -354,7 +406,7 @@ final class TelocareUITests: XCTestCase {
         app.launch()
         completeGuidedFlow(in: app)
 
-        let situationTab = app.tabBars.buttons["Situation"]
+        let situationTab = app.tabBars.buttons["My Map"]
         XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
         situationTab.tap()
 
@@ -383,7 +435,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let inputsTab = app.tabBars.buttons["Inputs"]
+        let inputsTab = app.tabBars.buttons["Habits"]
         XCTAssertTrue(inputsTab.waitForExistence(timeout: 4))
         inputsTab.tap()
 
@@ -408,9 +460,7 @@ final class TelocareUITests: XCTestCase {
         let foundInTodo = checkButton.waitForExistence(timeout: 2) || incrementButton.waitForExistence(timeout: 2)
         XCTAssertTrue(foundInTodo)
 
-        let interventionTitle = app.staticTexts[interventionName]
-        XCTAssertTrue(interventionTitle.waitForExistence(timeout: 2))
-        interventionTitle.tap()
+        XCTAssertTrue(openInputDetail(named: interventionName, in: app))
 
         let stopTrackingButton = app.buttons["Stop tracking this intervention"]
         XCTAssertTrue(stopTrackingButton.waitForExistence(timeout: 2))
@@ -432,7 +482,7 @@ final class TelocareUITests: XCTestCase {
 
         completeGuidedFlow(in: app)
 
-        let inputsTab = app.tabBars.buttons["Inputs"]
+        let inputsTab = app.tabBars.buttons["Habits"]
         XCTAssertTrue(inputsTab.waitForExistence(timeout: 4))
         inputsTab.tap()
 
@@ -448,10 +498,25 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(waitForValueContaining("Latest", of: historyChart, timeout: 4))
     }
 
+    func testHabitsShowsNextBestActionsSection() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let habitsTab = app.tabBars.buttons["Habits"]
+        XCTAssertTrue(habitsTab.waitForExistence(timeout: 4))
+        habitsTab.tap()
+
+        let nextBestActions = element(withIdentifier: UIID.exploreInputsNextBestActions, in: app)
+        XCTAssertTrue(nextBestActions.waitForExistence(timeout: 4))
+    }
+
     private func configuredApp(
         authState: UITestAuthState,
         signUpNeedsConfirmation: Bool = false,
-        useEmptyMockData: Bool = false
+        useEmptyMockData: Bool = false,
+        museEnabled: Bool? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["TELOCARE_USE_MOCK_SERVICES"] = "1"
@@ -461,6 +526,9 @@ final class TelocareUITests: XCTestCase {
         }
         if useEmptyMockData {
             app.launchEnvironment["TELOCARE_MOCK_EMPTY_USER_DATA"] = "1"
+        }
+        if let museEnabled {
+            app.launchEnvironment["TELOCARE_UI_MUSE_ENABLED"] = museEnabled ? "1" : "0"
         }
         return app
     }
@@ -488,7 +556,7 @@ final class TelocareUITests: XCTestCase {
             return true
         }
 
-        return app.tabBars.buttons["Situation"].waitForExistence(timeout: timeout)
+        return app.tabBars.buttons["My Map"].waitForExistence(timeout: timeout)
     }
 
     private func selectMorningRating(in app: XCUIApplication, pickerID: String) {
@@ -600,6 +668,12 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(globalPicker.waitForExistence(timeout: 4))
     }
 
+    private func scrollPastPotentialMuseSection(in app: XCUIApplication) {
+        for _ in 0..<4 {
+            app.swipeUp()
+        }
+    }
+
     private func scrollToMuseSection(in app: XCUIApplication) {
         let section = element(withIdentifier: UIID.exploreMuseSessionSection, in: app)
         for _ in 0..<4 {
@@ -631,6 +705,7 @@ private enum UIID {
     static let graphSelectionText = "graph.selection.text"
     static let exploreDetailsSheet = "explore.situation.details.sheet"
     static let exploreDetailsNodeDeactivationButton = "explore.situation.details.node.deactivate"
+    static let exploreDetailsNodeBranchToggleButton = "explore.situation.details.node.branch.toggle"
     static let exploreDetailsEdgeDeactivationButton = "explore.situation.details.edge.deactivate"
     static let exploreDetailsNodeDeactivationStatus = "explore.situation.details.node.status"
     static let exploreDetailsEdgeDeactivationStatus = "explore.situation.details.edge.status"
@@ -641,6 +716,7 @@ private enum UIID {
     static let profileThemeSection = "profile.theme.section"
     static let profileThemeWarmCoralOption = "profile.theme.option.warm.coral"
     static let profileThemeGardenOption = "profile.theme.option.garden"
+    static let profileMuseFeatureToggle = "profile.muse.feature.toggle"
     static let profileSignOutEntry = "profile.signout.entry"
     static let exploreChatInput = "explore.chat.input"
     static let exploreChatSendButton = "explore.chat.send.button"
@@ -657,14 +733,33 @@ private enum UIID {
     static let exploreMuseStartRecordingButton = "explore.outcomes.muse.start.button"
     static let exploreMuseStopRecordingButton = "explore.outcomes.muse.stop.button"
     static let exploreMuseSaveNightOutcomeButton = "explore.outcomes.muse.save.button"
+    static let exploreMuseExportSetupDiagnosticsButton = "explore.outcomes.muse.setup.export.button"
     static let exploreMuseExportDiagnosticsButton = "explore.outcomes.muse.export.button"
     static let exploreMuseSummaryText = "explore.outcomes.muse.summary.text"
+    static let exploreMuseReliabilityText = "explore.outcomes.muse.reliability.text"
     static let exploreMuseLiveStatusText = "explore.outcomes.muse.live.status.text"
     static let exploreMuseFitGuidanceText = "explore.outcomes.muse.fit.guidance.text"
+    static let exploreMuseFitModal = "explore.outcomes.muse.fit.modal"
+    static let exploreMuseFitModalStatusText = "explore.outcomes.muse.fit.modal.status.text"
+    static let exploreMuseFitModalPrimaryBlockerText = "explore.outcomes.muse.fit.modal.blocker.text"
+    static let exploreMuseFitModalReadyStreakText = "explore.outcomes.muse.fit.modal.ready.streak.text"
+    static let exploreMuseFitModalDiagnosisText = "explore.outcomes.muse.fit.modal.diagnosis.text"
+    static let exploreMuseFitModalConnectionHealthText = "explore.outcomes.muse.fit.modal.connection.health.text"
+    static let exploreMuseFitModalSignalHealthText = "explore.outcomes.muse.fit.modal.signal.health.text"
+    static let exploreMuseFitModalTroubleshootingSummaryText = "explore.outcomes.muse.fit.modal.troubleshooting.summary.text"
+    static let exploreMuseFitModalTroubleshootingActionsText = "explore.outcomes.muse.fit.modal.troubleshooting.actions.text"
+    static let exploreMuseFitModalOvernightTipsText = "explore.outcomes.muse.fit.modal.troubleshooting.overnight.text"
+    static let exploreMuseFitModalReadinessChecksText = "explore.outcomes.muse.fit.modal.readiness.checks.text"
+    static let exploreMuseFitModalSensorStatusText = "explore.outcomes.muse.fit.modal.sensor.status.text"
+    static let exploreMuseFitModalStartReadyButton = "explore.outcomes.muse.fit.modal.start.ready.button"
+    static let exploreMuseFitModalStartOverrideButton = "explore.outcomes.muse.fit.modal.start.override.button"
+    static let exploreMuseFitModalExportSetupButton = "explore.outcomes.muse.fit.modal.setup.export.button"
+    static let exploreMuseFitModalCloseButton = "explore.outcomes.muse.fit.modal.close.button"
     static let exploreMuseExportFeedbackText = "explore.outcomes.muse.export.feedback.text"
     static let exploreMuseFeedbackText = "explore.outcomes.muse.feedback.text"
     static let exploreMuseDisclaimerText = "explore.outcomes.muse.disclaimer.text"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"
+    static let exploreInputsNextBestActions = "explore.inputs.next.best.actions"
     static let exploreInputCompletionHistoryChart = "explore.inputs.completion.history.chart"
     static let exploreMorningGlobalPicker = "explore.outcomes.morning.global.picker"
     static let exploreMorningNeckPicker = "explore.outcomes.morning.neck.picker"

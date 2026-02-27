@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Telocare
 
@@ -69,12 +70,14 @@ struct DashboardSnapshotBuilderTests {
                             defaultDailyGoal: 3000,
                             defaultIncrement: 100
                         ),
+                        timeOfDay: [.anytime],
                         appleHealthAvailable: true,
                         appleHealthConfig: AppleHealthConfig(
                             identifier: .dietaryWater,
                             aggregation: .cumulativeSum,
                             dayAttribution: .localDay
-                        )
+                        ),
+                        causalPathway: "upstream"
                     ),
                     InterventionDefinition(
                         id: "exercise_minutes",
@@ -93,14 +96,20 @@ struct DashboardSnapshotBuilderTests {
                             unit: .minutes,
                             defaultDailyGoal: 30,
                             defaultIncrement: 10
-                        )
+                        ),
+                        timeOfDay: [.preBed],
+                        causalPathway: "midstream"
                     ),
                 ]
             ),
             outcomesMetadata: .empty
         )
 
-        let snapshot = builder.build(from: document, firstPartyContent: firstPartyContent)
+        let snapshot = builder.build(
+            from: document,
+            firstPartyContent: firstPartyContent,
+            now: date("2026-02-22T12:00:00Z")
+        )
 
         #expect(snapshot.inputs.map { $0.id } == ["water_intake", "exercise_minutes"])
 
@@ -115,6 +124,8 @@ struct DashboardSnapshotBuilderTests {
         #expect(water.completionEvents.count == 2)
         #expect(water.completionEvents.map { $0.interventionId } == ["water_intake", "water_intake"])
         #expect(water.completionEvents.first?.occurredAt == "2026-02-22T08:05:00Z")
+        #expect(water.timeOfDay == [.anytime])
+        #expect(water.causalPathway == "upstream")
 
         let exercise = snapshot.inputs[1]
         #expect(exercise.trackingMode == .dose)
@@ -123,6 +134,27 @@ struct DashboardSnapshotBuilderTests {
         #expect(exercise.doseState?.increment == 10)
         #expect(exercise.completionEvents.count == 1)
         #expect(exercise.completionEvents.first?.interventionId == "exercise_minutes")
+        #expect(exercise.timeOfDay == [.preBed])
+        #expect(exercise.causalPathway == "midstream")
+    }
+
+    @Test func interventionDefinitionDecodesTimeOfDayIncludingPreBed() throws {
+        let json = """
+        {
+          "interventions": [
+            {
+              "id": "nasal_strip",
+              "name": "Nasal Strip",
+              "defaultOrder": 1,
+              "timeOfDay": ["preBed", "anytime"]
+            }
+          ]
+        }
+        """
+
+        let catalog = try JSONDecoder().decode(InterventionsCatalog.self, from: Data(json.utf8))
+        #expect(catalog.interventions.count == 1)
+        #expect(catalog.interventions[0].timeOfDay == [.preBed, .anytime])
     }
 
     @Test func buildsInputInventoryFromGraphWithPersistedState() {
@@ -206,7 +238,10 @@ struct DashboardSnapshotBuilderTests {
             experienceFlow: .empty
         )
 
-        let snapshot = builder.build(from: document)
+        let snapshot = builder.build(
+            from: document,
+            now: date("2026-02-21T12:00:00Z")
+        )
 
         #expect(snapshot.inputs.count == 3)
         #expect(snapshot.inputs.map { $0.id } == ["PPI_TX", "BED_ELEV_TX", "UNTRACKED_TX"])
@@ -270,6 +305,60 @@ struct DashboardSnapshotBuilderTests {
         #expect(snapshot.outcomeRecords.count == 3)
         #expect(snapshot.outcomeRecords.first?.id == "2026-02-21")
         #expect(snapshot.outcomeRecords.last?.id == "2026-02-19")
+    }
+
+    @Test func doesNotTreatLatestHistoricalCheckInAsToday() {
+        let builder = DashboardSnapshotBuilder()
+        let document = UserDataDocument(
+            version: 1,
+            lastExport: nil,
+            personalStudies: [],
+            notes: [],
+            experiments: [],
+            interventionRatings: [],
+            dailyCheckIns: [
+                "2026-02-22": ["caffeine_limit"],
+            ],
+            nightExposures: [],
+            nightOutcomes: [],
+            morningStates: [],
+            habitTrials: [],
+            habitClassifications: [],
+            hiddenInterventions: [],
+            unlockedAchievements: [],
+            customCausalDiagram: nil,
+            experienceFlow: .empty
+        )
+        let firstPartyContent = FirstPartyContentBundle(
+            graphData: CausalGraphData(nodes: [], edges: []),
+            interventionsCatalog: InterventionsCatalog(
+                interventions: [
+                    InterventionDefinition(
+                        id: "caffeine_limit",
+                        name: "Avoid Caffeine",
+                        description: nil,
+                        detailedDescription: nil,
+                        evidenceLevel: nil,
+                        evidenceSummary: nil,
+                        citationIds: [],
+                        externalLink: nil,
+                        defaultOrder: 1,
+                        trackingType: .binary
+                    ),
+                ]
+            ),
+            outcomesMetadata: .empty
+        )
+
+        let snapshot = builder.build(
+            from: document,
+            firstPartyContent: firstPartyContent,
+            now: date("2026-02-25T12:00:00Z")
+        )
+
+        let caffeine = snapshot.inputs.first(where: { $0.id == "caffeine_limit" })
+        #expect(caffeine?.isCheckedToday == false)
+        #expect(caffeine?.statusText == "1/7 days")
     }
 
     @Test func firstPartyCatalogEnrichesInputsAndOutcomesMetadata() {
@@ -348,5 +437,11 @@ struct DashboardSnapshotBuilderTests {
         #expect(snapshot.inputs.first?.evidenceSummary == "RCT-backed reduction in RMMA.")
         #expect(snapshot.inputs.first?.citationIDs == ["ohmure_2016"])
         #expect(snapshot.outcomesMetadata.metrics.count == 1)
+    }
+
+    private func date(_ value: String) -> Date {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: value) ?? Date(timeIntervalSince1970: 0)
     }
 }

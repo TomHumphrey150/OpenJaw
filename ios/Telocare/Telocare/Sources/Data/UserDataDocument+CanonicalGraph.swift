@@ -17,6 +17,7 @@ extension UserDataDocument {
             nightExposures: nightExposures,
             nightOutcomes: nightOutcomes,
             morningStates: morningStates,
+            morningQuestionnaire: morningQuestionnaire,
             wakeDaySleepAttributionMigrated: wakeDaySleepAttributionMigrated,
             habitTrials: habitTrials,
             habitClassifications: habitClassifications,

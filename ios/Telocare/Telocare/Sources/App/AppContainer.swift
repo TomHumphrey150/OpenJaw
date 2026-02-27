@@ -7,6 +7,7 @@ final class AppContainer {
     private let environment: [String: String]
     private let bundle: Bundle
     private let skinPreferenceStore: SkinPreferenceStore
+    private let museFeatureFlagStore: MuseFeatureFlagStore
     private let accessibilityAnnouncer: AccessibilityAnnouncer
 
     init(
@@ -14,18 +15,21 @@ final class AppContainer {
         environment: [String: String] = ProcessInfo.processInfo.environment,
         bundle: Bundle = .main,
         skinPreferenceStore: SkinPreferenceStore = SkinPreferenceStore(),
+        museFeatureFlagStore: MuseFeatureFlagStore = MuseFeatureFlagStore(),
         accessibilityAnnouncer: AccessibilityAnnouncer = .voiceOver
     ) {
         self.arguments = arguments
         self.environment = environment
         self.bundle = bundle
         self.skinPreferenceStore = skinPreferenceStore
+        self.museFeatureFlagStore = museFeatureFlagStore
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
 
     func makeRootViewModel() -> RootViewModel {
         let snapshotBuilder = DashboardSnapshotBuilder()
         let initialSkinID = resolvedSkinID
+        let initialIsMuseEnabled = resolvedIsMuseEnabled
 
         MuseDiagnosticsLogger.bootstrap()
         TelocareTheme.configure(skinID: initialSkinID)
@@ -33,7 +37,8 @@ final class AppContainer {
         if shouldUseMockServices {
             return makeMockRootViewModel(
                 snapshotBuilder: snapshotBuilder,
-                initialSkinID: initialSkinID
+                initialSkinID: initialSkinID,
+                initialIsMuseEnabled: initialIsMuseEnabled
             )
         }
 
@@ -58,7 +63,9 @@ final class AppContainer {
                 museLicenseData: configuration.museLicenseData,
                 accessibilityAnnouncer: accessibilityAnnouncer,
                 initialSkinID: initialSkinID,
-                persistSkinPreference: saveSkinPreference
+                initialIsMuseEnabled: initialIsMuseEnabled,
+                persistSkinPreference: saveSkinPreference,
+                persistMuseFeatureFlag: saveMuseFeatureFlag
             )
         } catch {
             return RootViewModel(
@@ -70,7 +77,9 @@ final class AppContainer {
                 museLicenseData: nil,
                 accessibilityAnnouncer: accessibilityAnnouncer,
                 initialSkinID: initialSkinID,
+                initialIsMuseEnabled: initialIsMuseEnabled,
                 persistSkinPreference: saveSkinPreference,
+                persistMuseFeatureFlag: saveMuseFeatureFlag,
                 bootstrapErrorMessage: error.localizedDescription
             )
         }
@@ -85,7 +94,8 @@ final class AppContainer {
 
     private func makeMockRootViewModel(
         snapshotBuilder: DashboardSnapshotBuilder,
-        initialSkinID: TelocareSkinID
+        initialSkinID: TelocareSkinID,
+        initialIsMuseEnabled: Bool
     ) -> RootViewModel {
         let mockSession = isMockAuthenticated
             ? AuthSession(
@@ -114,7 +124,9 @@ final class AppContainer {
             museLicenseData: nil,
             accessibilityAnnouncer: accessibilityAnnouncer,
             initialSkinID: initialSkinID,
-            persistSkinPreference: saveSkinPreference
+            initialIsMuseEnabled: initialIsMuseEnabled,
+            persistSkinPreference: saveSkinPreference,
+            persistMuseFeatureFlag: saveMuseFeatureFlag
         )
     }
 
@@ -131,6 +143,18 @@ final class AppContainer {
 
     private func saveSkinPreference(_ skinID: TelocareSkinID) {
         skinPreferenceStore.save(skinID)
+    }
+
+    private var resolvedIsMuseEnabled: Bool {
+        if let explicitValue = boolEnvironmentValue(forKey: "TELOCARE_UI_MUSE_ENABLED") {
+            return explicitValue
+        }
+
+        return museFeatureFlagStore.load()
+    }
+
+    private func saveMuseFeatureFlag(_ isEnabled: Bool) {
+        museFeatureFlagStore.save(isEnabled)
     }
 
     private var isMockAuthenticated: Bool {
@@ -160,5 +184,28 @@ final class AppContainer {
 
     private var defaultMuseSessionService: MuseSessionService {
         MuseSDKGuards.defaultSessionService
+    }
+
+    private func boolEnvironmentValue(forKey key: String) -> Bool? {
+        guard let rawValue = environment[key] else {
+            return nil
+        }
+
+        let normalizedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalizedValue == "1"
+            || normalizedValue == "true"
+            || normalizedValue == "yes"
+            || normalizedValue == "on" {
+            return true
+        }
+
+        if normalizedValue == "0"
+            || normalizedValue == "false"
+            || normalizedValue == "no"
+            || normalizedValue == "off" {
+            return false
+        }
+
+        return nil
     }
 }

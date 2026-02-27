@@ -30,6 +30,20 @@
     },
     {
       "data": {
+        "id": "EXTERNAL_TRIGGERS",
+        "label": "External Triggers",
+        "styleClass": "moderate",
+        "confirmed": "yes",
+        "tooltip": {
+          "evidence": "Classification",
+          "stat": "Exogenous exposure group",
+          "citation": "Model taxonomy",
+          "mechanism": "Exogenous triggers can affect sleep fragmentation, reflux, and microarousal pathways"
+        }
+      }
+    },
+    {
+      "data": {
         "id": "OSA",
         "label": "Sleep Apnea / UARS",
         "styleClass": "moderate",
@@ -90,6 +104,10 @@
         "label": "SSRIs & Meds",
         "styleClass": "preliminary",
         "confirmed": "inactive",
+        "parentIds": [
+          "EXTERNAL_TRIGGERS",
+          "RMMA"
+        ],
         "tooltip": {
           "evidence": "Moderate (systematic review)",
           "stat": "~24% risk vs 15% baseline",
@@ -104,6 +122,11 @@
         "label": "Caffeine\n1.5x odds",
         "styleClass": "preliminary",
         "confirmed": "external",
+        "parentIds": [
+          "EXTERNAL_TRIGGERS",
+          "SLEEP_DEP",
+          "GERD"
+        ],
         "tooltip": {
           "evidence": "Preliminary (observational)",
           "stat": "1.5x odds",
@@ -118,6 +141,11 @@
         "label": "Alcohol\n2x odds",
         "styleClass": "preliminary",
         "confirmed": "external",
+        "parentIds": [
+          "EXTERNAL_TRIGGERS",
+          "SLEEP_DEP",
+          "GERD"
+        ],
         "tooltip": {
           "evidence": "Preliminary (observational)",
           "stat": "2x odds",
@@ -132,6 +160,11 @@
         "label": "Smoking\n>2x odds",
         "styleClass": "preliminary",
         "confirmed": "inactive",
+        "parentIds": [
+          "EXTERNAL_TRIGGERS",
+          "SLEEP_DEP",
+          "GERD"
+        ],
         "tooltip": {
           "evidence": "Preliminary (observational)",
           "stat": ">2x odds",
@@ -188,6 +221,9 @@
         "label": "Airway Obstruction",
         "styleClass": "mechanism",
         "confirmed": "no",
+        "parentIds": [
+          "OSA"
+        ],
         "tooltip": {
           "evidence": "Mechanism",
           "stat": "85.7% linked to RMMA",
@@ -202,6 +238,9 @@
         "label": "Neg. Intrathoracic\nPressure",
         "styleClass": "mechanism",
         "confirmed": "no",
+        "parentIds": [
+          "AIRWAY_OBS"
+        ],
         "tooltip": {
           "evidence": "Mechanism",
           "stat": "N=25",

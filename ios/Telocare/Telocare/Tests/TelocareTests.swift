@@ -13,13 +13,20 @@ struct AppViewModelTests {
         #expect(harness.viewModel.snapshot.outcomeRecords.isEmpty == false)
     }
 
+    @Test func exploreTabTitlesUseCalmNaming() {
+        #expect(ExploreTab.inputs.title == "Habits")
+        #expect(ExploreTab.situation.title == "My Map")
+        #expect(ExploreTab.outcomes.title == "Progress")
+        #expect(ExploreTab.chat.title == "Guide")
+    }
+
     @Test func selectingExploreTabUpdatesSelectionAndAnnouncement() {
         let harness = AppViewModelHarness()
 
         harness.viewModel.selectExploreTab(.situation)
 
         #expect(harness.viewModel.selectedExploreTab == .situation)
-        #expect(harness.recorder.messages.last == "Situation tab selected.")
+        #expect(harness.recorder.messages.last == "My Map tab selected.")
     }
 
     @Test func exploreActionsUpdateFeedbackAndAnnouncement() {
@@ -65,14 +72,159 @@ struct AppViewModelTests {
         )
 
         #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated == nil)
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isExpanded == false)
 
         harness.viewModel.toggleGraphNodeDeactivated("RMMA")
 
         await waitUntil { await patchRecorder.count() == 1 }
         let patch = await patchRecorder.lastPatch()
         #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated == true)
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isExpanded == false)
         #expect(
             patch?.customCausalDiagram?.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isDeactivated == true
+        )
+        #expect(
+            patch?.customCausalDiagram?.graphData.nodes.first(where: { $0.data.id == "RMMA" })?.data.isExpanded == false
+        )
+    }
+
+    @Test func graphNodeDoubleTapTogglesExpansionAndPersistsPatch() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "STRESS" })?.data.isExpanded == false)
+
+        harness.viewModel.handleGraphEvent(.nodeDoubleTapped(id: "STRESS", label: "Stress"))
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "STRESS" })?.data.isExpanded == true)
+        #expect(
+            patch?.customCausalDiagram?.graphData.nodes.first(where: { $0.data.id == "STRESS" })?.data.isExpanded == true
+        )
+    }
+
+    @Test func hierarchySeedsRespiratoryBranchForOsaAndUars() {
+        let harness = AppViewModelHarness()
+
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "OSA" })?.data.parentIds == nil)
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "OSA" })?.data.parentId == nil)
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "AIRWAY_OBS" })?.data.parentIds == ["OSA"])
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "AIRWAY_OBS" })?.data.parentId == "OSA")
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "NEG_PRESSURE" })?.data.parentIds == ["AIRWAY_OBS"]
+        )
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "NEG_PRESSURE" })?.data.parentId == "AIRWAY_OBS"
+        )
+    }
+
+    @Test func hierarchySeedsExternalTriggerMultiParentMembership() {
+        let harness = AppViewModelHarness()
+
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "CAFFEINE" })?.data.parentIds
+                == ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"]
+        )
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "ALCOHOL" })?.data.parentIds
+                == ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"]
+        )
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "SMOKING" })?.data.parentIds
+                == ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"]
+        )
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "SSRI" })?.data.parentIds
+                == ["EXTERNAL_TRIGGERS", "RMMA"]
+        )
+    }
+
+    @Test func hierarchyRemapsLegacyOsaParentAssignments() {
+        let legacyGraph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "OSA",
+                        label: "Sleep Apnea / UARS",
+                        styleClass: "moderate",
+                        confirmed: "no",
+                        tier: nil,
+                        tooltip: nil,
+                        parentId: "GERD"
+                    )
+                ),
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "AIRWAY_OBS",
+                        label: "Airway Obstruction",
+                        styleClass: "mechanism",
+                        confirmed: "no",
+                        tier: nil,
+                        tooltip: nil,
+                        parentId: "GERD"
+                    )
+                ),
+                GraphNodeElement(
+                    data: GraphNodeData(
+                        id: "NEG_PRESSURE",
+                        label: "Negative Pressure",
+                        styleClass: "mechanism",
+                        confirmed: "no",
+                        tier: nil,
+                        tooltip: nil,
+                        parentId: "GERD"
+                    )
+                ),
+            ],
+            edges: []
+        )
+
+        let harness = AppViewModelHarness(graphData: legacyGraph)
+
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "OSA" })?.data.parentIds == nil)
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "OSA" })?.data.parentId == nil)
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "AIRWAY_OBS" })?.data.parentIds == ["OSA"])
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "AIRWAY_OBS" })?.data.parentId == "OSA")
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "NEG_PRESSURE" })?.data.parentIds == ["AIRWAY_OBS"]
+        )
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "NEG_PRESSURE" })?.data.parentId == "AIRWAY_OBS"
+        )
+    }
+
+    @Test func graphNodeDeactivationPreservesSeededParentMetadata() async {
+        let patchRecorder = PatchRecorder()
+        let harness = AppViewModelHarness(
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.toggleGraphNodeDeactivated("CAFFEINE")
+
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+
+        #expect(
+            harness.viewModel.graphData.nodes.first(where: { $0.data.id == "CAFFEINE" })?.data.parentIds
+                == ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"]
+        )
+        #expect(harness.viewModel.graphData.nodes.first(where: { $0.data.id == "CAFFEINE" })?.data.parentId == "EXTERNAL_TRIGGERS")
+        #expect(
+            patch?.customCausalDiagram?.graphData.nodes.first(where: { $0.data.id == "CAFFEINE" })?.data.parentIds
+                == ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"]
+        )
+        #expect(
+            patch?.customCausalDiagram?.graphData.nodes.first(where: { $0.data.id == "CAFFEINE" })?.data.parentId == "EXTERNAL_TRIGGERS"
         )
     }
 
@@ -472,6 +624,78 @@ struct AppViewModelTests {
         #expect(harness.recorder.messages.last == "Could not save morning outcomes. Reverted.")
     }
 
+    @Test func morningQuestionnaireDefaultsToLegacyFieldsForUnconfiguredUsers() {
+        let harness = AppViewModelHarness()
+
+        #expect(harness.viewModel.morningCheckInFields == MorningOutcomeField.legacyFields)
+        #expect(harness.viewModel.requiredMorningCheckInFields == MorningOutcomeField.legacyFields)
+        #expect(
+            harness.viewModel.morningTrendMetricOptions
+                == [.composite] + MorningTrendMetric.legacyFieldMetrics
+        )
+    }
+
+    @Test func morningQuestionnaireConfigRestrictsFieldsAndSavesConfiguredValues() async {
+        let patchRecorder = PatchRecorder()
+        let questionnaire = MorningQuestionnaire(
+            enabledFields: [
+                .neckTightness,
+                .jawSoreness,
+                .earFullness,
+                .stressLevel,
+                .morningHeadache,
+                .dryMouth,
+            ],
+            requiredFields: [
+                .neckTightness,
+                .jawSoreness,
+                .earFullness,
+                .stressLevel,
+                .morningHeadache,
+                .dryMouth,
+            ]
+        )
+        let harness = AppViewModelHarness(
+            initialMorningQuestionnaire: questionnaire,
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        #expect(
+            harness.viewModel.morningCheckInFields == [
+                .neckTightness,
+                .jawSoreness,
+                .earFullness,
+                .stressLevel,
+                .morningHeadache,
+                .dryMouth,
+            ]
+        )
+        #expect(harness.viewModel.requiredMorningCheckInFields == harness.viewModel.morningCheckInFields)
+        #expect(
+            harness.viewModel.morningTrendMetricOptions == [
+                .composite,
+                .neckTightness,
+                .jawSoreness,
+                .earFullness,
+                .stressLevel,
+                .morningHeadache,
+                .dryMouth,
+            ]
+        )
+
+        harness.viewModel.setMorningOutcomeValue(7, for: .globalSensation)
+        #expect(await patchRecorder.count() == 0)
+
+        harness.viewModel.setMorningOutcomeValue(8, for: .morningHeadache)
+        await waitUntil { await patchRecorder.count() == 1 }
+        let patch = await patchRecorder.lastPatch()
+        #expect(patch?.morningStates?.first?.morningHeadache == 8)
+        #expect(patch?.morningStates?.first?.globalSensation == nil)
+    }
+
     @Test func museSessionFlowSavesNightOutcomePatch() async {
         let patchRecorder = PatchRecorder()
         let harness = AppViewModelHarness(
@@ -509,8 +733,7 @@ struct AppViewModelTests {
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
 
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
 
         harness.viewModel.stopMuseRecording()
         await waitUntil { harness.viewModel.museCanSaveNightOutcome }
@@ -550,8 +773,7 @@ struct AppViewModelTests {
         await waitUntil { harness.viewModel.museCanConnect }
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
         harness.viewModel.stopMuseRecording()
         await waitUntil { harness.viewModel.museRecordingSummary != nil }
 
@@ -560,6 +782,276 @@ struct AppViewModelTests {
 
         await waitUntil { harness.viewModel.museSessionFeedback.contains("2 hours") }
         #expect(await patchRecorder.count() == 0)
+    }
+
+    @Test func museStartRecordingOpensFitCalibration() async {
+        let harness = AppViewModelHarness()
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+
+        harness.viewModel.startMuseRecording()
+
+        #expect(harness.viewModel.isMuseFitCalibrationPresented == true)
+        #expect(harness.viewModel.museCanStopRecording == false)
+        #expect(harness.viewModel.museSessionFeedback.contains("Fit calibration opened"))
+
+        harness.viewModel.dismissMuseFitCalibration()
+        #expect(harness.viewModel.isMuseFitCalibrationPresented == false)
+    }
+
+    @Test func museFitReadyPathRequiresTwentySecondsBeforeReadyStart() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180,
+                        fitGuidance: .good
+                    )
+                },
+                fitDiagnosticsSnapshot: { _ in
+                    MuseLiveDiagnostics(
+                        elapsedSeconds: 10,
+                        signalConfidence: 0.9,
+                        awakeLikelihood: 0.2,
+                        headbandOnCoverage: 0.95,
+                        qualityGateCoverage: 0.88,
+                        fitGuidance: .good,
+                        rawDataPacketCount: 500,
+                        rawArtifactPacketCount: 20,
+                        parsedPacketCount: 520,
+                        droppedPacketCount: 0,
+                        droppedDataPacketTypeCounts: [:],
+                        lastPacketAgeSeconds: 0.2,
+                        fitReadiness: MuseFitReadinessSnapshot(
+                            isReady: true,
+                            primaryBlocker: nil,
+                            blockers: [],
+                            goodChannelCount: 4,
+                            hsiGoodChannelCount: 4
+                        ),
+                        sensorStatuses: [
+                            MuseSensorFitStatus(
+                                sensor: .eeg1,
+                                isGood: true,
+                                hsiPrecision: 1,
+                                passesIsGood: true,
+                                passesHsi: true
+                            ),
+                            MuseSensorFitStatus(
+                                sensor: .eeg2,
+                                isGood: true,
+                                hsiPrecision: 1,
+                                passesIsGood: true,
+                                passesHsi: true
+                            ),
+                            MuseSensorFitStatus(
+                                sensor: .eeg3,
+                                isGood: true,
+                                hsiPrecision: 1,
+                                passesIsGood: true,
+                                passesHsi: true
+                            ),
+                            MuseSensorFitStatus(
+                                sensor: .eeg4,
+                                isGood: true,
+                                hsiPrecision: 1,
+                                passesIsGood: true,
+                                passesHsi: true
+                            ),
+                        ],
+                        droppedPacketTypes: []
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+
+        #expect(harness.viewModel.museCanStartRecordingFromFitCalibration == false)
+        harness.viewModel.startMuseRecordingFromFitCalibration()
+        #expect(harness.viewModel.museCanStopRecording == false)
+
+        await waitUntil { harness.viewModel.museCanStartRecordingFromFitCalibration }
+        #expect(harness.viewModel.museFitReadyStreakSeconds == harness.viewModel.museFitReadyRequiredSeconds)
+
+        harness.viewModel.startMuseRecordingFromFitCalibration()
+        await waitUntil { harness.viewModel.museCanStopRecording }
+
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museRecordingSummary != nil }
+        #expect(harness.viewModel.museRecordingSummary?.startedWithFitOverride == false)
+        #expect(harness.viewModel.museRecordingSummary?.recordingReliability == .verifiedFit)
+    }
+
+    @Test func museFitOverrideMarksLimitedReliability() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                stopSession: { endDate in
+                    MuseRecordingSummary(
+                        startedAt: endDate.addingTimeInterval(-3 * 60 * 60),
+                        endedAt: endDate,
+                        microArousalCount: 6,
+                        confidence: 0.8,
+                        totalSleepMinutes: 180,
+                        fitGuidance: .good
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
+        #expect(harness.viewModel.museSessionFeedback.contains("low reliability warning"))
+
+        harness.viewModel.stopMuseRecording()
+        await waitUntil { harness.viewModel.museRecordingSummary != nil }
+        #expect(harness.viewModel.museRecordingSummary?.startedWithFitOverride == true)
+        #expect(harness.viewModel.museRecordingSummary?.recordingReliability == .limitedFit)
+    }
+
+    @Test func museFitDiagnosticsPublishesPrimaryBlockerAndSensorStatuses() async {
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                fitDiagnosticsSnapshot: { _ in
+                    MuseLiveDiagnostics(
+                        elapsedSeconds: 9,
+                        signalConfidence: 0.35,
+                        awakeLikelihood: 0.55,
+                        headbandOnCoverage: 0.74,
+                        qualityGateCoverage: 0.22,
+                        fitGuidance: .adjustHeadband,
+                        rawDataPacketCount: 220,
+                        rawArtifactPacketCount: 18,
+                        parsedPacketCount: 120,
+                        droppedPacketCount: 100,
+                        droppedDataPacketTypeCounts: [41: 82, 2: 18],
+                        lastPacketAgeSeconds: 0.3,
+                        fitReadiness: MuseFitReadinessSnapshot(
+                            isReady: false,
+                            primaryBlocker: .poorHsiPrecision,
+                            blockers: [.poorHsiPrecision, .lowHeadbandCoverage, .lowQualityCoverage],
+                            goodChannelCount: 2,
+                            hsiGoodChannelCount: 1
+                        ),
+                        sensorStatuses: [
+                            MuseSensorFitStatus(
+                                sensor: .eeg1,
+                                isGood: true,
+                                hsiPrecision: 1,
+                                passesIsGood: true,
+                                passesHsi: true
+                            ),
+                            MuseSensorFitStatus(
+                                sensor: .eeg2,
+                                isGood: false,
+                                hsiPrecision: 4,
+                                passesIsGood: false,
+                                passesHsi: false
+                            ),
+                            MuseSensorFitStatus(
+                                sensor: .eeg3,
+                                isGood: false,
+                                hsiPrecision: 4,
+                                passesIsGood: false,
+                                passesHsi: false
+                            ),
+                            MuseSensorFitStatus(
+                                sensor: .eeg4,
+                                isGood: true,
+                                hsiPrecision: 2,
+                                passesIsGood: true,
+                                passesHsi: true
+                            ),
+                        ],
+                        droppedPacketTypes: [
+                            MuseDroppedPacketTypeCount(code: 41, label: "optics", count: 82),
+                            MuseDroppedPacketTypeCount(code: 2, label: "eeg", count: 18),
+                        ]
+                    )
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+
+        await waitUntil { harness.viewModel.museFitDiagnostics != nil }
+        #expect(harness.viewModel.museFitPrimaryBlockerText?.contains("HSI precision") == true)
+        #expect(harness.viewModel.museFitDiagnostics?.sensorStatuses.count == 4)
+    }
+
+    @Test func museSetupDiagnosticsSnapshotUpdatesPublishedURLs() async {
+        let setupURL = URL(fileURLWithPath: "/tmp/setup-diagnostics/session-1/manifest.json")
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                snapshotSetupDiagnosticsCapture: { _ in
+                    [setupURL]
+                }
+            )
+        )
+
+        let exported = await harness.viewModel.exportMuseSetupDiagnosticsSnapshot()
+
+        #expect(exported == [setupURL])
+        #expect(harness.viewModel.museSetupDiagnosticsFileURLs == [setupURL])
+    }
+
+    @Test func museSetupDiagnosticsAvailabilityRefreshesAfterConnectFailure() async {
+        let setupURL = URL(fileURLWithPath: "/tmp/setup-diagnostics/connect-failure/manifest.json")
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                connectHeadband: { _, _ in
+                    throw MuseSessionServiceError.notConnected
+                },
+                latestSetupDiagnosticsCapture: {
+                    [setupURL]
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+
+        await waitUntil { harness.viewModel.museSetupDiagnosticsFileURLs == [setupURL] }
+    }
+
+    @Test func museFitCalibrationCloseCapturesSetupDiagnosticsSnapshot() async {
+        let setupURL = URL(fileURLWithPath: "/tmp/setup-diagnostics/modal-close/manifest.json")
+        let harness = AppViewModelHarness(
+            museSessionService: MockMuseSessionService(
+                snapshotSetupDiagnosticsCapture: { _ in
+                    [setupURL]
+                }
+            )
+        )
+
+        harness.viewModel.scanForMuseHeadband()
+        await waitUntil { harness.viewModel.museCanConnect }
+        harness.viewModel.connectToMuseHeadband()
+        await waitUntil { harness.viewModel.museCanStartRecording }
+        harness.viewModel.startMuseRecording()
+        await waitUntil { harness.viewModel.isMuseFitCalibrationPresented }
+
+        harness.viewModel.dismissMuseFitCalibration()
+        await waitUntil { harness.viewModel.museSetupDiagnosticsFileURLs == [setupURL] }
     }
 
     @Test func museDiagnosticsExportRequiresStoppedSummaryWithFiles() async {
@@ -590,8 +1082,7 @@ struct AppViewModelTests {
         await waitUntil { harness.viewModel.museCanConnect }
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
         #expect(museCanExportDiagnostics(harness.viewModel) == false)
 
         harness.viewModel.stopMuseRecording()
@@ -636,8 +1127,7 @@ struct AppViewModelTests {
         await waitUntil { harness.viewModel.museCanConnect }
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
         await waitUntil { harness.viewModel.museLiveDiagnostics != nil }
 
         #expect(harness.viewModel.museLiveDiagnostics?.isReceivingData == true)
@@ -728,8 +1218,7 @@ struct AppViewModelTests {
         await waitUntil { harness.viewModel.museCanConnect }
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
         harness.viewModel.stopMuseRecording()
         await waitUntil { harness.viewModel.museCanSaveNightOutcome }
         harness.viewModel.saveMuseNightOutcome()
@@ -758,8 +1247,7 @@ struct AppViewModelTests {
         await waitUntil { harness.viewModel.museCanConnect }
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
 
         harness.viewModel.handleAppMovedToBackground()
 
@@ -776,6 +1264,13 @@ struct AppViewModelTests {
 
             try? await Task.sleep(nanoseconds: 20_000_000)
         }
+    }
+
+    private func startMuseRecordingWithFitOverride(_ viewModel: AppViewModel) async {
+        viewModel.startMuseRecording()
+        await waitUntil { viewModel.isMuseFitCalibrationPresented }
+        viewModel.startMuseRecordingWithFitOverride()
+        await waitUntil { viewModel.museCanStopRecording }
     }
 
     private func museCanExportDiagnostics(_ viewModel: AppViewModel) -> Bool {
@@ -816,8 +1311,7 @@ struct AppViewModelTests {
         await waitUntil { harness.viewModel.museCanConnect }
         harness.viewModel.connectToMuseHeadband()
         await waitUntil { harness.viewModel.museCanStartRecording }
-        harness.viewModel.startMuseRecording()
-        await waitUntil { harness.viewModel.museCanStopRecording }
+        await startMuseRecordingWithFitOverride(harness.viewModel)
         harness.viewModel.stopMuseRecording()
         await waitUntil { harness.viewModel.museCanSaveNightOutcome }
         harness.viewModel.saveMuseNightOutcome()
@@ -937,6 +1431,7 @@ private struct AppViewModelHarness {
 
     init(
         snapshot: DashboardSnapshot = InMemoryDashboardRepository().loadDashboardSnapshot(),
+        graphData: CausalGraphData = CanonicalGraphLoader.loadGraphOrFallback(),
         initialExperienceFlow: ExperienceFlow = .empty,
         initialDailyCheckIns: [String: [String]] = [:],
         initialDailyDoseProgress: [String: [String: Double]] = [:],
@@ -945,11 +1440,13 @@ private struct AppViewModelHarness {
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
+        initialMorningQuestionnaire: MorningQuestionnaire? = nil,
         initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         museSessionService: MuseSessionService = MockMuseSessionService(),
-        museLicenseData: Data? = nil
+        museLicenseData: Data? = nil,
+        museDiagnosticsPollingIntervalNanoseconds: UInt64 = 5_000_000
     ) {
         let recorder = AnnouncementRecorder()
         let announcer = AccessibilityAnnouncer { message in
@@ -958,7 +1455,7 @@ private struct AppViewModelHarness {
         self.recorder = recorder
         viewModel = AppViewModel(
             snapshot: snapshot,
-            graphData: CanonicalGraphLoader.loadGraphOrFallback(),
+            graphData: graphData,
             initialExperienceFlow: initialExperienceFlow,
             initialDailyCheckIns: initialDailyCheckIns,
             initialDailyDoseProgress: initialDailyDoseProgress,
@@ -967,6 +1464,7 @@ private struct AppViewModelHarness {
             initialAppleHealthConnections: initialAppleHealthConnections,
             initialNightOutcomes: initialNightOutcomes,
             initialMorningStates: initialMorningStates,
+            initialMorningQuestionnaire: initialMorningQuestionnaire,
             initialActiveInterventions: initialActiveInterventions,
             persistUserDataPatch: persistUserDataPatch,
             appleHealthDoseService: appleHealthDoseService,
@@ -976,6 +1474,7 @@ private struct AppViewModelHarness {
                 let calendar = Calendar(identifier: .gregorian)
                 return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
             },
+            museDiagnosticsPollingIntervalNanoseconds: museDiagnosticsPollingIntervalNanoseconds,
             accessibilityAnnouncer: announcer
         )
     }

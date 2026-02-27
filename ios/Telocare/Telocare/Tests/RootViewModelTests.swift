@@ -44,6 +44,45 @@ struct RootViewModelTests {
         #expect(persistCallCount == 0)
     }
 
+    @Test func setMuseEnabledPersistsFeatureFlag() async {
+        var persistedValues: [Bool] = []
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: MockUserDataRepository(),
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in },
+            persistMuseFeatureFlag: { value in
+                persistedValues.append(value)
+            }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.setMuseEnabled(true)
+
+        #expect(viewModel.isMuseEnabled == true)
+        #expect(persistedValues == [true])
+    }
+
+    @Test func setMuseEnabledDoesNotPersistWhenValueIsUnchanged() async {
+        var persistCallCount = 0
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: MockUserDataRepository(),
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in },
+            initialIsMuseEnabled: false,
+            persistMuseFeatureFlag: { _ in
+                persistCallCount += 1
+            }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+        viewModel.setMuseEnabled(false)
+
+        #expect(viewModel.isMuseEnabled == false)
+        #expect(persistCallCount == 0)
+    }
+
     @Test func bootstrapWithoutSessionShowsAuthState() async {
         let viewModel = RootViewModel(
             authClient: MockAuthClient(),

@@ -8,6 +8,8 @@ struct MorningOutcomeSelection: Equatable {
     let earFullness: Int?
     let healthAnxiety: Int?
     let stressLevel: Int?
+    let morningHeadache: Int?
+    let dryMouth: Int?
 
     init(
         nightID: String,
@@ -16,7 +18,9 @@ struct MorningOutcomeSelection: Equatable {
         jawSoreness: Int?,
         earFullness: Int?,
         healthAnxiety: Int?,
-        stressLevel: Int? = nil
+        stressLevel: Int? = nil,
+        morningHeadache: Int? = nil,
+        dryMouth: Int? = nil
     ) {
         self.nightID = nightID
         self.globalSensation = globalSensation
@@ -25,6 +29,8 @@ struct MorningOutcomeSelection: Equatable {
         self.earFullness = earFullness
         self.healthAnxiety = healthAnxiety
         self.stressLevel = stressLevel
+        self.morningHeadache = morningHeadache
+        self.dryMouth = dryMouth
     }
 
     static func empty(nightID: String) -> MorningOutcomeSelection {
@@ -35,7 +41,9 @@ struct MorningOutcomeSelection: Equatable {
             jawSoreness: nil,
             earFullness: nil,
             healthAnxiety: nil,
-            stressLevel: nil
+            stressLevel: nil,
+            morningHeadache: nil,
+            dryMouth: nil
         )
     }
 
@@ -46,15 +54,16 @@ struct MorningOutcomeSelection: Equatable {
             || earFullness != nil
             || healthAnxiety != nil
             || stressLevel != nil
+            || morningHeadache != nil
+            || dryMouth != nil
     }
 
     var isComplete: Bool {
-        globalSensation != nil
-            && neckTightness != nil
-            && jawSoreness != nil
-            && earFullness != nil
-            && healthAnxiety != nil
-            && stressLevel != nil
+        isComplete(requiredFields: MorningOutcomeField.legacyFields)
+    }
+
+    func isComplete(requiredFields: [MorningOutcomeField]) -> Bool {
+        !requiredFields.contains { value(for: $0) == nil }
     }
 
     func value(for field: MorningOutcomeField) -> Int? {
@@ -71,6 +80,10 @@ struct MorningOutcomeSelection: Equatable {
             return healthAnxiety
         case .stressLevel:
             return stressLevel
+        case .morningHeadache:
+            return morningHeadache
+        case .dryMouth:
+            return dryMouth
         }
     }
 
@@ -84,7 +97,9 @@ struct MorningOutcomeSelection: Equatable {
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
                 healthAnxiety: healthAnxiety,
-                stressLevel: stressLevel
+                stressLevel: stressLevel,
+                morningHeadache: morningHeadache,
+                dryMouth: dryMouth
             )
         case .neckTightness:
             return MorningOutcomeSelection(
@@ -94,7 +109,9 @@ struct MorningOutcomeSelection: Equatable {
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
                 healthAnxiety: healthAnxiety,
-                stressLevel: stressLevel
+                stressLevel: stressLevel,
+                morningHeadache: morningHeadache,
+                dryMouth: dryMouth
             )
         case .jawSoreness:
             return MorningOutcomeSelection(
@@ -104,7 +121,9 @@ struct MorningOutcomeSelection: Equatable {
                 jawSoreness: value,
                 earFullness: earFullness,
                 healthAnxiety: healthAnxiety,
-                stressLevel: stressLevel
+                stressLevel: stressLevel,
+                morningHeadache: morningHeadache,
+                dryMouth: dryMouth
             )
         case .earFullness:
             return MorningOutcomeSelection(
@@ -114,7 +133,9 @@ struct MorningOutcomeSelection: Equatable {
                 jawSoreness: jawSoreness,
                 earFullness: value,
                 healthAnxiety: healthAnxiety,
-                stressLevel: stressLevel
+                stressLevel: stressLevel,
+                morningHeadache: morningHeadache,
+                dryMouth: dryMouth
             )
         case .healthAnxiety:
             return MorningOutcomeSelection(
@@ -124,7 +145,9 @@ struct MorningOutcomeSelection: Equatable {
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
                 healthAnxiety: value,
-                stressLevel: stressLevel
+                stressLevel: stressLevel,
+                morningHeadache: morningHeadache,
+                dryMouth: dryMouth
             )
         case .stressLevel:
             return MorningOutcomeSelection(
@@ -134,7 +157,33 @@ struct MorningOutcomeSelection: Equatable {
                 jawSoreness: jawSoreness,
                 earFullness: earFullness,
                 healthAnxiety: healthAnxiety,
-                stressLevel: value
+                stressLevel: value,
+                morningHeadache: morningHeadache,
+                dryMouth: dryMouth
+            )
+        case .morningHeadache:
+            return MorningOutcomeSelection(
+                nightID: nightID,
+                globalSensation: globalSensation,
+                neckTightness: neckTightness,
+                jawSoreness: jawSoreness,
+                earFullness: earFullness,
+                healthAnxiety: healthAnxiety,
+                stressLevel: stressLevel,
+                morningHeadache: value,
+                dryMouth: dryMouth
+            )
+        case .dryMouth:
+            return MorningOutcomeSelection(
+                nightID: nightID,
+                globalSensation: globalSensation,
+                neckTightness: neckTightness,
+                jawSoreness: jawSoreness,
+                earFullness: earFullness,
+                healthAnxiety: healthAnxiety,
+                stressLevel: stressLevel,
+                morningHeadache: morningHeadache,
+                dryMouth: value
             )
         }
     }
@@ -148,22 +197,35 @@ struct MorningOutcomeSelection: Equatable {
             earFullness: earFullness.map(Double.init),
             healthAnxiety: healthAnxiety.map(Double.init),
             stressLevel: stressLevel.map(Double.init),
+            morningHeadache: morningHeadache.map(Double.init),
+            dryMouth: dryMouth.map(Double.init),
             createdAt: createdAt
         )
     }
 }
 
-enum MorningOutcomeField: String, CaseIterable, Identifiable {
+enum MorningOutcomeField: String, CaseIterable, Identifiable, Hashable {
     case globalSensation
     case neckTightness
     case jawSoreness
     case earFullness
     case healthAnxiety
     case stressLevel
+    case morningHeadache
+    case dryMouth
 
     var id: String {
         rawValue
     }
+
+    static let legacyFields: [MorningOutcomeField] = [
+        .globalSensation,
+        .neckTightness,
+        .jawSoreness,
+        .earFullness,
+        .healthAnxiety,
+        .stressLevel,
+    ]
 
     var title: String {
         switch self {
@@ -179,6 +241,10 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return "Anxiety"
         case .stressLevel:
             return "Stress"
+        case .morningHeadache:
+            return "Headache"
+        case .dryMouth:
+            return "Dry Mouth"
         }
     }
 
@@ -196,6 +262,10 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return AccessibilityID.exploreMorningAnxietyPicker
         case .stressLevel:
             return AccessibilityID.exploreMorningStressPicker
+        case .morningHeadache:
+            return AccessibilityID.exploreMorningHeadachePicker
+        case .dryMouth:
+            return AccessibilityID.exploreMorningDryMouthPicker
         }
     }
 
@@ -213,6 +283,10 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return "Worry level"
         case .stressLevel:
             return "Stress level"
+        case .morningHeadache:
+            return "Morning headache"
+        case .dryMouth:
+            return "Dry mouth on waking"
         }
     }
 
@@ -230,6 +304,10 @@ enum MorningOutcomeField: String, CaseIterable, Identifiable {
             return "brain.head.profile"
         case .stressLevel:
             return "bolt.heart"
+        case .morningHeadache:
+            return "brain"
+        case .dryMouth:
+            return "drop"
         }
     }
 }

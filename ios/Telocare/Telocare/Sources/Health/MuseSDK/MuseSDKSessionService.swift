@@ -2,19 +2,23 @@
 import Foundation
 
 actor MuseSDKSessionService: MuseSessionService {
+    private static let fitCalibrationRetentionWindowSeconds: Int64 = 30
+
     private let scanTimeoutSeconds: TimeInterval
     private let connectTimeoutSeconds: TimeInterval
     private let scanPollIntervalNanoseconds: UInt64
     private let connectPollIntervalNanoseconds: UInt64
 
     private var core: MuseSessionServiceCore
-    private var accumulator: MuseSessionAccumulator
+    private var recordingAccumulator: MuseSessionAccumulator
+    private var fitAccumulator: MuseSessionAccumulator
     private let detector: MuseArousalDetector
     private let packetAdapter: MuseSDKPacketAdapter
     private let diagnosticsRecorder: MuseDiagnosticsRecorder
 
     private let manager: IXNMuseManagerIos
     private var connectedMuse: IXNMuse?
+    private var connectedAt: Date?
     private var recordingStartedAt: Date?
 
     private var listListener: MuseSDKMuseListListenerBridge?
@@ -24,6 +28,7 @@ actor MuseSDKSessionService: MuseSessionService {
     private var sdkLogListener: MuseSDKLogListenerBridge?
 
     private var latestConnectionState: MuseConnectionStateCode
+    private var fitTelemetry: RecordingTelemetry
     private var recordingTelemetry: RecordingTelemetry
 
     init(
@@ -37,22 +42,27 @@ actor MuseSDKSessionService: MuseSessionService {
         connectPollIntervalNanoseconds = 150_000_000
 
         core = MuseSessionServiceCore(scanTimeout: scanTimeoutSeconds)
-        accumulator = MuseSessionAccumulator()
+        recordingAccumulator = MuseSessionAccumulator()
+        fitAccumulator = MuseSessionAccumulator(
+            retentionWindowSeconds: Self.fitCalibrationRetentionWindowSeconds
+        )
         detector = MuseArousalDetector()
         packetAdapter = MuseSDKPacketAdapter()
         diagnosticsRecorder = MuseDiagnosticsRecorder()
 
         self.manager = manager
         connectedMuse = nil
+        connectedAt = nil
         recordingStartedAt = nil
 
         listListener = nil
         connectionListener = nil
         dataListener = nil
         errorListener = nil
-        sdkLogListener = Self.makeSdkLogListener()
+        sdkLogListener = nil
 
         latestConnectionState = .unknown
+        fitTelemetry = RecordingTelemetry()
         recordingTelemetry = RecordingTelemetry()
         self.manager.removeFromList(after: 0)
     }
@@ -84,7 +94,20 @@ actor MuseSDKSessionService: MuseSessionService {
 
     func connect(to headband: MuseHeadband, licenseData: Data?) async throws {
         MuseDiagnosticsLogger.info("Muse connect requested for \(headband.name)")
-        let muse = try resolveMuse(for: headband)
+        configureSdkLogListener()
+        let connectStartedAt = Date()
+        diagnosticsRecorder.beginSetupSession(startedAt: connectStartedAt)
+        let muse: IXNMuse
+        do {
+            muse = try resolveMuse(for: headband)
+        } catch {
+            _ = diagnosticsRecorder.finishSetupSession(
+                endedAt: Date(),
+                reason: "connect_failed_resolve_headband",
+                detectionSummary: nil
+            )
+            throw error
+        }
 
         core.resetPresetAttempts()
 
@@ -122,11 +145,20 @@ actor MuseSDKSessionService: MuseSessionService {
             case .success:
                 guard muse.getModel() == .ms03 else {
                     cleanupConnectedMuse(muse)
+                    _ = diagnosticsRecorder.finishSetupSession(
+                        endedAt: Date(),
+                        reason: "connect_failed_unsupported_model",
+                        detectionSummary: nil
+                    )
                     MuseDiagnosticsLogger.warn("Muse connect failed due to unsupported model")
                     throw MuseSessionServiceError.unsupportedHeadbandModel
                 }
 
                 connectedMuse = muse
+                connectedAt = Date()
+                fitAccumulator.reset()
+                fitTelemetry.reset()
+                diagnosticsRecorder.ensureSetupSession(startedAt: connectedAt ?? connectStartedAt)
                 MuseDiagnosticsLogger.info("Muse connected")
                 return
             case .retry:
@@ -135,6 +167,12 @@ actor MuseSDKSessionService: MuseSessionService {
                 try await Task.sleep(nanoseconds: 700_000_000)
             case .fail(let error):
                 cleanupConnectedMuse(muse)
+                let setupSummary = fitAccumulator.detectionSummary(detector: detector)
+                _ = diagnosticsRecorder.finishSetupSession(
+                    endedAt: Date(),
+                    reason: "connect_failed_\(error.diagnosticsLabel)",
+                    detectionSummary: setupSummary
+                )
                 MuseDiagnosticsLogger.warn("Muse connect failed: \(error)")
                 throw error
             }
@@ -144,13 +182,23 @@ actor MuseSDKSessionService: MuseSessionService {
     func disconnect() async {
         if recordingStartedAt != nil {
             diagnosticsRecorder.recordServiceEvent("recording_cancelled_disconnect")
-            _ = diagnosticsRecorder.finishSession(endedAt: Date(), detectionSummary: nil)
+            _ = diagnosticsRecorder.finishRecordingSession(endedAt: Date(), detectionSummary: nil)
         }
 
+        let setupSummary = fitAccumulator.detectionSummary(detector: detector)
+        _ = diagnosticsRecorder.finishSetupSession(
+            endedAt: Date(),
+            reason: "disconnect",
+            detectionSummary: setupSummary
+        )
+
         core.resetRecordingState()
+        connectedAt = nil
         recordingStartedAt = nil
+        fitTelemetry.reset()
         recordingTelemetry.reset()
-        accumulator.reset()
+        fitAccumulator.reset()
+        recordingAccumulator.reset()
 
         guard let muse = connectedMuse else {
             return
@@ -175,10 +223,16 @@ actor MuseSDKSessionService: MuseSessionService {
         }
 
         try core.startRecording()
+        let setupSummary = fitAccumulator.detectionSummary(detector: detector)
+        _ = diagnosticsRecorder.finishSetupSession(
+            endedAt: startDate,
+            reason: "recording_started",
+            detectionSummary: setupSummary
+        )
         recordingStartedAt = startDate
         recordingTelemetry.reset()
-        accumulator.reset()
-        diagnosticsRecorder.beginSession(startedAt: startDate)
+        recordingAccumulator.reset()
+        diagnosticsRecorder.beginRecordingSession(startedAt: startDate)
         MuseDiagnosticsLogger.info("Muse recording started")
     }
 
@@ -191,7 +245,7 @@ actor MuseSDKSessionService: MuseSessionService {
 
         self.recordingStartedAt = nil
 
-        let summary = accumulator.buildSummary(
+        let summary = recordingAccumulator.buildSummary(
             startedAt: recordingStartedAt,
             endedAt: endDate,
             detector: detector,
@@ -204,15 +258,60 @@ actor MuseSDKSessionService: MuseSessionService {
         diagnosticsRecorder.recordServiceEvent(
             "ingest_counts raw_data=\(recordingTelemetry.rawDataPacketCount) raw_artifact=\(recordingTelemetry.rawArtifactPacketCount) parsed=\(recordingTelemetry.parsedPacketCount) dropped=\(recordingTelemetry.droppedPacketCount) dropped_types=\(recordingTelemetry.droppedTypeSummary)"
         )
-        let diagnosticsFileURLs = diagnosticsRecorder.finishSession(
+        let diagnosticsFileURLs = diagnosticsRecorder.finishRecordingSession(
             endedAt: endDate,
             detectionSummary: summary.detectionSummary
         )
 
         MuseDiagnosticsLogger.info("Muse recording stopped")
         recordingTelemetry.reset()
+        fitAccumulator.reset()
+        fitTelemetry.reset()
+        connectedAt = endDate
 
         return summary.recordingSummary.withDiagnosticsFileURLs(diagnosticsFileURLs)
+    }
+
+    func fitDiagnostics(at now: Date) async -> MuseLiveDiagnostics? {
+        guard connectedMuse != nil else {
+            return nil
+        }
+        guard recordingStartedAt == nil else {
+            return nil
+        }
+
+        diagnosticsRecorder.ensureSetupSession(startedAt: connectedAt ?? now)
+
+        let elapsedSeconds: Int
+        if let connectedAt {
+            elapsedSeconds = max(0, Int(now.timeIntervalSince(connectedAt)))
+        } else {
+            elapsedSeconds = 0
+        }
+        let lastPacketAgeSeconds = fitTelemetry.lastPacketAt.map { max(0, now.timeIntervalSince($0)) }
+        let detectionSummary = fitAccumulator.detectionSummary(
+            detector: detector,
+            includeDecisions: true
+        )
+
+        let diagnostics = fitDiagnosticsSnapshot(
+            elapsedSeconds: elapsedSeconds,
+            detectionSummary: detectionSummary,
+            telemetry: fitTelemetry,
+            lastPacketAgeSeconds: lastPacketAgeSeconds,
+            now: now
+        )
+        diagnosticsRecorder.recordFitSnapshot(diagnostics, at: now)
+        return diagnostics
+    }
+
+    func snapshotSetupDiagnostics(at now: Date) async -> [URL] {
+        let liveDiagnostics = await fitDiagnostics(at: now)
+        return diagnosticsRecorder.snapshotSetupSession(at: now, latestDiagnostics: liveDiagnostics)
+    }
+
+    func latestSetupDiagnosticsFileURLs() async -> [URL] {
+        diagnosticsRecorder.latestSetupSessionFileURLs()
     }
 
     func recordingDiagnostics(at now: Date) async -> MuseLiveDiagnostics? {
@@ -220,7 +319,7 @@ actor MuseSDKSessionService: MuseSessionService {
             return nil
         }
 
-        let detectionSummary = accumulator.detectionSummary(detector: detector)
+        let detectionSummary = recordingAccumulator.detectionSummary(detector: detector)
         let elapsedSeconds = max(0, Int(now.timeIntervalSince(recordingStartedAt)))
         let lastPacketAgeSeconds = recordingTelemetry.lastPacketAt.map { max(0, now.timeIntervalSince($0)) }
 
@@ -236,8 +335,175 @@ actor MuseSDKSessionService: MuseSessionService {
             parsedPacketCount: recordingTelemetry.parsedPacketCount,
             droppedPacketCount: recordingTelemetry.droppedPacketCount,
             droppedDataPacketTypeCounts: recordingTelemetry.droppedDataPacketTypeCounts,
-            lastPacketAgeSeconds: lastPacketAgeSeconds
+            lastPacketAgeSeconds: lastPacketAgeSeconds,
+            droppedPacketTypes: recordingTelemetry.droppedPacketTypes,
+            setupDiagnosis: .unknown,
+            windowPassRates: .zero,
+            artifactRates: .zero,
+            sdkWarningCounts: []
         )
+    }
+
+    private func fitDiagnosticsSnapshot(
+        elapsedSeconds: Int,
+        detectionSummary: MuseDetectionSummary,
+        telemetry: RecordingTelemetry,
+        lastPacketAgeSeconds: Double?,
+        now: Date
+    ) -> MuseLiveDiagnostics {
+        let latestDecision = detectionSummary.decisions.last
+        let sensorStatuses = MuseFitReadinessEvaluator.sensorStatuses(
+            isGoodChannels: latestDecision?.isGoodChannels,
+            hsiPrecisionChannels: latestDecision?.hsiPrecisionChannels
+        )
+        let goodChannelCount = MuseFitReadinessEvaluator.goodChannelCount(
+            from: latestDecision?.isGoodChannels
+        )
+        let hsiGoodChannelCount = MuseFitReadinessEvaluator.hsiGoodChannelCount(
+            from: latestDecision?.hsiPrecisionChannels
+        )
+        let isReceivingData = lastPacketAgeSeconds.map { $0 <= 3 } ?? false
+        let fitReadiness = MuseFitReadinessEvaluator.evaluate(
+            isReceivingData: isReceivingData,
+            latestHeadbandOn: latestDecision?.headbandOn,
+            latestHasQualityInputs: latestDecision?.hasQualityInputs,
+            goodChannelCount: goodChannelCount,
+            hsiGoodChannelCount: hsiGoodChannelCount,
+            headbandOnCoverage: detectionSummary.headbandOnCoverage,
+            qualityGateCoverage: detectionSummary.qualityGateCoverage
+        )
+
+        let window = buildSetupWindowSnapshot(
+            decisions: detectionSummary.decisions,
+            elapsedSeconds: elapsedSeconds,
+            telemetry: telemetry,
+            now: now
+        )
+        let setupDiagnosis = MuseSetupDiagnosticsClassifier.classify(
+            MuseSetupClassifierInput(
+                passRates: window.passRates,
+                artifactRates: window.artifactRates,
+                hasRecentDisconnectOrTimeoutEvent: window.hasRecentDisconnectOrTimeoutEvent,
+                transportWarningCount: window.transportWarningCount
+            )
+        )
+
+        return MuseLiveDiagnostics(
+            elapsedSeconds: elapsedSeconds,
+            signalConfidence: detectionSummary.confidence,
+            awakeLikelihood: detectionSummary.awakeLikelihood,
+            headbandOnCoverage: detectionSummary.headbandOnCoverage,
+            qualityGateCoverage: detectionSummary.qualityGateCoverage,
+            fitGuidance: detectionSummary.fitGuidance,
+            rawDataPacketCount: telemetry.rawDataPacketCount,
+            rawArtifactPacketCount: telemetry.rawArtifactPacketCount,
+            parsedPacketCount: telemetry.parsedPacketCount,
+            droppedPacketCount: telemetry.droppedPacketCount,
+            droppedDataPacketTypeCounts: telemetry.droppedDataPacketTypeCounts,
+            lastPacketAgeSeconds: lastPacketAgeSeconds,
+            fitReadiness: fitReadiness,
+            sensorStatuses: sensorStatuses,
+            droppedPacketTypes: telemetry.droppedPacketTypes,
+            setupDiagnosis: setupDiagnosis,
+            windowPassRates: window.passRates,
+            artifactRates: window.artifactRates,
+            sdkWarningCounts: MuseDroppedPacketTypeCatalog.counts(from: window.sdkWarningCounts),
+            latestHeadbandOn: latestDecision?.headbandOn,
+            latestHasQualityInputs: latestDecision?.hasQualityInputs
+        )
+    }
+
+    private func buildSetupWindowSnapshot(
+        decisions: [MuseSecondDecision],
+        elapsedSeconds: Int,
+        telemetry: RecordingTelemetry,
+        now: Date
+    ) -> SetupWindowSnapshot {
+        let windowTargetSeconds = min(
+            MuseSetupDiagnosticsClassifier.windowSeconds,
+            max(1, elapsedSeconds + 1)
+        )
+        let recentDecisions = Array(decisions.suffix(windowTargetSeconds))
+        let sampleCount = recentDecisions.count
+
+        let receivingPacketsRate = min(
+            1,
+            Double(sampleCount) / Double(windowTargetSeconds)
+        )
+
+        let headbandCoverageRate = rate(
+            passCount: recentDecisions.filter(\.headbandOn).count,
+            sampleCount: sampleCount
+        )
+        let hsiGood3Rate = rate(
+            passCount: recentDecisions.filter {
+                MuseFitReadinessEvaluator.hsiGoodChannelCount(from: $0.hsiPrecisionChannels) >=
+                    MuseArousalHeuristicConstants.minimumGoodChannels
+            }.count,
+            sampleCount: sampleCount
+        )
+        let eegGood3Rate = rate(
+            passCount: recentDecisions.filter {
+                MuseFitReadinessEvaluator.goodChannelCount(from: $0.isGoodChannels) >=
+                    MuseArousalHeuristicConstants.minimumGoodChannels
+            }.count,
+            sampleCount: sampleCount
+        )
+        let qualityGateRate = rate(
+            passCount: recentDecisions.filter(\.qualityGateSatisfied).count,
+            sampleCount: sampleCount
+        )
+
+        let blinkRate = rate(
+            passCount: recentDecisions.filter(\.blinkDetected).count,
+            sampleCount: sampleCount
+        )
+        let jawRate = rate(
+            passCount: recentDecisions.filter(\.jawClenchDetected).count,
+            sampleCount: sampleCount
+        )
+
+        let cutoff = now.addingTimeInterval(
+            -Double(MuseSetupDiagnosticsClassifier.windowSeconds)
+        )
+        let sdkWarningCounts = telemetry.sdkWarningCounts(since: cutoff)
+        let transportWarningCount = transportWarningCount(from: sdkWarningCounts)
+        let hasRecentDisconnectOrTimeoutEvent = telemetry.hasDisconnectOrTimeoutEvent(since: cutoff)
+
+        return SetupWindowSnapshot(
+            passRates: MuseSetupPassRates(
+                receivingPackets: receivingPacketsRate,
+                headbandCoverage: headbandCoverageRate,
+                hsiGood3: hsiGood3Rate,
+                eegGood3: eegGood3Rate,
+                qualityGate: qualityGateRate
+            ),
+            artifactRates: MuseSetupArtifactRates(
+                blinkTrueRate: blinkRate,
+                jawClenchTrueRate: jawRate
+            ),
+            sdkWarningCounts: sdkWarningCounts,
+            transportWarningCount: transportWarningCount,
+            hasRecentDisconnectOrTimeoutEvent: hasRecentDisconnectOrTimeoutEvent
+        )
+    }
+
+    private func rate(passCount: Int, sampleCount: Int) -> Double {
+        guard sampleCount > 0 else {
+            return 0
+        }
+
+        return Double(passCount) / Double(sampleCount)
+    }
+
+    private func transportWarningCount(from sdkWarningCounts: [Int: Int]) -> Int {
+        sdkWarningCounts.reduce(into: 0) { total, entry in
+            if MuseDroppedPacketTypeCatalog.label(for: entry.key) == "optics" {
+                return
+            }
+
+            total += entry.value
+        }
     }
 
     private func apply(_ action: MuseServiceCoreAction) {
@@ -402,6 +668,9 @@ actor MuseSDKSessionService: MuseSessionService {
                 let message = "Muse SDK error code=\(error.code) info=\(error.info)"
                 diagnosticsRecorder.recordServiceEvent(message)
                 MuseDiagnosticsLogger.warn(message)
+                Task { [weak self] in
+                    await self?.handleServiceEventMessage(message)
+                }
             }
         }
     }
@@ -412,62 +681,134 @@ actor MuseSDKSessionService: MuseSessionService {
     private func handleConnectionState(_ state: MuseConnectionStateCode) {
         latestConnectionState = state
         diagnosticsRecorder.recordConnectionState(state)
+        let now = Date()
+        fitTelemetry.recordConnectionState(state, now: now)
+        recordingTelemetry.recordConnectionState(state, now: now)
     }
 
     private func handleDataPacket(
         parsedPacket: MusePacket?,
         packetTypeCode: Int?
     ) {
-        guard recordingStartedAt != nil else {
+        guard connectedMuse != nil else {
             return
         }
 
-        recordingTelemetry.recordDataPacket(
-            now: Date(),
-            packetTypeCode: packetTypeCode,
-            parsed: parsedPacket != nil
-        )
+        let now = Date()
+        let isRecording = recordingStartedAt != nil
+        if isRecording {
+            recordingTelemetry.recordDataPacket(
+                now: now,
+                packetTypeCode: packetTypeCode,
+                parsed: parsedPacket != nil
+            )
+        } else {
+            fitTelemetry.recordDataPacket(
+                now: now,
+                packetTypeCode: packetTypeCode,
+                parsed: parsedPacket != nil
+            )
+        }
 
         guard let parsedPacket else {
             return
         }
 
-        accumulator.ingest(parsedPacket)
+        if isRecording {
+            recordingAccumulator.ingest(parsedPacket)
+            return
+        }
+
+        fitAccumulator.ingest(parsedPacket)
     }
 
     private func handleArtifactPacket(parsedPacket: MusePacket?) {
-        guard recordingStartedAt != nil else {
+        guard connectedMuse != nil else {
             return
         }
 
-        recordingTelemetry.recordArtifactPacket(now: Date(), parsed: parsedPacket != nil)
+        let now = Date()
+        let isRecording = recordingStartedAt != nil
+        if isRecording {
+            recordingTelemetry.recordArtifactPacket(now: now, parsed: parsedPacket != nil)
+        } else {
+            fitTelemetry.recordArtifactPacket(now: now, parsed: parsedPacket != nil)
+        }
 
         guard let parsedPacket else {
             return
         }
 
-        accumulator.ingest(parsedPacket)
-    }
-
-    nonisolated private static func makeSdkLogListener() -> MuseSDKLogListenerBridge? {
-        let listener = MuseSDKLogListenerBridge()
-        if let logManager = IXNLogManager.instance() {
-            logManager.setLogListener(listener)
-            logManager.setMinimumSeverity(.sevVerbose)
-            return listener
+        if isRecording {
+            recordingAccumulator.ingest(parsedPacket)
+            return
         }
 
-        return nil
+        fitAccumulator.ingest(parsedPacket)
+    }
+
+    private func handleSdkLogMessage(_ message: String) {
+        guard connectedMuse != nil else {
+            return
+        }
+        guard let packetTypeCode = MuseSdkWarningParser.negativeTimestampPacketTypeCode(in: message) else {
+            return
+        }
+
+        let now = Date()
+        fitTelemetry.recordSdkWarning(packetTypeCode: packetTypeCode, now: now)
+        recordingTelemetry.recordSdkWarning(packetTypeCode: packetTypeCode, now: now)
+    }
+
+    private func handleServiceEventMessage(_ message: String) {
+        guard connectedMuse != nil else {
+            return
+        }
+        guard MuseSdkWarningParser.isDisconnectOrTimeoutServiceEvent(message) else {
+            return
+        }
+
+        let now = Date()
+        fitTelemetry.recordDisconnectOrTimeoutEvent(now: now)
+        recordingTelemetry.recordDisconnectOrTimeoutEvent(now: now)
+    }
+
+    private func configureSdkLogListener() {
+        guard let logManager = IXNLogManager.instance() else {
+            sdkLogListener = nil
+            return
+        }
+
+        let listener = MuseSDKLogListenerBridge { [weak self] message in
+            Task { [weak self] in
+                await self?.handleSdkLogMessage(message)
+            }
+        }
+        logManager.setLogListener(listener)
+        logManager.setMinimumSeverity(.sevVerbose)
+        sdkLogListener = listener
     }
 }
 
+private struct SetupWindowSnapshot: Sendable {
+    let passRates: MuseSetupPassRates
+    let artifactRates: MuseSetupArtifactRates
+    let sdkWarningCounts: [Int: Int]
+    let transportWarningCount: Int
+    let hasRecentDisconnectOrTimeoutEvent: Bool
+}
+
 private struct RecordingTelemetry: Sendable {
+    private static let retentionSeconds: TimeInterval = 120
+
     var rawDataPacketCount: Int
     var rawArtifactPacketCount: Int
     var parsedPacketCount: Int
     var droppedPacketCount: Int
     var droppedDataPacketTypeCounts: [Int: Int]
     var lastPacketAt: Date?
+    var sdkWarningEvents: [TimedPacketTypeEvent]
+    var disconnectOrTimeoutEvents: [Date]
 
     init() {
         rawDataPacketCount = 0
@@ -476,6 +817,8 @@ private struct RecordingTelemetry: Sendable {
         droppedPacketCount = 0
         droppedDataPacketTypeCounts = [:]
         lastPacketAt = nil
+        sdkWarningEvents = []
+        disconnectOrTimeoutEvents = []
     }
 
     mutating func reset() {
@@ -485,6 +828,8 @@ private struct RecordingTelemetry: Sendable {
         droppedPacketCount = 0
         droppedDataPacketTypeCounts = [:]
         lastPacketAt = nil
+        sdkWarningEvents = []
+        disconnectOrTimeoutEvents = []
     }
 
     mutating func recordDataPacket(
@@ -516,15 +861,65 @@ private struct RecordingTelemetry: Sendable {
         droppedPacketCount += 1
     }
 
+    mutating func recordSdkWarning(packetTypeCode: Int, now: Date) {
+        sdkWarningEvents.append(TimedPacketTypeEvent(packetTypeCode: packetTypeCode, at: now))
+        pruneEvents(now: now)
+    }
+
+    mutating func recordDisconnectOrTimeoutEvent(now: Date) {
+        disconnectOrTimeoutEvents.append(now)
+        pruneEvents(now: now)
+    }
+
+    mutating func recordConnectionState(_ state: MuseConnectionStateCode, now: Date) {
+        if state == .disconnected {
+            recordDisconnectOrTimeoutEvent(now: now)
+        } else {
+            pruneEvents(now: now)
+        }
+    }
+
+    func sdkWarningCounts(since cutoff: Date) -> [Int: Int] {
+        sdkWarningEvents.reduce(into: [:]) { result, event in
+            guard event.recordedAt >= cutoff else {
+                return
+            }
+            result[event.packetTypeCode, default: 0] += 1
+        }
+    }
+
+    func hasDisconnectOrTimeoutEvent(since cutoff: Date) -> Bool {
+        disconnectOrTimeoutEvents.contains { $0 >= cutoff }
+    }
+
     var droppedTypeSummary: String {
-        if droppedDataPacketTypeCounts.isEmpty {
+        if droppedPacketTypes.isEmpty {
             return "none"
         }
 
-        return droppedDataPacketTypeCounts
-            .sorted { $0.key < $1.key }
-            .map { "\($0.key):\($0.value)" }
+        return droppedPacketTypes
+            .map { "\($0.code):\($0.count)" }
             .joined(separator: ",")
+    }
+
+    var droppedPacketTypes: [MuseDroppedPacketTypeCount] {
+        MuseDroppedPacketTypeCatalog.counts(from: droppedDataPacketTypeCounts)
+    }
+
+    private mutating func pruneEvents(now: Date) {
+        let cutoff = now.addingTimeInterval(-Self.retentionSeconds)
+        sdkWarningEvents.removeAll { $0.recordedAt < cutoff }
+        disconnectOrTimeoutEvents.removeAll { $0 < cutoff }
+    }
+}
+
+private struct TimedPacketTypeEvent: Sendable {
+    let packetTypeCode: Int
+    let recordedAt: Date
+
+    init(packetTypeCode: Int, at recordedAt: Date) {
+        self.packetTypeCode = packetTypeCode
+        self.recordedAt = recordedAt
     }
 }
 
@@ -552,6 +947,29 @@ private extension MuseConnectOutcome {
             return "disconnected"
         case .timeout:
             return "timeout"
+        }
+    }
+}
+
+private extension MuseSessionServiceError {
+    var diagnosticsLabel: String {
+        switch self {
+        case .unavailable:
+            return "unavailable"
+        case .noHeadbandFound:
+            return "no_headband_found"
+        case .notConnected:
+            return "not_connected"
+        case .needsLicense:
+            return "needs_license"
+        case .needsUpdate:
+            return "needs_update"
+        case .unsupportedHeadbandModel:
+            return "unsupported_headband_model"
+        case .alreadyRecording:
+            return "already_recording"
+        case .notRecording:
+            return "not_recording"
         }
     }
 }

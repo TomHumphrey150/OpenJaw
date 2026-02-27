@@ -61,13 +61,13 @@ enum ExploreTab: String, CaseIterable, Identifiable, Equatable {
     var title: String {
         switch self {
         case .outcomes:
-            return "Outcomes"
+            return "Progress"
         case .situation:
-            return "Situation"
+            return "My Map"
         case .inputs:
-            return "Inputs"
+            return "Habits"
         case .chat:
-            return "Chat"
+            return "Guide"
         }
     }
 

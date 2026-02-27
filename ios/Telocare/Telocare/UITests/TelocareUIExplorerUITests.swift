@@ -23,7 +23,7 @@ final class TelocareUIExplorerUITests: XCTestCase {
             doneButton.tap()
         }
 
-        let situationTab = app.tabBars.buttons["Situation"]
+        let situationTab = app.tabBars.buttons["My Map"]
         XCTAssertTrue(situationTab.waitForExistence(timeout: 4))
         situationTab.tap()
         capture("04-explore-situation-collapsed")
@@ -38,17 +38,17 @@ final class TelocareUIExplorerUITests: XCTestCase {
         optionsDoneButton.tap()
         capture("06-explore-situation-after-options")
 
-        let inputsTab = app.tabBars.buttons["Inputs"]
+        let inputsTab = app.tabBars.buttons["Habits"]
         XCTAssertTrue(inputsTab.exists)
         inputsTab.tap()
         capture("07-explore-inputs")
 
-        let outcomesTab = app.tabBars.buttons["Outcomes"]
+        let outcomesTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(outcomesTab.exists)
         outcomesTab.tap()
         capture("08-explore-outcomes")
 
-        let chatTab = app.tabBars.buttons["Chat"]
+        let chatTab = app.tabBars.buttons["Guide"]
         XCTAssertTrue(chatTab.exists)
         chatTab.tap()
         XCTAssertTrue(app.textFields["explore.chat.input"].waitForExistence(timeout: 4))

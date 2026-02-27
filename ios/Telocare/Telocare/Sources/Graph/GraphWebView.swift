@@ -144,6 +144,11 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
             let label = payload?["label"] as? String ?? id
             lastFocusedNodeID = id
             onEvent(.nodeSelected(id: id, label: label))
+        case "nodeDoubleTapped":
+            let id = payload?["id"] as? String ?? ""
+            let label = payload?["label"] as? String ?? id
+            lastFocusedNodeID = id
+            onEvent(.nodeDoubleTapped(id: id, label: label))
         case "edgeSelected":
             let sourceID = payload?["source"] as? String ?? ""
             let targetID = payload?["target"] as? String ?? ""

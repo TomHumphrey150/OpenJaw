@@ -5,6 +5,8 @@ export const DEFAULT_GRAPH_DATA = {
             tooltip: { evidence: 'Moderate (observational)', stat: 'OR 2.07 (95% CI 1.26-3.40)', citation: 'Chemelo 2020, J Oral Rehabil', mechanism: 'HPA axis activation drives cortisol and sympathetic shift' } } },
         { data: { id: 'HEALTH_ANXIETY', label: 'Health Anxiety', styleClass: 'moderate', confirmed: 'yes',
             tooltip: { evidence: 'Moderate', stat: 'User-confirmed input', citation: 'Clinical self-report', mechanism: 'Health anxiety amplifies stress response and hypervigilance' } } },
+        { data: { id: 'EXTERNAL_TRIGGERS', label: 'External Triggers', styleClass: 'moderate', confirmed: 'yes',
+            tooltip: { evidence: 'Classification', stat: 'Exogenous exposure group', citation: 'Model taxonomy', mechanism: 'Exogenous triggers can affect sleep fragmentation, reflux, and microarousal pathways' } } },
 
         // ── REFLUX PATHWAY ──
         { data: { id: 'OSA', label: 'Sleep Apnea / UARS', styleClass: 'moderate', confirmed: 'no',
@@ -19,13 +21,13 @@ export const DEFAULT_GRAPH_DATA = {
         // ── EXTERNAL FACTORS ──
         { data: { id: 'GENETICS', label: 'Genetics\n21-50% heritable', styleClass: 'moderate', confirmed: 'inactive',
             tooltip: { evidence: 'Moderate (twin studies)', stat: '21-50% heritability', citation: 'Hublin 1998; Abe 2012', mechanism: 'Polygenic predisposition to arousal threshold and motor pattern generation' } } },
-        { data: { id: 'SSRI', label: 'SSRIs & Meds', styleClass: 'preliminary', confirmed: 'inactive',
+        { data: { id: 'SSRI', label: 'SSRIs & Meds', styleClass: 'preliminary', confirmed: 'inactive', parentIds: ['EXTERNAL_TRIGGERS', 'RMMA'],
             tooltip: { evidence: 'Moderate (systematic review)', stat: '~24% risk vs 15% baseline', citation: 'Garrett 2018, PMC5914744', mechanism: 'Serotonergic suppression of dopaminergic inhibition of motor patterns' } } },
-        { data: { id: 'CAFFEINE', label: 'Caffeine\n1.5x odds', styleClass: 'preliminary', confirmed: 'external',
+        { data: { id: 'CAFFEINE', label: 'Caffeine\n1.5x odds', styleClass: 'preliminary', confirmed: 'external', parentIds: ['EXTERNAL_TRIGGERS', 'SLEEP_DEP', 'GERD'],
             tooltip: { evidence: 'Preliminary (observational)', stat: '1.5x odds', citation: 'Bertazzo-Silveira 2016, JADA', mechanism: 'Adenosine receptor antagonism increases arousal frequency' } } },
-        { data: { id: 'ALCOHOL', label: 'Alcohol\n2x odds', styleClass: 'preliminary', confirmed: 'external',
+        { data: { id: 'ALCOHOL', label: 'Alcohol\n2x odds', styleClass: 'preliminary', confirmed: 'external', parentIds: ['EXTERNAL_TRIGGERS', 'SLEEP_DEP', 'GERD'],
             tooltip: { evidence: 'Preliminary (observational)', stat: '2x odds', citation: 'Bertazzo-Silveira 2016, JADA', mechanism: 'Rebound sympathetic activation during alcohol metabolism' } } },
-        { data: { id: 'SMOKING', label: 'Smoking\n>2x odds', styleClass: 'preliminary', confirmed: 'inactive',
+        { data: { id: 'SMOKING', label: 'Smoking\n>2x odds', styleClass: 'preliminary', confirmed: 'inactive', parentIds: ['EXTERNAL_TRIGGERS', 'SLEEP_DEP', 'GERD'],
             tooltip: { evidence: 'Preliminary (observational)', stat: '>2x odds', citation: 'Bertazzo-Silveira 2016, JADA', mechanism: 'Nicotine increases sympathetic activation and arousal frequency' } } },
 
         // ── STRESS MECHANISMS ──
@@ -37,9 +39,9 @@ export const DEFAULT_GRAPH_DATA = {
             tooltip: { evidence: 'Moderate', stat: 'Sympathovagal shift -8 min (P≤0.03)', citation: 'Huynh 2006', mechanism: 'Autonomic shift precedes and triggers microarousals' } } },
 
         // ── REFLUX MECHANISMS ──
-        { data: { id: 'AIRWAY_OBS', label: 'Airway Obstruction', styleClass: 'mechanism', confirmed: 'no',
+        { data: { id: 'AIRWAY_OBS', label: 'Airway Obstruction', styleClass: 'mechanism', confirmed: 'no', parentIds: ['OSA'],
             tooltip: { evidence: 'Mechanism', stat: '85.7% linked to RMMA', citation: 'Saito 2014', mechanism: 'Upper airway collapse creates negative intrathoracic pressure' } } },
-        { data: { id: 'NEG_PRESSURE', label: 'Neg. Intrathoracic\nPressure', styleClass: 'mechanism', confirmed: 'no',
+        { data: { id: 'NEG_PRESSURE', label: 'Neg. Intrathoracic\nPressure', styleClass: 'mechanism', confirmed: 'no', parentIds: ['AIRWAY_OBS'],
             tooltip: { evidence: 'Mechanism', stat: 'N=25', citation: 'Kuribayashi 2010', mechanism: 'Negative pressure gradient triggers transient lower esophageal sphincter relaxation' } } },
         { data: { id: 'TLESR', label: 'TLESR', styleClass: 'mechanism', confirmed: 'no',
             tooltip: { evidence: 'Mechanism', stat: 'Primary reflux mechanism', citation: 'Kuribayashi 2010', mechanism: 'Transient LES relaxation allows gastric acid into esophagus' } } },

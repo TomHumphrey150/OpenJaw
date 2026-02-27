@@ -31,6 +31,7 @@ struct GraphSkin: Codable, Equatable {
 enum GraphEvent: Equatable {
     case graphReady
     case nodeSelected(id: String, label: String)
+    case nodeDoubleTapped(id: String, label: String)
     case edgeSelected(
         sourceID: String,
         targetID: String,

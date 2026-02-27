@@ -83,11 +83,11 @@ private struct GuidedOutcomesScreen: View {
     private var scoreCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Shield score")
-                .font(.subheadline.weight(.semibold))
+                .font(TelocareTheme.Typography.caption.weight(.semibold))
             Text("\(outcomes.shieldScore)")
                 .font(.system(size: 56, weight: .bold, design: .rounded))
             Text("Last 7 days")
-                .font(.footnote)
+                .font(TelocareTheme.Typography.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(16)
@@ -149,7 +149,7 @@ private struct GuidedSituationScreen: View {
                 LabeledContent("Visible problems", value: "\(situation.visibleHotspots) hotspots")
                 LabeledContent("Top source", value: situation.topSource)
                 Text(graphSelectionText)
-                    .font(.footnote)
+                    .font(TelocareTheme.Typography.caption)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier(AccessibilityID.graphSelectionText)
                 Button("What can I do?", action: onContinue)
@@ -177,7 +177,7 @@ private struct GuidedInputsScreen: View {
                 GuidedStepHeader(step: .inputs)
                 inputRows
                 Text("Finish this cycle to unlock Explore Mode controls.")
-                    .font(.footnote)
+                    .font(TelocareTheme.Typography.caption)
                     .foregroundStyle(.secondary)
                 Button("Done", action: onDone)
                     .buttonStyle(.borderedProminent)
@@ -211,15 +211,15 @@ private struct GuidedStepHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Guided Flow: Step \(step.position)/3 \(step.title)")
-                .font(.title3.weight(.bold))
+                .font(TelocareTheme.Typography.title.weight(.bold))
                 .accessibilityIdentifier(AccessibilityID.guidedStepLabel)
             Text(step.subtitle)
-                .font(.subheadline)
+                .font(TelocareTheme.Typography.body)
                 .foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 ForEach(GuidedStep.allCases, id: \.self) { item in
                     Text(item.title)
-                        .font(.caption.weight(.semibold))
+                        .font(TelocareTheme.Typography.small.weight(.semibold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(chipBackground(for: item))

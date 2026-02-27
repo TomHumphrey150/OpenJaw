@@ -6,6 +6,7 @@ final class RootViewModel: ObservableObject {
     @Published private(set) var dashboardViewModel: AppViewModel?
     @Published private(set) var currentUserEmail: String?
     @Published private(set) var selectedSkinID: TelocareSkinID
+    @Published private(set) var isMuseEnabled: Bool
 
     @Published var authEmail: String
     @Published var authPassword: String
@@ -21,6 +22,7 @@ final class RootViewModel: ObservableObject {
     private let museLicenseData: Data?
     private let accessibilityAnnouncer: AccessibilityAnnouncer
     private let persistSkinPreference: (TelocareSkinID) -> Void
+    private let persistMuseFeatureFlag: (Bool) -> Void
     private let bootstrapSession: AuthSession?
     private let bootstrapErrorMessage: String?
 
@@ -33,7 +35,9 @@ final class RootViewModel: ObservableObject {
         museLicenseData: Data? = nil,
         accessibilityAnnouncer: AccessibilityAnnouncer,
         initialSkinID: TelocareSkinID = .warmCoral,
+        initialIsMuseEnabled: Bool = false,
         persistSkinPreference: @escaping (TelocareSkinID) -> Void = { _ in },
+        persistMuseFeatureFlag: @escaping (Bool) -> Void = { _ in },
         bootstrapSession: AuthSession? = nil,
         bootstrapErrorMessage: String? = nil
     ) {
@@ -45,6 +49,7 @@ final class RootViewModel: ObservableObject {
         self.museLicenseData = museLicenseData
         self.accessibilityAnnouncer = accessibilityAnnouncer
         self.persistSkinPreference = persistSkinPreference
+        self.persistMuseFeatureFlag = persistMuseFeatureFlag
         self.bootstrapSession = bootstrapSession
         self.bootstrapErrorMessage = bootstrapErrorMessage
 
@@ -56,6 +61,7 @@ final class RootViewModel: ObservableObject {
         isAuthBusy = false
         currentUserEmail = nil
         selectedSkinID = initialSkinID
+        isMuseEnabled = initialIsMuseEnabled
 
         TelocareTheme.configure(skinID: initialSkinID)
 
@@ -96,6 +102,28 @@ final class RootViewModel: ObservableObject {
         selectedSkinID = skinID
         persistSkinPreference(skinID)
         accessibilityAnnouncer.announce("Theme changed to \(skinID.displayName).")
+    }
+
+    func setMuseEnabled(_ isEnabled: Bool) {
+        guard isMuseEnabled != isEnabled else {
+            return
+        }
+
+        isMuseEnabled = isEnabled
+        persistMuseFeatureFlag(isEnabled)
+        if isEnabled {
+            accessibilityAnnouncer.announce("Muse controls enabled.")
+            return
+        }
+
+        dashboardViewModel?.dismissMuseFitCalibration()
+        if dashboardViewModel?.museCanStopRecording == true {
+            dashboardViewModel?.stopMuseRecording()
+        }
+        if dashboardViewModel?.museCanDisconnect == true {
+            dashboardViewModel?.disconnectMuseHeadband()
+        }
+        accessibilityAnnouncer.announce("Muse controls hidden.")
     }
 
     private func bootstrap() async {
@@ -195,7 +223,8 @@ final class RootViewModel: ObservableObject {
 
             let snapshot = snapshotBuilder.build(
                 from: document,
-                firstPartyContent: firstPartyContent
+                firstPartyContent: firstPartyContent,
+                now: Date()
             )
             let graphData = snapshotBuilder.graphData(
                 from: document,
@@ -213,6 +242,7 @@ final class RootViewModel: ObservableObject {
                 initialAppleHealthConnections: document.appleHealthConnections,
                 initialNightOutcomes: document.nightOutcomes,
                 initialMorningStates: document.morningStates,
+                initialMorningQuestionnaire: document.morningQuestionnaire,
                 initialActiveInterventions: document.activeInterventions,
                 persistUserDataPatch: { patch in
                     try await repository.upsertUserDataPatch(patch)
@@ -409,7 +439,10 @@ final class RootViewModel: ObservableObject {
                     confirmed: node.data.confirmed,
                     tier: node.data.tier,
                     tooltip: node.data.tooltip,
-                    isDeactivated: true
+                    isDeactivated: true,
+                    parentIds: node.data.parentIds,
+                    parentId: node.data.parentId,
+                    isExpanded: node.data.isExpanded
                 )
             )
         }

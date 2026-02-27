@@ -1,0 +1,55 @@
+Muse diagnostics logger configured
+Muse scan started
+SDK[PLATFORM] scan +
+SDK[PLATFORM] scan -
+Muse scan discovered 1 device(s)
+Muse connect requested for MuseS-C558
+Muse connect attempt using preset1031
+SDK[LIBMUSE] starting async connection
+SDK[PLATFORM] conn MuseS-C558
+SDK[CONNECTOR] Version::send(v6)
+SDK[CONNECTOR] Version::on_serial_response to v6: {"fw":"3.1.11","bn":1,"tp":"consumer","hw":"01.0","pv":4,"ap":"headset","sp":"Athena_RevE","hb":"Athena_RevE","bl":"1.0.1","be":"1.5.1","rc":0}
+SDK[CONNECTOR] VersionCheck::send(s)
+SDK[CONNECTOR] VersionCheck::on_serial_response to s: {"hn":"MuseS-C558","sn":"7010-DHY7-C558","ma":"00-55-da-bb-c5-58","hs":"DP11-ZEVH-3025","id":"0","bp":3.10,"ps":4129,"ln":"0","rc":0}
+SDK[CONNECTOR] Halt::send(h)
+SDK[CONNECTOR] Halt::on_serial_response to h: {"rc":0}
+SDK[CONNECTOR] Preset::send(p1031)
+SDK[CONNECTOR] Preset::on_serial_response to p1031: {"rc":0}
+SDK[CONNECTOR] Status::send(s)
+SDK[CONNECTOR] Status::on_serial_response to s: {"hn":"MuseS-C558","sn":"7010-DHY7-C558","ma":"00-55-da-bb-c5-58","hs":"DP11-ZEVH-3025","id":"0","bp":3.10,"ps":4145,"ln":"0","rc":0}
+SDK[CONNECTOR] StartStreaming::send(d)
+SDK[CONNECTOR] StartStreaming::on_serial_response to d: {"rc":0}
+Muse connected
+Muse fit calibration opened
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 2, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 2, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 2, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 2, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 2, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+Muse fit calibration closed
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).
+SDK[PACKET] Negative timestamp detected for packet type 41, discarding set (1/5).

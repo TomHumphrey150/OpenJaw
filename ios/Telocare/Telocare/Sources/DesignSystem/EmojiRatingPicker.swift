@@ -45,7 +45,7 @@ struct EmojiRatingPicker: View {
     @ViewBuilder
     private var fieldIcon: some View {
         Image(systemName: field.systemImageName)
-            .font(.system(size: 20))
+            .font(.system(size: 20, weight: .regular, design: .rounded))
             .foregroundStyle(TelocareTheme.coral)
             .frame(width: 28, height: 28)
     }
@@ -73,7 +73,7 @@ private struct EmojiButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Text(emoji)
-                    .font(.system(size: 28))
+                    .font(.system(size: 28, weight: .regular, design: .rounded))
                 Text(label)
                     .font(TelocareTheme.Typography.small)
                     .foregroundStyle(isSelected ? TelocareTheme.coral : TelocareTheme.warmGray)

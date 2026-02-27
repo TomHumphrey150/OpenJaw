@@ -50,6 +50,34 @@ struct UserDataDocumentDecodingTests {
         #expect(decoded.customCausalDiagram?.graphData.edges.first?.data.isDeactivated == true)
     }
 
+    @Test func decodesLegacyParentIdIntoParentIds() throws {
+        let data = try jsonData(from: legacyParentIdGraphJSON)
+        let decoded = try JSONDecoder().decode(UserDataDocument.self, from: data)
+
+        #expect(decoded.customCausalDiagram?.graphData.nodes.first?.data.parentId == "GERD")
+        #expect(decoded.customCausalDiagram?.graphData.nodes.first?.data.parentIds == ["GERD"])
+    }
+
+    @Test func encodesParentIdsAndMirrorsFirstParentId() throws {
+        let node = GraphNodeData(
+            id: "CAFFEINE",
+            label: "Caffeine",
+            styleClass: "preliminary",
+            confirmed: nil,
+            tier: nil,
+            tooltip: nil,
+            parentIds: ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"]
+        )
+
+        let encoded = try JSONEncoder().encode(node)
+        let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        let parentIds = try #require(object["parentIds"] as? [String])
+        let parentId = try #require(object["parentId"] as? String)
+
+        #expect(parentIds == ["EXTERNAL_TRIGGERS", "SLEEP_DEP", "GERD"])
+        #expect(parentId == "EXTERNAL_TRIGGERS")
+    }
+
     @Test func failsToDecodeInvalidGraphPayload() throws {
         #expect(throws: DecodingError.self) {
             let data = try jsonData(from: invalidGraphJSON)
@@ -282,6 +310,46 @@ private let deactivatedGraphJSON = """
           }
         }
       ]
+    },
+    "lastModified": "2026-02-21T00:00:00.000Z"
+  }
+}
+"""
+
+private let legacyParentIdGraphJSON = """
+{
+  "version": 1,
+  "personalStudies": [],
+  "notes": [],
+  "experiments": [],
+  "interventionRatings": [],
+  "dailyCheckIns": {},
+  "nightExposures": [],
+  "nightOutcomes": [],
+  "morningStates": [],
+  "habitTrials": [],
+  "habitClassifications": [],
+  "hiddenInterventions": [],
+  "unlockedAchievements": [],
+  "experienceFlow": {
+    "hasCompletedInitialGuidedFlow": false,
+    "lastGuidedEntryDate": null,
+    "lastGuidedCompletedDate": null,
+    "lastGuidedStatus": "not_started"
+  },
+  "customCausalDiagram": {
+    "graphData": {
+      "nodes": [
+        {
+          "data": {
+            "id": "OSA",
+            "label": "Sleep Apnea / UARS",
+            "styleClass": "moderate",
+            "parentId": "GERD"
+          }
+        }
+      ],
+      "edges": []
     },
     "lastModified": "2026-02-21T00:00:00.000Z"
   }

@@ -97,4 +97,27 @@ struct MuseSessionAccumulatorTests {
         #expect(summary.detectionSummary.decisions.count == 1)
         #expect(summary.recordingSummary.fitGuidance == .good)
     }
+
+    @Test func rollingRetentionPrunesOldCalibrationFrames() {
+        var accumulator = MuseSessionAccumulator(retentionWindowSeconds: 30)
+
+        for second in 0..<35 {
+            let timestampUs = Int64(second) * 1_000_000
+            accumulator.ingest(
+                .artifact(timestampUs: timestampUs, headbandOn: true, blink: false, jawClench: false)
+            )
+            accumulator.ingest(
+                .isGood(timestampUs: timestampUs, channels: [true, true, true, true])
+            )
+            accumulator.ingest(
+                .hsiPrecision(timestampUs: timestampUs, channels: [1, 1, 1, 1])
+            )
+        }
+
+        let detectionSummary = accumulator.detectionSummary(includeDecisions: true)
+
+        #expect(detectionSummary.decisions.count == 30)
+        #expect(detectionSummary.decisions.first?.secondEpoch == 5)
+        #expect(detectionSummary.decisions.last?.secondEpoch == 34)
+    }
 }

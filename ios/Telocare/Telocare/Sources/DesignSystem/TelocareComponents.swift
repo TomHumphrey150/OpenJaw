@@ -87,6 +87,7 @@ struct WarmProgressRing: View {
     let progress: Double
     var size: CGFloat = 48
     var lineWidth: CGFloat = 6
+    var badgeSystemImage: String? = nil
 
     var body: some View {
         ZStack {
@@ -102,6 +103,16 @@ struct WarmProgressRing: View {
             Text("\(Int(progress * 100))%")
                 .font(TelocareTheme.Typography.small)
                 .foregroundStyle(TelocareTheme.charcoal)
+
+            if let badgeSystemImage {
+                Image(systemName: badgeSystemImage)
+                    .font(TelocareTheme.Typography.small)
+                    .foregroundStyle(TelocareTheme.warmOrange)
+                    .padding(5)
+                    .background(TelocareTheme.cream)
+                    .clipShape(Circle())
+                    .offset(x: size * 0.26, y: -size * 0.26)
+            }
         }
         .frame(width: size, height: size)
     }

@@ -88,8 +88,60 @@ struct MuseDiagnosticsExportBundleTests {
         }
     }
 
-    private func findSummaryFileURL(in directory: URL, fileManager: FileManager) throws -> URL? {
+    @Test func makeCreatesSetupDiagnosticsZipArchiveWithSetupPrefix() throws {
+        let fileManager = FileManager.default
+        let rootDirectory = fileManager.temporaryDirectory
+            .appendingPathComponent("muse-export-setup-tests-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
+        defer {
+            try? fileManager.removeItem(at: rootDirectory)
+        }
+
+        let decisionsFileURL = rootDirectory.appendingPathComponent("decisions.ndjson")
+        let manifestFileURL = rootDirectory.appendingPathComponent("manifest.json")
+        let setupSegmentURL = rootDirectory.appendingPathComponent("setup-segment-0001.muse")
+
+        try Data("{\"type\":\"fit_snapshot\"}\n".utf8).write(to: decisionsFileURL)
+        try Data("{\"schemaVersion\":2}".utf8).write(to: manifestFileURL)
+        try Data([0xAA, 0xBB, 0xCC]).write(to: setupSegmentURL)
+
+        let exportArchiveURL = try MuseDiagnosticsExportBundle.make(
+            fileURLs: [setupSegmentURL, decisionsFileURL, manifestFileURL],
+            capturePhase: .setup,
+            now: Date(timeIntervalSince1970: 1_700_000_200),
+            fileManager: fileManager
+        )
+        defer {
+            try? fileManager.removeItem(at: exportArchiveURL)
+        }
+
+        #expect(exportArchiveURL.lastPathComponent.hasPrefix("muse-setup-diagnostics-"))
+
+        let unzipDirectory = rootDirectory.appendingPathComponent("unzipped", isDirectory: true)
+        try fileManager.createDirectory(at: unzipDirectory, withIntermediateDirectories: false)
+        defer {
+            try? fileManager.removeItem(at: unzipDirectory)
+        }
+        try fileManager.unzipItem(at: exportArchiveURL, to: unzipDirectory)
+
+        let summaryURL = try #require(
+            try findSummaryFileURL(
+                in: unzipDirectory,
+                summaryPrefix: "muse-setup-diagnostics-export-summary-",
+                fileManager: fileManager
+            )
+        )
+        let summaryContent = try String(contentsOf: summaryURL, encoding: .utf8)
+        #expect(summaryContent.contains("Telocare Muse setup diagnostics export summary"))
+        #expect(summaryContent.contains("setup-segment-0001.muse"))
+    }
+
+    private func findSummaryFileURL(
+        in directory: URL,
+        summaryPrefix: String = "muse-diagnostics-export-summary-",
+        fileManager: FileManager
+    ) throws -> URL? {
         let contents = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-        return contents.first { $0.lastPathComponent.hasPrefix("muse-diagnostics-export-summary-") }
+        return contents.first { $0.lastPathComponent.hasPrefix(summaryPrefix) }
     }
 }

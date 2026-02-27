@@ -3,7 +3,7 @@
   const tooltip = document.getElementById('tooltip');
 
   const NODE_TIERS = {
-    HEALTH_ANXIETY: 1, OSA: 1, GENETICS: 1, SSRI: 1,
+    HEALTH_ANXIETY: 1, OSA: 1, EXTERNAL_TRIGGERS: 1, GENETICS: 1, SSRI: 1,
     STRESS: 2, SLEEP_DEP: 2, CAFFEINE: 2, ALCOHOL: 2, SMOKING: 2, AIRWAY_OBS: 2,
     CORTISOL: 3, CATECHOL: 3, GERD: 3, NEG_PRESSURE: 3, MG_DEF: 3, VIT_D: 3,
     SYMPATHETIC: 4, ACID: 4, PEPSIN: 4, TLESR: 4, GABA_DEF: 4, DOPAMINE: 4,
@@ -59,6 +59,7 @@
   let resizeThrottle = null;
   let zoomStyleFrame = null;
   let currentSkin = readSkinFromCSS();
+  let lastNodeTap = null;
 
   const LEGACY_EDGE_COLOR_TOKEN_BY_HEX = Object.freeze({
     b45309: 'edgeCausalColor',
@@ -95,6 +96,175 @@
     };
   }
 
+  function parentIDsForNode(node) {
+    if (!node) return [];
+
+    if (Array.isArray(node.parentIds)) {
+      return node.parentIds
+        .filter((value) => typeof value === 'string')
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
+    }
+
+    if (typeof node.parentId === 'string' && node.parentId.length > 0) {
+      return [node.parentId];
+    }
+
+    return [];
+  }
+
+  function hierarchyMaps(nodes) {
+    const parentsByID = new Map();
+
+    nodes.forEach((item) => {
+      const node = item && item.data ? item.data : null;
+      if (!node || typeof node.id !== 'string') return;
+
+      const parentIDs = parentIDsForNode(node);
+      if (parentIDs.length === 0) {
+        return;
+      }
+
+      parentsByID.set(node.id, parentIDs);
+    });
+
+    return { parentsByID };
+  }
+
+  function visibleNodeIDsByHierarchy(nodes, nodeByID, parentsByID) {
+    const visibilityByID = new Map();
+    const resolving = new Set();
+
+    function isVisible(nodeID) {
+      if (visibilityByID.has(nodeID)) {
+        return visibilityByID.get(nodeID);
+      }
+
+      if (resolving.has(nodeID)) {
+        return true;
+      }
+
+      const node = nodeByID.get(nodeID);
+      if (!node) {
+        return false;
+      }
+
+      resolving.add(nodeID);
+      const parentIDs = parentsByID.get(nodeID) || [];
+      let visible = false;
+
+      if (parentIDs.length === 0) {
+        visible = true;
+      } else {
+        for (const parentID of parentIDs) {
+          const parentNode = nodeByID.get(parentID);
+          if (!parentNode) {
+            visible = true;
+            break;
+          }
+
+          if (!isVisible(parentID)) {
+            continue;
+          }
+
+          if (parentNode.isExpanded === false) {
+            continue;
+          }
+
+          visible = true;
+          break;
+        }
+      }
+
+      resolving.delete(nodeID);
+      visibilityByID.set(nodeID, visible);
+      return visible;
+    }
+
+    nodes.forEach((item) => {
+      const node = item && item.data ? item.data : null;
+      if (!node || typeof node.id !== 'string') return;
+      isVisible(node.id);
+    });
+
+    return new Set(
+      [...visibilityByID.entries()]
+        .filter((entry) => entry[1] === true)
+        .map((entry) => entry[0])
+    );
+  }
+
+  function nearestVisibleAncestor(nodeID, visibleNodeIDs, parentsByID) {
+    if (visibleNodeIDs.has(nodeID)) {
+      return nodeID;
+    }
+
+    const visited = new Set([nodeID]);
+    const queue = [nodeID];
+
+    while (queue.length > 0) {
+      const currentNodeID = queue.shift();
+      const parentIDs = parentsByID.get(currentNodeID) || [];
+
+      for (const parentID of parentIDs) {
+        if (visited.has(parentID)) {
+          continue;
+        }
+
+        if (visibleNodeIDs.has(parentID)) {
+          return parentID;
+        }
+
+        visited.add(parentID);
+        queue.push(parentID);
+      }
+    }
+
+    return null;
+  }
+
+  function hierarchyMembershipEdges(visibleNodeIDs, nodeByID, parentsByID, existingEdges) {
+    const existingEdgeKeys = new Set();
+    existingEdges.forEach((item) => {
+      const edge = item && item.data ? item.data : null;
+      if (!edge) return;
+      existingEdgeKeys.add(`${edge.source}->${edge.target}`);
+    });
+
+    const hierarchyEdges = [];
+    parentsByID.forEach((parentIDs, childID) => {
+      if (!visibleNodeIDs.has(childID)) return;
+
+      parentIDs.forEach((parentID) => {
+        if (!visibleNodeIDs.has(parentID)) return;
+
+        const parentNode = nodeByID.get(parentID);
+        if (!parentNode || parentNode.isExpanded === false) return;
+
+        const key = `${parentID}->${childID}`;
+        if (existingEdgeKeys.has(key)) return;
+        existingEdgeKeys.add(key);
+
+        hierarchyEdges.push({
+          data: {
+            id: `hierarchy::${parentID}::${childID}`,
+            source: parentID,
+            target: childID,
+            label: null,
+            edgeType: 'hierarchy',
+            edgeColor: currentSkin.edgeMechanismColor,
+            tooltip: 'Hierarchy membership',
+            originalSource: parentID,
+            originalTarget: childID,
+            isSyntheticHierarchy: true,
+          },
+        });
+      });
+    });
+
+    return hierarchyEdges;
+  }
+
   function filteredGraphData(graphData) {
     const interventionIDs = new Set();
     const filteredNodes = graphData.nodes.filter((item) => {
@@ -113,6 +283,12 @@
         .filter((node) => node && typeof node.id === 'string')
         .map((node) => [node.id, node])
     );
+    const { parentsByID } = hierarchyMaps(filteredNodes);
+    const visibleNodeIDs = visibleNodeIDsByHierarchy(filteredNodes, nodeByID, parentsByID);
+    const visibleNodesByHierarchy = filteredNodes.filter((item) => {
+      const node = item && item.data ? item.data : null;
+      return node && visibleNodeIDs.has(node.id);
+    });
 
     const filteredEdges = graphData.edges
       .filter((item) => {
@@ -125,21 +301,47 @@
       })
       .map((item) => {
         const edge = item && item.data ? item.data : null;
-        if (!edge) return item;
+        if (!edge) return null;
 
-        const edgeColor = resolvedEdgeColor(edge, nodeByID);
-        if (edgeColor === edge.edgeColor) {
-          return item;
+        const routedSourceID = nearestVisibleAncestor(
+          edge.source,
+          visibleNodeIDs,
+          parentsByID
+        );
+        const routedTargetID = nearestVisibleAncestor(
+          edge.target,
+          visibleNodeIDs,
+          parentsByID
+        );
+
+        if (!routedSourceID || !routedTargetID) {
+          return null;
+        }
+        if (routedSourceID === routedTargetID) {
+          return null;
         }
 
+        const edgeColor = resolvedEdgeColor(edge, nodeByID);
         return {
           ...item,
           data: {
             ...edge,
+            source: routedSourceID,
+            target: routedTargetID,
             edgeColor,
+            originalSource: edge.source,
+            originalTarget: edge.target,
           },
         };
-      });
+      })
+      .filter((item) => item !== null);
+    const hierarchyEdges = hierarchyMembershipEdges(
+      visibleNodeIDs,
+      nodeByID,
+      parentsByID,
+      filteredEdges
+    );
+    const combinedEdges = filteredEdges.concat(hierarchyEdges);
 
     const deactivatedNodeIDs = new Set(
       filteredNodes
@@ -148,7 +350,7 @@
         .map((node) => node.id)
     );
 
-    const visibleNodes = filteredNodes.map((item) => {
+    const visibleNodes = visibleNodesByHierarchy.map((item) => {
       const node = item && item.data ? item.data : null;
       if (!node || node.isDeactivated !== true) {
         return item;
@@ -157,17 +359,20 @@
       return withClass(item, 'is-deactivated');
     });
 
-    const edgesAfterNodeDeactivation = filteredEdges.filter((item) => {
+    const edgesAfterNodeDeactivation = combinedEdges.filter((item) => {
       const edge = item && item.data ? item.data : null;
       if (!edge) return false;
-      return !deactivatedNodeIDs.has(edge.source);
+      const originalSourceID = edge.originalSource || edge.source;
+      return !deactivatedNodeIDs.has(originalSourceID);
     });
 
     const visibleEdges = edgesAfterNodeDeactivation.map((item) => {
       const edge = item && item.data ? item.data : null;
       if (!edge) return item;
 
+      const originalTargetID = edge.originalTarget || edge.target;
       const isDeactivated = edge.isDeactivated === true
+        || deactivatedNodeIDs.has(originalTargetID)
         || deactivatedNodeIDs.has(edge.target);
       if (!isDeactivated) {
         return item;
@@ -451,6 +656,16 @@
         },
       },
       {
+        selector: 'edge[edgeType = "hierarchy"]',
+        style: {
+          'line-style': 'dotted',
+          'line-dash-pattern': [2, 4],
+          'target-arrow-shape': 'none',
+          'width': 1.3,
+          'opacity': 0.75,
+        },
+      },
+      {
         selector: 'edge[edgeType = "protective"]',
         style: {
           'line-style': 'dashed',
@@ -656,6 +871,20 @@
     cy.on('tap', 'node', (event) => {
       const node = event.target;
       const data = node.data();
+      const now = Date.now();
+      if (lastNodeTap && lastNodeTap.id === data.id && (now - lastNodeTap.timestamp) <= 280) {
+        postEvent('nodeDoubleTapped', {
+          id: data.id,
+          label: firstLine(data.label),
+        });
+        lastNodeTap = null;
+      } else {
+        lastNodeTap = {
+          id: data.id,
+          timestamp: now,
+        };
+      }
+
       hideTooltip();
       centerSelectionInVisibleSpace(event.renderedPosition);
       postEvent('nodeSelected', {
@@ -667,14 +896,22 @@
     cy.on('tap', 'edge', (event) => {
       const edge = event.target;
       const data = edge.data();
-      const sourceLabel = nodeLabelMap.get(data.source) || data.source;
-      const targetLabel = nodeLabelMap.get(data.target) || data.target;
+      if (data.isSyntheticHierarchy === true) {
+        lastNodeTap = null;
+        hideTooltip();
+        return;
+      }
+      lastNodeTap = null;
+      const originalSourceID = data.originalSource || data.source;
+      const originalTargetID = data.originalTarget || data.target;
+      const sourceLabel = nodeLabelMap.get(originalSourceID) || originalSourceID;
+      const targetLabel = nodeLabelMap.get(originalTargetID) || originalTargetID;
       hideTooltip();
       centerSelectionInVisibleSpace(event.renderedPosition);
 
       postEvent('edgeSelected', {
-        source: data.source,
-        target: data.target,
+        source: originalSourceID,
+        target: originalTargetID,
         sourceLabel,
         targetLabel,
         label: data.label || null,
@@ -684,6 +921,7 @@
 
     cy.on('tap', (event) => {
       if (event.target === cy) {
+        lastNodeTap = null;
         hideTooltip();
       }
     });
@@ -712,6 +950,7 @@
         edges: filtered.edges,
       };
 
+      lastNodeTap = null;
       destroyGraph();
 
       cy = window.cytoscape({
@@ -741,7 +980,9 @@
 
       applyZoomAdaptiveStyle();
 
-      const labelMap = new Map(elements.nodes.map((node) => [node.data.id, firstLine(node.data.label)]));
+      const labelMap = new Map(
+        currentGraphData.nodes.map((node) => [node.data.id, firstLine(node.data.label)])
+      );
       bindGraphEvents(labelMap);
       postEvent('graphReady');
     } catch (error) {

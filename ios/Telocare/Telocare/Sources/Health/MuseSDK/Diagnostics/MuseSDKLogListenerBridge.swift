@@ -2,8 +2,17 @@
 import Foundation
 
 final class MuseSDKLogListenerBridge: NSObject, IXNLogListener {
+    private let onLogMessage: @Sendable (String) -> Void
+
+    init(onLogMessage: @escaping @Sendable (String) -> Void = { _ in }) {
+        self.onLogMessage = onLogMessage
+        super.init()
+    }
+
     func receiveLog(_ log: IXNLogPacket) {
         let message = "SDK[\(log.tag)] \(log.message)"
+
+        onLogMessage(message)
 
         switch log.severity {
         case .sevVerbose, .sevDebug:

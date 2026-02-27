@@ -1,5 +1,37 @@
 import Foundation
 
+enum MuseDiagnosticsCapturePhase: String, Equatable, Sendable, Codable {
+    case setup
+    case recording
+
+    var storageDirectoryName: String {
+        switch self {
+        case .setup:
+            return "setup"
+        case .recording:
+            return "sessions"
+        }
+    }
+
+    var archivePrefix: String {
+        switch self {
+        case .setup:
+            return "muse-setup-diagnostics"
+        case .recording:
+            return "muse-diagnostics"
+        }
+    }
+
+    var exportSummaryTitle: String {
+        switch self {
+        case .setup:
+            return "Telocare Muse setup diagnostics export summary"
+        case .recording:
+            return "Telocare Muse diagnostics export summary"
+        }
+    }
+}
+
 struct MuseDiagnosticsStorage {
     static let retentionDays = 7
 
@@ -14,10 +46,13 @@ struct MuseDiagnosticsStorage {
         self.nowProvider = nowProvider
     }
 
-    func createSessionDirectory(startedAt: Date) throws -> URL {
+    func createSessionDirectory(
+        startedAt: Date,
+        capturePhase: MuseDiagnosticsCapturePhase
+    ) throws -> URL {
         try purgeExpiredSessions()
 
-        let directory = try sessionsDirectory()
+        let directory = try phaseDirectory(capturePhase)
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
         let timestamp = formatter.string(from: startedAt).replacingOccurrences(of: ":", with: "-")
@@ -35,32 +70,35 @@ struct MuseDiagnosticsStorage {
 
     func purgeExpiredSessions() throws {
         let cutoffDate = nowProvider().addingTimeInterval(-TimeInterval(Self.retentionDays * 24 * 60 * 60))
-        let directory = try sessionsDirectory()
         let resourceKeys: Set<URLResourceKey> = [.creationDateKey, .contentModificationDateKey, .isDirectoryKey]
-        let sessionDirectories = try fileManager.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: Array(resourceKeys),
-            options: [.skipsHiddenFiles]
-        )
 
-        for sessionDirectory in sessionDirectories {
-            let values = try sessionDirectory.resourceValues(forKeys: resourceKeys)
-            guard values.isDirectory == true else {
-                continue
+        for capturePhase in MuseDiagnosticsCapturePhase.allCases {
+            let directory = try phaseDirectory(capturePhase)
+            let sessionDirectories = try fileManager.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: Array(resourceKeys),
+                options: [.skipsHiddenFiles]
+            )
+
+            for sessionDirectory in sessionDirectories {
+                let values = try sessionDirectory.resourceValues(forKeys: resourceKeys)
+                guard values.isDirectory == true else {
+                    continue
+                }
+
+                let referenceDate = values.creationDate ?? values.contentModificationDate
+                guard let referenceDate, referenceDate < cutoffDate else {
+                    continue
+                }
+
+                try fileManager.removeItem(at: sessionDirectory)
             }
-
-            let referenceDate = values.creationDate ?? values.contentModificationDate
-            guard let referenceDate, referenceDate < cutoffDate else {
-                continue
-            }
-
-            try fileManager.removeItem(at: sessionDirectory)
         }
     }
 
-    private func sessionsDirectory() throws -> URL {
+    private func phaseDirectory(_ capturePhase: MuseDiagnosticsCapturePhase) throws -> URL {
         try ensureDirectory(
-            rootDirectory().appendingPathComponent("sessions", isDirectory: true)
+            rootDirectory().appendingPathComponent(capturePhase.storageDirectoryName, isDirectory: true)
         )
     }
 
@@ -91,3 +129,5 @@ struct MuseDiagnosticsStorage {
         return directory
     }
 }
+
+extension MuseDiagnosticsCapturePhase: CaseIterable {}

@@ -146,6 +146,65 @@ struct OutcomeTrendDataBuilderTests {
         #expect(points.first?.value == 8)
     }
 
+    @Test func morningCompositeCanUseConfiguredComponents() {
+        let builder = OutcomeTrendDataBuilder(calendar: fixedCalendar, now: nowDate)
+        let states = [
+            MorningState(
+                nightId: "2026-02-22",
+                globalSensation: 10,
+                neckTightness: 4,
+                jawSoreness: 6,
+                earFullness: nil,
+                healthAnxiety: 9,
+                stressLevel: 8,
+                morningHeadache: 2,
+                dryMouth: 4,
+                createdAt: "2026-02-22T08:00:00Z"
+            ),
+        ]
+
+        let configuredPoints = builder.morningPoints(
+            from: states,
+            metric: .composite,
+            compositeComponents: [
+                .neckTightness,
+                .jawSoreness,
+                .stressLevel,
+                .morningHeadache,
+                .dryMouth,
+            ]
+        )
+        let legacyPoints = builder.morningPoints(from: states, metric: .composite)
+
+        #expect(configuredPoints.count == 1)
+        #expect(configuredPoints.first?.value == 4.8)
+        #expect(legacyPoints.first?.value == 7.4)
+    }
+
+    @Test func morningMetricExtractionSupportsHeadacheAndDryMouth() {
+        let builder = OutcomeTrendDataBuilder(calendar: fixedCalendar, now: nowDate)
+        let states = [
+            MorningState(
+                nightId: "2026-02-22",
+                globalSensation: nil,
+                neckTightness: nil,
+                jawSoreness: nil,
+                earFullness: nil,
+                healthAnxiety: nil,
+                stressLevel: nil,
+                morningHeadache: 9,
+                dryMouth: 3,
+                createdAt: "2026-02-22T08:00:00Z"
+            ),
+        ]
+
+        let headachePoints = builder.morningPoints(from: states, metric: .morningHeadache)
+        let dryMouthPoints = builder.morningPoints(from: states, metric: .dryMouth)
+
+        #expect(headachePoints.first?.value == 9)
+        #expect(dryMouthPoints.first?.value == 3)
+    }
+
     private var fixedCalendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current

@@ -7,10 +7,10 @@ struct AuthView: View {
         VStack(spacing: 20) {
             VStack(spacing: 8) {
                 Text("Telocare")
-                    .font(.largeTitle.bold())
+                    .font(TelocareTheme.Typography.largeTitle.weight(.bold))
                     .foregroundStyle(TelocareTheme.charcoal)
                 Text("Sign in with email and password")
-                    .font(.subheadline)
+                    .font(TelocareTheme.Typography.body)
                     .foregroundStyle(TelocareTheme.warmGray)
             }
 
@@ -58,7 +58,7 @@ struct AuthView: View {
             if let error = viewModel.authErrorMessage {
                 Text(error)
                     .foregroundStyle(.red)
-                    .font(.footnote)
+                    .font(TelocareTheme.Typography.caption)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier(AccessibilityID.authErrorMessage)
             }
@@ -66,7 +66,7 @@ struct AuthView: View {
             if let status = viewModel.authStatusMessage {
                 Text(status)
                     .foregroundStyle(TelocareTheme.warmGray)
-                    .font(.footnote)
+                    .font(TelocareTheme.Typography.caption)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier(AccessibilityID.authStatusMessage)
             }

@@ -402,8 +402,8 @@
       "name": "Exercise",
       "emoji": "🏃",
       "icon": "figure.walk",
-      "description": "Track total exercise minutes completed today.",
-      "detailedDescription": "Accumulate moderate exercise minutes each day while still finishing intense sessions at least 4 hours before bed.",
+      "description": "Track moderate exercise minutes completed today.",
+      "detailedDescription": "Accumulate at least 30 moderate-intensity exercise minutes each day. Apple Exercise ring minutes are shown as a reference, but the goal metric prioritizes workout-derived moderate minutes.",
       "tier": 2,
       "frequency": "daily",
       "trackingType": "dose",
@@ -438,7 +438,7 @@
       },
       "appleHealthAvailable": true,
       "appleHealthConfig": {
-        "identifier": "appleExerciseTime",
+        "identifier": "moderateWorkoutMinutes",
         "aggregation": "cumulativeSum",
         "dayAttribution": "localDay"
       }
@@ -1325,6 +1325,77 @@
       "causalPathway": "upstream",
       "legacyIds": [
         "OSA_TX"
+      ],
+      "graphNodeId": "OSA_TX"
+    },
+    {
+      "id": "dymista_nasal_spray",
+      "name": "Dymista (Azelastine/Fluticasone)",
+      "emoji": "👃",
+      "icon": "spraycan.fill",
+      "description": "Use Dymista as prescribed to reduce nighttime nasal congestion and support easier nasal breathing.",
+      "detailedDescription": "Dymista combines an intranasal antihistamine (azelastine) and corticosteroid (fluticasone). For people with OSA/UARS plus allergic-rhinitis nasal blockage, reducing congestion can improve comfort with nasal breathing and PAP use. It is an adjunct, not a replacement for CPAP/MAD when OSA is present.",
+      "tier": 2,
+      "frequency": "daily",
+      "trackingType": "binary",
+      "isRemindable": false,
+      "defaultReminderMinutes": null,
+      "externalLink": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12033272/",
+      "evidenceLevel": "Low-Moderate (adjunct)",
+      "evidenceSummary": "Intranasal steroid evidence in OSA shows modest benefit in selected patients, and azelastine/fluticasone may help symptom burden; overall PAP-adherence effects are mixed.",
+      "citationIds": [
+        "intranasal_steroids_osa_meta",
+        "intranasal_steroid_cpap_compliance",
+        "azeflu_osa_pap_adherence_trial",
+        "azeflu_allergic_rhinitis_rct"
+      ],
+      "roiTier": "B",
+      "easeScore": 7,
+      "costRange": "$20-150/month",
+      "timeOfDay": [
+        "preBed"
+      ],
+      "defaultOrder": 472,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "upstream",
+      "legacyIds": [
+        "DYMISTA_TX"
+      ],
+      "graphNodeId": "OSA_TX"
+    },
+    {
+      "id": "breathe_right_strip",
+      "name": "Breathe Right Nasal Strip",
+      "emoji": "🩹",
+      "icon": "bandage.fill",
+      "description": "Apply a nasal strip at bedtime to reduce nasal resistance and support nasal breathing.",
+      "detailedDescription": "External nasal dilator strips can improve perceived nasal airflow and may reduce snoring in some people. Evidence does not show meaningful improvement in core OSA metrics (AHI) for most users, so treat this as a comfort adjunct rather than a primary sleep-apnea treatment.",
+      "tier": 2,
+      "frequency": "daily",
+      "trackingType": "binary",
+      "isRemindable": false,
+      "defaultReminderMinutes": null,
+      "externalLink": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5187471/",
+      "evidenceLevel": "Low (adjunct)",
+      "evidenceSummary": "Meta-analysis shows improved nasal breathing but little/no consistent improvement in OSA outcomes for external nasal strips.",
+      "citationIds": [
+        "nasal_dilator_meta_osa"
+      ],
+      "roiTier": "B",
+      "easeScore": 9,
+      "costRange": "$10-25/month",
+      "timeOfDay": [
+        "preBed"
+      ],
+      "defaultOrder": 474,
+      "estimatedDurationMinutes": 1,
+      "energyLevel": "low",
+      "targetCondition": "both",
+      "causalPathway": "upstream",
+      "legacyIds": [
+        "NASAL_STRIP_TX"
       ],
       "graphNodeId": "OSA_TX"
     },

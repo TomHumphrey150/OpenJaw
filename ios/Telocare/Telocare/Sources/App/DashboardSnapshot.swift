@@ -71,8 +71,30 @@ struct InputAppleHealthState: Equatable, Hashable, Sendable {
     let connected: Bool
     let syncStatus: AppleHealthSyncStatus
     let todayHealthValue: Double?
+    let referenceTodayHealthValue: Double?
+    let referenceTodayHealthValueLabel: String?
     let lastSyncAt: String?
     let config: AppleHealthConfig?
+
+    init(
+        available: Bool,
+        connected: Bool,
+        syncStatus: AppleHealthSyncStatus,
+        todayHealthValue: Double?,
+        referenceTodayHealthValue: Double? = nil,
+        referenceTodayHealthValueLabel: String? = nil,
+        lastSyncAt: String?,
+        config: AppleHealthConfig?
+    ) {
+        self.available = available
+        self.connected = connected
+        self.syncStatus = syncStatus
+        self.todayHealthValue = todayHealthValue
+        self.referenceTodayHealthValue = referenceTodayHealthValue
+        self.referenceTodayHealthValueLabel = referenceTodayHealthValueLabel
+        self.lastSyncAt = lastSyncAt
+        self.config = config
+    }
 }
 
 struct DashboardSnapshot: Equatable {
@@ -124,6 +146,8 @@ struct InputStatus: Equatable, Identifiable, Hashable {
     let citationIDs: [String]
     let externalLink: String?
     let appleHealthState: InputAppleHealthState?
+    let timeOfDay: [InterventionTimeOfDay]
+    let causalPathway: String?
 
     init(
         id: String,
@@ -142,7 +166,9 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         detailedDescription: String?,
         citationIDs: [String],
         externalLink: String?,
-        appleHealthState: InputAppleHealthState? = nil
+        appleHealthState: InputAppleHealthState? = nil,
+        timeOfDay: [InterventionTimeOfDay] = [],
+        causalPathway: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -161,5 +187,7 @@ struct InputStatus: Equatable, Identifiable, Hashable {
         self.citationIDs = citationIDs
         self.externalLink = externalLink
         self.appleHealthState = appleHealthState
+        self.timeOfDay = timeOfDay
+        self.causalPathway = causalPathway
     }
 }

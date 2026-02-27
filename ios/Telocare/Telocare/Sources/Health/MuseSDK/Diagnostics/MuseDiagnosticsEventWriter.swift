@@ -36,6 +36,7 @@ struct MuseDiagnosticsSummaryRecord: Codable, Equatable, Sendable {
 
 struct MuseDiagnosticsManifest: Codable, Equatable, Sendable {
     let schemaVersion: Int
+    let capturePhase: MuseDiagnosticsCapturePhase
     let startedAtISO8601: String
     let endedAtISO8601: String
     let appVersion: String
@@ -44,18 +45,46 @@ struct MuseDiagnosticsManifest: Codable, Equatable, Sendable {
     let files: [String]
 }
 
+struct MuseDiagnosticsFitSnapshotRecord: Codable, Equatable, Sendable {
+    let elapsedSeconds: Int
+    let signalConfidence: Double
+    let awakeLikelihood: Double
+    let headbandOnCoverage: Double
+    let qualityGateCoverage: Double
+    let fitGuidance: MuseFitGuidance
+    let rawDataPacketCount: Int
+    let rawArtifactPacketCount: Int
+    let parsedPacketCount: Int
+    let droppedPacketCount: Int
+    let droppedPacketTypes: [MuseDroppedPacketTypeCount]
+    let fitReadiness: MuseFitReadinessSnapshot
+    let sensorStatuses: [MuseSensorFitStatus]
+    let lastPacketAgeSeconds: Double?
+    let setupDiagnosis: MuseSetupDiagnosis
+    let windowPassRates: MuseSetupPassRates
+    let artifactRates: MuseSetupArtifactRates
+    let sdkWarningCounts: [MuseDroppedPacketTypeCount]
+    let latestHeadbandOn: Bool?
+    let latestHasQualityInputs: Bool?
+}
+
 final class MuseDiagnosticsEventWriter {
-    static let schemaVersion = 1
+    static let schemaVersion = 2
 
     let decisionsFileURL: URL
     let manifestFileURL: URL
 
     private let encoder: JSONEncoder
     private var fileHandle: FileHandle?
+    private let capturePhase: MuseDiagnosticsCapturePhase
 
-    init(sessionDirectoryURL: URL) throws {
+    init(
+        sessionDirectoryURL: URL,
+        capturePhase: MuseDiagnosticsCapturePhase
+    ) throws {
         decisionsFileURL = sessionDirectoryURL.appendingPathComponent("decisions.ndjson")
         manifestFileURL = sessionDirectoryURL.appendingPathComponent("manifest.json")
+        self.capturePhase = capturePhase
 
         encoder = JSONEncoder()
         encoder.outputFormatting = [.withoutEscapingSlashes]
@@ -75,7 +104,8 @@ final class MuseDiagnosticsEventWriter {
             timestampISO8601: nil,
             message: nil,
             decision: decision,
-            summary: nil
+            summary: nil,
+            fitSnapshot: nil
         )
         appendLine(line)
     }
@@ -87,7 +117,42 @@ final class MuseDiagnosticsEventWriter {
             timestampISO8601: Self.iso8601Timestamp(from: date),
             message: message,
             decision: nil,
-            summary: nil
+            summary: nil,
+            fitSnapshot: nil
+        )
+        appendLine(line)
+    }
+
+    func appendFitSnapshot(_ diagnostics: MuseLiveDiagnostics, at date: Date = Date()) {
+        let line = MuseDiagnosticsDecisionLine(
+            type: "fit_snapshot",
+            schemaVersion: Self.schemaVersion,
+            timestampISO8601: Self.iso8601Timestamp(from: date),
+            message: nil,
+            decision: nil,
+            summary: nil,
+            fitSnapshot: MuseDiagnosticsFitSnapshotRecord(
+                elapsedSeconds: diagnostics.elapsedSeconds,
+                signalConfidence: diagnostics.signalConfidence,
+                awakeLikelihood: diagnostics.awakeLikelihood,
+                headbandOnCoverage: diagnostics.headbandOnCoverage,
+                qualityGateCoverage: diagnostics.qualityGateCoverage,
+                fitGuidance: diagnostics.fitGuidance,
+                rawDataPacketCount: diagnostics.rawDataPacketCount,
+                rawArtifactPacketCount: diagnostics.rawArtifactPacketCount,
+                parsedPacketCount: diagnostics.parsedPacketCount,
+                droppedPacketCount: diagnostics.droppedPacketCount,
+                droppedPacketTypes: diagnostics.droppedPacketTypes,
+                fitReadiness: diagnostics.fitReadiness,
+                sensorStatuses: diagnostics.sensorStatuses,
+                lastPacketAgeSeconds: diagnostics.lastPacketAgeSeconds,
+                setupDiagnosis: diagnostics.setupDiagnosis,
+                windowPassRates: diagnostics.windowPassRates,
+                artifactRates: diagnostics.artifactRates,
+                sdkWarningCounts: diagnostics.sdkWarningCounts,
+                latestHeadbandOn: diagnostics.latestHeadbandOn,
+                latestHasQualityInputs: diagnostics.latestHasQualityInputs
+            )
         )
         appendLine(line)
     }
@@ -107,7 +172,8 @@ final class MuseDiagnosticsEventWriter {
                 headbandOnCoverage: detectionSummary.headbandOnCoverage,
                 qualityGateCoverage: detectionSummary.qualityGateCoverage,
                 fitGuidance: detectionSummary.fitGuidance
-            )
+            ),
+            fitSnapshot: nil
         )
         appendLine(line)
     }
@@ -120,6 +186,7 @@ final class MuseDiagnosticsEventWriter {
     ) throws {
         let manifest = MuseDiagnosticsManifest(
             schemaVersion: Self.schemaVersion,
+            capturePhase: capturePhase,
             startedAtISO8601: Self.iso8601Timestamp(from: startedAt),
             endedAtISO8601: Self.iso8601Timestamp(from: endedAt),
             appVersion: Self.appVersionDescription(),
@@ -194,4 +261,5 @@ private struct MuseDiagnosticsDecisionLine: Codable {
     let message: String?
     let decision: MuseSecondDecision?
     let summary: MuseDiagnosticsSummaryRecord?
+    let fitSnapshot: MuseDiagnosticsFitSnapshotRecord?
 }

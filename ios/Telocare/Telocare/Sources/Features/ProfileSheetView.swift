@@ -3,7 +3,9 @@ import SwiftUI
 struct ProfileSheetView: View {
     let accountDescription: String
     let selectedSkinID: TelocareSkinID
+    let isMuseEnabled: Bool
     let onSelectSkin: (TelocareSkinID) -> Void
+    let onSetMuseEnabled: (Bool) -> Void
     let onSignOut: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -24,7 +26,7 @@ struct ProfileSheetView: View {
                     .accessibilityIdentifier(AccessibilityID.profileAccountEntry)
                 } header: {
                     Text("General")
-                        .font(.subheadline)
+                        .font(TelocareTheme.Typography.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
                         .textCase(nil)
@@ -57,9 +59,27 @@ struct ProfileSheetView: View {
                         action: { onSelectSkin(.garden) }
                     )
                     .accessibilityIdentifier(AccessibilityID.profileThemeGardenOption)
+
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Toggle(
+                            "Enable Muse recording controls",
+                            isOn: Binding(
+                                get: { isMuseEnabled },
+                                set: onSetMuseEnabled
+                            )
+                        )
+                        .tint(TelocareTheme.coral)
+                        .accessibilityIdentifier(AccessibilityID.profileMuseFeatureToggle)
+
+                        Text("Off by default. Turn on only if you want Muse setup and recording controls in Outcomes.")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, TelocareTheme.Spacing.xs)
                 } header: {
                     Text("Settings")
-                        .font(.subheadline)
+                        .font(TelocareTheme.Typography.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
                         .textCase(nil)
@@ -76,7 +96,7 @@ struct ProfileSheetView: View {
                     .accessibilityIdentifier(AccessibilityID.profileSignOutEntry)
                 } header: {
                     Text("Account Actions")
-                        .font(.subheadline)
+                        .font(TelocareTheme.Typography.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(TelocareTheme.coral)
                         .textCase(nil)
@@ -114,7 +134,7 @@ private struct ThemeOptionRow: View {
                 if isSelected {
                     Image(systemName: "checkmark")
                         .foregroundStyle(TelocareTheme.coral)
-                        .font(.body.weight(.semibold))
+                        .font(TelocareTheme.Typography.body.weight(.semibold))
                 }
             }
         }
@@ -131,7 +151,7 @@ private struct ProfileEntryDetailView: View {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
                 WarmCard {
                     Text(message)
-                        .font(.body)
+                        .font(TelocareTheme.Typography.body)
                         .foregroundStyle(TelocareTheme.charcoal)
                 }
             }

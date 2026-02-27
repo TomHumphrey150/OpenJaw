@@ -59,7 +59,12 @@ struct MuseAccumulatorSummary: Sendable {
 }
 
 struct MuseSessionAccumulator: Sendable {
+    private let retentionWindowSeconds: Int64?
     private var framesBySecond: [Int64: MuseSecondAggregation] = [:]
+
+    init(retentionWindowSeconds: Int64? = nil) {
+        self.retentionWindowSeconds = retentionWindowSeconds
+    }
 
     mutating func reset() {
         framesBySecond.removeAll(keepingCapacity: true)
@@ -103,6 +108,7 @@ struct MuseSessionAccumulator: Sendable {
         }
 
         framesBySecond[second] = aggregation
+        pruneFrames(keepingFrom: second)
     }
 
     func detectionSummary(
@@ -139,5 +145,14 @@ struct MuseSessionAccumulator: Sendable {
             recordingSummary: recordingSummary,
             detectionSummary: detectionSummary
         )
+    }
+
+    private mutating func pruneFrames(keepingFrom newestSecond: Int64) {
+        guard let retentionWindowSeconds, retentionWindowSeconds > 0 else {
+            return
+        }
+
+        let minimumSecondToKeep = newestSecond - retentionWindowSeconds + 1
+        framesBySecond = framesBySecond.filter { $0.key >= minimumSecondToKeep }
     }
 }

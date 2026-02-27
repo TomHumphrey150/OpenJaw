@@ -3,6 +3,7 @@ import HealthKit
 
 struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
     private let healthStore: HKHealthStore
+    private let moderateHeartRateThresholdBPM = 100.0
 
     init(healthStore: HKHealthStore = HKHealthStore()) {
         self.healthStore = healthStore
@@ -17,7 +18,7 @@ struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
             throw AppleHealthDoseServiceError.healthDataUnavailable
         }
 
-        let readTypes = Set(configs.compactMap(objectType(for:)))
+        let readTypes = Set(configs.flatMap(readObjectTypes(for:)))
         if readTypes.isEmpty {
             return
         }
@@ -30,6 +31,10 @@ struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
             throw AppleHealthDoseServiceError.healthDataUnavailable
         }
 
+        if config.identifier == .moderateWorkoutMinutes {
+            return try await fetchModerateWorkoutMinutes(for: config, unit: unit, now: now)
+        }
+
         switch config.aggregation {
         case .cumulativeSum:
             return try await fetchCumulativeQuantity(for: config, unit: unit, now: now)
@@ -38,6 +43,70 @@ struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
         case .sleepAsleepDurationSum:
             return try await fetchSleepDuration(for: config, unit: unit, now: now)
         }
+    }
+
+    private func fetchModerateWorkoutMinutes(
+        for config: AppleHealthConfig,
+        unit: DoseUnit,
+        now: Date
+    ) async throws -> Double? {
+        let interval = dateInterval(for: config.dayAttribution, now: now)
+        let predicate = HKQuery.predicateForSamples(
+            withStart: interval.start,
+            end: interval.end,
+            options: .strictStartDate
+        )
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workout(predicate)],
+            sortDescriptors: [SortDescriptor(\.startDate)],
+            limit: Int(HKObjectQueryNoLimit)
+        )
+        let workouts = try await descriptor.result(for: healthStore)
+        if workouts.isEmpty {
+            return nil
+        }
+
+        var totalMinutes = 0.0
+        for workout in workouts {
+            let workoutInterval = DateInterval(start: workout.startDate, end: workout.endDate)
+            guard let clippedInterval = overlap(of: workoutInterval, with: interval) else {
+                continue
+            }
+
+            let workoutMinutes = clippedInterval.duration / 60.0
+            guard workoutMinutes > 0 else {
+                continue
+            }
+
+            if isModerateWorkoutType(workout.workoutActivityType) {
+                totalMinutes += workoutMinutes
+                continue
+            }
+
+            guard let averageHeartRateBPM = workoutAverageHeartRateBPM(workout) else {
+                continue
+            }
+
+            if averageHeartRateBPM >= moderateHeartRateThresholdBPM {
+                totalMinutes += workoutMinutes
+            }
+        }
+
+        let converted: Double
+        switch unit {
+        case .minutes:
+            converted = totalMinutes
+        case .hours:
+            converted = totalMinutes / 60.0
+        case .milliliters, .reps, .breaths:
+            throw AppleHealthDoseServiceError.unsupportedUnit
+        }
+
+        if converted <= 0 {
+            return nil
+        }
+
+        return converted
     }
 
     private func fetchCumulativeQuantity(
@@ -144,12 +213,29 @@ struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
         return converted
     }
 
-    private func objectType(for config: AppleHealthConfig) -> HKObjectType? {
+    private func readObjectTypes(for config: AppleHealthConfig) -> [HKObjectType] {
         switch config.identifier {
+        case .moderateWorkoutMinutes:
+            var types: [HKObjectType] = [HKObjectType.workoutType()]
+            if let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) {
+                types.append(heartRateType)
+            }
+            if let exerciseType = HKObjectType.quantityType(forIdentifier: .appleExerciseTime) {
+                types.append(exerciseType)
+            }
+            return types
+
         case .appleExerciseTime, .dietaryWater:
-            return quantityType(for: config.identifier)
+            if let type = quantityType(for: config.identifier) {
+                return [type]
+            }
+            return []
+
         case .mindfulSession, .sleepAnalysis:
-            return categoryType(for: config.identifier)
+            if let type = categoryType(for: config.identifier) {
+                return [type]
+            }
+            return []
         }
     }
 
@@ -159,7 +245,7 @@ struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
             return HKObjectType.quantityType(forIdentifier: .appleExerciseTime)
         case .dietaryWater:
             return HKObjectType.quantityType(forIdentifier: .dietaryWater)
-        case .sleepAnalysis, .mindfulSession:
+        case .moderateWorkoutMinutes, .sleepAnalysis, .mindfulSession:
             return nil
         }
     }
@@ -170,9 +256,31 @@ struct HealthKitAppleHealthDoseService: AppleHealthDoseService {
             return HKObjectType.categoryType(forIdentifier: .mindfulSession)
         case .sleepAnalysis:
             return HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
-        case .appleExerciseTime, .dietaryWater:
+        case .appleExerciseTime, .moderateWorkoutMinutes, .dietaryWater:
             return nil
         }
+    }
+
+    private func isModerateWorkoutType(_ workoutType: HKWorkoutActivityType) -> Bool {
+        switch workoutType {
+        case .walking, .hiking, .mindAndBody, .preparationAndRecovery, .flexibility, .cooldown, .other:
+            return false
+        default:
+            return true
+        }
+    }
+
+    private func workoutAverageHeartRateBPM(_ workout: HKWorkout) -> Double? {
+        guard let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) else {
+            return nil
+        }
+
+        guard let averageQuantity = workout.statistics(for: heartRateType)?.averageQuantity() else {
+            return nil
+        }
+
+        let beatsPerMinute = HKUnit.count().unitDivided(by: HKUnit.minute())
+        return averageQuantity.doubleValue(for: beatsPerMinute)
     }
 
     private func quantityUnit(for unit: DoseUnit) -> HKUnit? {

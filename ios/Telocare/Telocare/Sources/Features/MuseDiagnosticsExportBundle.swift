@@ -11,6 +11,7 @@ enum MuseDiagnosticsExportBundleError: Error {
 struct MuseDiagnosticsExportBundle {
     static func make(
         fileURLs: [URL],
+        capturePhase: MuseDiagnosticsCapturePhase = .recording,
         now: Date = Date(),
         fileManager: FileManager = .default
     ) throws -> URL {
@@ -33,7 +34,7 @@ struct MuseDiagnosticsExportBundle {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
         let timestamp = formatter.string(from: now).replacingOccurrences(of: ":", with: "-")
-        let bundleName = "muse-diagnostics-\(timestamp)-\(UUID().uuidString.lowercased())"
+        let bundleName = "\(capturePhase.archivePrefix)-\(timestamp)-\(UUID().uuidString.lowercased())"
         let bundleDirectory = exportsDirectory
             .appendingPathComponent(bundleName, isDirectory: true)
         let archiveURL = exportsDirectory
@@ -67,14 +68,25 @@ struct MuseDiagnosticsExportBundle {
             return "- \(copiedURL.lastPathComponent) (\(size) bytes)"
         }
 
+        let summaryPrefix: String
+        let summaryPurpose: String
+        switch capturePhase {
+        case .setup:
+            summaryPrefix = "muse-setup-diagnostics-export-summary"
+            summaryPurpose = "Purpose: Share setup-stage diagnostics for fit and transport debugging."
+        case .recording:
+            summaryPrefix = "muse-diagnostics-export-summary"
+            summaryPurpose = "Purpose: Share summary plus core decision files."
+        }
+
         let exportFileURL = bundleDirectory
-            .appendingPathComponent("muse-diagnostics-export-summary-\(timestamp)")
+            .appendingPathComponent("\(summaryPrefix)-\(timestamp)")
             .appendingPathExtension("txt")
 
         let summary = """
-        Telocare Muse diagnostics export summary
+        \(capturePhase.exportSummaryTitle)
         Created: \(ISO8601DateFormatter().string(from: now))
-        Purpose: Share summary plus core decision files.
+        \(summaryPurpose)
 
         Source files discovered:
         \(discoveredFileDescriptions.joined(separator: "\n"))

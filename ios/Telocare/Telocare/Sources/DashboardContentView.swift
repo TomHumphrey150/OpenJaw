@@ -4,7 +4,9 @@ struct DashboardContentView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.scenePhase) private var scenePhase
     let selectedSkinID: TelocareSkinID
+    let isMuseEnabled: Bool
     let onSelectSkin: (TelocareSkinID) -> Void
+    let onSetMuseEnabled: (Bool) -> Void
     let accountDescription: String
     let onSignOut: () -> Void
 
@@ -12,7 +14,8 @@ struct DashboardContentView: View {
         ZStack(alignment: .topTrailing) {
             ExploreTabShell(
                 viewModel: viewModel,
-                selectedSkinID: selectedSkinID
+                selectedSkinID: selectedSkinID,
+                isMuseSessionEnabled: isMuseEnabled
             )
             ProfileAvatarButton(mode: viewModel.mode, action: viewModel.openProfileSheet)
         }
@@ -25,7 +28,9 @@ struct DashboardContentView: View {
             ProfileSheetView(
                 accountDescription: accountDescription,
                 selectedSkinID: selectedSkinID,
+                isMuseEnabled: isMuseEnabled,
                 onSelectSkin: onSelectSkin,
+                onSetMuseEnabled: onSetMuseEnabled,
                 onSignOut: onSignOut
             )
             .accessibilityIdentifier(AccessibilityID.profileSheet)
