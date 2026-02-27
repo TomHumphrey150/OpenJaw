@@ -19,7 +19,8 @@
     "test:all": "node --experimental-default-type=module --test test/*.test.mjs",
     "test:defense-scoring": "node --experimental-default-type=module --test test/defenseScoring.test.mjs",
     "test:protocol": "node --experimental-default-type=module --test test/personalizationModel.unit.test.mjs test/personalizationProtocol.test.mjs test/realityFeedback.integration.test.mjs test/realityProtocolStorage.test.mjs test/storageDomains.unit.test.mjs test/storageIo.unit.test.mjs test/storageSync.unit.test.mjs test/defenseScoring.test.mjs",
-    "test:coverage": "node --experimental-default-type=module --test --experimental-test-coverage test/*.test.mjs"
+    "test:coverage": "node --experimental-default-type=module --test --experimental-test-coverage test/*.test.mjs",
+    "guard:ios-hotspots": "./scripts/guard-ios-hotspots.sh"
   },
   "packageManager": "npm@10",
   "dependencies": {

@@ -115,6 +115,25 @@ struct RootViewModelTests {
         #expect(viewModel.dashboardViewModel?.selectedExploreTab == .inputs)
     }
 
+    @Test func hydrationDoesNotEnterGuidedFlowByDefault() async {
+        let viewModel = RootViewModel(
+            authClient: MockAuthClient(),
+            userDataRepository: MockUserDataRepository(),
+            snapshotBuilder: DashboardSnapshotBuilder(),
+            accessibilityAnnouncer: AccessibilityAnnouncer { _ in }
+        )
+
+        await waitUntil { viewModel.state == .auth }
+
+        viewModel.authEmail = "user@example.com"
+        viewModel.authPassword = "Password123!"
+        viewModel.submitSignIn()
+
+        await waitUntil { viewModel.state == .ready }
+        #expect(viewModel.dashboardViewModel?.mode == .explore)
+        #expect(viewModel.dashboardViewModel?.guidedStep == .outcomes)
+    }
+
     @Test func signUpNeedsConfirmationKeepsAuthStateAndShowsStatus() async {
         let viewModel = RootViewModel(
             authClient: MockAuthClient(signUpNeedsEmailConfirmation: true),

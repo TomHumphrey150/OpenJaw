@@ -67,6 +67,11 @@ final class AppViewModel: ObservableObject {
     private let museLicenseData: Data?
     private let nowProvider: () -> Date
     private let museDiagnosticsPollingIntervalNanoseconds: UInt64
+    private let graphMutationService: GraphMutationService
+    private let inputMutationService: InputMutationService
+    private let morningOutcomeMutationService: MorningOutcomeMutationService
+    private let appleHealthSyncCoordinator: AppleHealthSyncCoordinator
+    private let museSessionCoordinator: MuseSessionCoordinator
     private static let maxCompletionEventsPerIntervention = 200
     private static let minimumMuseRecordingMinutes = 120.0
     private static let museOutcomeSource = "muse_athena_heuristic_v1"
@@ -210,6 +215,11 @@ final class AppViewModel: ObservableObject {
         museLicenseData: Data? = nil,
         nowProvider: @escaping () -> Date = Date.init,
         museDiagnosticsPollingIntervalNanoseconds: UInt64 = defaultMuseDiagnosticsPollingIntervalNanoseconds,
+        graphMutationService: GraphMutationService = DefaultGraphMutationService(),
+        inputMutationService: InputMutationService = DefaultInputMutationService(),
+        morningOutcomeMutationService: MorningOutcomeMutationService = DefaultMorningOutcomeMutationService(),
+        appleHealthSyncCoordinator: AppleHealthSyncCoordinator? = nil,
+        museSessionCoordinator: MuseSessionCoordinator = DefaultMuseSessionCoordinator(),
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
         let todayKey = Self.localDateKey(from: nowProvider())
@@ -287,6 +297,12 @@ final class AppViewModel: ObservableObject {
         self.museLicenseData = museLicenseData
         self.nowProvider = nowProvider
         self.museDiagnosticsPollingIntervalNanoseconds = museDiagnosticsPollingIntervalNanoseconds
+        self.graphMutationService = graphMutationService
+        self.inputMutationService = inputMutationService
+        self.morningOutcomeMutationService = morningOutcomeMutationService
+        self.appleHealthSyncCoordinator = appleHealthSyncCoordinator
+            ?? DefaultAppleHealthSyncCoordinator(appleHealthDoseService: appleHealthDoseService)
+        self.museSessionCoordinator = museSessionCoordinator
         self.accessibilityAnnouncer = accessibilityAnnouncer
     }
 
@@ -758,51 +774,26 @@ final class AppViewModel: ObservableObject {
 
     func toggleGraphNodeDeactivated(_ nodeID: String) {
         guard mode == .explore else { return }
-        guard let nodeIndex = graphData.nodes.firstIndex(where: { $0.data.id == nodeID }) else { return }
+        guard let mutation = graphMutationService.toggleNodeDeactivation(
+            nodeID: nodeID,
+            graphData: graphData,
+            at: nowProvider()
+        ) else { return }
 
         let previousGraphData = graphData
-        let currentNode = graphData.nodes[nodeIndex].data
-        let nextIsDeactivated = !(currentNode.isDeactivated ?? false)
-
-        var nextNodes = graphData.nodes
-        nextNodes[nodeIndex] = GraphNodeElement(
-            data: GraphNodeData(
-                id: currentNode.id,
-                label: currentNode.label,
-                styleClass: currentNode.styleClass,
-                confirmed: currentNode.confirmed,
-                tier: currentNode.tier,
-                tooltip: currentNode.tooltip,
-                isDeactivated: nextIsDeactivated,
-                parentIds: currentNode.parentIds,
-                parentId: currentNode.parentId,
-                isExpanded: currentNode.isExpanded
-            )
-        )
-
-        let nextGraphData = CausalGraphData(
-            nodes: nextNodes,
-            edges: graphData.edges
-        )
-        graphData = nextGraphData
-
-        let nodeLabel = Self.firstLine(for: currentNode.label)
-        let successMessage = nextIsDeactivated
-            ? "\(nodeLabel) deactivated."
-            : "\(nodeLabel) reactivated."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        graphData = mutation.graphData
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextGraphDeactivationOperationToken()
         Task {
             do {
-                try await persistPatch(graphDeactivationPatch(for: nextGraphData))
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == graphDeactivationOperationToken else { return }
                 graphData = previousGraphData
-                let failureMessage = "Could not save \(nodeLabel) state. Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
@@ -814,56 +805,29 @@ final class AppViewModel: ObservableObject {
         edgeType: String?
     ) {
         guard mode == .explore else { return }
-        guard let edgeIndex = graphData.edges.firstIndex(where: {
-            Self.edgeIdentityMatches(
-                edgeData: $0.data,
-                sourceID: sourceID,
-                targetID: targetID,
-                label: label,
-                edgeType: edgeType
-            )
-        }) else { return }
+        guard let mutation = graphMutationService.toggleEdgeDeactivation(
+            sourceID: sourceID,
+            targetID: targetID,
+            label: label,
+            edgeType: edgeType,
+            graphData: graphData,
+            at: nowProvider()
+        ) else { return }
 
         let previousGraphData = graphData
-        let currentEdge = graphData.edges[edgeIndex].data
-        let nextIsDeactivated = !(currentEdge.isDeactivated ?? false)
-
-        var nextEdges = graphData.edges
-        nextEdges[edgeIndex] = GraphEdgeElement(
-            data: GraphEdgeData(
-                source: currentEdge.source,
-                target: currentEdge.target,
-                label: currentEdge.label,
-                edgeType: currentEdge.edgeType,
-                edgeColor: currentEdge.edgeColor,
-                tooltip: currentEdge.tooltip,
-                isDeactivated: nextIsDeactivated
-            )
-        )
-
-        let nextGraphData = CausalGraphData(
-            nodes: graphData.nodes,
-            edges: nextEdges
-        )
-        graphData = nextGraphData
-
-        let edgeText = edgeDescription(sourceID: sourceID, targetID: targetID)
-        let successMessage = nextIsDeactivated
-            ? "Link \(edgeText) deactivated."
-            : "Link \(edgeText) reactivated."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        graphData = mutation.graphData
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextGraphDeactivationOperationToken()
         Task {
             do {
-                try await persistPatch(graphDeactivationPatch(for: nextGraphData))
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == graphDeactivationOperationToken else { return }
                 graphData = previousGraphData
-                let failureMessage = "Could not save link \(edgeText) state. Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
@@ -871,58 +835,26 @@ final class AppViewModel: ObservableObject {
     @discardableResult
     func toggleGraphNodeExpanded(_ nodeID: String) -> Bool {
         guard mode == .explore else { return false }
-        guard let nodeIndex = graphData.nodes.firstIndex(where: { $0.data.id == nodeID }) else { return false }
-
-        let childCount = graphData.nodes.reduce(into: 0) { count, node in
-            if node.data.parentIds?.contains(nodeID) == true {
-                count += 1
-            }
-        }
-        guard childCount > 0 else { return false }
+        guard let mutation = graphMutationService.toggleNodeExpansion(
+            nodeID: nodeID,
+            graphData: graphData,
+            at: nowProvider()
+        ) else { return false }
 
         let previousGraphData = graphData
-        let currentNode = graphData.nodes[nodeIndex].data
-        let nextIsExpanded = !(currentNode.isExpanded ?? true)
-
-        var nextNodes = graphData.nodes
-        nextNodes[nodeIndex] = GraphNodeElement(
-            data: GraphNodeData(
-                id: currentNode.id,
-                label: currentNode.label,
-                styleClass: currentNode.styleClass,
-                confirmed: currentNode.confirmed,
-                tier: currentNode.tier,
-                tooltip: currentNode.tooltip,
-                isDeactivated: currentNode.isDeactivated,
-                parentIds: currentNode.parentIds,
-                parentId: currentNode.parentId,
-                isExpanded: nextIsExpanded
-            )
-        )
-
-        let nextGraphData = CausalGraphData(
-            nodes: nextNodes,
-            edges: graphData.edges
-        )
-        graphData = nextGraphData
-
-        let nodeLabel = Self.firstLine(for: currentNode.label)
-        let successMessage = nextIsExpanded
-            ? "\(nodeLabel) branch expanded."
-            : "\(nodeLabel) branch collapsed."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        graphData = mutation.graphData
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextGraphDeactivationOperationToken()
         Task {
             do {
-                try await persistPatch(graphDeactivationPatch(for: nextGraphData))
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == graphDeactivationOperationToken else { return }
                 graphData = previousGraphData
-                let failureMessage = "Could not save \(nodeLabel) branch state. Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
 
@@ -931,100 +863,42 @@ final class AppViewModel: ObservableObject {
 
     func toggleInputCheckedToday(_ inputID: String) {
         guard mode == .explore else { return }
-        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+        let context = InputMutationContext(
+            snapshot: snapshot,
+            dailyCheckIns: dailyCheckIns,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionCompletionEvents: interventionCompletionEvents,
+            interventionDoseSettings: interventionDoseSettings,
+            activeInterventions: activeInterventions,
+            now: nowProvider(),
+            maxCompletionEventsPerIntervention: Self.maxCompletionEventsPerIntervention
+        )
+        guard let mutation = inputMutationService.toggleCheckIn(inputID: inputID, context: context) else { return }
 
-        let currentInput = snapshot.inputs[index]
-        guard currentInput.trackingMode == .binary else { return }
         let previousSnapshot = snapshot
         let previousDailyCheckIns = dailyCheckIns
         let previousInterventionCompletionEvents = interventionCompletionEvents
 
-        let currentDayCount = dayCount(for: currentInput)
-        let nextCheckedToday = !currentInput.isCheckedToday
-        let nextDayCount = updatedDayCount(
-            currentDayCount: currentDayCount,
-            currentlyCheckedToday: currentInput.isCheckedToday
-        )
-        let nextStatusText = statusText(
-            dayCount: nextDayCount,
-            checkedToday: nextCheckedToday
-        )
-
-        let eventTimestamp = Self.timestamp(from: nowProvider())
-        let nextInterventionCompletionEvents: [InterventionCompletionEvent]
-        if nextCheckedToday {
-            nextInterventionCompletionEvents = Self.appendCompletionEvent(
-                InterventionCompletionEvent(
-                    interventionId: currentInput.id,
-                    occurredAt: eventTimestamp,
-                    source: .binaryCheck
-                ),
-                to: interventionCompletionEvents,
-                maxPerIntervention: Self.maxCompletionEventsPerIntervention
-            )
-        } else {
-            nextInterventionCompletionEvents = interventionCompletionEvents
-        }
-
-        let nextInput = InputStatus(
-            id: currentInput.id,
-            name: currentInput.name,
-            trackingMode: .binary,
-            statusText: nextStatusText,
-            completion: Double(nextDayCount) / 7.0,
-            isCheckedToday: nextCheckedToday,
-            doseState: nil,
-            completionEvents: Self.completionEvents(
-                for: currentInput.id,
-                in: nextInterventionCompletionEvents
-            ),
-            graphNodeID: currentInput.graphNodeID,
-            classificationText: currentInput.classificationText,
-            isActive: currentInput.isActive,
-            evidenceLevel: currentInput.evidenceLevel,
-            evidenceSummary: currentInput.evidenceSummary,
-            detailedDescription: currentInput.detailedDescription,
-            citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState,
-            timeOfDay: currentInput.timeOfDay
-        )
-
-        let dateKey = Self.localDateKey(from: nowProvider())
-        let nextDailyCheckIns = Self.updatedDailyCheckIns(
-            from: dailyCheckIns,
-            dateKey: dateKey,
-            interventionID: currentInput.id,
-            isChecked: nextCheckedToday
-        )
-
-        updateInput(nextInput, at: index)
-        dailyCheckIns = nextDailyCheckIns
-        interventionCompletionEvents = nextInterventionCompletionEvents
-
-        let successMessage = nextCheckedToday
-            ? "\(currentInput.name) checked for today."
-            : "\(currentInput.name) unchecked for today."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        snapshot = mutation.snapshot
+        dailyCheckIns = mutation.dailyCheckIns
+        dailyDoseProgress = mutation.dailyDoseProgress
+        interventionCompletionEvents = mutation.interventionCompletionEvents
+        interventionDoseSettings = mutation.interventionDoseSettings
+        activeInterventions = mutation.activeInterventions
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextInputCheckOperationToken()
         Task {
             do {
-                try await persistPatch(
-                    .dailyCheckInsAndCompletionEvents(
-                        nextDailyCheckIns,
-                        nextInterventionCompletionEvents
-                    )
-                )
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == inputCheckOperationToken else { return }
                 dailyCheckIns = previousDailyCheckIns
                 interventionCompletionEvents = previousInterventionCompletionEvents
                 snapshot = previousSnapshot
-                let failureMessage = "Could not save \(currentInput.name) check-in. Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
@@ -1078,7 +952,7 @@ final class AppViewModel: ObservableObject {
             syncStatus: .connecting,
             todayHealthValue: appleHealthValues[inputID],
             referenceTodayHealthValue: appleHealthReferenceValues[inputID],
-            referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
+            referenceTodayHealthValueLabel: appleHealthSyncCoordinator.referenceLabel(for: config),
             lastSyncAt: connection.lastSyncAt,
             config: config
         )
@@ -1137,7 +1011,7 @@ final class AppViewModel: ObservableObject {
             syncStatus: .disconnected,
             todayHealthValue: nil,
             referenceTodayHealthValue: nil,
-            referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
+            referenceTodayHealthValueLabel: appleHealthSyncCoordinator.referenceLabel(for: config),
             lastSyncAt: nil,
             config: config
         )
@@ -1190,7 +1064,7 @@ final class AppViewModel: ObservableObject {
             syncStatus: .syncing,
             todayHealthValue: appleHealthValues[inputID],
             referenceTodayHealthValue: appleHealthReferenceValues[inputID],
-            referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
+            referenceTodayHealthValueLabel: appleHealthSyncCoordinator.referenceLabel(for: config),
             lastSyncAt: currentAppleHealthState.lastSyncAt,
             config: config
         )
@@ -1212,14 +1086,17 @@ final class AppViewModel: ObservableObject {
                 unit: currentDoseState.unit,
                 now: nowProvider()
             )
-            let referenceValue = await fetchAppleHealthReferenceValue(
+            let referenceValue = await appleHealthSyncCoordinator.fetchReferenceValue(
                 config: config,
-                unit: currentDoseState.unit
+                unit: currentDoseState.unit,
+                now: nowProvider()
             )
             var nextDailyDoseProgressForPatch: [String: [String: Double]]?
+            var sanitizedHealthValueForResult: Double?
             if let healthValue {
                 let sanitizedHealthValue = max(0, healthValue)
                 appleHealthValues[inputID] = sanitizedHealthValue
+                sanitizedHealthValueForResult = sanitizedHealthValue
                 let dateKey = Self.localDateKey(from: nowProvider())
                 let nextDailyDoseProgress = Self.updatedDailyDoseProgressForAppleHealthSync(
                     from: dailyDoseProgress,
@@ -1239,16 +1116,15 @@ final class AppViewModel: ObservableObject {
                 appleHealthReferenceValues.removeValue(forKey: inputID)
             }
 
-            let status: AppleHealthSyncStatus = healthValue == nil ? .noData : .synced
-            let syncTimestamp = Self.timestampNow()
-            let updatedConnection = AppleHealthConnection(
-                isConnected: true,
-                connectedAt: appleHealthConnections[inputID]?.connectedAt ?? syncTimestamp,
-                lastSyncAt: syncTimestamp,
-                lastSyncStatus: status,
-                lastErrorCode: nil
+            let syncResult = appleHealthSyncCoordinator.successResult(
+                existingConnection: appleHealthConnections[inputID],
+                healthValue: sanitizedHealthValueForResult,
+                referenceValue: referenceValue,
+                at: nowProvider()
             )
-            appleHealthConnections[inputID] = updatedConnection
+            let status = syncResult.status
+            let syncTimestamp = syncResult.connection.lastSyncAt ?? DateKeying.timestampNow()
+            appleHealthConnections[inputID] = syncResult.connection
 
             if let refreshedIndex = snapshot.inputs.firstIndex(where: { $0.id == inputID }) {
                 let refreshedInput = snapshot.inputs[refreshedIndex]
@@ -1259,7 +1135,7 @@ final class AppViewModel: ObservableObject {
                         syncStatus: status,
                         todayHealthValue: appleHealthValues[inputID],
                         referenceTodayHealthValue: appleHealthReferenceValues[inputID],
-                        referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
+                        referenceTodayHealthValueLabel: appleHealthSyncCoordinator.referenceLabel(for: config),
                         lastSyncAt: syncTimestamp,
                         config: config
                     )
@@ -1295,15 +1171,13 @@ final class AppViewModel: ObservableObject {
                 announce(message)
             }
         } catch {
-            let syncTimestamp = Self.timestampNow()
-            let updatedConnection = AppleHealthConnection(
-                isConnected: true,
-                connectedAt: appleHealthConnections[inputID]?.connectedAt ?? syncTimestamp,
-                lastSyncAt: syncTimestamp,
-                lastSyncStatus: .failed,
-                lastErrorCode: Self.appleHealthErrorCode(for: error)
+            let syncResult = appleHealthSyncCoordinator.failureResult(
+                existingConnection: appleHealthConnections[inputID],
+                error: error,
+                at: nowProvider()
             )
-            appleHealthConnections[inputID] = updatedConnection
+            appleHealthConnections[inputID] = syncResult.connection
+            let syncTimestamp = syncResult.connection.lastSyncAt ?? DateKeying.timestampNow()
 
             if let refreshedIndex = snapshot.inputs.firstIndex(where: { $0.id == inputID }) {
                 let refreshedInput = snapshot.inputs[refreshedIndex]
@@ -1314,7 +1188,7 @@ final class AppViewModel: ObservableObject {
                         syncStatus: .failed,
                         todayHealthValue: appleHealthValues[inputID],
                         referenceTodayHealthValue: appleHealthReferenceValues[inputID],
-                        referenceTodayHealthValueLabel: appleHealthReferenceLabel(for: config),
+                        referenceTodayHealthValueLabel: appleHealthSyncCoordinator.referenceLabel(for: config),
                         lastSyncAt: syncTimestamp,
                         config: config
                     )
@@ -1353,164 +1227,117 @@ final class AppViewModel: ObservableObject {
 
     func updateDoseSettings(_ inputID: String, dailyGoal: Double, increment: Double) {
         guard mode == .explore else { return }
-        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+        let context = InputMutationContext(
+            snapshot: snapshot,
+            dailyCheckIns: dailyCheckIns,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionCompletionEvents: interventionCompletionEvents,
+            interventionDoseSettings: interventionDoseSettings,
+            activeInterventions: activeInterventions,
+            now: nowProvider(),
+            maxCompletionEventsPerIntervention: Self.maxCompletionEventsPerIntervention
+        )
+        guard let mutation = inputMutationService.updateDoseSettings(
+            inputID: inputID,
+            dailyGoal: dailyGoal,
+            increment: increment,
+            context: context
+        ) else { return }
 
-        let currentInput = snapshot.inputs[index]
-        guard currentInput.trackingMode == .dose else { return }
-        guard let currentDoseState = currentInput.doseState else { return }
-
-        let safeGoal = max(1, dailyGoal)
-        let safeIncrement = max(1, increment)
         let previousSnapshot = snapshot
         let previousSettings = interventionDoseSettings
 
-        let nextState = InputDoseState(
-            manualValue: currentDoseState.manualValue,
-            healthValue: currentDoseState.healthValue,
-            goal: safeGoal,
-            increment: safeIncrement,
-            unit: currentDoseState.unit
-        )
-        let nextInput = InputStatus(
-            id: currentInput.id,
-            name: currentInput.name,
-            trackingMode: .dose,
-            statusText: doseStatusText(for: nextState),
-            completion: nextState.completionClamped,
-            isCheckedToday: nextState.isGoalMet,
-            doseState: nextState,
-            completionEvents: currentInput.completionEvents,
-            graphNodeID: currentInput.graphNodeID,
-            classificationText: currentInput.classificationText,
-            isActive: currentInput.isActive,
-            evidenceLevel: currentInput.evidenceLevel,
-            evidenceSummary: currentInput.evidenceSummary,
-            detailedDescription: currentInput.detailedDescription,
-            citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState,
-            timeOfDay: currentInput.timeOfDay
-        )
-
-        var nextSettings = interventionDoseSettings
-        nextSettings[inputID] = DoseSettings(dailyGoal: safeGoal, increment: safeIncrement)
-
-        updateInput(nextInput, at: index)
-        interventionDoseSettings = nextSettings
-
-        let successMessage = "Saved dose settings for \(currentInput.name)."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        snapshot = mutation.snapshot
+        dailyCheckIns = mutation.dailyCheckIns
+        dailyDoseProgress = mutation.dailyDoseProgress
+        interventionCompletionEvents = mutation.interventionCompletionEvents
+        interventionDoseSettings = mutation.interventionDoseSettings
+        activeInterventions = mutation.activeInterventions
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextInputDoseSettingsOperationToken()
         Task {
             do {
-                try await persistPatch(.interventionDoseSettings(nextSettings))
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == inputDoseSettingsOperationToken else { return }
                 interventionDoseSettings = previousSettings
                 snapshot = previousSnapshot
-                let failureMessage = "Could not save dose settings for \(currentInput.name). Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
 
     func toggleInputActive(_ inputID: String) {
         guard mode == .explore else { return }
-        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
+        let context = InputMutationContext(
+            snapshot: snapshot,
+            dailyCheckIns: dailyCheckIns,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionCompletionEvents: interventionCompletionEvents,
+            interventionDoseSettings: interventionDoseSettings,
+            activeInterventions: activeInterventions,
+            now: nowProvider(),
+            maxCompletionEventsPerIntervention: Self.maxCompletionEventsPerIntervention
+        )
+        guard let mutation = inputMutationService.toggleActive(inputID: inputID, context: context) else { return }
 
-        let currentInput = snapshot.inputs[index]
         let previousSnapshot = snapshot
         let previousActiveInterventions = activeInterventions
-        let nextActive = !currentInput.isActive
 
-        let nextInput = InputStatus(
-            id: currentInput.id,
-            name: currentInput.name,
-            trackingMode: currentInput.trackingMode,
-            statusText: currentInput.statusText,
-            completion: currentInput.completion,
-            isCheckedToday: currentInput.isCheckedToday,
-            doseState: currentInput.doseState,
-            completionEvents: currentInput.completionEvents,
-            graphNodeID: currentInput.graphNodeID,
-            classificationText: currentInput.classificationText,
-            isActive: nextActive,
-            evidenceLevel: currentInput.evidenceLevel,
-            evidenceSummary: currentInput.evidenceSummary,
-            detailedDescription: currentInput.detailedDescription,
-            citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState,
-            timeOfDay: currentInput.timeOfDay
-        )
-
-        let currentActiveInterventions = snapshot.inputs.compactMap { input -> String? in
-            input.isActive ? input.id : nil
-        }
-        let nextActiveInterventions = Self.updatedActiveInterventions(
-            from: currentActiveInterventions,
-            interventionID: currentInput.id,
-            isActive: nextActive
-        )
-
-        updateInput(nextInput, at: index)
-        activeInterventions = nextActiveInterventions
-
-        let successMessage = nextActive
-            ? "\(currentInput.name) started tracking."
-            : "\(currentInput.name) stopped tracking."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        snapshot = mutation.snapshot
+        dailyCheckIns = mutation.dailyCheckIns
+        dailyDoseProgress = mutation.dailyDoseProgress
+        interventionCompletionEvents = mutation.interventionCompletionEvents
+        interventionDoseSettings = mutation.interventionDoseSettings
+        activeInterventions = mutation.activeInterventions
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextInputActiveOperationToken()
         Task {
             do {
-                try await persistPatch(.activeInterventions(nextActiveInterventions))
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == inputActiveOperationToken else { return }
                 activeInterventions = previousActiveInterventions
                 snapshot = previousSnapshot
-                let failureMessage = "Could not save tracking state for \(currentInput.name). Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
 
     func setMorningOutcomeValue(_ value: Int?, for field: MorningOutcomeField) {
         guard mode == .explore else { return }
-        guard configuredMorningOutcomeFields.contains(field) else { return }
-
-        let clampedValue = value.map { max(0, min(10, $0)) }
-        let nextSelection = morningOutcomeSelection.updating(field: field, value: clampedValue)
-        guard nextSelection != morningOutcomeSelection else { return }
+        guard let mutation = morningOutcomeMutationService.setMorningOutcomeValue(
+            value,
+            field: field,
+            selection: morningOutcomeSelection,
+            morningStates: morningStates,
+            configuredFields: configuredMorningOutcomeFields,
+            at: nowProvider()
+        ) else { return }
 
         let previousSelection = morningOutcomeSelection
         let previousMorningStates = morningStates
-        let nextRecord = nextSelection.asMorningState(createdAt: Self.timestampNow())
-        let nextMorningStates = Self.upsert(morningState: nextRecord, in: morningStates)
-
-        morningOutcomeSelection = nextSelection
-        morningStates = nextMorningStates
-
-        let successMessage = "Saved morning outcomes for \(nextSelection.nightID)."
-        exploreFeedback = successMessage
-        announce(successMessage)
+        morningOutcomeSelection = mutation.morningOutcomeSelection
+        morningStates = mutation.morningStates
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextMorningOutcomeOperationToken()
         Task {
             do {
-                try await persistPatch(.morningStates(nextMorningStates))
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == morningOutcomeOperationToken else { return }
                 morningOutcomeSelection = previousSelection
                 morningStates = previousMorningStates
-                let failureMessage = "Could not save morning outcomes. Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
@@ -1781,7 +1608,7 @@ final class AppViewModel: ObservableObject {
                 let summary = try await museSessionService.stopRecording(at: endDate)
                 guard operationToken == museSessionOperationToken else { return }
                 stopMuseDiagnosticsPolling(clearDiagnostics: true)
-                let recordingReliability = deriveRecordingReliability(
+                let recordingReliability = museSessionCoordinator.recordingReliability(
                     fitGuidance: summary.fitGuidance,
                     startedWithFitOverride: museRecordingStartedWithFitOverride
                 )
@@ -1825,52 +1652,10 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    private func deriveRecordingReliability(
-        fitGuidance: MuseFitGuidance,
-        startedWithFitOverride: Bool
-    ) -> MuseRecordingReliability {
-        if fitGuidance == .insufficientSignal {
-            return .insufficientSignal
-        }
-        if startedWithFitOverride || fitGuidance == .adjustHeadband {
-            return .limitedFit
-        }
-
-        return .verifiedFit
-    }
-
     private func applyMuseSessionError(_ error: Error, fallback: String) {
-        guard let museError = error as? MuseSessionServiceError else {
-            museConnectionState = .failed(fallback)
-            museSessionFeedback = fallback
-            announce(fallback)
-            return
-        }
-
-        let message: String
-        switch museError {
-        case .unavailable:
-            message = "Muse integration is unavailable in this build."
-            museConnectionState = .failed(message)
-        case .noHeadbandFound:
-            message = "No Muse headbands found."
-            museConnectionState = .disconnected
-        case .notConnected:
-            message = "Muse is not connected."
-            museConnectionState = .disconnected
-        case .needsLicense:
-            message = "Muse license is required before connecting."
-            museConnectionState = .needsLicense
-        case .needsUpdate:
-            message = "Muse headband firmware update is required."
-            museConnectionState = .needsUpdate
-        case .unsupportedHeadbandModel:
-            message = "This Muse headband model is not supported. Use Muse S Athena (MS-03)."
-            museConnectionState = .failed(message)
-        case .alreadyRecording:
-            message = "Recording is already in progress."
-        case .notRecording:
-            message = "No active recording to stop."
+        let result = museSessionCoordinator.resolveSessionError(error, fallback: fallback)
+        if let connectionState = result.connectionState {
+            museConnectionState = connectionState
         }
 
         isMuseFitCalibrationPresented = false
@@ -1879,8 +1664,8 @@ final class AppViewModel: ObservableObject {
         Task {
             await refreshMuseSetupDiagnosticsAvailability()
         }
-        museSessionFeedback = message
-        announce(message)
+        museSessionFeedback = result.message
+        announce(result.message)
     }
 
     private func nextInputCheckOperationToken() -> Int {
@@ -1928,187 +1713,54 @@ final class AppViewModel: ObservableObject {
         return museOutcomeSaveOperationToken
     }
 
-    private func dayCount(for input: InputStatus) -> Int {
-        let scaled = (input.completion * 7.0).rounded()
-        return max(0, min(7, Int(scaled)))
-    }
-
-    private func updatedDayCount(currentDayCount: Int, currentlyCheckedToday: Bool) -> Int {
-        if currentlyCheckedToday {
-            return max(0, currentDayCount - 1)
-        }
-
-        return min(7, currentDayCount + 1)
-    }
-
-    private func statusText(dayCount: Int, checkedToday: Bool) -> String {
-        if checkedToday {
-            return "Checked today"
-        }
-
-        if dayCount > 0 {
-            return "\(dayCount)/7 days"
-        }
-
-        return "Not checked yet"
-    }
-
     private func updateDose(inputID: String, operation: DoseOperation) {
-        guard let index = snapshot.inputs.firstIndex(where: { $0.id == inputID }) else { return }
-
-        let currentInput = snapshot.inputs[index]
-        guard currentInput.trackingMode == .dose else { return }
-        guard let doseState = currentInput.doseState else { return }
+        let context = InputMutationContext(
+            snapshot: snapshot,
+            dailyCheckIns: dailyCheckIns,
+            dailyDoseProgress: dailyDoseProgress,
+            interventionCompletionEvents: interventionCompletionEvents,
+            interventionDoseSettings: interventionDoseSettings,
+            activeInterventions: activeInterventions,
+            now: nowProvider(),
+            maxCompletionEventsPerIntervention: Self.maxCompletionEventsPerIntervention
+        )
+        guard let mutation = inputMutationService.mutateDose(
+            inputID: inputID,
+            operation: operation.asMutationOperation,
+            context: context
+        ) else { return }
 
         let previousSnapshot = snapshot
         let previousDailyDoseProgress = dailyDoseProgress
         let previousInterventionCompletionEvents = interventionCompletionEvents
 
-        let nextValue: Double
-        switch operation {
-        case .increment:
-            nextValue = doseState.manualValue + doseState.increment
-        case .decrement:
-            nextValue = max(0, doseState.manualValue - doseState.increment)
-        case .reset:
-            nextValue = 0
-        }
-
-        let nextDoseState = InputDoseState(
-            manualValue: nextValue,
-            healthValue: doseState.healthValue,
-            goal: doseState.goal,
-            increment: doseState.increment,
-            unit: doseState.unit
-        )
-
-        let eventTimestamp = Self.timestamp(from: nowProvider())
-        let nextInterventionCompletionEvents: [InterventionCompletionEvent]
-        if operation == .increment {
-            nextInterventionCompletionEvents = Self.appendCompletionEvent(
-                InterventionCompletionEvent(
-                    interventionId: currentInput.id,
-                    occurredAt: eventTimestamp,
-                    source: .doseIncrement
-                ),
-                to: interventionCompletionEvents,
-                maxPerIntervention: Self.maxCompletionEventsPerIntervention
-            )
-        } else {
-            nextInterventionCompletionEvents = interventionCompletionEvents
-        }
-
-        let nextInput = InputStatus(
-            id: currentInput.id,
-            name: currentInput.name,
-            trackingMode: .dose,
-            statusText: doseStatusText(for: nextDoseState),
-            completion: nextDoseState.completionClamped,
-            isCheckedToday: nextDoseState.isGoalMet,
-            doseState: nextDoseState,
-            completionEvents: Self.completionEvents(
-                for: currentInput.id,
-                in: nextInterventionCompletionEvents
-            ),
-            graphNodeID: currentInput.graphNodeID,
-            classificationText: currentInput.classificationText,
-            isActive: currentInput.isActive,
-            evidenceLevel: currentInput.evidenceLevel,
-            evidenceSummary: currentInput.evidenceSummary,
-            detailedDescription: currentInput.detailedDescription,
-            citationIDs: currentInput.citationIDs,
-            externalLink: currentInput.externalLink,
-            appleHealthState: currentInput.appleHealthState,
-            timeOfDay: currentInput.timeOfDay
-        )
-
-        let dateKey = Self.localDateKey(from: nowProvider())
-        let nextDailyDoseProgress = Self.updatedDailyDoseProgress(
-            from: dailyDoseProgress,
-            dateKey: dateKey,
-            interventionID: currentInput.id,
-            value: nextValue
-        )
-
-        updateInput(nextInput, at: index)
-        dailyDoseProgress = nextDailyDoseProgress
-        interventionCompletionEvents = nextInterventionCompletionEvents
-
-        let successMessage: String
-        switch operation {
-        case .increment:
-            successMessage = "\(currentInput.name) progress increased."
-        case .decrement:
-            successMessage = "\(currentInput.name) progress decreased."
-        case .reset:
-            successMessage = "\(currentInput.name) progress reset."
-        }
-
-        exploreFeedback = successMessage
-        announce(successMessage)
+        snapshot = mutation.snapshot
+        dailyCheckIns = mutation.dailyCheckIns
+        dailyDoseProgress = mutation.dailyDoseProgress
+        interventionCompletionEvents = mutation.interventionCompletionEvents
+        interventionDoseSettings = mutation.interventionDoseSettings
+        activeInterventions = mutation.activeInterventions
+        exploreFeedback = mutation.successMessage
+        announce(mutation.successMessage)
 
         let operationToken = nextInputDoseOperationToken()
         Task {
             do {
-                try await persistPatch(
-                    .dailyDoseProgressAndCompletionEvents(
-                        nextDailyDoseProgress,
-                        nextInterventionCompletionEvents
-                    )
-                )
+                try await persistPatch(mutation.patch)
             } catch {
                 guard operationToken == inputDoseOperationToken else { return }
                 dailyDoseProgress = previousDailyDoseProgress
                 interventionCompletionEvents = previousInterventionCompletionEvents
                 snapshot = previousSnapshot
-                let failureMessage = "Could not save dose progress for \(currentInput.name). Reverted."
-                exploreFeedback = failureMessage
-                announce(failureMessage)
+                exploreFeedback = mutation.failureMessage
+                announce(mutation.failureMessage)
             }
         }
     }
 
     private func doseStatusText(for state: InputDoseState) -> String {
         let percent = Int((state.completionRaw * 100).rounded())
-        return "\(formattedDoseValue(state.value))/\(formattedDoseValue(state.goal)) \(state.unit.displayName) today (\(percent)%)"
-    }
-
-    private func appleHealthReferenceLabel(for config: AppleHealthConfig) -> String? {
-        guard config.identifier == .moderateWorkoutMinutes else {
-            return nil
-        }
-
-        return "Apple Exercise ring minutes (reference)"
-    }
-
-    private func fetchAppleHealthReferenceValue(
-        config: AppleHealthConfig,
-        unit: DoseUnit
-    ) async -> Double? {
-        guard config.identifier == .moderateWorkoutMinutes else {
-            return nil
-        }
-
-        let referenceConfig = AppleHealthConfig(
-            identifier: .appleExerciseTime,
-            aggregation: .cumulativeSum,
-            dayAttribution: config.dayAttribution
-        )
-
-        do {
-            let value = try await appleHealthDoseService.fetchTodayValue(
-                for: referenceConfig,
-                unit: unit,
-                now: nowProvider()
-            )
-            guard let value else {
-                return nil
-            }
-
-            return max(0, value)
-        } catch {
-            return nil
-        }
+        return "\(DoseValueFormatter.string(from: state.value))/\(DoseValueFormatter.string(from: state.goal)) \(state.unit.displayName) today (\(percent)%)"
     }
 
     private func doseInput(
@@ -2147,24 +1799,6 @@ final class AppViewModel: ObservableObject {
             externalLink: currentInput.externalLink,
             appleHealthState: appleHealthState,
             timeOfDay: currentInput.timeOfDay
-        )
-    }
-
-    private func formattedDoseValue(_ value: Double) -> String {
-        let roundedValue = value.rounded()
-        if abs(roundedValue - value) < 0.0001 {
-            return String(Int(roundedValue))
-        }
-
-        return String(format: "%.1f", value)
-    }
-
-    private func graphDeactivationPatch(for graphData: CausalGraphData) -> UserDataPatch {
-        UserDataPatch.customCausalDiagram(
-            CustomCausalDiagram(
-                graphData: graphData,
-                lastModified: Self.timestamp(from: nowProvider())
-            )
         )
     }
 
@@ -2261,55 +1895,6 @@ final class AppViewModel: ObservableObject {
         return uniqueParentIDs.isEmpty ? nil : uniqueParentIDs
     }
 
-    private func edgeDescription(sourceID: String, targetID: String) -> String {
-        let labelsByID = Dictionary(
-            uniqueKeysWithValues: graphData.nodes.map { ($0.data.id, Self.firstLine(for: $0.data.label)) }
-        )
-        let sourceLabel = labelsByID[sourceID] ?? sourceID
-        let targetLabel = labelsByID[targetID] ?? targetID
-        return "\(sourceLabel) to \(targetLabel)"
-    }
-
-    private static func updatedDailyCheckIns(
-        from current: [String: [String]],
-        dateKey: String,
-        interventionID: String,
-        isChecked: Bool
-    ) -> [String: [String]] {
-        var next = current
-        var interventionIDs = next[dateKey] ?? []
-
-        if isChecked {
-            if !interventionIDs.contains(interventionID) {
-                interventionIDs.append(interventionID)
-            }
-        } else {
-            interventionIDs.removeAll { $0 == interventionID }
-        }
-
-        next[dateKey] = interventionIDs
-        return next
-    }
-
-    private static func updatedDailyDoseProgress(
-        from current: [String: [String: Double]],
-        dateKey: String,
-        interventionID: String,
-        value: Double
-    ) -> [String: [String: Double]] {
-        var next = current
-        var progress = next[dateKey] ?? [:]
-
-        if value <= 0 {
-            progress.removeValue(forKey: interventionID)
-        } else {
-            progress[interventionID] = value
-        }
-
-        next[dateKey] = progress
-        return next
-    }
-
     private static func updatedDailyDoseProgressForAppleHealthSync(
         from current: [String: [String: Double]],
         dateKey: String,
@@ -2329,108 +1914,14 @@ final class AppViewModel: ObservableObject {
         return next
     }
 
-    private static func completionEvents(
-        for interventionID: String,
-        in events: [InterventionCompletionEvent]
-    ) -> [InterventionCompletionEvent] {
-        events
-            .filter { $0.interventionId == interventionID }
-            .sorted { lhs, rhs in
-                lhs.occurredAt > rhs.occurredAt
-            }
-    }
-
-    private static func appendCompletionEvent(
-        _ event: InterventionCompletionEvent,
-        to current: [InterventionCompletionEvent],
-        maxPerIntervention: Int
-    ) -> [InterventionCompletionEvent] {
-        var next = current
-        next.append(event)
-
-        let matchingIndices = next.indices.filter { index in
-            next[index].interventionId == event.interventionId
-        }
-        let overflowCount = matchingIndices.count - maxPerIntervention
-        if overflowCount <= 0 {
-            return next
-        }
-
-        let oldestIndices = matchingIndices
-            .sorted { lhs, rhs in
-                if next[lhs].occurredAt == next[rhs].occurredAt {
-                    return lhs < rhs
-                }
-                return next[lhs].occurredAt < next[rhs].occurredAt
-            }
-            .prefix(overflowCount)
-            .sorted(by: >)
-
-        for index in oldestIndices {
-            next.remove(at: index)
-        }
-
-        return next
-    }
-
-    private static func updatedActiveInterventions(
-        from current: [String],
-        interventionID: String,
-        isActive: Bool
-    ) -> [String] {
-        var deduped: [String] = []
-        var seen = Set<String>()
-
-        for id in current {
-            if id.isEmpty {
-                continue
-            }
-            if seen.insert(id).inserted {
-                deduped.append(id)
-            }
-        }
-
-        deduped.removeAll { $0 == interventionID }
-        if isActive {
-            deduped.append(interventionID)
-        }
-
-        return deduped
-    }
-
     private static func resolveNodeID(from graphData: CausalGraphData, focusedNodeLabel: String) -> String? {
         graphData.nodes.first {
             firstLine(for: $0.data.label) == focusedNodeLabel
         }?.data.id
     }
 
-    private static func edgeIdentityMatches(
-        edgeData: GraphEdgeData,
-        sourceID: String,
-        targetID: String,
-        label: String?,
-        edgeType: String?
-    ) -> Bool {
-        guard edgeData.source == sourceID else { return false }
-        guard edgeData.target == targetID else { return false }
-        guard normalizedOptionalString(edgeData.label) == normalizedOptionalString(label) else { return false }
-        return normalizedOptionalString(edgeData.edgeType) == normalizedOptionalString(edgeType)
-    }
-
     private static func firstLine(for label: String) -> String {
         label.components(separatedBy: "\n").first ?? label
-    }
-
-    private static func normalizedOptionalString(_ value: String?) -> String? {
-        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-            return nil
-        }
-
-        guard !trimmed.isEmpty else {
-            return nil
-        }
-
-        return trimmed
     }
 
     private static func localDateKey(from date: Date) -> String {
@@ -2644,10 +2135,6 @@ final class AppViewModel: ObservableObject {
         ISO8601DateFormatter().string(from: date)
     }
 
-    private static func appleHealthErrorCode(for error: Error) -> String {
-        let nsError = error as NSError
-        return "\(nsError.domain)#\(nsError.code)"
-    }
 }
 
 private enum PersistenceError: Error {
@@ -2658,4 +2145,17 @@ private enum DoseOperation {
     case increment
     case decrement
     case reset
+}
+
+private extension DoseOperation {
+    var asMutationOperation: InputDoseMutationOperation {
+        switch self {
+        case .increment:
+            return .increment
+        case .decrement:
+            return .decrement
+        case .reset:
+            return .reset
+        }
+    }
 }
