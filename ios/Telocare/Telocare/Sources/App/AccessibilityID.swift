@@ -90,6 +90,15 @@ enum AccessibilityID {
     static let exploreInputAppleHealthDisconnect = "explore.inputs.applehealth.disconnect"
     static let exploreInputAppleHealthRefresh = "explore.inputs.applehealth.refresh"
     static let exploreInputsNextBestActions = "explore.inputs.next.best.actions"
+    static let exploreInputsUnifiedScroll = "explore.inputs.unified.scroll"
+    static let exploreInputsPinnedHeader = "explore.inputs.header.pinned"
+    static let exploreInputsFilterPending = "explore.inputs.filter.pending"
+    static let exploreInputsFilterCompleted = "explore.inputs.filter.completed"
+    static let exploreInputsFilterAvailable = "explore.inputs.filter.available"
+    static let exploreInputsGardenHierarchy = "explore.inputs.garden.hierarchy"
+    static let exploreInputsGardenBreadcrumb = "explore.inputs.garden.breadcrumb"
+    static let exploreInputsGardenBreadcrumbBack = "explore.inputs.garden.breadcrumb.back"
+    static let exploreInputsGardenSubgardenStrip = "explore.inputs.garden.subgarden.strip"
     static let exploreSituationEditButton = "explore.situation.edit.button"
     static let exploreSituationOptionsSheet = "explore.situation.options.sheet"
     static let exploreDetailsSheet = "explore.situation.details.sheet"
@@ -106,4 +115,12 @@ enum AccessibilityID {
     static let exploreActionExplainLinks = "explore.action.explain.links"
     static let exploreActionRefineNode = "explore.action.refine.node"
     static let exploreActionInterpretOutcome = "explore.action.interpret.outcome"
+
+    static func exploreInputsGardenBreadcrumbChip(depth: Int) -> String {
+        "explore.inputs.garden.breadcrumb.chip.\(depth)"
+    }
+
+    static func exploreInputsGardenSubgardenCard(nodeID: String) -> String {
+        "explore.inputs.garden.subgarden.card.\(nodeID)"
+    }
 }

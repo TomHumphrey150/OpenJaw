@@ -18,7 +18,8 @@ struct ExploreInputsScreen: View {
 
     @State private var navigationPath = NavigationPath()
     @State private var filterMode: InputFilterMode
-    @State private var selectedGarden: GardenPathway?
+    @State private var gardenSelection = GardenHierarchySelection.all
+    private let gardenHierarchyBuilder = GardenHierarchyBuilder()
     private static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -63,12 +64,21 @@ struct ExploreInputsScreen: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                gardenOverview
-                filterPillsSection
-                inputsContent
+            ScrollView {
+                LazyVStack(spacing: TelocareTheme.Spacing.md, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        gardenContentSection
+                        inputsListSection
+                    } header: {
+                        pinnedHeaderSection
+                    }
+                }
             }
             .background(TelocareTheme.sand.ignoresSafeArea())
+            .refreshable {
+                await onRefreshAllAppleHealth()
+            }
+            .accessibilityIdentifier(AccessibilityID.exploreInputsUnifiedScroll)
             .navigationTitle("Habits")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: String.self) { inputID in
@@ -105,24 +115,96 @@ struct ExploreInputsScreen: View {
 
     // MARK: - Garden Overview
 
-    private var gardenSnapshots: [GardenSnapshot] {
-        GardenSnapshotBuilder().build(from: inputs)
+    private var gardenHierarchyResult: GardenHierarchyBuildResult {
+        gardenHierarchyBuilder.build(
+            inputs: inputs,
+            graphData: graphData,
+            selection: gardenSelection
+        )
+    }
+
+    private var resolvedNodePath: [String] {
+        gardenHierarchyResult.resolvedNodePath
+    }
+
+    private var breadcrumbSegments: [GardenBreadcrumbSegment] {
+        var segments = [GardenBreadcrumbSegment(depth: 0, title: "All Gardens")]
+
+        for (index, nodeID) in resolvedNodePath.enumerated() {
+            let title = gardenHierarchyBuilder.nodeTitle(
+                for: nodeID,
+                in: graphData
+            )
+            segments.append(
+                GardenBreadcrumbSegment(
+                    depth: index + 1,
+                    title: title
+                )
+            )
+        }
+
+        return segments
+    }
+
+    private var hierarchyCurrentLevel: GardenHierarchyLevel? {
+        gardenHierarchyResult.levels.last
+    }
+
+    private var hierarchyCurrentClusters: [GardenClusterSnapshot] {
+        hierarchyCurrentLevel?.clusters ?? []
+    }
+
+    private var currentLeafCluster: GardenClusterSnapshot? {
+        guard !resolvedNodePath.isEmpty else {
+            return nil
+        }
+        guard hierarchyCurrentClusters.isEmpty else {
+            return nil
+        }
+
+        return gardenHierarchyBuilder.leafCluster(
+            nodePath: resolvedNodePath,
+            filteredInputs: hierarchyFilteredInputs,
+            graphData: graphData
+        )
     }
 
     @ViewBuilder
-    private var gardenOverview: some View {
+    private var pinnedHeaderSection: some View {
         VStack(spacing: TelocareTheme.Spacing.sm) {
-            GardenStripView(
-                gardens: gardenSnapshots,
-                selectedPathway: $selectedGarden
+            GardenBreadcrumbView(
+                segments: breadcrumbSegments,
+                canGoBack: !resolvedNodePath.isEmpty,
+                onGoBack: goBackOneLevel,
+                onSelectDepth: selectBreadcrumbDepth
             )
+            filterPillsSection
+                .accessibilityIdentifier(AccessibilityID.exploreInputsPinnedHeader)
+        }
+        .id(resolvedNodePath)
+        .padding(.horizontal, TelocareTheme.Spacing.md)
+        .padding(.top, TelocareTheme.Spacing.md)
+        .padding(.bottom, TelocareTheme.Spacing.xs)
+        .background(TelocareTheme.sand)
+    }
+
+    @ViewBuilder
+    private var gardenContentSection: some View {
+        VStack(spacing: TelocareTheme.Spacing.sm) {
+            if !hierarchyCurrentClusters.isEmpty {
+                gardenGrid
+                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+            } else if let currentLeafCluster {
+                CurrentGardenCardView(cluster: currentLeafCluster)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
 
             HStack(spacing: TelocareTheme.Spacing.xs) {
-                Text("\(checkedTodayCount) of \(gardenAwareActiveInputs.count) habits completed today")
+                Text("\(checkedTodayCount) of \(hierarchyFilteredActiveInputs.count) habits completed today")
                     .font(TelocareTheme.Typography.caption)
                     .foregroundStyle(TelocareTheme.warmGray)
 
-                if checkedTodayCount == gardenAwareActiveInputs.count && !gardenAwareActiveInputs.isEmpty {
+                if checkedTodayCount == hierarchyFilteredActiveInputs.count && !hierarchyFilteredActiveInputs.isEmpty {
                     Label("All done!", systemImage: "checkmark.circle.fill")
                         .font(TelocareTheme.Typography.caption)
                         .foregroundStyle(TelocareTheme.success)
@@ -130,28 +212,56 @@ struct ExploreInputsScreen: View {
             }
         }
         .padding(.horizontal, TelocareTheme.Spacing.md)
-        .padding(.top, TelocareTheme.Spacing.md)
+        .padding(.top, TelocareTheme.Spacing.xs)
+        .accessibilityIdentifier(AccessibilityID.exploreInputsGardenHierarchy)
+        .animation(.easeInOut(duration: 0.2), value: resolvedNodePath)
     }
 
-    private var gardenAwareInputs: [InputStatus] {
-        guard let selectedGarden else { return inputs }
-        let gardenInputIDs = Set(
-            gardenSnapshots.first(where: { $0.pathway == selectedGarden })?.inputIDs ?? []
+    private var gardenGrid: some View {
+        GardenGridView(
+            clusters: hierarchyCurrentClusters,
+            selectedNodeID: resolvedNodePath.last,
+            onSelectNode: selectSubGarden
         )
-        return inputs.filter { gardenInputIDs.contains($0.id) }
     }
 
-    private var gardenAwareActiveInputs: [InputStatus] {
-        gardenAwareInputs.filter(\.isActive)
+    private func selectBreadcrumbDepth(_ depth: Int) {
+        if depth <= 0 {
+            gardenSelection = .all
+            return
+        }
+
+        let keepCount = min(depth, resolvedNodePath.count)
+        gardenSelection.selectedNodePath = Array(resolvedNodePath.prefix(keepCount))
+    }
+
+    private func goBackOneLevel() {
+        guard !resolvedNodePath.isEmpty else {
+            return
+        }
+
+        gardenSelection.selectedNodePath = Array(resolvedNodePath.dropLast())
+    }
+
+    private func selectSubGarden(_ nodeID: String) {
+        gardenSelection.selectedNodePath = resolvedNodePath + [nodeID]
+    }
+
+    private var hierarchyFilteredInputs: [InputStatus] {
+        gardenHierarchyResult.filteredInputs
+    }
+
+    private var hierarchyFilteredActiveInputs: [InputStatus] {
+        hierarchyFilteredInputs.filter(\.isActive)
     }
 
     private var checkedTodayCount: Int {
-        gardenAwareActiveInputs.filter(\.isCheckedToday).count
+        hierarchyFilteredActiveInputs.filter(\.isCheckedToday).count
     }
 
     private var overallCompletion: Double {
-        guard !gardenAwareActiveInputs.isEmpty else { return 0 }
-        return Double(checkedTodayCount) / Double(gardenAwareActiveInputs.count)
+        guard !hierarchyFilteredActiveInputs.isEmpty else { return 0 }
+        return Double(checkedTodayCount) / Double(hierarchyFilteredActiveInputs.count)
     }
 
     // MARK: - Filter Pills
@@ -165,17 +275,28 @@ struct ExploreInputsScreen: View {
                         title: mode.title,
                         count: countFor(mode),
                         isSelected: filterMode == mode,
-                        action: { filterMode = mode }
+                        action: { filterMode = mode },
+                        accessibilityIdentifier: filterAccessibilityIdentifier(for: mode)
                     )
                 }
             }
-            .padding(.horizontal, TelocareTheme.Spacing.md)
             .padding(.vertical, TelocareTheme.Spacing.sm)
         }
     }
 
+    private func filterAccessibilityIdentifier(for mode: InputFilterMode) -> String {
+        switch mode {
+        case .pending:
+            return AccessibilityID.exploreInputsFilterPending
+        case .completed:
+            return AccessibilityID.exploreInputsFilterCompleted
+        case .available:
+            return AccessibilityID.exploreInputsFilterAvailable
+        }
+    }
+
     private func countFor(_ mode: InputFilterMode) -> Int {
-        let source = gardenAwareInputs
+        let source = hierarchyFilteredInputs
         switch mode {
         case .pending:
             return source.filter { $0.isActive && !$0.isCheckedToday }.count
@@ -189,38 +310,36 @@ struct ExploreInputsScreen: View {
     // MARK: - Inputs Content
 
     @ViewBuilder
-    private var inputsContent: some View {
+    private var inputsListSection: some View {
         if filteredInputs.isEmpty {
             emptyStatePlaceholder
+                .padding(.horizontal, TelocareTheme.Spacing.md)
+                .padding(.bottom, TelocareTheme.Spacing.md)
         } else {
-            ScrollView {
-                LazyVStack(spacing: TelocareTheme.Spacing.sm) {
-                    if filterMode != .available && !nextBestActions.isEmpty {
-                        nextBestActionsSection
-                            .accessibilityIdentifier(AccessibilityID.exploreInputsNextBestActions)
-                    }
-
-                    ForEach(filteredInputs) { input in
-                        InputCard(
-                            input: input,
-                            onToggle: { toggleInputCheckedToday(input.id) },
-                            onIncrementDose: { onIncrementDose(input.id) },
-                            onToggleActive: { onToggleActive(input.id) },
-                            onShowDetails: { showInputDetail(input) }
-                        )
-                    }
+            LazyVStack(spacing: TelocareTheme.Spacing.sm) {
+                if filterMode != .available && !nextBestActions.isEmpty {
+                    nextBestActionsSection
+                        .accessibilityIdentifier(AccessibilityID.exploreInputsNextBestActions)
                 }
-                .padding(TelocareTheme.Spacing.md)
+
+                ForEach(filteredInputs) { input in
+                    InputCard(
+                        input: input,
+                        onToggle: { toggleInputCheckedToday(input.id) },
+                        onIncrementDose: { onIncrementDose(input.id) },
+                        onToggleActive: { onToggleActive(input.id) },
+                        onShowDetails: { showInputDetail(input) }
+                    )
+                }
             }
-            .refreshable {
-                await onRefreshAllAppleHealth()
-            }
+            .padding(.horizontal, TelocareTheme.Spacing.md)
+            .padding(.bottom, TelocareTheme.Spacing.md)
         }
     }
 
     /// Inputs sorted by impact score (most useful first), filtered by selected garden
     private var sortedInputs: [InputStatus] {
-        InputScoring.sortedByImpact(inputs: gardenAwareInputs, graphData: graphData)
+        InputScoring.sortedByImpact(inputs: hierarchyFilteredInputs, graphData: graphData)
     }
 
     private var filteredInputs: [InputStatus] {
@@ -243,7 +362,7 @@ struct ExploreInputsScreen: View {
     }
 
     private var nextBestActions: [InputStatus] {
-        let source = gardenAwareInputs
+        let source = hierarchyFilteredInputs
         let defaultOrderByID = Dictionary(uniqueKeysWithValues: source.enumerated().map { ($1.id, $0) })
         return source
             .filter { $0.isActive && !$0.isCheckedToday }
@@ -586,6 +705,7 @@ private struct FilterPill: View {
     let count: Int
     let isSelected: Bool
     let action: () -> Void
+    let accessibilityIdentifier: String
 
     var body: some View {
         Button(action: action) {
@@ -607,6 +727,7 @@ private struct FilterPill: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 
@@ -799,4 +920,3 @@ struct EvidenceBadge: View {
         }
     }
 }
-

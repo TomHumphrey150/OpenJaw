@@ -2,10 +2,19 @@ import SceneKit
 import SwiftUI
 
 struct GardenPlotView: View {
-    let pathway: GardenPathway
+    let themeKey: GardenThemeKey
     let bloomLevel: Double
 
     @State private var scene: SCNScene?
+
+    init(themeKey: GardenThemeKey, bloomLevel: Double) {
+        self.themeKey = themeKey
+        self.bloomLevel = bloomLevel
+    }
+
+    init(pathway: GardenPathway, bloomLevel: Double) {
+        self.init(themeKey: GardenThemeKey(pathway: pathway), bloomLevel: bloomLevel)
+    }
 
     var body: some View {
         SceneView(
@@ -13,14 +22,22 @@ struct GardenPlotView: View {
             options: []
         )
         .frame(width: 110, height: 100)
-        .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: TelocareTheme.CornerRadius.medium,
+                style: .continuous
+            )
+        )
         .overlay(alignment: .bottom) {
             soilGradient
         }
         .onChange(of: bloomLevel) { _, newLevel in
             if let scene {
-                GardenSceneBuilder(pathway: pathway).updatePlant(in: scene, bloomLevel: newLevel)
+                GardenSceneBuilder(themeKey: themeKey).updatePlant(in: scene, bloomLevel: newLevel)
             }
+        }
+        .onChange(of: themeKey) { _, _ in
+            scene = GardenSceneBuilder(themeKey: themeKey).makeScene(bloomLevel: bloomLevel)
         }
     }
 
@@ -29,7 +46,7 @@ struct GardenPlotView: View {
             return scene
         }
 
-        let newScene = GardenSceneBuilder(pathway: pathway).makeScene(bloomLevel: bloomLevel)
+        let newScene = GardenSceneBuilder(themeKey: themeKey).makeScene(bloomLevel: bloomLevel)
         DispatchQueue.main.async {
             scene = newScene
         }
@@ -47,8 +64,24 @@ struct GardenPlotView: View {
         )
         .frame(height: 30)
         .clipShape(
-            RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous)
+            RoundedRectangle(
+                cornerRadius: TelocareTheme.CornerRadius.medium,
+                style: .continuous
+            )
         )
         .allowsHitTesting(false)
+    }
+}
+
+private extension GardenThemeKey {
+    init(pathway: GardenPathway) {
+        switch pathway {
+        case .upstream:
+            self = .meadow
+        case .midstream:
+            self = .alpine
+        case .downstream:
+            self = .sunrise
+        }
     }
 }

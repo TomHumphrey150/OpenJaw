@@ -439,6 +439,8 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(inputsTab.waitForExistence(timeout: 4))
         inputsTab.tap()
 
+        XCTAssertTrue(scrollUntilHabitControlVisible(in: app, maxSwipes: 16))
+
         let startButtonQuery = app.buttons.matching(
             NSPredicate(format: "label BEGINSWITH %@", "Start tracking ")
         )
@@ -512,6 +514,171 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(nextBestActions.waitForExistence(timeout: 4))
     }
 
+    func testHabitsGardenHierarchyHidesUntappedTopLevelSiblings() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let habitsTab = app.tabBars.buttons["Habits"]
+        XCTAssertTrue(habitsTab.waitForExistence(timeout: 4))
+        habitsTab.tap()
+
+        let topLevelCards = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", UIID.exploreInputsGardenSubgardenCardPrefix)
+        )
+        let topLevelGarden = firstGardenCard(in: app)
+        XCTAssertTrue(topLevelGarden.waitForExistence(timeout: 4))
+        let selectedTopLevelID = topLevelGarden.identifier
+        let topLevelIDs = (0..<topLevelCards.count).map { index in
+            topLevelCards.element(boundBy: index).identifier
+        }
+        topLevelGarden.tap()
+
+        let hierarchyContainer = element(withIdentifier: UIID.exploreInputsGardenHierarchy, in: app)
+        XCTAssertTrue(hierarchyContainer.waitForExistence(timeout: 4))
+
+        let breadcrumb = element(withIdentifier: UIID.exploreInputsGardenBreadcrumb, in: app)
+        XCTAssertTrue(breadcrumb.waitForExistence(timeout: 4))
+        XCTAssertTrue(
+            element(withIdentifier: UIID.exploreInputsGardenBreadcrumbBack, in: app).waitForExistence(timeout: 4)
+        )
+        XCTAssertTrue(
+            element(withIdentifier: UIID.exploreInputsGardenBreadcrumbChip(depth: 1), in: app).waitForExistence(timeout: 4)
+        )
+
+        let untappedTopLevelIDs = topLevelIDs.filter { id in
+            id != selectedTopLevelID
+        }
+        for untappedID in untappedTopLevelIDs {
+            XCTAssertFalse(
+                app.descendants(matching: .any).matching(
+                    NSPredicate(format: "identifier == %@", untappedID)
+                ).firstMatch.exists
+            )
+        }
+    }
+
+    func testHabitsGardenHierarchySubgardenSelectionAndBreadcrumbReset() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let habitsTab = app.tabBars.buttons["Habits"]
+        XCTAssertTrue(habitsTab.waitForExistence(timeout: 4))
+        habitsTab.tap()
+
+        let topLevelGarden = firstGardenCard(in: app)
+        XCTAssertTrue(topLevelGarden.waitForExistence(timeout: 4))
+        topLevelGarden.tap()
+
+        XCTAssertTrue(
+            element(withIdentifier: UIID.exploreInputsGardenBreadcrumbChip(depth: 1), in: app).waitForExistence(timeout: 4)
+        )
+
+        let subGardenCard = firstGardenCard(in: app)
+        let nextBestActions = element(withIdentifier: UIID.exploreInputsNextBestActions, in: app)
+        if subGardenCard.waitForExistence(timeout: 4) {
+            let firstDepthGardenID = subGardenCard.identifier
+            subGardenCard.tap()
+
+            XCTAssertTrue(nextBestActions.waitForExistence(timeout: 4))
+
+            let depthTwoBreadcrumbChip = element(
+                withIdentifier: UIID.exploreInputsGardenBreadcrumbChip(depth: 2),
+                in: app
+            )
+            let reachedDepthTwo = depthTwoBreadcrumbChip.waitForExistence(timeout: 2)
+            if !reachedDepthTwo {
+                XCTAssertTrue(
+                    app.descendants(matching: .any).matching(
+                        NSPredicate(format: "identifier == %@", firstDepthGardenID)
+                    ).firstMatch.exists
+                )
+            }
+        } else {
+            XCTAssertTrue(nextBestActions.waitForExistence(timeout: 4))
+        }
+
+        let allGardensChip = element(
+            withIdentifier: UIID.exploreInputsGardenBreadcrumbChip(depth: 0),
+            in: app
+        )
+        XCTAssertTrue(allGardensChip.waitForExistence(timeout: 4))
+        allGardensChip.tap()
+
+        XCTAssertTrue(firstGardenCard(in: app).waitForExistence(timeout: 4))
+        XCTAssertFalse(
+            element(withIdentifier: UIID.exploreInputsGardenBreadcrumbBack, in: app).exists
+        )
+    }
+
+    func testHabitsGardenHierarchyBreadcrumbBackReturnsToPreviousLevel() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let habitsTab = app.tabBars.buttons["Habits"]
+        XCTAssertTrue(habitsTab.waitForExistence(timeout: 4))
+        habitsTab.tap()
+
+        let topLevelGarden = firstGardenCard(in: app)
+        XCTAssertTrue(topLevelGarden.waitForExistence(timeout: 4))
+        topLevelGarden.tap()
+
+        let backButton = element(withIdentifier: UIID.exploreInputsGardenBreadcrumbBack, in: app)
+        XCTAssertTrue(backButton.waitForExistence(timeout: 4))
+        backButton.tap()
+
+        XCTAssertTrue(firstGardenCard(in: app).waitForExistence(timeout: 4))
+        XCTAssertFalse(backButton.exists)
+    }
+
+    func testHabitsUnifiedScrollFromGardensIntoHabits() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let habitsTab = app.tabBars.buttons["Habits"]
+        XCTAssertTrue(habitsTab.waitForExistence(timeout: 4))
+        habitsTab.tap()
+
+        let unifiedScroll = element(withIdentifier: UIID.exploreInputsUnifiedScroll, in: app)
+        XCTAssertTrue(unifiedScroll.waitForExistence(timeout: 4))
+        XCTAssertTrue(firstGardenCard(in: app).waitForExistence(timeout: 4))
+        XCTAssertTrue(scrollUntilHabitControlVisible(in: app, maxSwipes: 16))
+
+        XCTAssertTrue(
+            element(withIdentifier: UIID.exploreInputsGardenBreadcrumbChip(depth: 0), in: app).exists
+        )
+        XCTAssertTrue(element(withIdentifier: UIID.exploreInputsFilterPending, in: app).exists)
+        XCTAssertTrue(element(withIdentifier: UIID.exploreInputsPinnedHeader, in: app).exists)
+    }
+
+    func testHabitsUnifiedScrollNoNestedGardenScrollTrap() {
+        let app = configuredApp(authState: .authenticated)
+        app.launch()
+
+        completeGuidedFlow(in: app)
+
+        let habitsTab = app.tabBars.buttons["Habits"]
+        XCTAssertTrue(habitsTab.waitForExistence(timeout: 4))
+        habitsTab.tap()
+
+        let topLevelGarden = firstGardenCard(in: app)
+        XCTAssertTrue(topLevelGarden.waitForExistence(timeout: 4))
+        topLevelGarden.tap()
+        XCTAssertTrue(
+            element(withIdentifier: UIID.exploreInputsGardenBreadcrumbBack, in: app).waitForExistence(timeout: 4)
+        )
+
+        XCTAssertTrue(scrollUntilHabitControlVisible(in: app, maxSwipes: 18))
+        XCTAssertTrue(element(withIdentifier: UIID.exploreInputsFilterPending, in: app).exists)
+    }
+
     private func configuredApp(
         authState: UITestAuthState,
         signUpNeedsConfirmation: Bool = false,
@@ -557,6 +724,39 @@ final class TelocareUITests: XCTestCase {
         }
 
         return app.tabBars.buttons["My Map"].waitForExistence(timeout: timeout)
+    }
+
+    private func firstGardenCard(in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", UIID.exploreInputsGardenSubgardenCardPrefix)
+        ).firstMatch
+    }
+
+    private func firstHabitPrimaryControl(in app: XCUIApplication) -> XCUIElement {
+        let predicate = NSPredicate(
+            format: "label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@",
+            "Check ",
+            "Uncheck ",
+            "Increment ",
+            "Start tracking "
+        )
+        return app.buttons.matching(predicate).firstMatch
+    }
+
+    private func scrollUntilHabitControlVisible(in app: XCUIApplication, maxSwipes: Int) -> Bool {
+        let control = firstHabitPrimaryControl(in: app)
+        if control.waitForExistence(timeout: 1) {
+            return true
+        }
+
+        for _ in 0..<maxSwipes {
+            app.swipeUp()
+            if control.exists {
+                return true
+            }
+        }
+
+        return control.exists
     }
 
     private func selectMorningRating(in app: XCUIApplication, pickerID: String) {
@@ -760,11 +960,25 @@ private enum UIID {
     static let exploreMuseDisclaimerText = "explore.outcomes.muse.disclaimer.text"
     static let exploreInputDetailSheet = "explore.inputs.detail.sheet"
     static let exploreInputsNextBestActions = "explore.inputs.next.best.actions"
+    static let exploreInputsUnifiedScroll = "explore.inputs.unified.scroll"
+    static let exploreInputsPinnedHeader = "explore.inputs.header.pinned"
+    static let exploreInputsFilterPending = "explore.inputs.filter.pending"
+    static let exploreInputsFilterCompleted = "explore.inputs.filter.completed"
+    static let exploreInputsFilterAvailable = "explore.inputs.filter.available"
     static let exploreInputCompletionHistoryChart = "explore.inputs.completion.history.chart"
+    static let exploreInputsGardenHierarchy = "explore.inputs.garden.hierarchy"
+    static let exploreInputsGardenBreadcrumb = "explore.inputs.garden.breadcrumb"
+    static let exploreInputsGardenBreadcrumbBack = "explore.inputs.garden.breadcrumb.back"
+    static let exploreInputsGardenSubgardenStrip = "explore.inputs.garden.subgarden.strip"
+    static let exploreInputsGardenSubgardenCardPrefix = "explore.inputs.garden.subgarden.card."
     static let exploreMorningGlobalPicker = "explore.outcomes.morning.global.picker"
     static let exploreMorningNeckPicker = "explore.outcomes.morning.neck.picker"
     static let exploreMorningJawPicker = "explore.outcomes.morning.jaw.picker"
     static let exploreMorningEarPicker = "explore.outcomes.morning.ear.picker"
     static let exploreMorningAnxietyPicker = "explore.outcomes.morning.anxiety.picker"
     static let exploreMorningStressPicker = "explore.outcomes.morning.stress.picker"
+
+    static func exploreInputsGardenBreadcrumbChip(depth: Int) -> String {
+        "explore.inputs.garden.breadcrumb.chip.\(depth)"
+    }
 }
