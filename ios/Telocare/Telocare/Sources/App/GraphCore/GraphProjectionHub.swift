@@ -1,5 +1,5 @@
-import Combine
 import Foundation
+import Observation
 
 struct HabitsProjection: Equatable, Sendable {
     let title: String
@@ -22,12 +22,13 @@ struct GuideProjection: Equatable, Sendable {
     let pendingPreview: GraphPatchPreview?
 }
 
+@Observable
 @MainActor
-final class GraphProjectionHub: ObservableObject {
-    @Published private(set) var habits: HabitsProjection
-    @Published private(set) var progress: ProgressProjection
-    @Published private(set) var map: MapProjection
-    @Published private(set) var guide: GuideProjection
+final class GraphProjectionHub {
+    private(set) var habits: HabitsProjection
+    private(set) var progress: ProgressProjection
+    private(set) var map: MapProjection
+    private(set) var guide: GuideProjection
 
     private let habitsBuilder: HabitsProjectionBuilding
     private let progressBuilder: ProgressProjectionBuilding

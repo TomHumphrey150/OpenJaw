@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ExploreTabShell: View {
-    @ObservedObject var viewModel: AppViewModel
+    @Bindable var viewModel: AppViewModel
     let selectedSkinID: TelocareSkinID
     let isMuseSessionEnabled: Bool
 

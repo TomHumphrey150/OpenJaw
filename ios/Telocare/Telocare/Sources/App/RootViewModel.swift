@@ -1,18 +1,20 @@
 import Foundation
+import Observation
 
+@Observable
 @MainActor
-final class RootViewModel: ObservableObject {
-    @Published private(set) var state: RootState
-    @Published private(set) var dashboardViewModel: AppViewModel?
-    @Published private(set) var currentUserEmail: String?
-    @Published private(set) var selectedSkinID: TelocareSkinID
-    @Published private(set) var isMuseEnabled: Bool
+final class RootViewModel {
+    private(set) var state: RootState
+    private(set) var dashboardViewModel: AppViewModel?
+    private(set) var currentUserEmail: String?
+    private(set) var selectedSkinID: TelocareSkinID
+    private(set) var isMuseEnabled: Bool
 
-    @Published var authEmail: String
-    @Published var authPassword: String
-    @Published private(set) var authErrorMessage: String?
-    @Published private(set) var authStatusMessage: String?
-    @Published private(set) var isAuthBusy: Bool
+    var authEmail: String
+    var authPassword: String
+    private(set) var authErrorMessage: String?
+    private(set) var authStatusMessage: String?
+    private(set) var isAuthBusy: Bool
 
     private let authClient: AuthClient
     private let sessionHydrationUseCase: SessionHydrationUseCase

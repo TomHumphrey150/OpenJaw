@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct GuidedFlowPager: View {
-    @ObservedObject var viewModel: AppViewModel
+    @Bindable var viewModel: AppViewModel
 
     var body: some View {
         ZStack {

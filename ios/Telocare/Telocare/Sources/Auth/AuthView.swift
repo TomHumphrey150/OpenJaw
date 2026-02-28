@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AuthView: View {
-    @ObservedObject var viewModel: RootViewModel
+    @Bindable var viewModel: RootViewModel
 
     var body: some View {
         VStack(spacing: 20) {

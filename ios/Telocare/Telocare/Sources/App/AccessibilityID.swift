@@ -29,7 +29,6 @@ enum AccessibilityID {
     static let profileSignOutEntry = "profile.signout.entry"
     static let globalLensNub = "explore.lens.nub"
     static let globalLensSheet = "explore.lens.sheet"
-    static let globalLensResetPosition = "explore.lens.reset.position"
     static let exploreOutcomesScreen = "explore.outcomes.screen"
     static let exploreSituationScreen = "explore.situation.screen"
     static let exploreInputsScreen = "explore.inputs.screen"

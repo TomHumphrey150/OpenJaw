@@ -405,13 +405,6 @@ enum HealthLensPreset: String, CaseIterable, Codable, Equatable, Hashable, Senda
     }
 }
 
-enum LensControlCorner: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
-    case lowerRight
-    case lowerLeft
-    case upperRight
-    case upperLeft
-}
-
 struct LensControlPosition: Codable, Equatable, Hashable, Sendable {
     let horizontalRatio: Double
     let verticalRatio: Double
@@ -422,22 +415,7 @@ struct LensControlPosition: Codable, Equatable, Hashable, Sendable {
     }
 
     static let lowerRight = LensControlPosition(horizontalRatio: 0.88, verticalRatio: 0.84)
-    static let lowerLeft = LensControlPosition(horizontalRatio: 0.12, verticalRatio: 0.84)
-    static let upperRight = LensControlPosition(horizontalRatio: 0.88, verticalRatio: 0.18)
-    static let upperLeft = LensControlPosition(horizontalRatio: 0.12, verticalRatio: 0.18)
-
-    static func forCorner(_ corner: LensControlCorner) -> LensControlPosition {
-        switch corner {
-        case .lowerRight:
-            return .lowerRight
-        case .lowerLeft:
-            return .lowerLeft
-        case .upperRight:
-            return .upperRight
-        case .upperLeft:
-            return .upperLeft
-        }
-    }
+    static let midRight = LensControlPosition(horizontalRatio: 0.88, verticalRatio: 0.50)
 }
 
 struct LensControlState: Codable, Equatable, Hashable, Sendable {

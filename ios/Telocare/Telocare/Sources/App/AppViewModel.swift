@@ -1,5 +1,5 @@
-import Combine
 import Foundation
+import Observation
 
 private let defaultMuseDiagnosticsPollingIntervalNanoseconds: UInt64 = 1_000_000_000
 
@@ -20,52 +20,53 @@ struct GraphCheckpointSummary: Equatable, Sendable, Identifiable {
     }
 }
 
+@Observable
 @MainActor
-final class AppViewModel: ObservableObject {
-    @Published private(set) var mode: AppMode
-    @Published private(set) var guidedStep: GuidedStep
-    @Published private(set) var snapshot: DashboardSnapshot {
+final class AppViewModel {
+    private(set) var mode: AppMode
+    private(set) var guidedStep: GuidedStep
+    private(set) var snapshot: DashboardSnapshot {
         didSet {
             scheduleProjectionPublish()
         }
     }
-    @Published private(set) var isProfileSheetPresented: Bool
-    @Published private(set) var selectedExploreTab: ExploreTab
-    @Published private(set) var exploreFeedback: String
-    @Published private(set) var graphData: CausalGraphData {
+    private(set) var isProfileSheetPresented: Bool
+    private(set) var selectedExploreTab: ExploreTab
+    private(set) var exploreFeedback: String
+    private(set) var graphData: CausalGraphData {
         didSet {
             scheduleProjectionPublish()
         }
     }
-    @Published private(set) var graphDisplayFlags: GraphDisplayFlags
-    @Published private(set) var focusedNodeID: String?
-    @Published private(set) var graphSelectionText: String
-    @Published private(set) var morningOutcomeSelection: MorningOutcomeSelection
-    @Published private(set) var museConnectionState: MuseConnectionState
-    @Published private(set) var museRecordingState: MuseRecordingState
-    @Published private(set) var museLiveDiagnostics: MuseLiveDiagnostics?
-    @Published private(set) var isMuseFitCalibrationPresented: Bool
-    @Published private(set) var museFitDiagnostics: MuseLiveDiagnostics?
-    @Published private(set) var museFitReadyStreakSeconds: Int
-    @Published private(set) var museFitPrimaryBlockerText: String?
-    @Published private(set) var museSetupDiagnosticsFileURLs: [URL]
-    @Published private(set) var museSessionFeedback: String
-    @Published private(set) var pendingGraphPatchPreview: GraphPatchPreview?
-    @Published private(set) var pendingGraphPatchConflicts: [GraphPatchConflict]
-    @Published private(set) var pendingGraphPatchConflictResolutions: [Int: GraphConflictResolutionChoice]
-    @Published private(set) var graphCheckpointVersions: [String]
-    @Published private(set) var graphCheckpointSummaries: [GraphCheckpointSummary]
-    @Published private(set) var progressQuestionProposal: ProgressQuestionSetProposal?
-    @Published private(set) var isProgressQuestionProposalPresented: Bool
-    @Published private(set) var plannerAvailableMinutes: Int
-    @Published private(set) var plannerTimeBudgetState: DailyTimeBudgetState
-    @Published private(set) var planningMode: PlanningMode
-    @Published private(set) var dailyPlanProposal: DailyPlanProposal?
-    @Published private(set) var flareSuggestion: FlareSuggestion?
-    @Published private(set) var healthLensState: HealthLensState
-    @Published private(set) var guideExportEnvelopeText: String?
-    @Published private(set) var pendingGuideImportPreview: GuideImportPreview?
-    @Published var chatDraft: String
+    private(set) var graphDisplayFlags: GraphDisplayFlags
+    private(set) var focusedNodeID: String?
+    private(set) var graphSelectionText: String
+    private(set) var morningOutcomeSelection: MorningOutcomeSelection
+    private(set) var museConnectionState: MuseConnectionState
+    private(set) var museRecordingState: MuseRecordingState
+    private(set) var museLiveDiagnostics: MuseLiveDiagnostics?
+    private(set) var isMuseFitCalibrationPresented: Bool
+    private(set) var museFitDiagnostics: MuseLiveDiagnostics?
+    private(set) var museFitReadyStreakSeconds: Int
+    private(set) var museFitPrimaryBlockerText: String?
+    private(set) var museSetupDiagnosticsFileURLs: [URL]
+    private(set) var museSessionFeedback: String
+    private(set) var pendingGraphPatchPreview: GraphPatchPreview?
+    private(set) var pendingGraphPatchConflicts: [GraphPatchConflict]
+    private(set) var pendingGraphPatchConflictResolutions: [Int: GraphConflictResolutionChoice]
+    private(set) var graphCheckpointVersions: [String]
+    private(set) var graphCheckpointSummaries: [GraphCheckpointSummary]
+    private(set) var progressQuestionProposal: ProgressQuestionSetProposal?
+    private(set) var isProgressQuestionProposalPresented: Bool
+    private(set) var plannerAvailableMinutes: Int
+    private(set) var plannerTimeBudgetState: DailyTimeBudgetState
+    private(set) var planningMode: PlanningMode
+    private(set) var dailyPlanProposal: DailyPlanProposal?
+    private(set) var flareSuggestion: FlareSuggestion?
+    private(set) var healthLensState: HealthLensState
+    private(set) var guideExportEnvelopeText: String?
+    private(set) var pendingGuideImportPreview: GuideImportPreview?
+    var chatDraft: String
 
     private var experienceFlow: ExperienceFlow
     private var dailyCheckIns: [String: [String]]
@@ -295,6 +296,7 @@ final class AppViewModel: ObservableObject {
             interventionsCatalog: initialInterventionsCatalog,
             planningPolicy: resolvedPlanningPolicy
         )
+        let resolvedInitialHealthLensState = Self.collapsedLensState(from: initialHealthLensState, nowProvider: nowProvider)
         let resolvedDailyPlanner = dailyPlanner ?? DailyPlanner()
         let resolvedFlareDetectionService = flareDetectionService ?? FlareDetectionService(policy: resolvedPlanningPolicy)
         let resolvedMorningOutcomeFields = Self.resolveMorningOutcomeFields(from: initialMorningQuestionnaire)
@@ -303,6 +305,23 @@ final class AppViewModel: ObservableObject {
             questionnaire: initialMorningQuestionnaire
         )
         let resolvedMorningTrendMetrics = Self.resolveMorningTrendMetrics(from: resolvedMorningOutcomeFields)
+        let resolvedPlannerPreferencesState = initialPlannerPreferencesState ?? PlannerPreferencesState(
+            defaultAvailableMinutes: resolvedPlanningPolicy.defaultAvailableMinutes,
+            modeOverride: nil,
+            flareSensitivity: .balanced,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        let initialTimelineState = resolvedPlannerPreferencesState.dailyTimeBudgetState
+            ?? DailyTimeBudgetState.from(
+                availableMinutes: resolvedPlannerPreferencesState.defaultAvailableMinutes,
+                updatedAt: Self.timestamp(from: nowProvider())
+            )
+        let timelineMinutes = initialTimelineState.availableMinutes
+        let resolvedPlannerAvailableMinutes = max(
+            0,
+            timelineMinutes > 0 ? timelineMinutes : resolvedPlannerPreferencesState.defaultAvailableMinutes
+        )
+        let resolvedPlanningMode = resolvedPlannerPreferencesState.modeOverride ?? .baseline
 
         mode = .explore
         guidedStep = .outcomes
@@ -335,29 +354,11 @@ final class AppViewModel: ObservableObject {
         graphCheckpointSummaries = []
         progressQuestionProposal = nil
         isProgressQuestionProposalPresented = false
-        plannerPreferencesState = initialPlannerPreferencesState ?? PlannerPreferencesState(
-            defaultAvailableMinutes: resolvedPlanningPolicy.defaultAvailableMinutes,
-            modeOverride: nil,
-            flareSensitivity: .balanced,
-            updatedAt: Self.timestamp(from: nowProvider())
-        )
-        let initialTimelineState = plannerPreferencesState.dailyTimeBudgetState
-            ?? DailyTimeBudgetState.from(
-                availableMinutes: plannerPreferencesState.defaultAvailableMinutes,
-                updatedAt: Self.timestamp(from: nowProvider())
-            )
+        plannerPreferencesState = resolvedPlannerPreferencesState
         plannerTimeBudgetState = initialTimelineState
-        let timelineMinutes = initialTimelineState.availableMinutes
-        plannerAvailableMinutes = max(
-            0,
-            timelineMinutes > 0 ? timelineMinutes : plannerPreferencesState.defaultAvailableMinutes
-        )
-        planningMode = plannerPreferencesState.modeOverride ?? .baseline
-        healthLensState = initialHealthLensState ?? HealthLensState(
-            preset: .all,
-            selectedPillar: nil,
-            updatedAt: Self.timestamp(from: nowProvider())
-        )
+        plannerAvailableMinutes = resolvedPlannerAvailableMinutes
+        planningMode = resolvedPlanningMode
+        healthLensState = resolvedInitialHealthLensState
         dailyPlanProposal = nil
         flareSuggestion = nil
         guideExportEnvelopeText = nil
@@ -407,9 +408,12 @@ final class AppViewModel: ObservableObject {
         interventionsCatalog = initialInterventionsCatalog
         planningPolicy = resolvedPlanningPolicy
         self.planningMetadataResolver = resolvedPlanningMetadataResolver
-        planningMetadataByInterventionID = resolvedPlanningMetadataResolver.metadataByInterventionID(for: snapshot.inputs)
+        let initialPlanningMetadataByInterventionID = resolvedPlanningMetadataResolver.metadataByInterventionID(
+            for: snapshot.inputs
+        )
+        planningMetadataByInterventionID = initialPlanningMetadataByInterventionID
         ladderByInterventionID = resolvedPlanningMetadataResolver.ladderByInterventionID(
-            metadataByInterventionID: planningMetadataByInterventionID
+            metadataByInterventionID: initialPlanningMetadataByInterventionID
         )
         pendingGraphPatchEnvelope = nil
         pendingGuideImportEnvelope = nil
@@ -452,6 +456,35 @@ final class AppViewModel: ObservableObject {
         Task {
             await publishGraphProjections()
         }
+    }
+
+    private static func collapsedLensState(
+        from savedState: HealthLensState?,
+        nowProvider: () -> Date
+    ) -> HealthLensState {
+        let startupPosition = LensControlPosition.midRight
+
+        guard let savedState else {
+            return HealthLensState(
+                preset: .all,
+                selectedPillar: nil,
+                updatedAt: Self.timestamp(from: nowProvider()),
+                controlState: LensControlState(
+                    position: startupPosition,
+                    isExpanded: false
+                )
+            )
+        }
+
+        return HealthLensState(
+            preset: savedState.preset,
+            selectedPillar: savedState.selectedPillar,
+            updatedAt: savedState.updatedAt,
+            controlState: LensControlState(
+                position: startupPosition,
+                isExpanded: false
+            )
+        )
     }
 
     func openProfileSheet() {
@@ -1779,19 +1812,6 @@ final class AppViewModel: ObservableObject {
         persistPlannerPreferencesState()
     }
 
-    func setLensControlPosition(_ position: LensControlPosition) {
-        healthLensState = HealthLensState(
-            preset: healthLensState.preset,
-            selectedPillar: healthLensState.selectedPillar,
-            updatedAt: Self.timestamp(from: nowProvider()),
-            controlState: LensControlState(
-                position: position,
-                isExpanded: healthLensState.controlState.isExpanded
-            )
-        )
-        persistHealthLensState()
-    }
-
     func setLensControlExpanded(_ isExpanded: Bool) {
         guard healthLensState.controlState.isExpanded != isExpanded else {
             return
@@ -1806,14 +1826,6 @@ final class AppViewModel: ObservableObject {
             )
         )
         persistHealthLensState()
-    }
-
-    func moveLensControl(to corner: LensControlCorner) {
-        setLensControlPosition(LensControlPosition.forCorner(corner))
-    }
-
-    func resetLensControlPosition() {
-        setLensControlPosition(.lowerRight)
     }
 
     private func persistPlannerPreferencesState() {

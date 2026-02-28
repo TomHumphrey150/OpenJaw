@@ -1315,16 +1315,22 @@ struct AppViewModelTests {
         #expect(identifiers.count == HealthLensPreset.allCases.count)
     }
 
-    @Test func globalLensNubBadgeTextReflectsActiveFilter() {
-        #expect(GlobalLensNubBadge.text(for: .all, selectedPillar: nil) == "All")
-        #expect(GlobalLensNubBadge.text(for: .foundation, selectedPillar: nil) == "Fdn")
-        #expect(GlobalLensNubBadge.text(for: .acute, selectedPillar: nil) == "Aqt")
-        #expect(GlobalLensNubBadge.text(for: .pillar, selectedPillar: nil) == "Plr")
+    @Test func coldStartAlwaysCollapsesLensPanelEvenWhenSavedExpanded() {
+        let savedPosition = LensControlPosition(horizontalRatio: 0.17, verticalRatio: 0.32)
+        let expectedStartupPosition = LensControlPosition.midRight
+        let harness = AppViewModelHarness(
+            initialHealthLensState: HealthLensState(
+                preset: .acute,
+                selectedPillar: nil,
+                updatedAt: "2026-02-21T12:00:00Z",
+                controlState: LensControlState(position: savedPosition, isExpanded: true)
+            )
+        )
 
-        let social = HealthPillar(id: "socialLife")
-        let romantic = HealthPillar(id: "romanticPersonalCare")
-        #expect(GlobalLensNubBadge.text(for: .pillar, selectedPillar: social) == "SL")
-        #expect(GlobalLensNubBadge.text(for: .pillar, selectedPillar: romantic) == "RPC")
+        #expect(harness.viewModel.projectedHealthLensPreset == .acute)
+        #expect(harness.viewModel.projectedLensControlState.position == expectedStartupPosition)
+        #expect(harness.viewModel.projectedLensControlState.position != savedPosition)
+        #expect(harness.viewModel.projectedLensControlState.isExpanded == false)
     }
 
     @Test func exploreInputsEmptyStateGuidanceNudgesToAvailableWhenItemsExist() {
