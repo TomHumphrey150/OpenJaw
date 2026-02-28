@@ -104,12 +104,14 @@ struct DefaultGraphMutationService: GraphMutationService {
         var nextEdges = graphData.edges
         nextEdges[edgeIndex] = GraphEdgeElement(
             data: GraphEdgeData(
+                id: currentEdge.id,
                 source: currentEdge.source,
                 target: currentEdge.target,
                 label: currentEdge.label,
                 edgeType: currentEdge.edgeType,
                 edgeColor: currentEdge.edgeColor,
                 tooltip: currentEdge.tooltip,
+                strength: currentEdge.strength,
                 isDeactivated: nextIsDeactivated
             )
         )
@@ -206,8 +208,34 @@ struct DefaultGraphMutationService: GraphMutationService {
         UserDataPatch.customCausalDiagram(
             CustomCausalDiagram(
                 graphData: graphData,
-                lastModified: DateKeying.timestamp(from: now)
+                lastModified: DateKeying.timestamp(from: now),
+                graphVersion: Self.graphVersion(for: graphData),
+                baseGraphVersion: nil
             )
         )
+    }
+
+    private static func graphVersion(for graphData: CausalGraphData) -> String {
+        var fingerprint = graphData.nodes
+            .map { node in "\(node.data.id)|\(node.data.styleClass)|\(node.data.confirmed ?? "")|\(node.data.tier ?? -1)" }
+            .sorted()
+            .joined(separator: ";")
+        fingerprint.append("|")
+        fingerprint.append(
+            graphData.edges
+                .map { edge in
+                    "\(edge.data.source)|\(edge.data.target)|\(edge.data.edgeType ?? "")|\(edge.data.label ?? "")|\(edge.data.strength ?? 0)"
+                }
+                .sorted()
+                .joined(separator: ";")
+        )
+
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in fingerprint.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 0x100000001b3
+        }
+
+        return String(format: "graph-%016llx", hash)
     }
 }

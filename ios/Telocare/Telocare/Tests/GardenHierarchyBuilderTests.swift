@@ -199,6 +199,50 @@ struct GardenHierarchyBuilderTests {
         #expect(level.clusters.map(\.nodeID).contains("N1") == false)
     }
 
+    @Test func topLevelClustersAreCappedAtSixByDeterministicMerging() throws {
+        let builder = GardenHierarchyBuilder()
+        let inputs = [
+            makeInput(id: "A_TX"),
+            makeInput(id: "B_TX"),
+            makeInput(id: "C_TX"),
+            makeInput(id: "D_TX"),
+            makeInput(id: "E_TX"),
+            makeInput(id: "F_TX"),
+            makeInput(id: "G_TX"),
+        ]
+        let graphData = makeGraphData(
+            interventionIDs: inputs.map(\.id),
+            targetNodes: [
+                ("N1", "Stress"),
+                ("N2", "Sleep"),
+                ("N3", "Reflux"),
+                ("N4", "Airway"),
+                ("N5", "Jaw"),
+                ("N6", "Neck"),
+                ("N7", "Nervous"),
+            ],
+            edges: [
+                ("A_TX", "N1", false),
+                ("A_TX", "N2", false),
+                ("B_TX", "N2", false),
+                ("C_TX", "N3", false),
+                ("D_TX", "N4", false),
+                ("E_TX", "N5", false),
+                ("F_TX", "N6", false),
+                ("G_TX", "N7", false),
+            ]
+        )
+
+        let result = builder.build(
+            inputs: inputs,
+            graphData: graphData,
+            selection: .all
+        )
+
+        let level = try #require(result.levels.first)
+        #expect(level.clusters.count == 6)
+    }
+
     private func makeInput(id: String, pathway: String? = nil) -> InputStatus {
         InputStatus(
             id: id,

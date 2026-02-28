@@ -16,6 +16,7 @@ struct UserDataDocument: Codable, Equatable {
     let nightOutcomes: [NightOutcome]
     let morningStates: [MorningState]
     let morningQuestionnaire: MorningQuestionnaire?
+    let progressQuestionSetState: ProgressQuestionSetState?
     let wakeDaySleepAttributionMigrated: Bool
     let habitTrials: [HabitTrialWindow]
     let habitClassifications: [HabitClassification]
@@ -23,6 +24,7 @@ struct UserDataDocument: Codable, Equatable {
     let hiddenInterventions: [String]
     let unlockedAchievements: [String]
     let customCausalDiagram: CustomCausalDiagram?
+    let gardenAliasOverrides: [GardenAliasOverride]
     let experienceFlow: ExperienceFlow
 
     static let empty = UserDataDocument(
@@ -41,6 +43,7 @@ struct UserDataDocument: Codable, Equatable {
         nightOutcomes: [],
         morningStates: [],
         morningQuestionnaire: nil,
+        progressQuestionSetState: nil,
         wakeDaySleepAttributionMigrated: false,
         habitTrials: [],
         habitClassifications: [],
@@ -48,6 +51,7 @@ struct UserDataDocument: Codable, Equatable {
         hiddenInterventions: [],
         unlockedAchievements: [],
         customCausalDiagram: nil,
+        gardenAliasOverrides: [],
         experienceFlow: .empty
     )
 
@@ -67,6 +71,7 @@ struct UserDataDocument: Codable, Equatable {
         nightOutcomes: [NightOutcome],
         morningStates: [MorningState],
         morningQuestionnaire: MorningQuestionnaire? = nil,
+        progressQuestionSetState: ProgressQuestionSetState? = nil,
         wakeDaySleepAttributionMigrated: Bool = false,
         habitTrials: [HabitTrialWindow],
         habitClassifications: [HabitClassification],
@@ -74,6 +79,7 @@ struct UserDataDocument: Codable, Equatable {
         hiddenInterventions: [String],
         unlockedAchievements: [String],
         customCausalDiagram: CustomCausalDiagram?,
+        gardenAliasOverrides: [GardenAliasOverride] = [],
         experienceFlow: ExperienceFlow
     ) {
         self.version = version
@@ -91,6 +97,7 @@ struct UserDataDocument: Codable, Equatable {
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
         self.morningQuestionnaire = morningQuestionnaire
+        self.progressQuestionSetState = progressQuestionSetState
         self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
         self.habitTrials = habitTrials
         self.habitClassifications = habitClassifications
@@ -98,6 +105,7 @@ struct UserDataDocument: Codable, Equatable {
         self.hiddenInterventions = hiddenInterventions
         self.unlockedAchievements = unlockedAchievements
         self.customCausalDiagram = customCausalDiagram
+        self.gardenAliasOverrides = gardenAliasOverrides
         self.experienceFlow = experienceFlow
     }
 
@@ -117,6 +125,7 @@ struct UserDataDocument: Codable, Equatable {
         case nightOutcomes
         case morningStates
         case morningQuestionnaire
+        case progressQuestionSetState
         case wakeDaySleepAttributionMigrated
         case habitTrials
         case habitClassifications
@@ -124,6 +133,7 @@ struct UserDataDocument: Codable, Equatable {
         case hiddenInterventions
         case unlockedAchievements
         case customCausalDiagram
+        case gardenAliasOverrides
         case experienceFlow
     }
 
@@ -144,6 +154,7 @@ struct UserDataDocument: Codable, Equatable {
         nightOutcomes = try container.decodeIfPresent([NightOutcome].self, forKey: .nightOutcomes) ?? []
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
         morningQuestionnaire = try container.decodeIfPresent(MorningQuestionnaire.self, forKey: .morningQuestionnaire)
+        progressQuestionSetState = try container.decodeIfPresent(ProgressQuestionSetState.self, forKey: .progressQuestionSetState)
         wakeDaySleepAttributionMigrated = try container.decodeIfPresent(Bool.self, forKey: .wakeDaySleepAttributionMigrated) ?? false
         habitTrials = try container.decodeIfPresent([HabitTrialWindow].self, forKey: .habitTrials) ?? []
         habitClassifications = try container.decodeIfPresent([HabitClassification].self, forKey: .habitClassifications) ?? []
@@ -151,6 +162,7 @@ struct UserDataDocument: Codable, Equatable {
         hiddenInterventions = try container.decodeIfPresent([String].self, forKey: .hiddenInterventions) ?? []
         unlockedAchievements = try container.decodeIfPresent([String].self, forKey: .unlockedAchievements) ?? []
         customCausalDiagram = try container.decodeIfPresent(CustomCausalDiagram.self, forKey: .customCausalDiagram)
+        gardenAliasOverrides = try container.decodeIfPresent([GardenAliasOverride].self, forKey: .gardenAliasOverrides) ?? []
         experienceFlow = try container.decodeIfPresent(ExperienceFlow.self, forKey: .experienceFlow) ?? .empty
     }
 }
@@ -344,6 +356,19 @@ struct InterventionCompletionEvent: Codable, Equatable, Hashable, Sendable {
     let interventionId: String
     let occurredAt: String
     let source: InterventionCompletionEventSource
+    let graphAssociation: GraphAssociationRef?
+
+    init(
+        interventionId: String,
+        occurredAt: String,
+        source: InterventionCompletionEventSource,
+        graphAssociation: GraphAssociationRef? = nil
+    ) {
+        self.interventionId = interventionId
+        self.occurredAt = occurredAt
+        self.source = source
+        self.graphAssociation = graphAssociation
+    }
 }
 
 struct DoseSettings: Codable, Equatable, Sendable {
@@ -416,6 +441,27 @@ struct NightOutcome: Codable, Equatable, Sendable {
     let totalSleepMinutes: Double?
     let source: String?
     let createdAt: String
+    let graphAssociation: GraphAssociationRef?
+
+    init(
+        nightId: String,
+        microArousalCount: Double?,
+        microArousalRatePerHour: Double?,
+        confidence: Double?,
+        totalSleepMinutes: Double?,
+        source: String?,
+        createdAt: String,
+        graphAssociation: GraphAssociationRef? = nil
+    ) {
+        self.nightId = nightId
+        self.microArousalCount = microArousalCount
+        self.microArousalRatePerHour = microArousalRatePerHour
+        self.confidence = confidence
+        self.totalSleepMinutes = totalSleepMinutes
+        self.source = source
+        self.createdAt = createdAt
+        self.graphAssociation = graphAssociation
+    }
 }
 
 struct MorningState: Codable, Equatable, Sendable {
@@ -429,6 +475,7 @@ struct MorningState: Codable, Equatable, Sendable {
     let morningHeadache: Double?
     let dryMouth: Double?
     let createdAt: String
+    let graphAssociation: GraphAssociationRef?
 
     init(
         nightId: String,
@@ -440,7 +487,8 @@ struct MorningState: Codable, Equatable, Sendable {
         stressLevel: Double? = nil,
         morningHeadache: Double? = nil,
         dryMouth: Double? = nil,
-        createdAt: String
+        createdAt: String,
+        graphAssociation: GraphAssociationRef? = nil
     ) {
         self.nightId = nightId
         self.globalSensation = globalSensation
@@ -452,6 +500,7 @@ struct MorningState: Codable, Equatable, Sendable {
         self.morningHeadache = morningHeadache
         self.dryMouth = dryMouth
         self.createdAt = createdAt
+        self.graphAssociation = graphAssociation
     }
 }
 
@@ -469,6 +518,63 @@ enum MorningQuestionField: String, Codable, Equatable, Sendable {
 struct MorningQuestionnaire: Codable, Equatable, Sendable {
     let enabledFields: [MorningQuestionField]
     let requiredFields: [MorningQuestionField]?
+}
+
+struct GraphAssociationRef: Codable, Equatable, Hashable, Sendable {
+    let graphVersion: String
+    let nodeIDs: [String]
+    let edgeIDs: [String]
+
+    init(graphVersion: String, nodeIDs: [String], edgeIDs: [String]) {
+        self.graphVersion = graphVersion
+        self.nodeIDs = nodeIDs.sorted()
+        self.edgeIDs = edgeIDs.sorted()
+    }
+}
+
+struct GraphDerivedProgressQuestion: Codable, Equatable, Hashable, Sendable {
+    let id: String
+    let title: String
+    let sourceNodeIDs: [String]
+    let sourceEdgeIDs: [String]
+
+    init(id: String, title: String, sourceNodeIDs: [String], sourceEdgeIDs: [String]) {
+        self.id = id
+        self.title = title
+        self.sourceNodeIDs = sourceNodeIDs.sorted()
+        self.sourceEdgeIDs = sourceEdgeIDs.sorted()
+    }
+}
+
+struct ProgressQuestionSetProposal: Codable, Equatable, Sendable {
+    let sourceGraphVersion: String
+    let proposedQuestionSetVersion: String
+    let questions: [GraphDerivedProgressQuestion]
+    let createdAt: String
+}
+
+struct ProgressQuestionSetState: Codable, Equatable, Sendable {
+    let activeQuestionSetVersion: String
+    let activeSourceGraphVersion: String
+    let declinedGraphVersions: [String]
+    let pendingProposal: ProgressQuestionSetProposal?
+    let updatedAt: String
+}
+
+struct GardenAliasOverride: Codable, Equatable, Hashable, Sendable {
+    let signature: String
+    let title: String
+    let approvedAt: String
+    let sourceGraphVersion: String
+}
+
+struct GardenNameProposal: Codable, Equatable, Sendable {
+    let proposalID: String
+    let signature: String
+    let currentTitle: String
+    let proposedTitle: String
+    let explanation: String
+    let sourceGraphVersion: String
 }
 
 struct HabitTrialWindow: Codable, Equatable, Identifiable {
@@ -527,10 +633,19 @@ enum ExperienceFlowStatus: String, Codable, Equatable, Sendable {
 struct CustomCausalDiagram: Codable, Equatable, Sendable {
     let graphData: CausalGraphData
     let lastModified: String?
+    let graphVersion: String?
+    let baseGraphVersion: String?
 
-    init(graphData: CausalGraphData, lastModified: String?) {
+    init(
+        graphData: CausalGraphData,
+        lastModified: String?,
+        graphVersion: String? = nil,
+        baseGraphVersion: String? = nil
+    ) {
         self.graphData = graphData
         self.lastModified = lastModified
+        self.graphVersion = graphVersion
+        self.baseGraphVersion = baseGraphVersion
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -538,6 +653,8 @@ struct CustomCausalDiagram: Codable, Equatable, Sendable {
         case nodes
         case edges
         case lastModified
+        case graphVersion
+        case baseGraphVersion
     }
 
     init(from decoder: Decoder) throws {
@@ -546,6 +663,8 @@ struct CustomCausalDiagram: Codable, Equatable, Sendable {
         if let wrappedGraphData = try container.decodeIfPresent(CausalGraphData.self, forKey: .graphData) {
             graphData = wrappedGraphData
             lastModified = try container.decodeIfPresent(String.self, forKey: .lastModified)
+            graphVersion = try container.decodeIfPresent(String.self, forKey: .graphVersion)
+            baseGraphVersion = try container.decodeIfPresent(String.self, forKey: .baseGraphVersion)
             return
         }
 
@@ -562,12 +681,16 @@ struct CustomCausalDiagram: Codable, Equatable, Sendable {
 
         graphData = CausalGraphData(nodes: directNodes, edges: directEdges)
         lastModified = try container.decodeIfPresent(String.self, forKey: .lastModified)
+        graphVersion = try container.decodeIfPresent(String.self, forKey: .graphVersion)
+        baseGraphVersion = try container.decodeIfPresent(String.self, forKey: .baseGraphVersion)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(graphData, forKey: .graphData)
         try container.encodeIfPresent(lastModified, forKey: .lastModified)
+        try container.encodeIfPresent(graphVersion, forKey: .graphVersion)
+        try container.encodeIfPresent(baseGraphVersion, forKey: .baseGraphVersion)
     }
 }
 
@@ -692,29 +815,35 @@ struct GraphEdgeElement: Codable, Equatable, Sendable {
 }
 
 struct GraphEdgeData: Codable, Equatable, Sendable {
+    let id: String?
     let source: String
     let target: String
     let label: String?
     let edgeType: String?
     let edgeColor: String?
     let tooltip: String?
+    let strength: Double?
     let isDeactivated: Bool?
 
     init(
+        id: String? = nil,
         source: String,
         target: String,
         label: String?,
         edgeType: String?,
         edgeColor: String?,
         tooltip: String?,
+        strength: Double? = nil,
         isDeactivated: Bool? = nil
     ) {
+        self.id = id
         self.source = source
         self.target = target
         self.label = label
         self.edgeType = edgeType
         self.edgeColor = edgeColor
         self.tooltip = tooltip
+        self.strength = strength
         self.isDeactivated = isDeactivated
     }
 }

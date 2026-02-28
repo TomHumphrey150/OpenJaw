@@ -15,8 +15,25 @@ enum GardenThemeKey: String, Equatable, CaseIterable, Sendable {
     case orchard
 }
 
+struct GardenClusterSignature: Hashable, Equatable, Sendable {
+    let rawValue: String
+
+    init(nodeIDs: [String]) {
+        rawValue = nodeIDs.sorted().joined(separator: "|")
+    }
+}
+
+struct WeightedGardenCluster: Equatable, Sendable {
+    let signature: GardenClusterSignature
+    let nodeIDs: [String]
+    let inputIDs: [String]
+    let weightedCoverage: Double
+    let affinityByInputID: [String: Double]
+}
+
 struct GardenClusterSnapshot: Equatable, Identifiable, Sendable {
     let nodeID: String
+    let nodeIDs: [String]
     let title: String
     let inputIDs: [String]
     let activeCount: Int
@@ -44,4 +61,5 @@ struct GardenHierarchyBuildResult: Equatable, Sendable {
     let filteredInputs: [InputStatus]
     let levels: [GardenHierarchyLevel]
     let resolvedNodePath: [String]
+    let resolvedClusterPath: [GardenClusterSnapshot]
 }

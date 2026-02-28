@@ -13,6 +13,8 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let hiddenInterventions: [String]?
     let customCausalDiagram: CustomCausalDiagram?
     let wakeDaySleepAttributionMigrated: Bool?
+    let progressQuestionSetState: ProgressQuestionSetState?
+    let gardenAliasOverrides: [GardenAliasOverride]?
 
     init(
         experienceFlow: ExperienceFlow?,
@@ -26,7 +28,9 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         activeInterventions: [String]?,
         hiddenInterventions: [String]?,
         customCausalDiagram: CustomCausalDiagram? = nil,
-        wakeDaySleepAttributionMigrated: Bool? = nil
+        wakeDaySleepAttributionMigrated: Bool? = nil,
+        progressQuestionSetState: ProgressQuestionSetState? = nil,
+        gardenAliasOverrides: [GardenAliasOverride]? = nil
     ) {
         self.experienceFlow = experienceFlow
         self.dailyCheckIns = dailyCheckIns
@@ -40,6 +44,8 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         self.hiddenInterventions = hiddenInterventions
         self.customCausalDiagram = customCausalDiagram
         self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
+        self.progressQuestionSetState = progressQuestionSetState
+        self.gardenAliasOverrides = gardenAliasOverrides
     }
 
     static func experienceFlow(_ value: ExperienceFlow) -> UserDataPatch {
@@ -266,6 +272,40 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             activeInterventions: nil,
             hiddenInterventions: nil,
             customCausalDiagram: value
+        )
+    }
+
+    static func customCausalDiagramAndGardenAliasOverrides(
+        _ diagram: CustomCausalDiagram,
+        _ aliases: [GardenAliasOverride]
+    ) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            customCausalDiagram: diagram,
+            gardenAliasOverrides: aliases
+        )
+    }
+
+    static func progressQuestionSetState(_ value: ProgressQuestionSetState) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            progressQuestionSetState: value
         )
     }
 }

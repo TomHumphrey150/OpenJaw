@@ -18,6 +18,7 @@ extension UserDataDocument {
             nightOutcomes: nightOutcomes,
             morningStates: morningStates,
             morningQuestionnaire: morningQuestionnaire,
+            progressQuestionSetState: progressQuestionSetState,
             wakeDaySleepAttributionMigrated: wakeDaySleepAttributionMigrated,
             habitTrials: habitTrials,
             habitClassifications: habitClassifications,
@@ -25,6 +26,7 @@ extension UserDataDocument {
             hiddenInterventions: hiddenInterventions,
             unlockedAchievements: unlockedAchievements,
             customCausalDiagram: customCausalDiagram,
+            gardenAliasOverrides: gardenAliasOverrides,
             experienceFlow: experienceFlow
         )
     }

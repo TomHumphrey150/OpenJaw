@@ -3,6 +3,15 @@ import SwiftUI
 struct ExploreChatScreen: View {
     @Binding var draft: String
     let feedback: String
+    let pendingGraphPatchPreview: GraphPatchPreview?
+    let pendingGraphPatchConflicts: [GraphPatchConflict]
+    let pendingGraphPatchConflictResolutions: [Int: GraphConflictResolutionChoice]
+    let checkpointVersions: [String]
+    let graphVersion: String?
+    let onSetConflictResolution: (Int, GraphConflictResolutionChoice) -> Void
+    let onApplyPendingPatch: () -> Void
+    let onDismissPendingPatch: () -> Void
+    let onRollbackGraphVersion: (String) -> Void
     let onSend: () -> Void
     let selectedSkinID: TelocareSkinID
 
@@ -22,6 +31,18 @@ struct ExploreChatScreen: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: TelocareTheme.Spacing.md) {
+                            if let graphVersion {
+                                graphVersionBadge(graphVersion)
+                            }
+
+                            if let pendingGraphPatchPreview {
+                                patchPreviewCard(preview: pendingGraphPatchPreview)
+                            }
+
+                            if !checkpointVersions.isEmpty {
+                                checkpointHistoryCard
+                            }
+
                             ForEach(messages) { message in
                                 ChatBubble(message: message)
                                     .id(message.id)
@@ -33,6 +54,9 @@ struct ExploreChatScreen: View {
                         withAnimation {
                             proxy.scrollTo(messages.last?.id, anchor: .bottom)
                         }
+                    }
+                    .onChange(of: feedback) { _, nextFeedback in
+                        appendAssistantMessage(nextFeedback)
                     }
                 }
 
@@ -78,10 +102,10 @@ struct ExploreChatScreen: View {
 
     private var suggestedPrompts: [String] {
         [
-            "Why is my jaw sore?",
-            "What can I try tonight?",
-            "Explain my progress",
-            "Best interventions for me"
+            "Export graph",
+            "Apply patch",
+            "Rollback graph-",
+            "Show latest graph changes"
         ]
     }
 
@@ -126,15 +150,176 @@ struct ExploreChatScreen: View {
         messages.append(ChatMessage(id: UUID(), content: trimmed, isFromUser: true, timestamp: Date()))
         draft = ""
         onSend()
+    }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            messages.append(ChatMessage(
+    @ViewBuilder
+    private func graphVersionBadge(_ version: String) -> some View {
+        HStack {
+            Label("Graph \(version)", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath")
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.warmGray)
+            Spacer()
+        }
+        .padding(.horizontal, TelocareTheme.Spacing.md)
+    }
+
+    @ViewBuilder
+    private func patchPreviewCard(preview: GraphPatchPreview) -> some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+            Text("Patch Preview")
+                .font(TelocareTheme.Typography.headline)
+                .foregroundStyle(TelocareTheme.charcoal)
+                .accessibilityIdentifier(AccessibilityID.exploreChatGraphPreview)
+
+            if !preview.summaryLines.isEmpty {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    ForEach(preview.summaryLines, id: \.self) { line in
+                        Text("• \(line)")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                    }
+                }
+            }
+
+            if !preview.envelope.explanations.isEmpty {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    ForEach(Array(preview.envelope.explanations.enumerated()), id: \.offset) { _, explanation in
+                        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                            Text(explanation.title)
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                            Text(explanation.details)
+                                .font(TelocareTheme.Typography.small)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                        }
+                    }
+                }
+            }
+
+            if !pendingGraphPatchConflicts.isEmpty {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    Text("Conflict Review")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.charcoal)
+
+                    ForEach(pendingGraphPatchConflicts) { conflict in
+                        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                            Text(conflict.message)
+                                .font(TelocareTheme.Typography.small)
+                                .foregroundStyle(TelocareTheme.warmGray)
+
+                            HStack(spacing: TelocareTheme.Spacing.sm) {
+                                conflictResolutionButton(
+                                    title: "Local",
+                                    isSelected: pendingGraphPatchConflictResolutions[conflict.operationIndex] == .local,
+                                    action: { onSetConflictResolution(conflict.operationIndex, .local) }
+                                )
+                                conflictResolutionButton(
+                                    title: "Server",
+                                    isSelected: pendingGraphPatchConflictResolutions[conflict.operationIndex] == .server,
+                                    action: { onSetConflictResolution(conflict.operationIndex, .server) }
+                                )
+                            }
+                        }
+                        .padding(.vertical, TelocareTheme.Spacing.xs)
+                    }
+                }
+                .accessibilityIdentifier(AccessibilityID.exploreChatGraphConflicts)
+            }
+
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                Button("Dismiss") {
+                    onDismissPendingPatch()
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier(AccessibilityID.exploreChatGraphDismissButton)
+
+                Button("Apply Patch") {
+                    onApplyPendingPatch()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(patchApplyIsBlocked)
+                .accessibilityIdentifier(AccessibilityID.exploreChatGraphApplyButton)
+            }
+        }
+        .padding(TelocareTheme.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.large, style: .continuous)
+                .fill(TelocareTheme.cream)
+        )
+    }
+
+    @ViewBuilder
+    private var checkpointHistoryCard: some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+            Text("Graph Checkpoints")
+                .font(TelocareTheme.Typography.headline)
+                .foregroundStyle(TelocareTheme.charcoal)
+
+            ForEach(checkpointVersions, id: \.self) { version in
+                HStack {
+                    Text(version)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                    Spacer()
+                    Button("Rollback") {
+                        onRollbackGraphVersion(version)
+                    }
+                    .font(TelocareTheme.Typography.caption)
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+        .padding(TelocareTheme.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.large, style: .continuous)
+                .fill(TelocareTheme.cream)
+        )
+        .accessibilityIdentifier(AccessibilityID.exploreChatGraphCheckpoints)
+    }
+
+    @ViewBuilder
+    private func conflictResolutionButton(
+        title: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(TelocareTheme.Typography.caption)
+                .frame(minWidth: 68, minHeight: 44)
+                .foregroundStyle(isSelected ? Color.white : TelocareTheme.coral)
+                .background(
+                    RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous)
+                        .fill(isSelected ? TelocareTheme.coral : TelocareTheme.peach)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var patchApplyIsBlocked: Bool {
+        if pendingGraphPatchConflicts.isEmpty {
+            return false
+        }
+        let conflictIndices = Set(pendingGraphPatchConflicts.map(\.operationIndex))
+        return conflictIndices.isSubset(of: Set(pendingGraphPatchConflictResolutions.keys)) == false
+    }
+
+    private func appendAssistantMessage(_ content: String) {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        if messages.last?.content == trimmed, messages.last?.isFromUser == false {
+            return
+        }
+
+        messages.append(
+            ChatMessage(
                 id: UUID(),
-                content: "I appreciate your question! The AI backend isn't connected yet, but once it is, I'll be able to help analyze your sleep data and provide personalized recommendations.",
+                content: trimmed,
                 isFromUser: false,
                 timestamp: Date()
-            ))
-        }
+            )
+        )
     }
 }
 

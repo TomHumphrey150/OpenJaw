@@ -61,6 +61,9 @@ struct DefaultRootDashboardFactory: RootDashboardFactory {
             initialNightOutcomes: document.nightOutcomes,
             initialMorningStates: document.morningStates,
             initialMorningQuestionnaire: document.morningQuestionnaire,
+            initialProgressQuestionSetState: document.progressQuestionSetState,
+            initialGardenAliasOverrides: document.gardenAliasOverrides,
+            initialCustomCausalDiagram: document.customCausalDiagram,
             initialActiveInterventions: document.activeInterventions,
             persistUserDataPatch: { patch in
                 try await userDataRepository.upsertUserDataPatch(patch)

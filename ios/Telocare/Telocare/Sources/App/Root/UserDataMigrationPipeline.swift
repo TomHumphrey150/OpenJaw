@@ -25,9 +25,11 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             fetchedDocument,
             fallbackGraph: fallbackGraph
         )
-        let graphMigratedDocument = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
+        let dormantGraphMigratedDocument = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
+        let graphMetadataMigratedDocument = withGraphMetadataMigrationIfNeeded(dormantGraphMigratedDocument)
+        let questionSetMigratedDocument = withProgressQuestionSetStateIfMissing(graphMetadataMigratedDocument)
         let migratedDocument = withWakeDaySleepAttributionMigrationIfNeeded(
-            graphMigratedDocument,
+            questionSetMigratedDocument,
             interventionsCatalog: firstPartyContent.interventionsCatalog
         )
 
@@ -40,15 +42,15 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
 
         let dormantGraphMigrationDiagram: CustomCausalDiagram?
         if fetchedDocument.customCausalDiagram != nil,
-            hydratedDocument.customCausalDiagram != graphMigratedDocument.customCausalDiagram {
-            dormantGraphMigrationDiagram = graphMigratedDocument.customCausalDiagram
+            hydratedDocument.customCausalDiagram != graphMetadataMigratedDocument.customCausalDiagram {
+            dormantGraphMigrationDiagram = graphMetadataMigratedDocument.customCausalDiagram
         } else {
             dormantGraphMigrationDiagram = nil
         }
 
         let sleepAttributionMigrationPatch: UserDataPatch?
         if shouldPersistWakeDaySleepAttributionMigration(
-            from: graphMigratedDocument,
+            from: questionSetMigratedDocument,
             migrated: migratedDocument
         ) {
             sleepAttributionMigrationPatch = .sleepAttributionMigration(
@@ -100,6 +102,109 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             lastModified: Self.timestampNow()
         )
         return document.withCustomCausalDiagram(migratedDiagram)
+    }
+
+    private func withGraphMetadataMigrationIfNeeded(_ document: UserDataDocument) -> UserDataDocument {
+        guard let customCausalDiagram = document.customCausalDiagram else {
+            return document
+        }
+
+        let nodeByID = Dictionary(uniqueKeysWithValues: customCausalDiagram.graphData.nodes.map { ($0.data.id, $0.data) })
+        var edgeCountByCanonicalPrefix: [String: Int] = [:]
+        var hasEdgeChanges = false
+        let migratedEdges = customCausalDiagram.graphData.edges.map { edgeElement in
+            let edge = edgeElement.data
+            let canonicalPrefix = Self.canonicalEdgeIDPrefix(
+                source: edge.source,
+                target: edge.target,
+                label: edge.label,
+                edgeType: edge.edgeType
+            )
+            let sequence = edgeCountByCanonicalPrefix[canonicalPrefix] ?? 0
+            edgeCountByCanonicalPrefix[canonicalPrefix] = sequence + 1
+            let canonicalID = "\(canonicalPrefix)#\(sequence)"
+            let resolvedID = edge.id ?? canonicalID
+            let targetNode = nodeByID[edge.target]
+            let resolvedStrength = edge.strength ?? Self.inferredStrength(edge, targetNode: targetNode)
+
+            if resolvedID != edge.id || resolvedStrength != edge.strength {
+                hasEdgeChanges = true
+            }
+
+            return GraphEdgeElement(
+                data: GraphEdgeData(
+                    id: resolvedID,
+                    source: edge.source,
+                    target: edge.target,
+                    label: edge.label,
+                    edgeType: edge.edgeType,
+                    edgeColor: edge.edgeColor,
+                    tooltip: edge.tooltip,
+                    strength: resolvedStrength,
+                    isDeactivated: edge.isDeactivated
+                )
+            )
+        }
+
+        let resolvedGraphVersion = customCausalDiagram.graphVersion
+            ?? Self.graphVersion(for: customCausalDiagram.graphData)
+        let resolvedBaseGraphVersion = customCausalDiagram.baseGraphVersion
+            ?? customCausalDiagram.graphVersion
+            ?? resolvedGraphVersion
+        let hasVersionChanges =
+            resolvedGraphVersion != customCausalDiagram.graphVersion
+            || resolvedBaseGraphVersion != customCausalDiagram.baseGraphVersion
+
+        guard hasEdgeChanges || hasVersionChanges else {
+            return document
+        }
+
+        let migratedDiagram = CustomCausalDiagram(
+            graphData: CausalGraphData(
+                nodes: customCausalDiagram.graphData.nodes,
+                edges: migratedEdges
+            ),
+            lastModified: customCausalDiagram.lastModified ?? Self.timestampNow(),
+            graphVersion: resolvedGraphVersion,
+            baseGraphVersion: resolvedBaseGraphVersion
+        )
+        return document.withCustomCausalDiagram(migratedDiagram)
+    }
+
+    private func withProgressQuestionSetStateIfMissing(_ document: UserDataDocument) -> UserDataDocument {
+        guard document.progressQuestionSetState == nil else {
+            return document
+        }
+
+        let sourceGraphVersion = document.customCausalDiagram?.graphVersion ?? "graph-unknown"
+        let fields = document.morningQuestionnaire?.enabledFields ?? [
+            .globalSensation,
+            .neckTightness,
+            .jawSoreness,
+            .earFullness,
+            .healthAnxiety,
+        ]
+        let questions = fields.map { field in
+            GraphDerivedProgressQuestion(
+                id: "morning.\(field.rawValue)",
+                title: Self.defaultQuestionTitle(for: field),
+                sourceNodeIDs: [],
+                sourceEdgeIDs: []
+            )
+        }
+        let state = ProgressQuestionSetState(
+            activeQuestionSetVersion: "question-set.v1",
+            activeSourceGraphVersion: sourceGraphVersion,
+            declinedGraphVersions: [],
+            pendingProposal: ProgressQuestionSetProposal(
+                sourceGraphVersion: sourceGraphVersion,
+                proposedQuestionSetVersion: "question-set.v1",
+                questions: questions,
+                createdAt: Self.timestampNow()
+            ),
+            updatedAt: Self.timestampNow()
+        )
+        return document.withProgressQuestionSetState(state)
     }
 
     private func withWakeDaySleepAttributionMigrationIfNeeded(
@@ -302,7 +407,8 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
                 confidence: outcome.confidence,
                 totalSleepMinutes: outcome.totalSleepMinutes,
                 source: outcome.source,
-                createdAt: outcome.createdAt
+                createdAt: outcome.createdAt,
+                graphAssociation: outcome.graphAssociation
             )
             outcomesByNightID[shiftedNightID] = preferredNightOutcome(
                 existing: outcomesByNightID[shiftedNightID],
@@ -351,7 +457,8 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
                 stressLevel: state.stressLevel,
                 morningHeadache: state.morningHeadache,
                 dryMouth: state.dryMouth,
-                createdAt: state.createdAt
+                createdAt: state.createdAt,
+                graphAssociation: state.graphAssociation
             )
             statesByNightID[shiftedNightID] = preferredMorningState(
                 existing: statesByNightID[shiftedNightID],
@@ -419,5 +526,95 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
 
     private static func timestampNow() -> String {
         ISO8601DateFormatter().string(from: Date())
+    }
+
+    private static func canonicalEdgeIDPrefix(
+        source: String,
+        target: String,
+        label: String?,
+        edgeType: String?
+    ) -> String {
+        let normalizedLabel = (label ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        let normalizedEdgeType = (edgeType ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return "edge:\(source)|\(target)|\(normalizedEdgeType)|\(normalizedLabel)"
+    }
+
+    private static func inferredStrength(_ edge: GraphEdgeData, targetNode: GraphNodeData?) -> Double {
+        let normalizedEdgeType = edge.edgeType?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        let baseStrength: Double
+        if normalizedEdgeType == "protective" || normalizedEdgeType == "inhibits" {
+            baseStrength = -0.6
+        } else if normalizedEdgeType == "feedback" {
+            baseStrength = 0.7
+        } else if normalizedEdgeType == "dashed" {
+            baseStrength = 0.45
+        } else if normalizedEdgeType == "causal" || normalizedEdgeType == "causes" || normalizedEdgeType == "triggers" || normalizedEdgeType == "forward" {
+            baseStrength = 0.8
+        } else {
+            baseStrength = 0.55
+        }
+
+        let evidence = (targetNode?.tooltip?.evidence ?? edge.label ?? edge.tooltip ?? "").lowercased()
+        let evidenceFactor: Double
+        if evidence.contains("robust") || evidence.contains("strong") || evidence.contains("high") {
+            evidenceFactor = 1.0
+        } else if evidence.contains("moderate") || evidence.contains("medium") {
+            evidenceFactor = 0.75
+        } else if evidence.contains("preliminary") || evidence.contains("low") || evidence.contains("limited") {
+            evidenceFactor = 0.55
+        } else {
+            evidenceFactor = 0.4
+        }
+
+        let scaled = baseStrength * evidenceFactor
+        return min(1.0, max(-1.0, scaled))
+    }
+
+    private static func graphVersion(for graphData: CausalGraphData) -> String {
+        var fingerprint = graphData.nodes
+            .map { node in "\(node.data.id)|\(node.data.styleClass)|\(node.data.confirmed ?? "")|\(node.data.tier ?? -1)" }
+            .sorted()
+            .joined(separator: ";")
+        fingerprint.append("|")
+        fingerprint.append(
+            graphData.edges
+                .map { edge in
+                    "\(edge.data.source)|\(edge.data.target)|\(edge.data.edgeType ?? "")|\(edge.data.label ?? "")|\(edge.data.strength ?? 0)"
+                }
+                .sorted()
+                .joined(separator: ";")
+        )
+
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in fingerprint.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 0x100000001b3
+        }
+        return String(format: "graph-%016llx", hash)
+    }
+
+    private static func defaultQuestionTitle(for field: MorningQuestionField) -> String {
+        switch field {
+        case .globalSensation:
+            return "Global sensation"
+        case .neckTightness:
+            return "Neck tightness"
+        case .jawSoreness:
+            return "Jaw soreness"
+        case .earFullness:
+            return "Ear fullness"
+        case .healthAnxiety:
+            return "Health anxiety"
+        case .stressLevel:
+            return "Stress level"
+        case .morningHeadache:
+            return "Morning headache"
+        case .dryMouth:
+            return "Dry mouth"
+        }
     }
 }

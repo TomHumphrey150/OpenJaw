@@ -256,7 +256,7 @@ struct RootViewModelTests {
         #expect(patch?.customCausalDiagram?.graphData.edges.first?.data.isDeactivated == true)
     }
 
-    @Test func existingCustomGraphWithExplicitDeactivationSkipsDormantMigrationPatch() async {
+    @Test func existingCustomGraphWithExplicitDeactivationSkipsDormantSeedingAndPersistsMetadataMigrationPatch() async {
         let graphData = CausalGraphData(
             nodes: [
                 GraphNodeElement(
@@ -315,8 +315,14 @@ struct RootViewModelTests {
         viewModel.submitSignIn()
 
         await waitUntil { viewModel.state == .ready }
-        try? await Task.sleep(nanoseconds: 200_000_000)
-        #expect(await repository.patchCallCount() == 0)
+        await waitUntil { await repository.patchCallCount() == 1 }
+        let patch = await repository.lastPatch()
+        let node = patch?.customCausalDiagram?.graphData.nodes.first?.data
+        let edge = patch?.customCausalDiagram?.graphData.edges.first?.data
+        #expect(node?.isDeactivated == true)
+        #expect(edge?.isDeactivated == nil)
+        #expect(edge?.id != nil)
+        #expect(edge?.strength != nil)
     }
 
     @Test func wakeDaySleepMigrationShiftsHistoricalSleepKeysAndPersistsMarkerPatch() async {

@@ -8,7 +8,7 @@ struct ExploreTabShell: View {
     var body: some View {
         TabView(selection: selectedTabBinding) {
             ExploreInputsScreen(
-                inputs: viewModel.snapshot.inputs,
+                inputs: viewModel.projectedInputs,
                 graphData: viewModel.graphData,
                 onToggleCheckedToday: viewModel.toggleInputCheckedToday,
                 onIncrementDose: viewModel.incrementInputDose,
@@ -112,6 +112,20 @@ struct ExploreTabShell: View {
             ExploreChatScreen(
                 draft: $viewModel.chatDraft,
                 feedback: viewModel.exploreFeedback,
+                pendingGraphPatchPreview: viewModel.pendingGraphPatchPreview,
+                pendingGraphPatchConflicts: viewModel.pendingGraphPatchConflicts,
+                pendingGraphPatchConflictResolutions: viewModel.pendingGraphPatchConflictResolutions,
+                checkpointVersions: viewModel.graphCheckpointVersions,
+                graphVersion: viewModel.projectedGuideGraphVersion,
+                onSetConflictResolution: { operationIndex, choice in
+                    viewModel.setPendingGraphPatchConflictResolution(
+                        operationIndex: operationIndex,
+                        choice: choice
+                    )
+                },
+                onApplyPendingPatch: viewModel.applyPendingGraphPatchFromReview,
+                onDismissPendingPatch: viewModel.clearPendingGraphPatchPreview,
+                onRollbackGraphVersion: viewModel.rollbackGraph(to:),
                 onSend: viewModel.submitChatPrompt,
                 selectedSkinID: selectedSkinID
             )
@@ -121,12 +135,44 @@ struct ExploreTabShell: View {
         }
         .tint(TelocareTheme.coral)
         .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
+        .alert(
+            "Progress Questions Updated",
+            isPresented: progressQuestionProposalPresentationBinding,
+            actions: {
+                Button("Accept") {
+                    viewModel.acceptProgressQuestionProposal()
+                }
+                Button("Decline", role: .cancel) {
+                    viewModel.declineProgressQuestionProposal()
+                }
+            },
+            message: {
+                if let proposal = viewModel.progressQuestionProposal {
+                    Text(
+                        "Graph \(proposal.sourceGraphVersion) proposes \(proposal.questions.count) updated questions. Accept to adopt this set for Progress."
+                    )
+                } else {
+                    Text("This graph version has a new question set proposal.")
+                }
+            }
+        )
     }
 
     private var selectedTabBinding: Binding<ExploreTab> {
         Binding(
             get: { viewModel.selectedExploreTab },
             set: viewModel.selectExploreTab
+        )
+    }
+
+    private var progressQuestionProposalPresentationBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.isProgressQuestionProposalPresented },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissProgressQuestionProposalPrompt()
+                }
+            }
         )
     }
 }

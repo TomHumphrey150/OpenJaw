@@ -1,12 +1,7 @@
 import Foundation
 
 extension UserDataDocument {
-    func withSleepAttributionMigration(
-        dailyDoseProgress: [String: [String: Double]],
-        nightOutcomes: [NightOutcome],
-        morningStates: [MorningState],
-        wakeDaySleepAttributionMigrated: Bool
-    ) -> UserDataDocument {
+    func withProgressQuestionSetState(_ progressQuestionSetState: ProgressQuestionSetState) -> UserDataDocument {
         UserDataDocument(
             version: version,
             lastExport: lastExport,

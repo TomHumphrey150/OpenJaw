@@ -15,10 +15,10 @@ struct GardenNameResolverTests {
         #expect(title == "Reflux Pressure")
     }
 
-    @Test func twoNodeLayerUsesPathOrderWithPlusSeparator() {
+    @Test func twoNodeLayerUsesSortedNamesWithPlusSeparator() {
         let labelByID = ["N1": "Alpha", "N2": "Beta"]
         let title = resolver.layerTitle(nodePath: ["N2", "N1"], labelByID: labelByID)
-        #expect(title == "Beta + Alpha")
+        #expect(title == "Alpha + Beta")
     }
 
     @Test func threeNodeLayerUsesCuratedLayerAlias() {
@@ -34,7 +34,7 @@ struct GardenNameResolverTests {
         #expect(title == "Arousal Loop")
     }
 
-    @Test func unknownLayerAliasFallsBackDeterministicallyToSortedNodeTitles() {
+    @Test func unknownLayerAliasFallsBackDeterministicallyToPrimaryNetworkName() {
         let labelByID = [
             "X3": "Gamma\nvalue",
             "X1": "Alpha",
@@ -44,7 +44,20 @@ struct GardenNameResolverTests {
         let first = resolver.layerTitle(nodePath: ["X3", "X1", "X2"], labelByID: labelByID)
         let second = resolver.layerTitle(nodePath: ["X2", "X3", "X1"], labelByID: labelByID)
 
-        #expect(first == "Alpha + Beta + Gamma")
-        #expect(second == "Alpha + Beta + Gamma")
+        #expect(first == "Alpha Network")
+        #expect(second == "Alpha Network")
+    }
+
+    @Test func layerOverrideTakesPrecedence() {
+        let override = GardenAliasOverride(
+            signature: LayerSignature(nodeIDs: ["X1", "X2", "X3"]).rawValue,
+            title: "Custom Loop",
+            approvedAt: "2026-02-27T00:00:00Z",
+            sourceGraphVersion: "graph-v1"
+        )
+        let resolver = GardenNameResolver(overrides: [override])
+        let labelByID = ["X1": "Alpha", "X2": "Beta", "X3": "Gamma"]
+        let title = resolver.layerTitle(nodePath: ["X3", "X1", "X2"], labelByID: labelByID)
+        #expect(title == "Custom Loop")
     }
 }

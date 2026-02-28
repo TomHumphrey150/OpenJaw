@@ -127,18 +127,18 @@ struct ExploreInputsScreen: View {
         gardenHierarchyResult.resolvedNodePath
     }
 
+    private var resolvedClusterPath: [GardenClusterSnapshot] {
+        gardenHierarchyResult.resolvedClusterPath
+    }
+
     private var breadcrumbSegments: [GardenBreadcrumbSegment] {
         var segments = [GardenBreadcrumbSegment(depth: 0, title: "All Gardens")]
 
-        for (index, nodeID) in resolvedNodePath.enumerated() {
-            let title = gardenHierarchyBuilder.nodeTitle(
-                for: nodeID,
-                in: graphData
-            )
+        for (index, cluster) in resolvedClusterPath.enumerated() {
             segments.append(
                 GardenBreadcrumbSegment(
                     depth: index + 1,
-                    title: title
+                    title: cluster.title
                 )
             )
         }
@@ -191,6 +191,13 @@ struct ExploreInputsScreen: View {
     @ViewBuilder
     private var gardenContentSection: some View {
         VStack(spacing: TelocareTheme.Spacing.sm) {
+            HStack {
+                Text("Health Gardens")
+                    .font(TelocareTheme.Typography.headline)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                Spacer()
+            }
+
             if !hierarchyCurrentClusters.isEmpty {
                 gardenGrid
                     .transition(.opacity.combined(with: .move(edge: .trailing)))

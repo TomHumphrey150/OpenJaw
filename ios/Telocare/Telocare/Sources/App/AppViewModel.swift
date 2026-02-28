@@ -13,11 +13,19 @@ enum AppleHealthRefreshTrigger: Sendable {
 final class AppViewModel: ObservableObject {
     @Published private(set) var mode: AppMode
     @Published private(set) var guidedStep: GuidedStep
-    @Published private(set) var snapshot: DashboardSnapshot
+    @Published private(set) var snapshot: DashboardSnapshot {
+        didSet {
+            scheduleProjectionPublish()
+        }
+    }
     @Published private(set) var isProfileSheetPresented: Bool
     @Published private(set) var selectedExploreTab: ExploreTab
     @Published private(set) var exploreFeedback: String
-    @Published private(set) var graphData: CausalGraphData
+    @Published private(set) var graphData: CausalGraphData {
+        didSet {
+            scheduleProjectionPublish()
+        }
+    }
     @Published private(set) var graphDisplayFlags: GraphDisplayFlags
     @Published private(set) var focusedNodeID: String?
     @Published private(set) var graphSelectionText: String
@@ -31,6 +39,12 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var museFitPrimaryBlockerText: String?
     @Published private(set) var museSetupDiagnosticsFileURLs: [URL]
     @Published private(set) var museSessionFeedback: String
+    @Published private(set) var pendingGraphPatchPreview: GraphPatchPreview?
+    @Published private(set) var pendingGraphPatchConflicts: [GraphPatchConflict]
+    @Published private(set) var pendingGraphPatchConflictResolutions: [Int: GraphConflictResolutionChoice]
+    @Published private(set) var graphCheckpointVersions: [String]
+    @Published private(set) var progressQuestionProposal: ProgressQuestionSetProposal?
+    @Published private(set) var isProgressQuestionProposalPresented: Bool
     @Published var chatDraft: String
 
     private var experienceFlow: ExperienceFlow
@@ -55,7 +69,11 @@ final class AppViewModel: ObservableObject {
     private var museOutcomeSaveOperationToken: Int
     private var museDiagnosticsPollingTask: Task<Void, Never>?
     private var museFitDiagnosticsPollingTask: Task<Void, Never>?
+    private var projectionPublishTask: Task<Void, Never>?
     private var museRecordingStartedWithFitOverride: Bool
+    private var progressQuestionSetState: ProgressQuestionSetState?
+    private var gardenAliasOverrides: [GardenAliasOverride]
+    private var pendingGraphPatchEnvelope: GraphPatchEnvelope?
     private let configuredMorningOutcomeFields: [MorningOutcomeField]
     private let requiredMorningOutcomeFields: [MorningOutcomeField]
     private let configuredMorningTrendMetrics: [MorningTrendMetric]
@@ -72,6 +90,10 @@ final class AppViewModel: ObservableObject {
     private let morningOutcomeMutationService: MorningOutcomeMutationService
     private let appleHealthSyncCoordinator: AppleHealthSyncCoordinator
     private let museSessionCoordinator: MuseSessionCoordinator
+    private let graphKernel: GraphKernel
+    private let graphProjectionHub: GraphProjectionHub
+    private let graphPatchCodec: GraphPatchJSONCodec
+    private let progressQuestionProposalBuilder: ProgressQuestionProposalBuilder
     private static let maxCompletionEventsPerIntervention = 200
     private static let minimumMuseRecordingMinutes = 120.0
     private static let museOutcomeSource = "muse_athena_heuristic_v1"
@@ -208,6 +230,9 @@ final class AppViewModel: ObservableObject {
         initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
         initialMorningQuestionnaire: MorningQuestionnaire? = nil,
+        initialProgressQuestionSetState: ProgressQuestionSetState? = nil,
+        initialGardenAliasOverrides: [GardenAliasOverride] = [],
+        initialCustomCausalDiagram: CustomCausalDiagram? = nil,
         initialActiveInterventions: [String] = [],
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
@@ -220,6 +245,7 @@ final class AppViewModel: ObservableObject {
         morningOutcomeMutationService: MorningOutcomeMutationService = DefaultMorningOutcomeMutationService(),
         appleHealthSyncCoordinator: AppleHealthSyncCoordinator? = nil,
         museSessionCoordinator: MuseSessionCoordinator = DefaultMuseSessionCoordinator(),
+        progressQuestionProposalBuilder: ProgressQuestionProposalBuilder = ProgressQuestionProposalBuilder(),
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
         let todayKey = Self.localDateKey(from: nowProvider())
@@ -255,6 +281,12 @@ final class AppViewModel: ObservableObject {
         museFitPrimaryBlockerText = nil
         museSetupDiagnosticsFileURLs = []
         museSessionFeedback = "Muse session idle."
+        pendingGraphPatchPreview = nil
+        pendingGraphPatchConflicts = []
+        pendingGraphPatchConflictResolutions = [:]
+        graphCheckpointVersions = []
+        progressQuestionProposal = nil
+        isProgressQuestionProposalPresented = false
         chatDraft = ""
         configuredMorningOutcomeFields = resolvedMorningOutcomeFields
         requiredMorningOutcomeFields = resolvedRequiredMorningOutcomeFields
@@ -289,7 +321,11 @@ final class AppViewModel: ObservableObject {
         museOutcomeSaveOperationToken = 0
         museDiagnosticsPollingTask = nil
         museFitDiagnosticsPollingTask = nil
+        projectionPublishTask = nil
         museRecordingStartedWithFitOverride = false
+        progressQuestionSetState = initialProgressQuestionSetState
+        gardenAliasOverrides = initialGardenAliasOverrides
+        pendingGraphPatchEnvelope = nil
 
         self.persistUserDataPatch = persistUserDataPatch
         self.appleHealthDoseService = appleHealthDoseService
@@ -303,7 +339,30 @@ final class AppViewModel: ObservableObject {
         self.appleHealthSyncCoordinator = appleHealthSyncCoordinator
             ?? DefaultAppleHealthSyncCoordinator(appleHealthDoseService: appleHealthDoseService)
         self.museSessionCoordinator = museSessionCoordinator
+        let initialDiagram = initialCustomCausalDiagram
+            ?? CustomCausalDiagram(
+                graphData: seededGraphData,
+                lastModified: DateKeying.timestamp(from: nowProvider()),
+                graphVersion: nil,
+                baseGraphVersion: nil
+            )
+        graphKernel = GraphKernel(
+            diagram: initialDiagram,
+            aliasOverrides: initialGardenAliasOverrides
+        )
+        graphProjectionHub = GraphProjectionHub(
+            inputs: snapshot.inputs,
+            graphData: seededGraphData,
+            graphVersion: initialDiagram.graphVersion,
+            questionSetState: initialProgressQuestionSetState
+        )
+        graphPatchCodec = GraphPatchJSONCodec()
+        self.progressQuestionProposalBuilder = progressQuestionProposalBuilder
         self.accessibilityAnnouncer = accessibilityAnnouncer
+
+        Task {
+            await publishGraphProjections()
+        }
     }
 
     func openProfileSheet() {
@@ -324,6 +383,14 @@ final class AppViewModel: ObservableObject {
 
     var morningTrendMetricOptions: [MorningTrendMetric] {
         configuredMorningTrendMetrics
+    }
+
+    var projectedInputs: [InputStatus] {
+        graphProjectionHub.habits.inputs
+    }
+
+    var projectedGuideGraphVersion: String? {
+        graphProjectionHub.guide.graphVersion
     }
 
     var museConnectionStatusText: String {
@@ -723,6 +790,7 @@ final class AppViewModel: ObservableObject {
     func selectExploreTab(_ tab: ExploreTab) {
         guard mode == .explore else { return }
         selectedExploreTab = tab
+        presentProgressQuestionProposalIfNeeded(for: tab)
         announce("\(tab.title) tab selected.")
     }
 
@@ -730,6 +798,95 @@ final class AppViewModel: ObservableObject {
         guard mode == .explore else { return }
         exploreFeedback = action.detail
         announce(action.announcement)
+    }
+
+    func applyPendingGraphPatchFromReview() {
+        guard mode == .explore else { return }
+        applyPendingGraphPatch(command: "apply patch")
+    }
+
+    func clearPendingGraphPatchPreview() {
+        guard mode == .explore else { return }
+        pendingGraphPatchEnvelope = nil
+        pendingGraphPatchPreview = nil
+        pendingGraphPatchConflicts = []
+        pendingGraphPatchConflictResolutions = [:]
+
+        Task {
+            await publishGraphProjections()
+        }
+    }
+
+    func setPendingGraphPatchConflictResolution(
+        operationIndex: Int,
+        choice: GraphConflictResolutionChoice
+    ) {
+        guard mode == .explore else { return }
+        pendingGraphPatchConflictResolutions[operationIndex] = choice
+    }
+
+    func rollbackGraph(to graphVersion: String) {
+        guard mode == .explore else { return }
+        rollbackGraph(command: "rollback \(graphVersion)")
+    }
+
+    func acceptProgressQuestionProposal() {
+        guard mode == .explore else { return }
+        guard let proposal = progressQuestionProposal else { return }
+
+        let existingDeclines = Set(progressQuestionSetState?.declinedGraphVersions ?? [])
+        let nextDeclines = existingDeclines.subtracting([proposal.sourceGraphVersion]).sorted()
+        let nextState = ProgressQuestionSetState(
+            activeQuestionSetVersion: proposal.proposedQuestionSetVersion,
+            activeSourceGraphVersion: proposal.sourceGraphVersion,
+            declinedGraphVersions: nextDeclines,
+            pendingProposal: nil,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        progressQuestionSetState = nextState
+        progressQuestionProposal = nil
+        isProgressQuestionProposalPresented = false
+
+        Task {
+            do {
+                try await persistPatch(.progressQuestionSetState(nextState))
+                await publishGraphProjections()
+            } catch {
+            }
+        }
+    }
+
+    func declineProgressQuestionProposal() {
+        guard mode == .explore else { return }
+        guard let proposal = progressQuestionProposal else { return }
+
+        let current = progressQuestionSetState ?? baselineProgressQuestionSetState(for: proposal.sourceGraphVersion)
+        let nextDeclines = Set(current.declinedGraphVersions)
+            .union([proposal.sourceGraphVersion])
+            .sorted()
+        let nextState = ProgressQuestionSetState(
+            activeQuestionSetVersion: current.activeQuestionSetVersion,
+            activeSourceGraphVersion: current.activeSourceGraphVersion,
+            declinedGraphVersions: nextDeclines,
+            pendingProposal: nil,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        progressQuestionSetState = nextState
+        progressQuestionProposal = nil
+        isProgressQuestionProposalPresented = false
+
+        Task {
+            do {
+                try await persistPatch(.progressQuestionSetState(nextState))
+                await publishGraphProjections()
+            } catch {
+            }
+        }
+    }
+
+    func dismissProgressQuestionProposalPrompt() {
+        guard mode == .explore else { return }
+        isProgressQuestionProposalPresented = false
     }
 
     func submitChatPrompt() {
@@ -740,10 +897,335 @@ final class AppViewModel: ObservableObject {
             announce(exploreFeedback)
             return
         }
-        exploreFeedback = "AI chat backend is not connected yet. Draft not sent: \(prompt)"
         chatDraft = ""
+
+        if looksLikeGraphPatchPayload(prompt) {
+            previewGraphPatch(from: prompt)
+            return
+        }
+
+        let normalizedPrompt = prompt.lowercased()
+        if normalizedPrompt == "apply patch" || normalizedPrompt == "apply patch local" || normalizedPrompt == "apply patch server" {
+            applyPendingGraphPatch(command: normalizedPrompt)
+            return
+        }
+
+        if normalizedPrompt == "export graph" {
+            exportGraph()
+            return
+        }
+
+        if normalizedPrompt.hasPrefix("rollback ") {
+            rollbackGraph(command: prompt)
+            return
+        }
+
+        exploreFeedback = "AI chat backend is not connected yet. Draft not sent: \(prompt)"
         announce("AI chat backend is not connected yet.")
     }
+
+    private func looksLikeGraphPatchPayload(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasPrefix("{") && trimmed.contains("\"operations\"")
+    }
+
+    private func previewGraphPatch(from rawText: String) {
+        let envelope: GraphPatchEnvelope
+        do {
+            envelope = try graphPatchCodec.decodeEnvelope(from: rawText)
+        } catch {
+            exploreFeedback = "Patch parse failed. Submit valid JSON with schemaVersion, baseGraphVersion, operations, and explanations."
+            announce(exploreFeedback)
+            return
+        }
+
+        Task {
+            do {
+                let previewResult = try await graphKernel.preview(envelope)
+                pendingGraphPatchEnvelope = previewResult.preview.envelope
+                pendingGraphPatchPreview = previewResult.preview
+                pendingGraphPatchConflicts = previewResult.conflicts
+                pendingGraphPatchConflictResolutions = [:]
+                await publishGraphProjections()
+
+                if previewResult.conflicts.isEmpty {
+                    exploreFeedback = "Patch preview ready (\(previewResult.preview.summaryLines.joined(separator: ", "))). Send APPLY PATCH to confirm."
+                } else {
+                    exploreFeedback = "Patch preview has \(previewResult.conflicts.count) conflict(s). Send APPLY PATCH LOCAL or APPLY PATCH SERVER."
+                }
+                announce(exploreFeedback)
+            } catch GraphKernelError.validationFailed(let errors) {
+                pendingGraphPatchEnvelope = nil
+                pendingGraphPatchPreview = nil
+                pendingGraphPatchConflicts = []
+                pendingGraphPatchConflictResolutions = [:]
+                await publishGraphProjections()
+                exploreFeedback = "Patch validation failed: \(errors.joined(separator: " "))"
+                announce(exploreFeedback)
+            } catch {
+                pendingGraphPatchEnvelope = nil
+                pendingGraphPatchPreview = nil
+                pendingGraphPatchConflicts = []
+                pendingGraphPatchConflictResolutions = [:]
+                await publishGraphProjections()
+                exploreFeedback = "Patch preview failed."
+                announce(exploreFeedback)
+            }
+        }
+    }
+
+    private func applyPendingGraphPatch(command: String) {
+        guard let envelope = pendingGraphPatchEnvelope else {
+            exploreFeedback = "No pending patch preview. Submit patch JSON first."
+            announce(exploreFeedback)
+            return
+        }
+
+        let defaultResolution: GraphConflictResolutionChoice?
+        if command.hasSuffix(" server") {
+            defaultResolution = .server
+        } else if command.hasSuffix(" local") {
+            defaultResolution = .local
+        } else {
+            defaultResolution = nil
+        }
+
+        Task {
+            var resolutions = pendingGraphPatchConflictResolutions
+            if let defaultResolution {
+                for conflict in pendingGraphPatchConflicts {
+                    resolutions[conflict.operationIndex] = defaultResolution
+                }
+            }
+            pendingGraphPatchConflictResolutions = resolutions
+
+            do {
+                let previousGraphData = graphData
+                let previousAliasOverrides = gardenAliasOverrides
+                let applied = try await graphKernel.apply(envelope, conflictResolutions: resolutions)
+                graphData = applied.diagram.graphData
+                gardenAliasOverrides = applied.aliasOverrides
+                pendingGraphPatchEnvelope = nil
+                pendingGraphPatchPreview = nil
+                pendingGraphPatchConflicts = []
+                pendingGraphPatchConflictResolutions = [:]
+                await publishGraphProjections()
+
+                let operationToken = nextGraphDeactivationOperationToken()
+                do {
+                    try await persistPatch(
+                        .customCausalDiagramAndGardenAliasOverrides(
+                            applied.diagram,
+                            applied.aliasOverrides
+                        )
+                    )
+                    exploreFeedback = "Applied graph patch (\(envelope.operations.count) operations)."
+                    announce(exploreFeedback)
+                } catch {
+                    guard operationToken == graphDeactivationOperationToken else { return }
+                    graphData = previousGraphData
+                    gardenAliasOverrides = previousAliasOverrides
+                    await graphKernel.replaceGraphData(previousGraphData, lastModified: DateKeying.timestamp(from: nowProvider()))
+                    await publishGraphProjections()
+                    exploreFeedback = "Could not save graph patch. Reverted."
+                    announce(exploreFeedback)
+                }
+            } catch GraphKernelError.unresolvedConflicts {
+                exploreFeedback = "Patch has unresolved conflicts. Choose Local or Server for each conflict before applying."
+                announce(exploreFeedback)
+            } catch {
+                exploreFeedback = "Patch apply failed."
+                announce(exploreFeedback)
+            }
+        }
+    }
+
+    private func rollbackGraph(command: String) {
+        let parts = command.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+        guard parts.count == 2 else {
+            exploreFeedback = "Rollback command requires a graph version: ROLLBACK <graphVersion>."
+            announce(exploreFeedback)
+            return
+        }
+
+        let graphVersion = String(parts[1]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !graphVersion.isEmpty else {
+            exploreFeedback = "Rollback command requires a graph version: ROLLBACK <graphVersion>."
+            announce(exploreFeedback)
+            return
+        }
+
+        Task {
+            guard let rolledBackDiagram = await graphKernel.rollback(to: graphVersion) else {
+                exploreFeedback = "No checkpoint found for \(graphVersion)."
+                announce(exploreFeedback)
+                return
+            }
+
+            graphData = rolledBackDiagram.graphData
+            pendingGraphPatchEnvelope = nil
+            pendingGraphPatchPreview = nil
+            pendingGraphPatchConflicts = []
+            pendingGraphPatchConflictResolutions = [:]
+            await publishGraphProjections()
+
+            let operationToken = nextGraphDeactivationOperationToken()
+            do {
+                try await persistPatch(.customCausalDiagram(rolledBackDiagram))
+                exploreFeedback = "Rolled back graph to \(graphVersion)."
+                announce(exploreFeedback)
+            } catch {
+                guard operationToken == graphDeactivationOperationToken else { return }
+                exploreFeedback = "Rollback could not be persisted."
+                announce(exploreFeedback)
+            }
+        }
+    }
+
+    private func exportGraph() {
+        Task {
+            do {
+                let diagram = await graphKernel.currentDiagram()
+                let aliases = await graphKernel.currentAliasOverrides()
+                let exportText = try graphPatchCodec.encodeGraphExport(
+                    diagram: diagram,
+                    aliasOverrides: aliases
+                )
+                exploreFeedback = "Graph export ready. Characters: \(exportText.count)."
+                announce(exploreFeedback)
+            } catch {
+                exploreFeedback = "Graph export failed."
+                announce(exploreFeedback)
+            }
+        }
+    }
+
+    private func syncKernelGraphDataWithViewState() {
+        Task {
+            await graphKernel.replaceGraphData(
+                graphData,
+                lastModified: DateKeying.timestamp(from: nowProvider())
+            )
+            await publishGraphProjections()
+        }
+    }
+
+    private func scheduleProjectionPublish() {
+        projectionPublishTask?.cancel()
+        projectionPublishTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+            await self.publishGraphProjections()
+        }
+    }
+
+    private func publishGraphProjections() async {
+        let diagram = await graphKernel.currentDiagram()
+        let checkpoints = await graphKernel.checkpointHistory()
+        graphCheckpointVersions = checkpoints.map(\.graphVersion)
+        refreshProgressQuestionProposalState(for: diagram.graphVersion)
+        graphProjectionHub.publish(
+            inputs: snapshot.inputs,
+            graphData: graphData,
+            graphVersion: diagram.graphVersion,
+            questionSetState: progressQuestionSetState,
+            checkpointVersions: graphCheckpointVersions,
+            pendingConflicts: pendingGraphPatchConflicts,
+            pendingPreview: pendingGraphPatchPreview
+        )
+    }
+
+    private func refreshProgressQuestionProposalState(for graphVersion: String?) {
+        guard let graphVersion else {
+            progressQuestionProposal = nil
+            isProgressQuestionProposalPresented = false
+            return
+        }
+
+        if progressQuestionSetState == nil {
+            let baselineState = baselineProgressQuestionSetState(for: graphVersion)
+            progressQuestionSetState = baselineState
+            progressQuestionProposal = nil
+            isProgressQuestionProposalPresented = false
+            return
+        }
+
+        guard let existingState = progressQuestionSetState else {
+            return
+        }
+
+        if existingState.activeSourceGraphVersion == graphVersion {
+            progressQuestionProposal = nil
+            isProgressQuestionProposalPresented = false
+            if existingState.pendingProposal != nil {
+                let nextState = ProgressQuestionSetState(
+                    activeQuestionSetVersion: existingState.activeQuestionSetVersion,
+                    activeSourceGraphVersion: existingState.activeSourceGraphVersion,
+                    declinedGraphVersions: existingState.declinedGraphVersions,
+                    pendingProposal: nil,
+                    updatedAt: Self.timestamp(from: nowProvider())
+                )
+                progressQuestionSetState = nextState
+            }
+            return
+        }
+
+        if Set(existingState.declinedGraphVersions).contains(graphVersion) {
+            progressQuestionProposal = nil
+            isProgressQuestionProposalPresented = false
+            return
+        }
+
+        if let pendingProposal = existingState.pendingProposal,
+           pendingProposal.sourceGraphVersion == graphVersion {
+            progressQuestionProposal = pendingProposal
+            return
+        }
+
+        let proposal = buildProgressQuestionSetProposal(for: graphVersion)
+        progressQuestionProposal = proposal
+        let nextState = ProgressQuestionSetState(
+            activeQuestionSetVersion: existingState.activeQuestionSetVersion,
+            activeSourceGraphVersion: existingState.activeSourceGraphVersion,
+            declinedGraphVersions: existingState.declinedGraphVersions,
+            pendingProposal: proposal,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        progressQuestionSetState = nextState
+    }
+
+    private func presentProgressQuestionProposalIfNeeded(for tab: ExploreTab) {
+        guard tab == .outcomes else {
+            return
+        }
+        guard let proposal = progressQuestionProposal else {
+            return
+        }
+        guard proposal.sourceGraphVersion != progressQuestionSetState?.activeSourceGraphVersion else {
+            return
+        }
+        isProgressQuestionProposalPresented = true
+    }
+
+    private func baselineProgressQuestionSetState(for graphVersion: String) -> ProgressQuestionSetState {
+        ProgressQuestionSetState(
+            activeQuestionSetVersion: "questions-\(graphVersion)",
+            activeSourceGraphVersion: graphVersion,
+            declinedGraphVersions: [],
+            pendingProposal: nil,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+    }
+
+    private func buildProgressQuestionSetProposal(for graphVersion: String) -> ProgressQuestionSetProposal {
+        progressQuestionProposalBuilder.build(
+            graphData: graphData,
+            graphVersion: graphVersion,
+            createdAt: Self.timestamp(from: nowProvider())
+        )
+    }
+
 
     func setShowInterventionNodes(_ isEnabled: Bool) {
         guard graphDisplayFlags.showInterventionNodes != isEnabled else { return }
@@ -782,6 +1264,7 @@ final class AppViewModel: ObservableObject {
 
         let previousGraphData = graphData
         graphData = mutation.graphData
+        syncKernelGraphDataWithViewState()
         exploreFeedback = mutation.successMessage
         announce(mutation.successMessage)
 
@@ -792,6 +1275,7 @@ final class AppViewModel: ObservableObject {
             } catch {
                 guard operationToken == graphDeactivationOperationToken else { return }
                 graphData = previousGraphData
+                syncKernelGraphDataWithViewState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
             }
@@ -816,6 +1300,7 @@ final class AppViewModel: ObservableObject {
 
         let previousGraphData = graphData
         graphData = mutation.graphData
+        syncKernelGraphDataWithViewState()
         exploreFeedback = mutation.successMessage
         announce(mutation.successMessage)
 
@@ -826,6 +1311,7 @@ final class AppViewModel: ObservableObject {
             } catch {
                 guard operationToken == graphDeactivationOperationToken else { return }
                 graphData = previousGraphData
+                syncKernelGraphDataWithViewState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
             }
@@ -843,6 +1329,7 @@ final class AppViewModel: ObservableObject {
 
         let previousGraphData = graphData
         graphData = mutation.graphData
+        syncKernelGraphDataWithViewState()
         exploreFeedback = mutation.successMessage
         announce(mutation.successMessage)
 
@@ -853,6 +1340,7 @@ final class AppViewModel: ObservableObject {
             } catch {
                 guard operationToken == graphDeactivationOperationToken else { return }
                 graphData = previousGraphData
+                syncKernelGraphDataWithViewState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
             }

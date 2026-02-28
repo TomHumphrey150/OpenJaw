@@ -53,9 +53,21 @@ struct GardenAliasCatalog: Sendable {
 
 struct GardenNameResolver {
     private let catalog: GardenAliasCatalog
+    private let overrideTitleBySignature: [String: String]
 
-    init(catalog: GardenAliasCatalog = .default) {
+    init(
+        catalog: GardenAliasCatalog = .default,
+        overrides: [GardenAliasOverride] = []
+    ) {
         self.catalog = catalog
+        overrideTitleBySignature = Dictionary(uniqueKeysWithValues: overrides.map { ($0.signature, $0.title) })
+    }
+
+    func withOverrides(_ overrides: [GardenAliasOverride]) -> GardenNameResolver {
+        GardenNameResolver(
+            catalog: catalog,
+            overrides: overrides
+        )
     }
 
     func nodeTitle(nodeID: String, fallbackLabel: String?) -> String {
@@ -78,18 +90,26 @@ struct GardenNameResolver {
             return "All Gardens"
         }
 
+        let signature = LayerSignature(nodeIDs: nodePath)
+        if let overrideTitle = overrideTitleBySignature[signature.rawValue], !overrideTitle.isEmpty {
+            return overrideTitle
+        }
+
         if nodePath.count == 1 {
             let nodeID = nodePath[0]
             return nodeTitle(nodeID: nodeID, fallbackLabel: labelByID[nodeID])
         }
 
         if nodePath.count == 2 {
-            let lhs = nodeTitle(nodeID: nodePath[0], fallbackLabel: labelByID[nodePath[0]])
-            let rhs = nodeTitle(nodeID: nodePath[1], fallbackLabel: labelByID[nodePath[1]])
-            return "\(lhs) + \(rhs)"
+            let names = nodePath.map { nodeID in
+                nodeTitle(nodeID: nodeID, fallbackLabel: labelByID[nodeID])
+            }
+            .sorted { lhs, rhs in
+                lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+            }
+            return names.joined(separator: " + ")
         }
 
-        let signature = LayerSignature(nodeIDs: nodePath)
         if let layerAlias = catalog.layerAliasBySignature[signature], !layerAlias.isEmpty {
             return layerAlias
         }
@@ -99,7 +119,8 @@ struct GardenNameResolver {
             .map { nodeID in
                 nodeTitle(nodeID: nodeID, fallbackLabel: labelByID[nodeID])
             }
-        return sortedTitles.joined(separator: " + ")
+        let primary = sortedTitles.first ?? "Garden"
+        return "\(primary) Network"
     }
 
     private func firstLine(of text: String) -> String {
