@@ -22,7 +22,10 @@
     "test:coverage": "node --experimental-default-type=module --test --experimental-test-coverage test/*.test.mjs",
     "guard:ios-hotspots": "./scripts/guard-ios-hotspots.sh",
     "debug:graph-clusters": "node --env-file=.env.local scripts/debug-graph-clusters.mjs",
-    "debug:foundation-coverage": "node --env-file=.env.local scripts/debug-foundation-coverage.mjs"
+    "debug:foundation-coverage": "node --env-file=.env.local scripts/debug-foundation-coverage.mjs",
+    "debug:pillar-integrity": "node --env-file=.env.local -r ts-node/register scripts/debug-pillar-integrity.ts",
+    "patch:user-graph": "node --env-file=.env.local -r ts-node/register scripts/patch-user-graph.ts",
+    "debug:user-graph-audit": "node --env-file=.env.local -r ts-node/register scripts/debug-user-graph-audit.ts"
   },
   "packageManager": "npm@10",
   "dependencies": {

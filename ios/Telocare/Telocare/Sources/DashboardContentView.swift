@@ -84,6 +84,60 @@ struct DashboardContentView: View {
     }
 }
 
+enum GlobalLensNubBadge {
+    static func text(for preset: HealthLensPreset, selectedPillar: HealthPillar?) -> String {
+        switch preset {
+        case .all:
+            return "All"
+        case .foundation:
+            return "Fdn"
+        case .acute:
+            return "Aqt"
+        case .pillar:
+            guard let selectedPillar else {
+                return "Plr"
+            }
+            return pillarCode(for: selectedPillar.displayName)
+        }
+    }
+
+    private static func pillarCode(for title: String) -> String {
+        let words = title.split { character in
+            character.isWhitespace || character == "/" || character == "-"
+        }
+
+        if words.count > 1 {
+            let acronym = words
+                .prefix(3)
+                .compactMap(\.first)
+                .map { String($0).uppercased() }
+                .joined()
+            if !acronym.isEmpty {
+                return acronym
+            }
+        }
+
+        let merged = words.joined()
+        guard !merged.isEmpty else {
+            return "Plr"
+        }
+        return String(merged.prefix(3)).uppercased()
+    }
+}
+
+func globalLensAccessibilityIdentifier(for preset: HealthLensPreset) -> String {
+    switch preset {
+    case .all:
+        return AccessibilityID.exploreInputsLensAll
+    case .foundation:
+        return AccessibilityID.exploreInputsLensFoundation
+    case .acute:
+        return AccessibilityID.exploreInputsLensAcute
+    case .pillar:
+        return AccessibilityID.exploreInputsLensPillar
+    }
+}
+
 private struct GlobalLensFloatingControl: View {
     let preset: HealthLensPreset
     let pillars: [HealthPillarDefinition]
@@ -96,65 +150,31 @@ private struct GlobalLensFloatingControl: View {
     let onMoveToCorner: (LensControlCorner) -> Void
     let onResetPosition: () -> Void
     @State private var draggedPosition: LensControlPosition?
+    @State private var dragStartPosition: LensControlPosition?
 
     var body: some View {
         GeometryReader { geometry in
             let nubSize: CGFloat = 56
             let resolvedPosition = draggedPosition ?? controlState.position
-            let xPosition = max(
-                nubSize / 2,
-                min(
-                    geometry.size.width - (nubSize / 2),
-                    CGFloat(resolvedPosition.horizontalRatio) * geometry.size.width
-                )
-            )
-            let yPosition = max(
-                nubSize / 2,
-                min(
-                    geometry.size.height - (nubSize / 2),
-                    CGFloat(resolvedPosition.verticalRatio) * geometry.size.height
-                )
+            let centerPoint = clampedCenterPoint(
+                for: resolvedPosition,
+                in: geometry.size,
+                nubSize: nubSize
             )
 
-            Button {
-                onSetExpanded(true)
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                    .font(.system(size: 26))
-                    .foregroundStyle(TelocareTheme.coral)
-                    .frame(width: nubSize, height: nubSize)
-                    .background(
-                        Circle()
-                            .fill(TelocareTheme.cream)
+            LensNub(badgeText: GlobalLensNubBadge.text(for: preset, selectedPillar: selectedPillar))
+                .frame(width: nubSize, height: nubSize)
+                .position(x: centerPoint.x, y: centerPoint.y)
+                .highPriorityGesture(
+                    dragGesture(
+                        in: geometry.size,
+                        nubSize: nubSize
                     )
-                    .overlay(
-                        Circle()
-                            .stroke(TelocareTheme.peach, lineWidth: 1)
-                    )
-            }
-            .buttonStyle(.plain)
-            .position(x: xPosition, y: yPosition)
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        let width = max(1, geometry.size.width)
-                        let height = max(1, geometry.size.height)
-                        let nextX = min(max(0, value.location.x / width), 1)
-                        let nextY = min(max(0, value.location.y / height), 1)
-                        draggedPosition =
-                            LensControlPosition(
-                                horizontalRatio: nextX,
-                                verticalRatio: nextY
-                            )
-                    }
-                    .onEnded { _ in
-                        if let draggedPosition {
-                            onSetPosition(draggedPosition)
-                        }
-                        draggedPosition = nil
-                    }
-            )
-            .sheet(
+                )
+                .onTapGesture {
+                    onSetExpanded(true)
+                }
+                .sheet(
                 isPresented: Binding(
                     get: { controlState.isExpanded },
                     set: onSetExpanded
@@ -171,10 +191,102 @@ private struct GlobalLensFloatingControl: View {
                     onClose: { onSetExpanded(false) }
                 )
             }
+            .accessibilityLabel("Global lens")
+            .accessibilityValue(GlobalLensNubBadge.text(for: preset, selectedPillar: selectedPillar))
+            .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier(AccessibilityID.globalLensNub)
         }
         .ignoresSafeArea()
         .allowsHitTesting(true)
+    }
+
+    private func dragGesture(in size: CGSize, nubSize: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { value in
+                let anchor = dragStartPosition ?? draggedPosition ?? controlState.position
+                if dragStartPosition == nil {
+                    dragStartPosition = anchor
+                }
+
+                let width = max(1, size.width)
+                let height = max(1, size.height)
+                let anchorPoint = clampedCenterPoint(for: anchor, in: size, nubSize: nubSize)
+                let nextPoint = CGPoint(
+                    x: anchorPoint.x + value.translation.width,
+                    y: anchorPoint.y + value.translation.height
+                )
+                let clampedPoint = clampedPointWithinBounds(nextPoint, in: size, nubSize: nubSize)
+                draggedPosition = LensControlPosition(
+                    horizontalRatio: Double(clampedPoint.x / width),
+                    verticalRatio: Double(clampedPoint.y / height)
+                )
+            }
+            .onEnded { _ in
+                if let draggedPosition {
+                    onSetPosition(draggedPosition)
+                }
+                dragStartPosition = nil
+                draggedPosition = nil
+            }
+    }
+
+    private func clampedCenterPoint(
+        for position: LensControlPosition,
+        in size: CGSize,
+        nubSize: CGFloat
+    ) -> CGPoint {
+        let width = max(1, size.width)
+        let height = max(1, size.height)
+        let rawPoint = CGPoint(
+            x: CGFloat(position.horizontalRatio) * width,
+            y: CGFloat(position.verticalRatio) * height
+        )
+        return clampedPointWithinBounds(rawPoint, in: size, nubSize: nubSize)
+    }
+
+    private func clampedPointWithinBounds(_ point: CGPoint, in size: CGSize, nubSize: CGFloat) -> CGPoint {
+        let width = max(1, size.width)
+        let height = max(1, size.height)
+        let minimumX = min(nubSize / 2, width / 2)
+        let maximumX = max(minimumX, width - (nubSize / 2))
+        let minimumY = min(nubSize / 2, height / 2)
+        let maximumY = max(minimumY, height - (nubSize / 2))
+
+        return CGPoint(
+            x: min(maximumX, max(minimumX, point.x)),
+            y: min(maximumY, max(minimumY, point.y))
+        )
+    }
+
+}
+
+private struct LensNub: View {
+    let badgeText: String
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                .font(.system(size: 26))
+                .foregroundStyle(TelocareTheme.coral)
+                .frame(width: 56, height: 56)
+                .background(
+                    Circle()
+                        .fill(TelocareTheme.cream)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(TelocareTheme.peach, lineWidth: 1)
+                )
+
+            Text(badgeText)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(TelocareTheme.coral)
+                .clipShape(Capsule())
+                .offset(x: 6, y: -6)
+        }
     }
 }
 
@@ -210,10 +322,11 @@ private struct GlobalLensSheet: View {
                                         .foregroundStyle(TelocareTheme.success)
                                 }
                             }
-                            .frame(minHeight: 44)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityIdentifier(lensAccessibilityID(for: lensPreset))
+                        .accessibilityIdentifier(globalLensAccessibilityIdentifier(for: lensPreset))
                     }
 
                     if preset == .pillar {
@@ -233,7 +346,8 @@ private struct GlobalLensSheet: View {
                                             .foregroundStyle(TelocareTheme.success)
                                     }
                                 }
-                                .frame(minHeight: 44)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             .accessibilityIdentifier(AccessibilityID.exploreInputsLensPillar(pillar: pillar.id.rawValue))
@@ -255,6 +369,7 @@ private struct GlobalLensSheet: View {
                                 .font(TelocareTheme.Typography.body)
                                 .foregroundStyle(TelocareTheme.charcoal)
                                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
@@ -266,6 +381,7 @@ private struct GlobalLensSheet: View {
                             .font(TelocareTheme.Typography.body)
                             .foregroundStyle(TelocareTheme.coral)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier(AccessibilityID.globalLensResetPosition)
@@ -282,19 +398,6 @@ private struct GlobalLensSheet: View {
             }
         }
         .accessibilityIdentifier(AccessibilityID.globalLensSheet)
-    }
-
-    private func lensAccessibilityID(for preset: HealthLensPreset) -> String {
-        switch preset {
-        case .all:
-            return AccessibilityID.exploreInputsLensAll
-        case .foundation:
-            return AccessibilityID.exploreInputsLensFoundation
-        case .acute:
-            return AccessibilityID.exploreInputsLensAcute
-        case .pillar:
-            return AccessibilityID.exploreInputsLensPillar
-        }
     }
 
     private func cornerTitle(_ corner: LensControlCorner) -> String {

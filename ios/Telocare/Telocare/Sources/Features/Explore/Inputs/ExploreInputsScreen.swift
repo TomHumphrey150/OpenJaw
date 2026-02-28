@@ -464,6 +464,13 @@ struct ExploreInputsScreen: View {
         }
     }
 
+    private var emptyStateGuidance: ExploreInputsEmptyStateGuidance {
+        ExploreInputsEmptyStateGuidance(
+            filterMode: filterMode,
+            availableCount: countFor(.available)
+        )
+    }
+
     // MARK: - Inputs Content
 
     @ViewBuilder
@@ -847,30 +854,34 @@ struct ExploreInputsScreen: View {
             Image(systemName: filterMode == .completed ? "checkmark.circle" : "list.bullet.clipboard")
                 .font(.system(size: 48))
                 .foregroundStyle(TelocareTheme.muted)
-            Text(emptyStateMessage)
+            Text(emptyStateGuidance.message)
                 .font(TelocareTheme.Typography.body)
                 .foregroundStyle(TelocareTheme.warmGray)
                 .multilineTextAlignment(.center)
+            if emptyStateGuidance.shouldShowAvailableNudge {
+                Button {
+                    filterMode = .available
+                } label: {
+                    HStack(spacing: TelocareTheme.Spacing.xs) {
+                        Text("See available habits")
+                        Image(systemName: "arrow.right")
+                    }
+                    .font(TelocareTheme.Typography.body)
+                    .padding(.horizontal, TelocareTheme.Spacing.md)
+                    .padding(.vertical, TelocareTheme.Spacing.sm)
+                }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier(AccessibilityID.exploreInputsEmptySwitchToAvailable)
+            }
             Spacer()
         }
         .padding(TelocareTheme.Spacing.xl)
-    }
-
-    private var emptyStateMessage: String {
-        switch filterMode {
-        case .pending:
-            return "No active interventions left for today."
-        case .completed:
-            return "Nothing completed yet today.\nTap an intervention to make progress."
-        case .available:
-            return "No available interventions."
-        }
     }
 }
 
 // MARK: - Filter Mode
 
-private enum InputFilterMode: CaseIterable {
+enum InputFilterMode: CaseIterable {
     case pending, completed, available
 
     var title: String {
@@ -882,6 +893,29 @@ private enum InputFilterMode: CaseIterable {
         case .available:
             return "Available"
         }
+    }
+}
+
+struct ExploreInputsEmptyStateGuidance: Equatable {
+    let filterMode: InputFilterMode
+    let availableCount: Int
+
+    var message: String {
+        switch filterMode {
+        case .pending:
+            if shouldShowAvailableNudge {
+                return "No active habits here right now.\nYou can add habits from Available."
+            }
+            return "No active interventions left for today."
+        case .completed:
+            return "Nothing completed yet today.\nTap an intervention to make progress."
+        case .available:
+            return "No available interventions."
+        }
+    }
+
+    var shouldShowAvailableNudge: Bool {
+        filterMode != .available && availableCount > 0
     }
 }
 

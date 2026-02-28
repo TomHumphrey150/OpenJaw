@@ -1305,6 +1305,40 @@ struct AppViewModelTests {
         #expect(harness.viewModel.projectedSituationGraphEmptyMessage.contains("Financial Security"))
     }
 
+    @Test func globalLensRowsUseExpectedAccessibilityIDs() {
+        #expect(globalLensAccessibilityIdentifier(for: .all) == AccessibilityID.exploreInputsLensAll)
+        #expect(globalLensAccessibilityIdentifier(for: .foundation) == AccessibilityID.exploreInputsLensFoundation)
+        #expect(globalLensAccessibilityIdentifier(for: .acute) == AccessibilityID.exploreInputsLensAcute)
+        #expect(globalLensAccessibilityIdentifier(for: .pillar) == AccessibilityID.exploreInputsLensPillar)
+
+        let identifiers = Set(HealthLensPreset.allCases.map(globalLensAccessibilityIdentifier(for:)))
+        #expect(identifiers.count == HealthLensPreset.allCases.count)
+    }
+
+    @Test func globalLensNubBadgeTextReflectsActiveFilter() {
+        #expect(GlobalLensNubBadge.text(for: .all, selectedPillar: nil) == "All")
+        #expect(GlobalLensNubBadge.text(for: .foundation, selectedPillar: nil) == "Fdn")
+        #expect(GlobalLensNubBadge.text(for: .acute, selectedPillar: nil) == "Aqt")
+        #expect(GlobalLensNubBadge.text(for: .pillar, selectedPillar: nil) == "Plr")
+
+        let social = HealthPillar(id: "socialLife")
+        let romantic = HealthPillar(id: "romanticPersonalCare")
+        #expect(GlobalLensNubBadge.text(for: .pillar, selectedPillar: social) == "SL")
+        #expect(GlobalLensNubBadge.text(for: .pillar, selectedPillar: romantic) == "RPC")
+    }
+
+    @Test func exploreInputsEmptyStateGuidanceNudgesToAvailableWhenItemsExist() {
+        let pendingWithAvailable = ExploreInputsEmptyStateGuidance(filterMode: .pending, availableCount: 4)
+        #expect(pendingWithAvailable.shouldShowAvailableNudge)
+        #expect(pendingWithAvailable.message.contains("Available"))
+
+        let completedWithAvailable = ExploreInputsEmptyStateGuidance(filterMode: .completed, availableCount: 2)
+        #expect(completedWithAvailable.shouldShowAvailableNudge)
+
+        let available = ExploreInputsEmptyStateGuidance(filterMode: .available, availableCount: 5)
+        #expect(available.shouldShowAvailableNudge == false)
+    }
+
     @Test func lensFilteringParitiesAcrossInputsMapAndProgressCharts() {
         let sleepPillar = HealthPillar(id: "sleep")
         let stressPillar = HealthPillar(id: "stressManagement")

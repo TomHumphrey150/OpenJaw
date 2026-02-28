@@ -110,6 +110,7 @@ enum AccessibilityID {
     static let exploreInputsFilterPending = "explore.inputs.filter.pending"
     static let exploreInputsFilterCompleted = "explore.inputs.filter.completed"
     static let exploreInputsFilterAvailable = "explore.inputs.filter.available"
+    static let exploreInputsEmptySwitchToAvailable = "explore.inputs.empty.switch.available"
     static let exploreInputsGardenHierarchy = "explore.inputs.garden.hierarchy"
     static let exploreInputsGardenBreadcrumb = "explore.inputs.garden.breadcrumb"
     static let exploreInputsGardenBreadcrumbBack = "explore.inputs.garden.breadcrumb.back"

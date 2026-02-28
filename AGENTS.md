@@ -73,6 +73,40 @@ Graphical interfaces are welcome, but they must remain fully operable non-visual
   - Prefer a temporary secret key for debugging and rotate/revoke it after use.
 - In sandboxed Codex environments, networked Supabase calls may require escalated command permissions.
 
+## Supabase User-Data Mutation Policy
+- Direct mutation of `public.user_data` is allowed only for user ID `58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14` during Telocare maintenance.
+- Never mutate any other user row without explicit per-run authorization.
+- Use a dry run first, then apply writes only after confirming the targeted diff.
+
+## Script Runbook (Data Audit + Graph Maintenance)
+- `npm run debug:user-data -- --list-users --limit 20`
+  - Lists recent users in `public.user_data` for targeting.
+- `npm run debug:user-data -- --user-id <uuid> [--window-days <n>] [--raw]`
+  - Read-only inspection of one user row (counts, recent activity, raw JSON).
+- `npm run debug:pillar-integrity -- --user-id <uuid> [--pillar <pillar-id>] [--strict] [--report-out <path>] [--raw]`
+  - Read-only pillar integrity audit using interventions catalog + planning policy + canonical graph.
+  - Reports interventions per pillar, active coverage per pillar, pillar node sets, missing node IDs in user graph, missing canonical edges, and per-pillar connectivity.
+  - `--strict` exits non-zero when missing nodes/edges/disconnected pillar nodes exist.
+- `npm run debug:user-graph-audit -- --user-id <uuid> [--report-out <path>] [--raw] [--pretty true|false]`
+  - Read-only provenance-first graph audit for one user.
+  - Emits one JSON bundle with graph nodes/edges, habit-to-graph links, outcome-question-to-graph links (from `progressQuestionSetState.pendingProposal.questions`), compact summary counts, strict validation results, and inline source references (`source_ref` + `provenance.refs`).
+  - Exit codes: `0` success, `1` runtime/config/query error, `2` strict schema validation failure.
+- `npm run patch:user-graph -- --user-id 58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14 --dry-run`
+  - Read-only preview of additive canonical graph merge for social/relationship/financial nodes and edges.
+- `npm run patch:user-graph -- --user-id 58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14 --write`
+  - Applies the same additive merge to `public.user_data.data.customCausalDiagram.graphData` for the authorized user only.
+  - Idempotent: repeat runs should be zero-op after first successful write.
+- `npm run debug:foundation-coverage -- --user-id <uuid> [--report-out <path>] [--raw]`
+  - Read-only foundation/acute coverage audit by pillar and mapping source.
+- `npm run debug:graph-clusters -- --user-id <uuid> [--max-depth <n>] [--report-out <path>]`
+  - Read-only graph-cluster introspection for map connectivity and neighborhood analysis.
+
+## Required Order for User Graph Patch
+1. Run `debug:pillar-integrity` for baseline.
+2. Run `patch:user-graph --dry-run`.
+3. Run `patch:user-graph --write` only after confirming diff.
+4. Re-run `debug:pillar-integrity --strict` and confirm zero missing nodes/edges for targeted pillars.
+
 ## Library
 Reference documents for this repository:
 

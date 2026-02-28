@@ -34,6 +34,10 @@ Every file does one thing. Every module has a clear boundary.
 - A test that only compares constants or reasserts implementation text is invalid.
 - UI behavior that is visual or interaction-driven must be verified with UI tests.
 
+## Supabase User-Data Mutation Policy
+- Telocare maintenance scripts may directly mutate `public.user_data` only for user ID `58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14`.
+- Direct mutation for any other user requires explicit per-run authorization.
+
 ## Accessibility Baseline (iOS)
 
 Assume users and teammates may be completely blind.

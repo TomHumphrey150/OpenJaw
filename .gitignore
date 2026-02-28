@@ -33,4 +33,5 @@ supabase/.temp/
 
 # Generated snapshot artifacts
 v1/bruxism-dashboard/snapshots/
+artifacts/user-graph-audit/
 .env*.local
