@@ -9,6 +9,17 @@ enum AppleHealthRefreshTrigger: Sendable {
     case postConnect
 }
 
+struct GraphCheckpointSummary: Equatable, Sendable, Identifiable {
+    let graphVersion: String
+    let createdAt: String
+    let nodeCount: Int
+    let edgeCount: Int
+
+    var id: String {
+        graphVersion
+    }
+}
+
 @MainActor
 final class AppViewModel: ObservableObject {
     @Published private(set) var mode: AppMode
@@ -43,8 +54,17 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var pendingGraphPatchConflicts: [GraphPatchConflict]
     @Published private(set) var pendingGraphPatchConflictResolutions: [Int: GraphConflictResolutionChoice]
     @Published private(set) var graphCheckpointVersions: [String]
+    @Published private(set) var graphCheckpointSummaries: [GraphCheckpointSummary]
     @Published private(set) var progressQuestionProposal: ProgressQuestionSetProposal?
     @Published private(set) var isProgressQuestionProposalPresented: Bool
+    @Published private(set) var plannerAvailableMinutes: Int
+    @Published private(set) var plannerTimeBudgetState: DailyTimeBudgetState
+    @Published private(set) var planningMode: PlanningMode
+    @Published private(set) var dailyPlanProposal: DailyPlanProposal?
+    @Published private(set) var flareSuggestion: FlareSuggestion?
+    @Published private(set) var healthLensState: HealthLensState
+    @Published private(set) var guideExportEnvelopeText: String?
+    @Published private(set) var pendingGuideImportPreview: GuideImportPreview?
     @Published var chatDraft: String
 
     private var experienceFlow: ExperienceFlow
@@ -73,7 +93,14 @@ final class AppViewModel: ObservableObject {
     private var museRecordingStartedWithFitOverride: Bool
     private var progressQuestionSetState: ProgressQuestionSetState?
     private var gardenAliasOverrides: [GardenAliasOverride]
+    private var plannerPreferencesState: PlannerPreferencesState
+    private var habitPlannerState: HabitPlannerState
+    private var planningMetadataByInterventionID: [String: HabitPlanningMetadata]
+    private var ladderByInterventionID: [String: HabitLadderDefinition]
+    private let interventionsCatalog: InterventionsCatalog
+    private let planningPolicy: PlanningPolicy
     private var pendingGraphPatchEnvelope: GraphPatchEnvelope?
+    private var pendingGuideImportEnvelope: GuideExportEnvelope?
     private let configuredMorningOutcomeFields: [MorningOutcomeField]
     private let requiredMorningOutcomeFields: [MorningOutcomeField]
     private let configuredMorningTrendMetrics: [MorningTrendMetric]
@@ -94,6 +121,9 @@ final class AppViewModel: ObservableObject {
     private let graphProjectionHub: GraphProjectionHub
     private let graphPatchCodec: GraphPatchJSONCodec
     private let progressQuestionProposalBuilder: ProgressQuestionProposalBuilder
+    private let dailyPlanner: DailyPlanning
+    private let flareDetectionService: FlareDetection
+    private let planningMetadataResolver: HabitPlanningMetadataResolver
     private static let maxCompletionEventsPerIntervention = 200
     private static let minimumMuseRecordingMinutes = 120.0
     private static let museOutcomeSource = "muse_athena_heuristic_v1"
@@ -198,7 +228,7 @@ final class AppViewModel: ObservableObject {
     ) {
         self.init(
             snapshot: loadDashboardSnapshotUseCase.execute(),
-            graphData: CanonicalGraphLoader.loadGraphOrFallback(),
+            graphData: CausalGraphData(nodes: [], edges: []),
             initialExperienceFlow: .empty,
             initialDailyCheckIns: [:],
             initialDailyDoseProgress: [:],
@@ -231,9 +261,15 @@ final class AppViewModel: ObservableObject {
         initialMorningStates: [MorningState] = [],
         initialMorningQuestionnaire: MorningQuestionnaire? = nil,
         initialProgressQuestionSetState: ProgressQuestionSetState? = nil,
+        initialPlannerPreferencesState: PlannerPreferencesState? = nil,
+        initialHabitPlannerState: HabitPlannerState? = nil,
+        initialHealthLensState: HealthLensState? = nil,
         initialGardenAliasOverrides: [GardenAliasOverride] = [],
         initialCustomCausalDiagram: CustomCausalDiagram? = nil,
         initialActiveInterventions: [String] = [],
+        initialInterventionsCatalog: InterventionsCatalog = .empty,
+        initialFoundationCatalog: FoundationCatalog? = nil,
+        initialPlanningPolicy: PlanningPolicy? = nil,
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         museSessionService: MuseSessionService = MockMuseSessionService(),
@@ -246,10 +282,21 @@ final class AppViewModel: ObservableObject {
         appleHealthSyncCoordinator: AppleHealthSyncCoordinator? = nil,
         museSessionCoordinator: MuseSessionCoordinator = DefaultMuseSessionCoordinator(),
         progressQuestionProposalBuilder: ProgressQuestionProposalBuilder = ProgressQuestionProposalBuilder(),
+        dailyPlanner: DailyPlanning? = nil,
+        flareDetectionService: FlareDetection? = nil,
+        planningMetadataResolver: HabitPlanningMetadataResolver? = nil,
         accessibilityAnnouncer: AccessibilityAnnouncer
     ) {
         let todayKey = Self.localDateKey(from: nowProvider())
         let seededGraphData = Self.seedHierarchyIfNeeded(graphData)
+        let resolvedPlanningPolicy = initialPlanningPolicy ?? .default
+        let resolvedPlanningMetadataResolver = planningMetadataResolver ?? HabitPlanningMetadataResolver(
+            foundationCatalog: initialFoundationCatalog,
+            interventionsCatalog: initialInterventionsCatalog,
+            planningPolicy: resolvedPlanningPolicy
+        )
+        let resolvedDailyPlanner = dailyPlanner ?? DailyPlanner()
+        let resolvedFlareDetectionService = flareDetectionService ?? FlareDetectionService(policy: resolvedPlanningPolicy)
         let resolvedMorningOutcomeFields = Self.resolveMorningOutcomeFields(from: initialMorningQuestionnaire)
         let resolvedRequiredMorningOutcomeFields = Self.resolveRequiredMorningOutcomeFields(
             enabledFields: resolvedMorningOutcomeFields,
@@ -285,8 +332,36 @@ final class AppViewModel: ObservableObject {
         pendingGraphPatchConflicts = []
         pendingGraphPatchConflictResolutions = [:]
         graphCheckpointVersions = []
+        graphCheckpointSummaries = []
         progressQuestionProposal = nil
         isProgressQuestionProposalPresented = false
+        plannerPreferencesState = initialPlannerPreferencesState ?? PlannerPreferencesState(
+            defaultAvailableMinutes: resolvedPlanningPolicy.defaultAvailableMinutes,
+            modeOverride: nil,
+            flareSensitivity: .balanced,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        let initialTimelineState = plannerPreferencesState.dailyTimeBudgetState
+            ?? DailyTimeBudgetState.from(
+                availableMinutes: plannerPreferencesState.defaultAvailableMinutes,
+                updatedAt: Self.timestamp(from: nowProvider())
+            )
+        plannerTimeBudgetState = initialTimelineState
+        let timelineMinutes = initialTimelineState.availableMinutes
+        plannerAvailableMinutes = max(
+            0,
+            timelineMinutes > 0 ? timelineMinutes : plannerPreferencesState.defaultAvailableMinutes
+        )
+        planningMode = plannerPreferencesState.modeOverride ?? .baseline
+        healthLensState = initialHealthLensState ?? HealthLensState(
+            preset: .all,
+            selectedPillar: nil,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        dailyPlanProposal = nil
+        flareSuggestion = nil
+        guideExportEnvelopeText = nil
+        pendingGuideImportPreview = nil
         chatDraft = ""
         configuredMorningOutcomeFields = resolvedMorningOutcomeFields
         requiredMorningOutcomeFields = resolvedRequiredMorningOutcomeFields
@@ -325,7 +400,19 @@ final class AppViewModel: ObservableObject {
         museRecordingStartedWithFitOverride = false
         progressQuestionSetState = initialProgressQuestionSetState
         gardenAliasOverrides = initialGardenAliasOverrides
+        habitPlannerState = initialHabitPlannerState ?? HabitPlannerState(
+            entriesByInterventionID: [:],
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        interventionsCatalog = initialInterventionsCatalog
+        planningPolicy = resolvedPlanningPolicy
+        self.planningMetadataResolver = resolvedPlanningMetadataResolver
+        planningMetadataByInterventionID = resolvedPlanningMetadataResolver.metadataByInterventionID(for: snapshot.inputs)
+        ladderByInterventionID = resolvedPlanningMetadataResolver.ladderByInterventionID(
+            metadataByInterventionID: planningMetadataByInterventionID
+        )
         pendingGraphPatchEnvelope = nil
+        pendingGuideImportEnvelope = nil
 
         self.persistUserDataPatch = persistUserDataPatch
         self.appleHealthDoseService = appleHealthDoseService
@@ -358,6 +445,8 @@ final class AppViewModel: ObservableObject {
         )
         graphPatchCodec = GraphPatchJSONCodec()
         self.progressQuestionProposalBuilder = progressQuestionProposalBuilder
+        self.dailyPlanner = resolvedDailyPlanner
+        self.flareDetectionService = resolvedFlareDetectionService
         self.accessibilityAnnouncer = accessibilityAnnouncer
 
         Task {
@@ -386,11 +475,159 @@ final class AppViewModel: ObservableObject {
     }
 
     var projectedInputs: [InputStatus] {
-        graphProjectionHub.habits.inputs
+        graphProjectionHub.habits.inputs.filter { input in
+            matchesHealthLens(input: input)
+        }
+    }
+
+    var projectedSituationGraphData: CausalGraphData {
+        guard healthLensState.preset != .all else {
+            return graphData
+        }
+
+        let sourceNodeIDs = healthLensNodeIDs
+        if sourceNodeIDs.isEmpty {
+            return CausalGraphData(nodes: [], edges: [])
+        }
+
+        let edges = graphData.edges.filter { edge in
+            sourceNodeIDs.contains(edge.data.source) || sourceNodeIDs.contains(edge.data.target)
+        }
+        let connectedNodeIDs = Set(
+            edges.flatMap { edge in
+                [edge.data.source, edge.data.target]
+            }
+        ).union(sourceNodeIDs)
+        let nodes = graphData.nodes.filter { node in
+            connectedNodeIDs.contains(node.data.id)
+        }
+
+        return CausalGraphData(nodes: nodes, edges: edges)
+    }
+
+    var projectedSituationGraphIsLensFilteredEmpty: Bool {
+        healthLensState.preset != .all && projectedSituationGraphData.nodes.isEmpty
+    }
+
+    var projectedSituationGraphEmptyMessage: String {
+        "No mapped nodes yet for \(projectedHealthLensLabel)."
     }
 
     var projectedGuideGraphVersion: String? {
         graphProjectionHub.guide.graphVersion
+    }
+
+    var projectedGuideExportEnvelopeText: String? {
+        guideExportEnvelopeText
+    }
+
+    var projectedGuideImportPreview: GuideImportPreview? {
+        pendingGuideImportPreview
+    }
+
+    var projectedGraphCheckpointSummaries: [GraphCheckpointSummary] {
+        graphCheckpointSummaries
+    }
+
+    var projectedPlanningMetadataByInterventionID: [String: HabitPlanningMetadata] {
+        planningMetadataByInterventionID
+    }
+
+    var projectedDailyPlanProposal: DailyPlanProposal? {
+        dailyPlanProposal
+    }
+
+    var projectedPlannedInterventionIDs: Set<String> {
+        Set(dailyPlanProposal?.actions.map(\.interventionID) ?? [])
+    }
+
+    var projectedFlareSuggestion: FlareSuggestion? {
+        flareSuggestion
+    }
+
+    var projectedPlannerTimeBudgetState: DailyTimeBudgetState {
+        plannerTimeBudgetState
+    }
+
+    var projectedLensControlState: LensControlState {
+        healthLensState.controlState
+    }
+
+    var projectedHealthLensLabel: String {
+        if healthLensState.preset == .pillar {
+            guard let selectedPillar = healthLensState.selectedPillar else {
+                return HealthLensPreset.pillar.displayName
+            }
+            return planningPolicy.title(for: selectedPillar)
+        }
+        return healthLensState.preset.displayName
+    }
+
+    var projectedHealthLensPreset: HealthLensPreset {
+        healthLensState.preset
+    }
+
+    var projectedHealthLensPillar: HealthPillar? {
+        healthLensState.selectedPillar
+    }
+
+    var projectedHealthLensPillars: [HealthPillarDefinition] {
+        planningPolicy.orderedPillars
+    }
+
+    var projectedProgressMorningStatesForCharts: [MorningState] {
+        morningStatesFilteredForCurrentLens
+    }
+
+    var projectedProgressNightOutcomesForCharts: [NightOutcome] {
+        nightOutcomesFilteredForCurrentLens
+    }
+
+    var projectedProgressExcludedChartsNote: String? {
+        guard healthLensState.preset != .all else {
+            return nil
+        }
+
+        let unscopedMorning = morningStates.filter { $0.graphAssociation == nil }.count
+        let unscopedNight = nightOutcomes.filter { $0.graphAssociation == nil }.count
+        let outOfScopeMorning = morningStates.filter {
+            $0.graphAssociation != nil && !graphAssociationMatchesLens($0.graphAssociation)
+        }.count
+        let outOfScopeNight = nightOutcomes.filter {
+            $0.graphAssociation != nil && !graphAssociationMatchesLens($0.graphAssociation)
+        }.count
+        let excludedTotal = unscopedMorning + unscopedNight + outOfScopeMorning + outOfScopeNight
+        guard excludedTotal > 0 else {
+            return nil
+        }
+
+        return "\(excludedTotal) chart points were excluded (\(unscopedMorning + unscopedNight) unscoped, \(outOfScopeMorning + outOfScopeNight) outside lens)."
+    }
+
+    var projectedHabitRungStatusByInterventionID: [String: HabitRungStatus] {
+        var result: [String: HabitRungStatus] = [:]
+
+        for input in snapshot.inputs {
+            guard let ladder = ladderByInterventionID[input.id], !ladder.rungs.isEmpty else {
+                continue
+            }
+            let entry = habitPlannerState.entriesByInterventionID[input.id] ?? .empty
+            let currentIndex = min(max(entry.currentRungIndex, 0), ladder.rungs.count - 1)
+            let current = ladder.rungs[currentIndex]
+            let target = ladder.rungs[0]
+            let higherRungs = Array(ladder.rungs.prefix(currentIndex))
+            result[input.id] = HabitRungStatus(
+                interventionID: input.id,
+                currentRungID: current.id,
+                currentRungTitle: current.title,
+                targetRungID: target.id,
+                targetRungTitle: target.title,
+                canReportHigherCompletion: currentIndex > 0,
+                higherRungs: higherRungs
+            )
+        }
+
+        return result
     }
 
     var museConnectionStatusText: String {
@@ -911,7 +1148,7 @@ final class AppViewModel: ObservableObject {
         }
 
         if normalizedPrompt == "export graph" {
-            exportGraph()
+            exportGuideSections(Set([.graph, .aliases]))
             return
         }
 
@@ -1082,22 +1319,281 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    private func exportGraph() {
+    func exportGuideSections(_ sections: Set<GuideTransferSection>) {
+        guard mode == .explore else { return }
+        let orderedSections = GuideTransferSection.allCases.filter { sections.contains($0) }
+        guard !orderedSections.isEmpty else {
+            exploreFeedback = "Select at least one section to export."
+            announce(exploreFeedback)
+            return
+        }
+
         Task {
             do {
                 let diagram = await graphKernel.currentDiagram()
                 let aliases = await graphKernel.currentAliasOverrides()
-                let exportText = try graphPatchCodec.encodeGraphExport(
-                    diagram: diagram,
-                    aliasOverrides: aliases
+                let envelope = GuideExportEnvelope(
+                    schemaVersion: "guide-transfer.v1",
+                    sections: orderedSections,
+                    graph: orderedSections.contains(.graph)
+                        ? GuideGraphTransferPayload(
+                            graphVersion: diagram.graphVersion,
+                            baseGraphVersion: diagram.baseGraphVersion,
+                            lastModified: diagram.lastModified,
+                            graphData: diagram.graphData
+                        )
+                        : nil,
+                    aliases: orderedSections.contains(.aliases) ? aliases : nil,
+                    planner: orderedSections.contains(.planner)
+                        ? GuidePlannerTransferPayload(
+                            plannerPreferencesState: plannerPreferencesState,
+                            habitPlannerState: habitPlannerState,
+                            healthLensState: healthLensState
+                        )
+                        : nil
                 )
-                exploreFeedback = "Graph export ready. Characters: \(exportText.count)."
+                let exportText = try graphPatchCodec.encodeGuideExportEnvelope(envelope)
+                guideExportEnvelopeText = exportText
+                exploreFeedback = "Guide export ready. Characters: \(exportText.count)."
                 announce(exploreFeedback)
             } catch {
-                exploreFeedback = "Graph export failed."
+                exploreFeedback = "Guide export failed."
                 announce(exploreFeedback)
             }
         }
+    }
+
+    func previewGuideImportPayload(_ text: String) {
+        guard mode == .explore else { return }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            pendingGuideImportEnvelope = nil
+            pendingGuideImportPreview = GuideImportPreview(
+                sections: [],
+                summaryLines: [],
+                validationError: "Import payload is empty."
+            )
+            return
+        }
+
+        do {
+            let envelope = try graphPatchCodec.decodeGuideExportEnvelope(from: trimmed)
+            let preview = guideImportPreview(for: envelope)
+            pendingGuideImportPreview = preview
+            if preview.isValid {
+                pendingGuideImportEnvelope = envelope
+                exploreFeedback = "Guide import preview ready. Apply when ready."
+            } else {
+                pendingGuideImportEnvelope = nil
+                exploreFeedback = preview.validationError ?? "Guide import preview failed."
+            }
+            announce(exploreFeedback)
+        } catch {
+            pendingGuideImportEnvelope = nil
+            let errorText = graphPatchCodec.decodeErrorMessage(for: error)
+            pendingGuideImportPreview = GuideImportPreview(
+                sections: [],
+                summaryLines: [],
+                validationError: errorText
+            )
+            exploreFeedback = "Import parse failed: \(errorText)"
+            announce(exploreFeedback)
+        }
+    }
+
+    func applyPendingGuideImportPayload() {
+        guard mode == .explore else { return }
+        guard let envelope = pendingGuideImportEnvelope else {
+            exploreFeedback = "No validated import payload. Preview first."
+            announce(exploreFeedback)
+            return
+        }
+        guard pendingGuideImportPreview?.isValid == true else {
+            exploreFeedback = "Resolve import validation issues before applying."
+            announce(exploreFeedback)
+            return
+        }
+
+        Task {
+            let previousDiagram = await graphKernel.currentDiagram()
+            let previousAliases = await graphKernel.currentAliasOverrides()
+            let previousPlannerPreferences = plannerPreferencesState
+            let previousPlannerState = habitPlannerState
+            let previousLensState = healthLensState
+            let previousPlanningMode = planningMode
+            let previousTimeBudgetState = plannerTimeBudgetState
+            let previousAvailableMinutes = plannerAvailableMinutes
+
+            var nextDiagram = previousDiagram
+            var nextAliases = previousAliases
+            var nextPlannerPreferences = plannerPreferencesState
+            var nextPlannerState = habitPlannerState
+            var nextLensState = healthLensState
+
+            let sections = GuideTransferSection.allCases.filter { envelope.sections.contains($0) }
+            for section in sections {
+                switch section {
+                case .graph:
+                    guard let payload = envelope.graph else { continue }
+                    nextDiagram = CustomCausalDiagram(
+                        graphData: payload.graphData,
+                        lastModified: payload.lastModified ?? DateKeying.timestamp(from: nowProvider()),
+                        graphVersion: payload.graphVersion,
+                        baseGraphVersion: payload.baseGraphVersion
+                    )
+                case .aliases:
+                    guard let aliases = envelope.aliases else { continue }
+                    nextAliases = aliases.sorted { $0.signature < $1.signature }
+                case .planner:
+                    guard let payload = envelope.planner else { continue }
+                    nextPlannerPreferences = payload.plannerPreferencesState
+                    nextPlannerState = payload.habitPlannerState
+                    nextLensState = payload.healthLensState
+                }
+            }
+
+            let graphChanged = nextDiagram != previousDiagram
+            let aliasesChanged = nextAliases != previousAliases
+            let plannerChanged =
+                nextPlannerPreferences != previousPlannerPreferences
+                || nextPlannerState != previousPlannerState
+                || nextLensState != previousLensState
+
+            if !graphChanged, !aliasesChanged, !plannerChanged {
+                pendingGuideImportEnvelope = nil
+                pendingGuideImportPreview = nil
+                exploreFeedback = "Import contained no changes."
+                announce(exploreFeedback)
+                return
+            }
+
+            if graphChanged || aliasesChanged {
+                await graphKernel.replace(
+                    diagram: nextDiagram,
+                    aliasOverrides: nextAliases,
+                    recordCheckpoint: true
+                )
+                graphData = nextDiagram.graphData
+                gardenAliasOverrides = nextAliases
+            }
+
+            if plannerChanged {
+                plannerPreferencesState = nextPlannerPreferences
+                habitPlannerState = nextPlannerState
+                healthLensState = nextLensState
+                plannerTimeBudgetState = nextPlannerPreferences.dailyTimeBudgetState
+                    ?? DailyTimeBudgetState.from(
+                        availableMinutes: nextPlannerPreferences.defaultAvailableMinutes,
+                        updatedAt: Self.timestamp(from: nowProvider())
+                    )
+                plannerAvailableMinutes = plannerTimeBudgetState.availableMinutes
+                planningMode = nextPlannerPreferences.modeOverride ?? planningMode
+            }
+
+            refreshPlanningState()
+            await publishGraphProjections()
+
+            let patch = UserDataPatch(
+                experienceFlow: nil,
+                dailyCheckIns: nil,
+                dailyDoseProgress: nil,
+                interventionCompletionEvents: nil,
+                interventionDoseSettings: nil,
+                appleHealthConnections: nil,
+                nightOutcomes: nil,
+                morningStates: nil,
+                activeInterventions: nil,
+                hiddenInterventions: nil,
+                customCausalDiagram: graphChanged ? nextDiagram : nil,
+                wakeDaySleepAttributionMigrated: nil,
+                progressQuestionSetState: nil,
+                gardenAliasOverrides: aliasesChanged ? nextAliases : nil,
+                plannerPreferencesState: plannerChanged ? nextPlannerPreferences : nil,
+                habitPlannerState: plannerChanged ? nextPlannerState : nil,
+                healthLensState: plannerChanged ? nextLensState : nil
+            )
+
+            do {
+                try await persistPatch(patch)
+                pendingGuideImportEnvelope = nil
+                pendingGuideImportPreview = nil
+                exploreFeedback = "Guide import applied."
+                announce(exploreFeedback)
+            } catch {
+                plannerPreferencesState = previousPlannerPreferences
+                habitPlannerState = previousPlannerState
+                healthLensState = previousLensState
+                planningMode = previousPlanningMode
+                plannerTimeBudgetState = previousTimeBudgetState
+                plannerAvailableMinutes = previousAvailableMinutes
+                graphData = previousDiagram.graphData
+                gardenAliasOverrides = previousAliases
+                await graphKernel.replace(
+                    diagram: previousDiagram,
+                    aliasOverrides: previousAliases,
+                    recordCheckpoint: false
+                )
+                refreshPlanningState()
+                await publishGraphProjections()
+                exploreFeedback = "Guide import failed and was reverted."
+                announce(exploreFeedback)
+            }
+        }
+    }
+
+    func clearPendingGuideImportPreview() {
+        pendingGuideImportEnvelope = nil
+        pendingGuideImportPreview = nil
+    }
+
+    private func guideImportPreview(for envelope: GuideExportEnvelope) -> GuideImportPreview {
+        let sections = GuideTransferSection.allCases.filter { envelope.sections.contains($0) }
+        guard !sections.isEmpty else {
+            return GuideImportPreview(
+                sections: [],
+                summaryLines: [],
+                validationError: "Envelope has no selected sections."
+            )
+        }
+
+        var summaryLines: [String] = []
+        for section in sections {
+            switch section {
+            case .graph:
+                guard let graph = envelope.graph else {
+                    return GuideImportPreview(
+                        sections: sections,
+                        summaryLines: summaryLines,
+                        validationError: "Graph section selected but graph payload is missing."
+                    )
+                }
+                summaryLines.append("Graph: \(graph.graphData.nodes.count) nodes, \(graph.graphData.edges.count) edges.")
+            case .aliases:
+                guard let aliases = envelope.aliases else {
+                    return GuideImportPreview(
+                        sections: sections,
+                        summaryLines: summaryLines,
+                        validationError: "Aliases section selected but alias payload is missing."
+                    )
+                }
+                summaryLines.append("Aliases: \(aliases.count) entries.")
+            case .planner:
+                guard let planner = envelope.planner else {
+                    return GuideImportPreview(
+                        sections: sections,
+                        summaryLines: summaryLines,
+                        validationError: "Planner section selected but planner payload is missing."
+                    )
+                }
+                summaryLines.append("Planner: \(planner.plannerPreferencesState.defaultAvailableMinutes) min default, mode \(planner.plannerPreferencesState.modeOverride?.rawValue ?? "none").")
+            }
+        }
+
+        return GuideImportPreview(
+            sections: sections,
+            summaryLines: summaryLines,
+            validationError: nil
+        )
     }
 
     private func syncKernelGraphDataWithViewState() {
@@ -1124,7 +1620,16 @@ final class AppViewModel: ObservableObject {
         let diagram = await graphKernel.currentDiagram()
         let checkpoints = await graphKernel.checkpointHistory()
         graphCheckpointVersions = checkpoints.map(\.graphVersion)
+        graphCheckpointSummaries = checkpoints.map { checkpoint in
+            GraphCheckpointSummary(
+                graphVersion: checkpoint.graphVersion,
+                createdAt: checkpoint.createdAt,
+                nodeCount: checkpoint.diagram.graphData.nodes.count,
+                edgeCount: checkpoint.diagram.graphData.edges.count
+            )
+        }
         refreshProgressQuestionProposalState(for: diagram.graphVersion)
+        refreshPlanningState()
         graphProjectionHub.publish(
             inputs: snapshot.inputs,
             graphData: graphData,
@@ -1221,9 +1726,272 @@ final class AppViewModel: ObservableObject {
     private func buildProgressQuestionSetProposal(for graphVersion: String) -> ProgressQuestionSetProposal {
         progressQuestionProposalBuilder.build(
             graphData: graphData,
+            inputs: snapshot.inputs.filter(\.isActive),
+            planningMetadataByInterventionID: planningMetadataByInterventionID,
+            policy: planningPolicy,
+            mode: planningMode,
             graphVersion: graphVersion,
             createdAt: Self.timestamp(from: nowProvider())
         )
+    }
+
+    func setPlannerAvailableMinutes(_ minutes: Int) {
+        let clamped = min(16 * 60, max(0, minutes))
+        guard clamped != plannerAvailableMinutes else {
+            return
+        }
+
+        let timestamp = Self.timestamp(from: nowProvider())
+        plannerTimeBudgetState = DailyTimeBudgetState.from(
+            availableMinutes: clamped,
+            updatedAt: timestamp,
+            window: plannerTimeBudgetState.timelineWindow
+        )
+        plannerAvailableMinutes = clamped
+        plannerPreferencesState = PlannerPreferencesState(
+            defaultAvailableMinutes: clamped,
+            modeOverride: plannerPreferencesState.modeOverride,
+            flareSensitivity: plannerPreferencesState.flareSensitivity,
+            updatedAt: timestamp,
+            dailyTimeBudgetState: plannerTimeBudgetState
+        )
+        refreshPlanningState()
+        persistPlannerPreferencesState()
+    }
+
+    func setPlannerTimeBudgetState(_ state: DailyTimeBudgetState) {
+        let timestamp = Self.timestamp(from: nowProvider())
+        let nextState = DailyTimeBudgetState(
+            timelineWindow: state.timelineWindow,
+            selectedSlotStartMinutes: state.selectedSlotStartMinutes,
+            updatedAt: timestamp
+        )
+        plannerTimeBudgetState = nextState
+        plannerAvailableMinutes = nextState.availableMinutes
+        plannerPreferencesState = PlannerPreferencesState(
+            defaultAvailableMinutes: nextState.availableMinutes,
+            modeOverride: plannerPreferencesState.modeOverride,
+            flareSensitivity: plannerPreferencesState.flareSensitivity,
+            updatedAt: timestamp,
+            dailyTimeBudgetState: nextState
+        )
+        refreshPlanningState()
+        persistPlannerPreferencesState()
+    }
+
+    func setLensControlPosition(_ position: LensControlPosition) {
+        healthLensState = HealthLensState(
+            preset: healthLensState.preset,
+            selectedPillar: healthLensState.selectedPillar,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            controlState: LensControlState(
+                position: position,
+                isExpanded: healthLensState.controlState.isExpanded
+            )
+        )
+        persistHealthLensState()
+    }
+
+    func setLensControlExpanded(_ isExpanded: Bool) {
+        guard healthLensState.controlState.isExpanded != isExpanded else {
+            return
+        }
+        healthLensState = HealthLensState(
+            preset: healthLensState.preset,
+            selectedPillar: healthLensState.selectedPillar,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            controlState: LensControlState(
+                position: healthLensState.controlState.position,
+                isExpanded: isExpanded
+            )
+        )
+        persistHealthLensState()
+    }
+
+    func moveLensControl(to corner: LensControlCorner) {
+        setLensControlPosition(LensControlPosition.forCorner(corner))
+    }
+
+    func resetLensControlPosition() {
+        setLensControlPosition(.lowerRight)
+    }
+
+    private func persistPlannerPreferencesState() {
+        Task {
+            do {
+                try await persistPatch(.plannerPreferencesState(plannerPreferencesState))
+            } catch {
+            }
+        }
+    }
+
+    func setHealthLensPreset(_ preset: HealthLensPreset) {
+        guard preset != healthLensState.preset else {
+            return
+        }
+        let nextPillar: HealthPillar?
+        if preset == .pillar {
+            nextPillar = healthLensState.selectedPillar ?? planningPolicy.pillarOrder.first
+        } else {
+            nextPillar = nil
+        }
+        healthLensState = HealthLensState(
+            preset: preset,
+            selectedPillar: nextPillar,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            controlState: healthLensState.controlState
+        )
+        scheduleProjectionPublish()
+        persistHealthLensState()
+    }
+
+    func setHealthLensPillar(_ pillar: HealthPillar) {
+        guard healthLensState.preset != .pillar || healthLensState.selectedPillar != pillar else {
+            return
+        }
+        healthLensState = HealthLensState(
+            preset: .pillar,
+            selectedPillar: pillar,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            controlState: healthLensState.controlState
+        )
+        scheduleProjectionPublish()
+        persistHealthLensState()
+    }
+
+    func acceptFlareSuggestion() {
+        guard let flareSuggestion else {
+            return
+        }
+        switch flareSuggestion.direction {
+        case .enterFlare:
+            planningMode = .flare
+        case .exitFlare:
+            planningMode = .baseline
+        }
+        self.flareSuggestion = nil
+        plannerPreferencesState = PlannerPreferencesState(
+            defaultAvailableMinutes: plannerAvailableMinutes,
+            modeOverride: planningMode,
+            flareSensitivity: plannerPreferencesState.flareSensitivity,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            dailyTimeBudgetState: plannerTimeBudgetState
+        )
+        refreshPlanningState()
+        persistPlannerPreferencesState()
+    }
+
+    func dismissFlareSuggestion() {
+        flareSuggestion = nil
+    }
+
+    private func persistHealthLensState() {
+        Task {
+            do {
+                try await persistPatch(.healthLensState(healthLensState))
+            } catch {
+            }
+        }
+    }
+
+    private func refreshPlanningState() {
+        planningMetadataByInterventionID = planningMetadataResolver.metadataByInterventionID(for: snapshot.inputs)
+        ladderByInterventionID = planningMetadataResolver.ladderByInterventionID(
+            metadataByInterventionID: planningMetadataByInterventionID
+        )
+
+        let todayKey = Self.localDateKey(from: nowProvider())
+        let context = DailyPlanningContext(
+            availableMinutes: plannerAvailableMinutes,
+            mode: planningMode,
+            todayKey: todayKey,
+            policy: planningPolicy,
+            inputs: snapshot.inputs,
+            planningMetadataByInterventionID: planningMetadataByInterventionID,
+            ladderByInterventionID: ladderByInterventionID,
+            plannerState: habitPlannerState,
+            morningStates: morningStates,
+            nightOutcomes: nightOutcomes,
+            selectedSlotStartMinutes: plannerTimeBudgetState.selectedSlotStartMinutes
+        )
+        let proposal = dailyPlanner.buildProposal(context: context)
+        dailyPlanProposal = proposal
+        habitPlannerState = proposal.nextPlannerState
+
+        flareSuggestion = flareDetectionService.detectSuggestion(
+            mode: planningMode,
+            morningStates: morningStates,
+            nightOutcomes: nightOutcomes,
+            sensitivity: plannerPreferencesState.flareSensitivity
+        )
+    }
+
+    private var healthLensNodeIDs: Set<String> {
+        Set(
+            snapshot.inputs
+                .filter { input in
+                    matchesHealthLens(input: input)
+                }
+                .compactMap { input in
+                    input.graphNodeID ?? input.id
+                }
+        )
+    }
+
+    private var morningStatesFilteredForCurrentLens: [MorningState] {
+        guard healthLensState.preset != .all else {
+            return morningStates
+        }
+        return morningStates.filter { state in
+            graphAssociationMatchesLens(state.graphAssociation)
+        }
+    }
+
+    private var nightOutcomesFilteredForCurrentLens: [NightOutcome] {
+        guard healthLensState.preset != .all else {
+            return nightOutcomes
+        }
+        return nightOutcomes.filter { outcome in
+            graphAssociationMatchesLens(outcome.graphAssociation)
+        }
+    }
+
+    private func graphAssociationMatchesLens(_ association: GraphAssociationRef?) -> Bool {
+        guard healthLensState.preset != .all else {
+            return true
+        }
+        guard let association else {
+            return false
+        }
+
+        let lensNodes = healthLensNodeIDs
+        guard !lensNodes.isEmpty else {
+            return false
+        }
+
+        return association.nodeIDs.contains { nodeID in
+            lensNodes.contains(nodeID)
+        }
+    }
+
+    private func matchesHealthLens(input: InputStatus) -> Bool {
+        guard let metadata = planningMetadataByInterventionID[input.id] else {
+            return true
+        }
+
+        switch healthLensState.preset {
+        case .all:
+            return true
+        case .foundation:
+            return metadata.isFoundation
+        case .acute:
+            return metadata.isAcute
+        case .pillar:
+            guard let pillar = healthLensState.selectedPillar else {
+                return true
+            }
+            return metadata.pillars.contains(pillar)
+        }
     }
 
 
@@ -1366,27 +2134,95 @@ final class AppViewModel: ObservableObject {
         let previousSnapshot = snapshot
         let previousDailyCheckIns = dailyCheckIns
         let previousInterventionCompletionEvents = interventionCompletionEvents
-
+        let previousHabitPlannerState = habitPlannerState
         snapshot = mutation.snapshot
         dailyCheckIns = mutation.dailyCheckIns
         dailyDoseProgress = mutation.dailyDoseProgress
         interventionCompletionEvents = mutation.interventionCompletionEvents
         interventionDoseSettings = mutation.interventionDoseSettings
         activeInterventions = mutation.activeInterventions
+        let plannerStateDidChange: Bool
+        if let nextPlannerState = nextPlannerStateForCompletionTransition(
+            interventionID: inputID,
+            previousSnapshot: previousSnapshot,
+            nextSnapshot: mutation.snapshot
+        ) {
+            habitPlannerState = nextPlannerState
+            plannerStateDidChange = true
+        } else {
+            plannerStateDidChange = false
+        }
+        refreshPlanningState()
         exploreFeedback = mutation.successMessage
         announce(mutation.successMessage)
 
         let operationToken = nextInputCheckOperationToken()
         Task {
             do {
-                try await persistPatch(mutation.patch)
+                let patchToPersist = patchIncludingHabitPlannerState(
+                    mutation.patch,
+                    includePlannerState: plannerStateDidChange
+                )
+                try await persistPatch(patchToPersist)
             } catch {
                 guard operationToken == inputCheckOperationToken else { return }
                 dailyCheckIns = previousDailyCheckIns
                 interventionCompletionEvents = previousInterventionCompletionEvents
                 snapshot = previousSnapshot
+                habitPlannerState = previousHabitPlannerState
+                refreshPlanningState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
+            }
+        }
+    }
+
+    func recordHigherRungCompletion(
+        interventionID: String,
+        achievedRungID: String
+    ) {
+        guard mode == .explore else { return }
+        guard snapshot.inputs.contains(where: { $0.id == interventionID && $0.isCheckedToday }) else {
+            return
+        }
+        guard let ladder = ladderByInterventionID[interventionID], !ladder.rungs.isEmpty else {
+            return
+        }
+        guard let achievedIndex = ladder.rungs.firstIndex(where: { $0.id == achievedRungID }) else {
+            return
+        }
+
+        let dayKey = Self.localDateKey(from: nowProvider())
+        let previousDayKey = Self.shiftedDayKey(dayKey, by: -1)
+        let previousState = habitPlannerState
+        var nextEntries = habitPlannerState.entriesByInterventionID
+        let existing = nextEntries[interventionID] ?? .empty
+
+        let completionIndex = min(existing.currentRungIndex, achievedIndex)
+        let completedYesterday = previousDayKey != nil && existing.lastCompletedDayKey == previousDayKey
+        let nextStreak = completedYesterday ? existing.consecutiveCompletions + 1 : 1
+        let promotedIndex = nextStreak >= 3 ? max(0, completionIndex - 1) : completionIndex
+        let nextConsecutiveCompletions = nextStreak >= 3 ? 0 : nextStreak
+
+        nextEntries[interventionID] = HabitPlannerEntryState(
+            currentRungIndex: promotedIndex,
+            consecutiveCompletions: nextConsecutiveCompletions,
+            lastCompletedDayKey: dayKey,
+            lastSuggestedDayKey: dayKey,
+            learnedDurationMinutes: existing.learnedDurationMinutes
+        )
+        habitPlannerState = HabitPlannerState(
+            entriesByInterventionID: nextEntries,
+            updatedAt: Self.timestamp(from: nowProvider())
+        )
+        refreshPlanningState()
+
+        Task {
+            do {
+                try await persistPatch(.habitPlannerState(habitPlannerState))
+            } catch {
+                habitPlannerState = previousState
+                refreshPlanningState()
             }
         }
     }
@@ -1813,6 +2649,7 @@ final class AppViewModel: ObservableObject {
         let previousMorningStates = morningStates
         morningOutcomeSelection = mutation.morningOutcomeSelection
         morningStates = mutation.morningStates
+        refreshPlanningState()
         exploreFeedback = mutation.successMessage
         announce(mutation.successMessage)
 
@@ -1824,6 +2661,7 @@ final class AppViewModel: ObservableObject {
                 guard operationToken == morningOutcomeOperationToken else { return }
                 morningOutcomeSelection = previousSelection
                 morningStates = previousMorningStates
+                refreshPlanningState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
             }
@@ -2221,29 +3059,98 @@ final class AppViewModel: ObservableObject {
         let previousSnapshot = snapshot
         let previousDailyDoseProgress = dailyDoseProgress
         let previousInterventionCompletionEvents = interventionCompletionEvents
-
+        let previousHabitPlannerState = habitPlannerState
         snapshot = mutation.snapshot
         dailyCheckIns = mutation.dailyCheckIns
         dailyDoseProgress = mutation.dailyDoseProgress
         interventionCompletionEvents = mutation.interventionCompletionEvents
         interventionDoseSettings = mutation.interventionDoseSettings
         activeInterventions = mutation.activeInterventions
+        let plannerStateDidChange: Bool
+        if let nextPlannerState = nextPlannerStateForCompletionTransition(
+            interventionID: inputID,
+            previousSnapshot: previousSnapshot,
+            nextSnapshot: mutation.snapshot
+        ) {
+            habitPlannerState = nextPlannerState
+            plannerStateDidChange = true
+        } else {
+            plannerStateDidChange = false
+        }
+        refreshPlanningState()
         exploreFeedback = mutation.successMessage
         announce(mutation.successMessage)
 
         let operationToken = nextInputDoseOperationToken()
         Task {
             do {
-                try await persistPatch(mutation.patch)
+                let patchToPersist = patchIncludingHabitPlannerState(
+                    mutation.patch,
+                    includePlannerState: plannerStateDidChange
+                )
+                try await persistPatch(patchToPersist)
             } catch {
                 guard operationToken == inputDoseOperationToken else { return }
                 dailyDoseProgress = previousDailyDoseProgress
                 interventionCompletionEvents = previousInterventionCompletionEvents
                 snapshot = previousSnapshot
+                habitPlannerState = previousHabitPlannerState
+                refreshPlanningState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
             }
         }
+    }
+
+    private func nextPlannerStateForCompletionTransition(
+        interventionID: String,
+        previousSnapshot: DashboardSnapshot,
+        nextSnapshot: DashboardSnapshot
+    ) -> HabitPlannerState? {
+        guard let previousInput = previousSnapshot.inputs.first(where: { $0.id == interventionID }) else {
+            return nil
+        }
+        guard let nextInput = nextSnapshot.inputs.first(where: { $0.id == interventionID }) else {
+            return nil
+        }
+        guard previousInput.isCheckedToday == false, nextInput.isCheckedToday else {
+            return nil
+        }
+
+        return dailyPlanner.recordCompletion(
+            interventionID: interventionID,
+            plannerState: habitPlannerState,
+            dayKey: Self.localDateKey(from: nowProvider())
+        )
+    }
+
+    private func patchIncludingHabitPlannerState(
+        _ patch: UserDataPatch,
+        includePlannerState: Bool
+    ) -> UserDataPatch {
+        guard includePlannerState else {
+            return patch
+        }
+
+        return UserDataPatch(
+            experienceFlow: patch.experienceFlow,
+            dailyCheckIns: patch.dailyCheckIns,
+            dailyDoseProgress: patch.dailyDoseProgress,
+            interventionCompletionEvents: patch.interventionCompletionEvents,
+            interventionDoseSettings: patch.interventionDoseSettings,
+            appleHealthConnections: patch.appleHealthConnections,
+            nightOutcomes: patch.nightOutcomes,
+            morningStates: patch.morningStates,
+            activeInterventions: patch.activeInterventions,
+            hiddenInterventions: patch.hiddenInterventions,
+            customCausalDiagram: patch.customCausalDiagram,
+            wakeDaySleepAttributionMigrated: patch.wakeDaySleepAttributionMigrated,
+            progressQuestionSetState: patch.progressQuestionSetState,
+            gardenAliasOverrides: patch.gardenAliasOverrides,
+            plannerPreferencesState: patch.plannerPreferencesState,
+            habitPlannerState: habitPlannerState,
+            healthLensState: patch.healthLensState
+        )
     }
 
     private func doseStatusText(for state: InputDoseState) -> String {
@@ -2423,6 +3330,42 @@ final class AppViewModel: ObservableObject {
         }
 
         return String(format: "%04d-%02d-%02d", year, month, day)
+    }
+
+    private static func shiftedDayKey(_ dayKey: String, by offset: Int) -> String? {
+        let parts = dayKey.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3 else {
+            return nil
+        }
+        guard
+            let year = Int(parts[0]),
+            let month = Int(parts[1]),
+            let day = Int(parts[2])
+        else {
+            return nil
+        }
+
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        components.calendar = Calendar(identifier: .gregorian)
+        guard let date = components.date else {
+            return nil
+        }
+        guard let shiftedDate = Calendar(identifier: .gregorian).date(byAdding: .day, value: offset, to: date) else {
+            return nil
+        }
+        let shiftedComponents = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: shiftedDate)
+        guard
+            let shiftedYear = shiftedComponents.year,
+            let shiftedMonth = shiftedComponents.month,
+            let shiftedDay = shiftedComponents.day
+        else {
+            return nil
+        }
+
+        return String(format: "%04d-%02d-%02d", shiftedYear, shiftedMonth, shiftedDay)
     }
 
     private static func resolveMorningOutcomeFields(

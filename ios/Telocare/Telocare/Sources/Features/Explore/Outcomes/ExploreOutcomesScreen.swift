@@ -6,6 +6,9 @@ struct ExploreOutcomesScreen: View {
     let outcomeRecords: [OutcomeRecord]
     let outcomesMetadata: OutcomesMetadata
     let morningStates: [MorningState]
+    let chartMorningStates: [MorningState]
+    let chartNightOutcomes: [NightOutcome]
+    let chartExclusionNote: String?
     let morningOutcomeSelection: MorningOutcomeSelection
     let morningCheckInFields: [MorningOutcomeField]
     let requiredMorningCheckInFields: [MorningOutcomeField]
@@ -43,6 +46,9 @@ struct ExploreOutcomesScreen: View {
     let onStopMuseRecording: () -> Void
     let onSaveMuseNightOutcome: () -> Void
     let isMuseSessionEnabled: Bool
+    let flareSuggestion: FlareSuggestion?
+    let onAcceptFlareSuggestion: () -> Void
+    let onDismissFlareSuggestion: () -> Void
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
@@ -58,6 +64,9 @@ struct ExploreOutcomesScreen: View {
         outcomeRecords: [OutcomeRecord],
         outcomesMetadata: OutcomesMetadata,
         morningStates: [MorningState],
+        chartMorningStates: [MorningState],
+        chartNightOutcomes: [NightOutcome],
+        chartExclusionNote: String?,
         morningOutcomeSelection: MorningOutcomeSelection,
         morningCheckInFields: [MorningOutcomeField],
         requiredMorningCheckInFields: [MorningOutcomeField],
@@ -95,12 +104,18 @@ struct ExploreOutcomesScreen: View {
         onStopMuseRecording: @escaping () -> Void,
         onSaveMuseNightOutcome: @escaping () -> Void,
         isMuseSessionEnabled: Bool,
+        flareSuggestion: FlareSuggestion?,
+        onAcceptFlareSuggestion: @escaping () -> Void,
+        onDismissFlareSuggestion: @escaping () -> Void,
         selectedSkinID: TelocareSkinID
     ) {
         self.outcomes = outcomes
         self.outcomeRecords = outcomeRecords
         self.outcomesMetadata = outcomesMetadata
         self.morningStates = morningStates
+        self.chartMorningStates = chartMorningStates
+        self.chartNightOutcomes = chartNightOutcomes
+        self.chartExclusionNote = chartExclusionNote
         self.morningOutcomeSelection = morningOutcomeSelection
         self.morningCheckInFields = morningCheckInFields
         self.requiredMorningCheckInFields = requiredMorningCheckInFields
@@ -138,6 +153,9 @@ struct ExploreOutcomesScreen: View {
         self.onStopMuseRecording = onStopMuseRecording
         self.onSaveMuseNightOutcome = onSaveMuseNightOutcome
         self.isMuseSessionEnabled = isMuseSessionEnabled
+        self.flareSuggestion = flareSuggestion
+        self.onAcceptFlareSuggestion = onAcceptFlareSuggestion
+        self.onDismissFlareSuggestion = onDismissFlareSuggestion
         self.selectedSkinID = selectedSkinID
         _isMorningCheckInExpanded = State(
             initialValue: !morningOutcomeSelection.isComplete(requiredFields: requiredMorningCheckInFields)
@@ -150,6 +168,7 @@ struct ExploreOutcomesScreen: View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: TelocareTheme.Spacing.lg) {
+                    flareSuggestionSection
                     morningGreetingCard
                     morningCheckInSection
                     morningTrendSection
@@ -194,6 +213,37 @@ struct ExploreOutcomesScreen: View {
             withAnimation(.spring(response: 0.3)) {
                 isMorningCheckInExpanded = false
             }
+        }
+    }
+
+    @ViewBuilder
+    private var flareSuggestionSection: some View {
+        if let flareSuggestion {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                    Text(flareSuggestion.direction == .enterFlare ? "Possible flare detected" : "Flare may be resolving")
+                        .font(TelocareTheme.Typography.headline)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    Text(flareSuggestion.reason)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+
+                    HStack(spacing: TelocareTheme.Spacing.sm) {
+                        Button("Apply") {
+                            onAcceptFlareSuggestion()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier(AccessibilityID.exploreOutcomesFlareAccept)
+
+                        Button("Dismiss", role: .cancel) {
+                            onDismissFlareSuggestion()
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier(AccessibilityID.exploreOutcomesFlareDismiss)
+                    }
+                }
+            }
+            .accessibilityIdentifier(AccessibilityID.exploreOutcomesFlareSuggestion)
         }
     }
 
@@ -304,7 +354,7 @@ struct ExploreOutcomesScreen: View {
     private var morningTrendPoints: [OutcomeTrendPoint] {
         OutcomeTrendDataBuilder()
             .morningPoints(
-                from: morningStates,
+                from: chartMorningStates,
                 metric: selectedMorningMetric,
                 compositeComponents: morningTrendMetrics.filter { $0 != .composite }
             )
@@ -312,7 +362,7 @@ struct ExploreOutcomesScreen: View {
 
     private var nightTrendPoints: [OutcomeTrendPoint] {
         OutcomeTrendDataBuilder()
-            .nightPoints(from: outcomeRecords, metric: selectedNightMetric)
+            .nightPoints(from: chartNightOutcomes, metric: selectedNightMetric)
     }
 
     private var morningChartHeight: CGFloat {
@@ -447,6 +497,13 @@ struct ExploreOutcomesScreen: View {
                     .font(TelocareTheme.Typography.caption)
                     .foregroundStyle(TelocareTheme.warmGray)
                     .fixedSize(horizontal: false, vertical: true)
+
+                if let chartExclusionNote, !chartExclusionNote.isEmpty {
+                    Text(chartExclusionNote)
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .accessibilityElement(children: .contain)
@@ -990,4 +1047,3 @@ private struct NightRecordCard: View {
         }
     }
 }
-

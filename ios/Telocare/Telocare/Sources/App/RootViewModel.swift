@@ -223,8 +223,8 @@ final class RootViewModel: ObservableObject {
             }
         } catch {
             dashboardViewModel = nil
-            state = .fatal(message: "Failed to load user data from Supabase.")
-            accessibilityAnnouncer.announce("Failed to load user data from Supabase.")
+            state = .fatal(message: "Failed to load required data from Supabase.")
+            accessibilityAnnouncer.announce("Failed to load required data from Supabase.")
         }
     }
 

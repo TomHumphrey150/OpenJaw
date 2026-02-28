@@ -58,6 +58,10 @@ actor GraphKernel {
         checkpoints.sorted { $0.createdAt > $1.createdAt }
     }
 
+    func checkpoint(for graphVersion: String) -> GraphCheckpoint? {
+        checkpoints.first { $0.graphVersion == graphVersion }
+    }
+
     func replaceGraphData(_ graphData: CausalGraphData, lastModified: String? = nil) {
         let nextVersion = graphVersion(for: graphData)
         diagram = CustomCausalDiagram(
@@ -65,6 +69,27 @@ actor GraphKernel {
             lastModified: lastModified ?? ISO8601DateFormatter().string(from: Date()),
             graphVersion: nextVersion,
             baseGraphVersion: diagram.baseGraphVersion ?? diagram.graphVersion ?? nextVersion
+        )
+    }
+
+    func replace(
+        diagram: CustomCausalDiagram,
+        aliasOverrides: [GardenAliasOverride],
+        recordCheckpoint: Bool
+    ) {
+        self.diagram = diagram
+        self.aliasOverrides = aliasOverrides.sorted { $0.signature < $1.signature }
+        guard recordCheckpoint else {
+            return
+        }
+        let version = diagram.graphVersion ?? "graph-unknown"
+        checkpoints.append(
+            GraphCheckpoint(
+                id: "checkpoint-\(version)-\(checkpoints.count + 1)",
+                graphVersion: version,
+                createdAt: ISO8601DateFormatter().string(from: Date()),
+                diagram: diagram
+            )
         )
     }
 

@@ -4,8 +4,7 @@ import Foundation
 protocol RootDashboardFactory {
     func makeDashboard(
         document: UserDataDocument,
-        firstPartyContent: FirstPartyContentBundle,
-        fallbackGraph: CausalGraphData
+        firstPartyContent: FirstPartyContentBundle
     ) -> AppViewModel
 }
 
@@ -36,8 +35,7 @@ struct DefaultRootDashboardFactory: RootDashboardFactory {
 
     func makeDashboard(
         document: UserDataDocument,
-        firstPartyContent: FirstPartyContentBundle,
-        fallbackGraph: CausalGraphData
+        firstPartyContent: FirstPartyContentBundle
     ) -> AppViewModel {
         let snapshot = snapshotBuilder.build(
             from: document,
@@ -46,7 +44,7 @@ struct DefaultRootDashboardFactory: RootDashboardFactory {
         )
         let graphData = snapshotBuilder.graphData(
             from: document,
-            fallbackGraph: fallbackGraph
+            fallbackGraph: firstPartyContent.graphData
         )
 
         return AppViewModel(
@@ -62,9 +60,15 @@ struct DefaultRootDashboardFactory: RootDashboardFactory {
             initialMorningStates: document.morningStates,
             initialMorningQuestionnaire: document.morningQuestionnaire,
             initialProgressQuestionSetState: document.progressQuestionSetState,
+            initialPlannerPreferencesState: document.plannerPreferencesState,
+            initialHabitPlannerState: document.habitPlannerState,
+            initialHealthLensState: document.healthLensState,
             initialGardenAliasOverrides: document.gardenAliasOverrides,
             initialCustomCausalDiagram: document.customCausalDiagram,
             initialActiveInterventions: document.activeInterventions,
+            initialInterventionsCatalog: firstPartyContent.interventionsCatalog,
+            initialFoundationCatalog: firstPartyContent.foundationCatalog,
+            initialPlanningPolicy: firstPartyContent.planningPolicy,
             persistUserDataPatch: { patch in
                 try await userDataRepository.upsertUserDataPatch(patch)
             },

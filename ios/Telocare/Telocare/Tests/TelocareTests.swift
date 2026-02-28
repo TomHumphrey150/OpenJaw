@@ -1256,6 +1256,311 @@ struct AppViewModelTests {
         #expect(harness.viewModel.museCanSaveNightOutcome == true)
     }
 
+    @Test func mapLensUsesExplicitEmptyStateWhenPillarHasNoMappedNodes() {
+        let sleepPillar = HealthPillar(id: "sleep")
+        let financialPillar = HealthPillar(id: "financialSecurity")
+        let policy = planningPolicy(pillars: [
+            HealthPillarDefinition(id: sleepPillar, title: "Sleep", rank: 1),
+            HealthPillarDefinition(id: financialPillar, title: "Financial Security", rank: 2),
+        ])
+        let foundationCatalog = foundationCatalog(mappings: [
+            FoundationCatalogInterventionMapping(
+                interventionID: "sleep_habit",
+                pillars: [sleepPillar],
+                tags: [.foundation, .coreFloor],
+                foundationRole: .maintenance,
+                acuteTargetNodeIDs: ["SLEEP_DEP"],
+                defaultMinutes: 15,
+                ladderTemplateID: "sleep",
+                preferredWindows: nil
+            ),
+        ])
+        let graph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(data: GraphNodeData(id: "SLEEP_HYG_TX", label: "Sleep Habit", styleClass: "intervention", confirmed: nil, tier: nil, tooltip: nil)),
+                GraphNodeElement(data: GraphNodeData(id: "SLEEP_DEP", label: "Sleep Debt", styleClass: "moderate", confirmed: nil, tier: nil, tooltip: nil)),
+            ],
+            edges: [
+                GraphEdgeElement(data: GraphEdgeData(source: "SLEEP_HYG_TX", target: "SLEEP_DEP", label: nil, edgeType: "forward", edgeColor: nil, tooltip: nil)),
+            ]
+        )
+        let snapshot = snapshot(
+            inputs: [
+                inputStatus(id: "sleep_habit", name: "Sleep Habit", graphNodeID: "SLEEP_HYG_TX", isActive: true),
+            ]
+        )
+        let harness = AppViewModelHarness(
+            snapshot: snapshot,
+            graphData: graph,
+            initialFoundationCatalog: foundationCatalog,
+            initialPlanningPolicy: policy
+        )
+
+        harness.viewModel.setHealthLensPreset(HealthLensPreset.pillar)
+        harness.viewModel.setHealthLensPillar(financialPillar)
+
+        #expect(harness.viewModel.projectedSituationGraphData.nodes.isEmpty)
+        #expect(harness.viewModel.projectedSituationGraphData.edges.isEmpty)
+        #expect(harness.viewModel.projectedSituationGraphIsLensFilteredEmpty)
+        #expect(harness.viewModel.projectedSituationGraphEmptyMessage.contains("Financial Security"))
+    }
+
+    @Test func lensFilteringParitiesAcrossInputsMapAndProgressCharts() {
+        let sleepPillar = HealthPillar(id: "sleep")
+        let stressPillar = HealthPillar(id: "stressManagement")
+        let policy = planningPolicy(pillars: [
+            HealthPillarDefinition(id: sleepPillar, title: "Sleep", rank: 1),
+            HealthPillarDefinition(id: stressPillar, title: "Stress", rank: 2),
+        ])
+        let foundationCatalog = foundationCatalog(mappings: [
+            FoundationCatalogInterventionMapping(
+                interventionID: "sleep_habit",
+                pillars: [sleepPillar],
+                tags: [.foundation, .coreFloor],
+                foundationRole: .maintenance,
+                acuteTargetNodeIDs: ["SLEEP_DEP"],
+                defaultMinutes: 15,
+                ladderTemplateID: "sleep",
+                preferredWindows: nil
+            ),
+            FoundationCatalogInterventionMapping(
+                interventionID: "stress_habit",
+                pillars: [stressPillar],
+                tags: [.foundation, .maintenance],
+                foundationRole: .maintenance,
+                acuteTargetNodeIDs: ["STRESS"],
+                defaultMinutes: 15,
+                ladderTemplateID: "stress",
+                preferredWindows: nil
+            ),
+        ])
+        let graph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(data: GraphNodeData(id: "SLEEP_HYG_TX", label: "Sleep Habit", styleClass: "intervention", confirmed: nil, tier: nil, tooltip: nil)),
+                GraphNodeElement(data: GraphNodeData(id: "SLEEP_DEP", label: "Sleep Debt", styleClass: "moderate", confirmed: nil, tier: nil, tooltip: nil)),
+                GraphNodeElement(data: GraphNodeData(id: "MINDFULNESS_TX", label: "Stress Habit", styleClass: "intervention", confirmed: nil, tier: nil, tooltip: nil)),
+                GraphNodeElement(data: GraphNodeData(id: "STRESS", label: "Stress", styleClass: "moderate", confirmed: nil, tier: nil, tooltip: nil)),
+            ],
+            edges: [
+                GraphEdgeElement(data: GraphEdgeData(source: "SLEEP_HYG_TX", target: "SLEEP_DEP", label: nil, edgeType: "forward", edgeColor: nil, tooltip: nil)),
+                GraphEdgeElement(data: GraphEdgeData(source: "MINDFULNESS_TX", target: "STRESS", label: nil, edgeType: "forward", edgeColor: nil, tooltip: nil)),
+            ]
+        )
+        let snapshot = snapshot(
+            inputs: [
+                inputStatus(id: "sleep_habit", name: "Sleep Habit", graphNodeID: "SLEEP_HYG_TX", isActive: true),
+                inputStatus(id: "stress_habit", name: "Stress Habit", graphNodeID: "MINDFULNESS_TX", isActive: true),
+            ]
+        )
+        let morningStates = [
+            MorningState(
+                nightId: "2026-02-21",
+                globalSensation: 7,
+                neckTightness: 6,
+                jawSoreness: 5,
+                earFullness: 4,
+                healthAnxiety: 3,
+                stressLevel: 8,
+                createdAt: "2026-02-21T08:00:00Z",
+                graphAssociation: GraphAssociationRef(
+                    graphVersion: "graph-v1",
+                    nodeIDs: ["SLEEP_HYG_TX"],
+                    edgeIDs: []
+                )
+            ),
+            MorningState(
+                nightId: "2026-02-20",
+                globalSensation: 6,
+                neckTightness: 4,
+                jawSoreness: 4,
+                earFullness: 3,
+                healthAnxiety: 3,
+                stressLevel: 7,
+                createdAt: "2026-02-20T08:00:00Z",
+                graphAssociation: GraphAssociationRef(
+                    graphVersion: "graph-v1",
+                    nodeIDs: ["MINDFULNESS_TX"],
+                    edgeIDs: []
+                )
+            ),
+            MorningState(
+                nightId: "2026-02-19",
+                globalSensation: 5,
+                neckTightness: 3,
+                jawSoreness: 3,
+                earFullness: 2,
+                healthAnxiety: 2,
+                stressLevel: 4,
+                createdAt: "2026-02-19T08:00:00Z",
+                graphAssociation: nil
+            ),
+        ]
+        let harness = AppViewModelHarness(
+            snapshot: snapshot,
+            graphData: graph,
+            initialMorningStates: morningStates,
+            initialFoundationCatalog: foundationCatalog,
+            initialPlanningPolicy: policy
+        )
+
+        harness.viewModel.setHealthLensPreset(HealthLensPreset.pillar)
+        harness.viewModel.setHealthLensPillar(sleepPillar)
+
+        let projectedInputIDs = Set(harness.viewModel.projectedInputs.map { $0.id })
+        #expect(projectedInputIDs == Set(["sleep_habit"]))
+        #expect(harness.viewModel.projectedSituationGraphData.nodes.contains { $0.data.id == "SLEEP_DEP" })
+        #expect(harness.viewModel.projectedProgressMorningStatesForCharts.count == 1)
+        #expect(harness.viewModel.projectedProgressMorningStatesForCharts.first?.nightId == "2026-02-21")
+        let exclusionNote = harness.viewModel.projectedProgressExcludedChartsNote
+        #expect(exclusionNote?.contains("unscoped") == true)
+        #expect(exclusionNote?.contains("outside lens") == true)
+    }
+
+    @Test func higherRungCompletionPersistsOverrideAtAchievedRung() async {
+        let patchRecorder = PatchRecorder()
+        let sleepPillar = HealthPillar(id: "sleep")
+        let foundationCatalog = foundationCatalog(mappings: [
+            FoundationCatalogInterventionMapping(
+                interventionID: "sleep_habit",
+                pillars: [sleepPillar],
+                tags: [.foundation, .coreFloor],
+                foundationRole: .maintenance,
+                acuteTargetNodeIDs: ["SLEEP_DEP"],
+                defaultMinutes: 30,
+                ladderTemplateID: "sleep",
+                preferredWindows: nil
+            ),
+        ])
+        let policy = planningPolicy(pillars: [
+            HealthPillarDefinition(id: sleepPillar, title: "Sleep", rank: 1),
+        ])
+        let snapshot = snapshot(
+            inputs: [
+                inputStatus(id: "sleep_habit", name: "Sleep Habit", graphNodeID: "SLEEP_HYG_TX", isActive: true),
+            ]
+        )
+        let plannerState = HabitPlannerState(
+            entriesByInterventionID: [
+                "sleep_habit": HabitPlannerEntryState(
+                    currentRungIndex: 2,
+                    consecutiveCompletions: 0,
+                    lastCompletedDayKey: nil,
+                    lastSuggestedDayKey: nil,
+                    learnedDurationMinutes: nil
+                ),
+            ],
+            updatedAt: "2026-02-20T08:00:00Z"
+        )
+        let harness = AppViewModelHarness(
+            snapshot: snapshot,
+            initialHabitPlannerState: plannerState,
+            initialFoundationCatalog: foundationCatalog,
+            initialPlanningPolicy: policy,
+            persistUserDataPatch: { patch in
+                await patchRecorder.record(patch)
+                return true
+            }
+        )
+
+        harness.viewModel.toggleInputCheckedToday("sleep_habit")
+        await waitUntil { await patchRecorder.count() >= 1 }
+        harness.viewModel.recordHigherRungCompletion(
+            interventionID: "sleep_habit",
+            achievedRungID: "full"
+        )
+        await waitUntil { await patchRecorder.count() >= 2 }
+
+        let rungStatus = harness.viewModel.projectedHabitRungStatusByInterventionID["sleep_habit"]
+        #expect(rungStatus?.currentRungID == "full")
+        #expect(rungStatus?.targetRungID == "full")
+
+        let patch = await patchRecorder.lastPatch()
+        let entry = patch?.habitPlannerState?.entriesByInterventionID["sleep_habit"]
+        #expect(entry?.currentRungIndex == 0)
+    }
+
+    @Test func guideSectionedExportAndImportRevertsAtomicallyOnPersistFailure() async throws {
+        let initialGraph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(data: GraphNodeData(id: "A", label: "A", styleClass: "mechanism", confirmed: nil, tier: nil, tooltip: nil)),
+            ],
+            edges: []
+        )
+        let initialPlannerPreferences = PlannerPreferencesState(
+            defaultAvailableMinutes: 90,
+            modeOverride: .baseline,
+            flareSensitivity: .balanced,
+            updatedAt: "2026-02-21T00:00:00Z",
+            dailyTimeBudgetState: DailyTimeBudgetState.from(
+                availableMinutes: 90,
+                updatedAt: "2026-02-21T00:00:00Z"
+            )
+        )
+        let harness = AppViewModelHarness(
+            graphData: initialGraph,
+            initialPlannerPreferencesState: initialPlannerPreferences,
+            persistUserDataPatch: { _ in
+                throw PatchFailure.writeFailed
+            }
+        )
+
+        harness.viewModel.exportGuideSections([.planner])
+        await waitUntil { harness.viewModel.projectedGuideExportEnvelopeText != nil }
+        let exportText = try #require(harness.viewModel.projectedGuideExportEnvelopeText)
+        let codec = GraphPatchJSONCodec()
+        let exportEnvelope = try codec.decodeGuideExportEnvelope(from: exportText)
+        #expect(exportEnvelope.sections == [.planner])
+        #expect(exportEnvelope.graph == nil)
+        #expect(exportEnvelope.aliases == nil)
+        #expect(exportEnvelope.planner != nil)
+
+        let updatedGraph = CausalGraphData(
+            nodes: [
+                GraphNodeElement(data: GraphNodeData(id: "A", label: "A", styleClass: "mechanism", confirmed: nil, tier: nil, tooltip: nil)),
+                GraphNodeElement(data: GraphNodeData(id: "B", label: "B", styleClass: "mechanism", confirmed: nil, tier: nil, tooltip: nil)),
+            ],
+            edges: []
+        )
+        let importEnvelope = GuideExportEnvelope(
+            schemaVersion: "guide-transfer.v1",
+            sections: [.graph, .planner],
+            graph: GuideGraphTransferPayload(
+                graphVersion: "graph-v2",
+                baseGraphVersion: "graph-v1",
+                lastModified: "2026-02-21T01:00:00Z",
+                graphData: updatedGraph
+            ),
+            aliases: nil,
+            planner: GuidePlannerTransferPayload(
+                plannerPreferencesState: PlannerPreferencesState(
+                    defaultAvailableMinutes: 45,
+                    modeOverride: .flare,
+                    flareSensitivity: .balanced,
+                    updatedAt: "2026-02-21T01:00:00Z",
+                    dailyTimeBudgetState: DailyTimeBudgetState.from(
+                        availableMinutes: 45,
+                        updatedAt: "2026-02-21T01:00:00Z"
+                    )
+                ),
+                habitPlannerState: .empty,
+                healthLensState: HealthLensState(
+                    preset: .acute,
+                    selectedPillar: nil,
+                    updatedAt: "2026-02-21T01:00:00Z"
+                )
+            )
+        )
+        let importText = try codec.encodeGuideExportEnvelope(importEnvelope)
+        harness.viewModel.previewGuideImportPayload(importText)
+        #expect(harness.viewModel.projectedGuideImportPreview?.isValid == true)
+        harness.viewModel.applyPendingGuideImportPayload()
+        await waitUntil { harness.viewModel.exploreFeedback.contains("failed and was reverted") }
+
+        #expect(harness.viewModel.graphData == initialGraph)
+        #expect(harness.viewModel.projectedPlannerTimeBudgetState.availableMinutes == 90)
+        #expect(harness.viewModel.projectedHealthLensPreset == .all)
+    }
+
     private func waitUntil(_ condition: @escaping () async -> Bool) async {
         for _ in 0..<200 {
             if await condition() {
@@ -1319,6 +1624,82 @@ struct AppViewModelTests {
 
         let patch = await patchRecorder.lastPatch()
         return patch?.nightOutcomes?.first(where: { $0.nightId == "2026-02-21" })
+    }
+
+    private func planningPolicy(pillars: [HealthPillarDefinition]) -> PlanningPolicy {
+        PlanningPolicy(
+            policyID: "planner.v1.test",
+            pillars: pillars,
+            coreFloorPillars: pillars.prefix(2).map(\.id),
+            highPriorityPillarCutoff: max(1, min(5, pillars.count)),
+            defaultAvailableMinutes: 90,
+            flareEnterThreshold: 0.65,
+            flareExitThreshold: 0.45,
+            flareLookbackDays: 3,
+            flareEnterRequiredDays: 2,
+            flareExitStableDays: 3,
+            ladder: .default
+        )
+    }
+
+    private func foundationCatalog(
+        mappings: [FoundationCatalogInterventionMapping]
+    ) -> FoundationCatalog {
+        FoundationCatalog(
+            schemaVersion: "foundation.v1",
+            sourceReportPath: "/tmp/test.md",
+            generatedAt: "2026-02-21T00:00:00Z",
+            pillars: [],
+            interventionMappings: mappings
+        )
+    }
+
+    private func snapshot(inputs: [InputStatus]) -> DashboardSnapshot {
+        DashboardSnapshot(
+            outcomes: OutcomeSummary(
+                shieldScore: 0,
+                burdenTrendPercent: 0,
+                topContributor: "None",
+                confidence: "Low",
+                burdenProgress: 0
+            ),
+            outcomeRecords: [],
+            outcomesMetadata: .empty,
+            situation: SituationSummary(
+                focusedNode: "None",
+                tier: "Tier 0",
+                visibleHotspots: 0,
+                topSource: "None"
+            ),
+            inputs: inputs
+        )
+    }
+
+    private func inputStatus(
+        id: String,
+        name: String,
+        graphNodeID: String,
+        isActive: Bool
+    ) -> InputStatus {
+        InputStatus(
+            id: id,
+            name: name,
+            trackingMode: .binary,
+            statusText: "pending",
+            completion: 0,
+            isCheckedToday: false,
+            doseState: nil,
+            completionEvents: [],
+            graphNodeID: graphNodeID,
+            classificationText: nil,
+            isActive: isActive,
+            evidenceLevel: nil,
+            evidenceSummary: nil,
+            detailedDescription: nil,
+            citationIDs: [],
+            externalLink: nil,
+            appleHealthState: nil
+        )
     }
 
     private func doseSnapshot() -> DashboardSnapshot {
@@ -1441,7 +1822,14 @@ private struct AppViewModelHarness {
         initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
         initialMorningQuestionnaire: MorningQuestionnaire? = nil,
+        initialPlannerPreferencesState: PlannerPreferencesState? = nil,
+        initialHabitPlannerState: HabitPlannerState? = nil,
+        initialHealthLensState: HealthLensState? = nil,
         initialActiveInterventions: [String] = [],
+        initialInterventionsCatalog: InterventionsCatalog = .empty,
+        initialFoundationCatalog: FoundationCatalog? = nil,
+        initialPlanningPolicy: PlanningPolicy? = nil,
+        planningMetadataResolver: HabitPlanningMetadataResolver? = nil,
         persistUserDataPatch: @escaping @Sendable (UserDataPatch) async throws -> Bool = { _ in true },
         appleHealthDoseService: AppleHealthDoseService = MockAppleHealthDoseService(),
         museSessionService: MuseSessionService = MockMuseSessionService(),
@@ -1465,7 +1853,13 @@ private struct AppViewModelHarness {
             initialNightOutcomes: initialNightOutcomes,
             initialMorningStates: initialMorningStates,
             initialMorningQuestionnaire: initialMorningQuestionnaire,
+            initialPlannerPreferencesState: initialPlannerPreferencesState,
+            initialHabitPlannerState: initialHabitPlannerState,
+            initialHealthLensState: initialHealthLensState,
             initialActiveInterventions: initialActiveInterventions,
+            initialInterventionsCatalog: initialInterventionsCatalog,
+            initialFoundationCatalog: initialFoundationCatalog,
+            initialPlanningPolicy: initialPlanningPolicy,
             persistUserDataPatch: persistUserDataPatch,
             appleHealthDoseService: appleHealthDoseService,
             museSessionService: museSessionService,
@@ -1475,6 +1869,7 @@ private struct AppViewModelHarness {
                 return calendar.date(from: DateComponents(year: 2026, month: 2, day: 21)) ?? Date()
             },
             museDiagnosticsPollingIntervalNanoseconds: museDiagnosticsPollingIntervalNanoseconds,
+            planningMetadataResolver: planningMetadataResolver,
             accessibilityAnnouncer: announcer
         )
     }

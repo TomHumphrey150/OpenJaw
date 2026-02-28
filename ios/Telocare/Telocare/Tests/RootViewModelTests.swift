@@ -632,7 +632,9 @@ struct RootViewModelTests {
             firstPartyContent: FirstPartyContentBundle(
                 graphData: firstPartyGraph,
                 interventionsCatalog: .empty,
-                outcomesMetadata: .empty
+                outcomesMetadata: .empty,
+                foundationCatalog: minimalFoundationCatalog(),
+                planningPolicy: .default
             )
         )
         let viewModel = RootViewModel(
@@ -714,7 +716,9 @@ struct RootViewModelTests {
                     )
                 ]
             ),
-            outcomesMetadata: .empty
+            outcomesMetadata: .empty,
+            foundationCatalog: minimalFoundationCatalog(),
+            planningPolicy: .default
         )
         let repository = TrackingUserDataRepository(
             document: document,
@@ -800,7 +804,19 @@ struct RootViewModelTests {
                     )
                 ]
             ),
-            outcomesMetadata: .empty
+            outcomesMetadata: .empty,
+            foundationCatalog: minimalFoundationCatalog(),
+            planningPolicy: .default
+        )
+    }
+
+    private func minimalFoundationCatalog() -> FoundationCatalog {
+        FoundationCatalog(
+            schemaVersion: "tests.foundation.v1",
+            sourceReportPath: "tests",
+            generatedAt: "tests",
+            pillars: [],
+            interventionMappings: []
         )
     }
 
@@ -815,6 +831,20 @@ struct RootViewModelTests {
     }
 }
 
+private let trackingDefaultFirstPartyContent = FirstPartyContentBundle(
+    graphData: .defaultGraph,
+    interventionsCatalog: .empty,
+    outcomesMetadata: .empty,
+    foundationCatalog: FoundationCatalog(
+        schemaVersion: "tests.foundation.v1",
+        sourceReportPath: "tests",
+        generatedAt: "tests",
+        pillars: [],
+        interventionMappings: []
+    ),
+    planningPolicy: .default
+)
+
 actor TrackingUserDataRepository: UserDataRepository {
     private let document: UserDataDocument
     private let firstPartyContent: FirstPartyContentBundle
@@ -826,7 +856,7 @@ actor TrackingUserDataRepository: UserDataRepository {
 
     init(
         document: UserDataDocument,
-        firstPartyContent: FirstPartyContentBundle = .empty,
+        firstPartyContent: FirstPartyContentBundle = trackingDefaultFirstPartyContent,
         backfillShouldThrow: Bool = false,
         patchShouldThrow: Bool = false
     ) {
@@ -841,8 +871,9 @@ actor TrackingUserDataRepository: UserDataRepository {
         return document
     }
 
-    func fetchFirstPartyContent() async throws -> FirstPartyContentBundle {
-        firstPartyContent
+    func fetchFirstPartyContent(userID: UUID) async throws -> FirstPartyContentBundle {
+        _ = userID
+        return firstPartyContent
     }
 
     func backfillDefaultGraphIfMissing(canonicalGraph: CausalGraphData, lastModified: String) async throws -> Bool {

@@ -15,6 +15,9 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let wakeDaySleepAttributionMigrated: Bool?
     let progressQuestionSetState: ProgressQuestionSetState?
     let gardenAliasOverrides: [GardenAliasOverride]?
+    let plannerPreferencesState: PlannerPreferencesState?
+    let habitPlannerState: HabitPlannerState?
+    let healthLensState: HealthLensState?
 
     init(
         experienceFlow: ExperienceFlow?,
@@ -30,7 +33,10 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         customCausalDiagram: CustomCausalDiagram? = nil,
         wakeDaySleepAttributionMigrated: Bool? = nil,
         progressQuestionSetState: ProgressQuestionSetState? = nil,
-        gardenAliasOverrides: [GardenAliasOverride]? = nil
+        gardenAliasOverrides: [GardenAliasOverride]? = nil,
+        plannerPreferencesState: PlannerPreferencesState? = nil,
+        habitPlannerState: HabitPlannerState? = nil,
+        healthLensState: HealthLensState? = nil
     ) {
         self.experienceFlow = experienceFlow
         self.dailyCheckIns = dailyCheckIns
@@ -46,6 +52,9 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
         self.progressQuestionSetState = progressQuestionSetState
         self.gardenAliasOverrides = gardenAliasOverrides
+        self.plannerPreferencesState = plannerPreferencesState
+        self.habitPlannerState = habitPlannerState
+        self.healthLensState = healthLensState
     }
 
     static func experienceFlow(_ value: ExperienceFlow) -> UserDataPatch {
@@ -306,6 +315,51 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             activeInterventions: nil,
             hiddenInterventions: nil,
             progressQuestionSetState: value
+        )
+    }
+
+    static func plannerPreferencesState(_ value: PlannerPreferencesState) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            plannerPreferencesState: value
+        )
+    }
+
+    static func habitPlannerState(_ value: HabitPlannerState) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            habitPlannerState: value
+        )
+    }
+
+    static func healthLensState(_ value: HealthLensState) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            healthLensState: value
         )
     }
 }

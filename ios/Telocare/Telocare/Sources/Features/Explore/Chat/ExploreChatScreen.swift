@@ -6,9 +6,15 @@ struct ExploreChatScreen: View {
     let pendingGraphPatchPreview: GraphPatchPreview?
     let pendingGraphPatchConflicts: [GraphPatchConflict]
     let pendingGraphPatchConflictResolutions: [Int: GraphConflictResolutionChoice]
-    let checkpointVersions: [String]
+    let checkpointSummaries: [GraphCheckpointSummary]
     let graphVersion: String?
+    let guideExportEnvelopeText: String?
+    let pendingGuideImportPreview: GuideImportPreview?
     let onSetConflictResolution: (Int, GraphConflictResolutionChoice) -> Void
+    let onExportGuideSections: (Set<GuideTransferSection>) -> Void
+    let onPreviewGuideImportPayload: (String) -> Void
+    let onApplyPendingGuideImport: () -> Void
+    let onDismissPendingGuideImport: () -> Void
     let onApplyPendingPatch: () -> Void
     let onDismissPendingPatch: () -> Void
     let onRollbackGraphVersion: (String) -> Void
@@ -24,6 +30,9 @@ struct ExploreChatScreen: View {
         )
     ]
     @FocusState private var isInputFocused: Bool
+    @State private var selectedGuideSections: Set<GuideTransferSection> = Set(GuideTransferSection.allCases)
+    @State private var importPayloadText = ""
+    @State private var pendingRollbackSummary: GraphCheckpointSummary?
 
     var body: some View {
         NavigationStack {
@@ -35,11 +44,13 @@ struct ExploreChatScreen: View {
                                 graphVersionBadge(graphVersion)
                             }
 
+                            guideTransferCard
+
                             if let pendingGraphPatchPreview {
                                 patchPreviewCard(preview: pendingGraphPatchPreview)
                             }
 
-                            if !checkpointVersions.isEmpty {
+                            if !checkpointSummaries.isEmpty {
                                 checkpointHistoryCard
                             }
 
@@ -72,6 +83,32 @@ struct ExploreChatScreen: View {
         }
         .tint(TelocareTheme.coral)
         .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
+        .confirmationDialog(
+            "Rollback graph checkpoint?",
+            isPresented: Binding(
+                get: { pendingRollbackSummary != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        pendingRollbackSummary = nil
+                    }
+                }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let summary = pendingRollbackSummary {
+                Button("Rollback to \(summary.graphVersion)", role: .destructive) {
+                    onRollbackGraphVersion(summary.graphVersion)
+                    pendingRollbackSummary = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    pendingRollbackSummary = nil
+                }
+            }
+        } message: {
+            if let summary = pendingRollbackSummary {
+                Text("Restore checkpoint with \(summary.nodeCount) nodes and \(summary.edgeCount) edges.")
+            }
+        }
     }
 
     // MARK: - Suggested Prompts
@@ -161,6 +198,116 @@ struct ExploreChatScreen: View {
             Spacer()
         }
         .padding(.horizontal, TelocareTheme.Spacing.md)
+    }
+
+    @ViewBuilder
+    private var guideTransferCard: some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+            Text("Export / Import")
+                .font(TelocareTheme.Typography.headline)
+                .foregroundStyle(TelocareTheme.charcoal)
+
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                ForEach(GuideTransferSection.allCases, id: \.self) { section in
+                    Button {
+                        if selectedGuideSections.contains(section) {
+                            selectedGuideSections.remove(section)
+                        } else {
+                            selectedGuideSections.insert(section)
+                        }
+                    } label: {
+                        HStack {
+                            Text(section.title)
+                                .font(TelocareTheme.Typography.body)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                            Spacer()
+                            Image(systemName: selectedGuideSections.contains(section) ? "checkmark.square.fill" : "square")
+                                .foregroundStyle(selectedGuideSections.contains(section) ? TelocareTheme.success : TelocareTheme.muted)
+                        }
+                        .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Button("Export selected sections") {
+                onExportGuideSections(selectedGuideSections)
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier(AccessibilityID.exploreChatGuideExportButton)
+
+            if let guideExportEnvelopeText, !guideExportEnvelopeText.isEmpty {
+                Text(guideExportEnvelopeText)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(TelocareTheme.Spacing.sm)
+                    .background(
+                        RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous)
+                            .fill(TelocareTheme.sand)
+                    )
+                    .accessibilityIdentifier(AccessibilityID.exploreChatGuideExportText)
+            }
+
+            Text("Import payload")
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.warmGray)
+
+            TextEditor(text: $importPayloadText)
+                .font(.system(.caption, design: .monospaced))
+                .frame(minHeight: 120)
+                .padding(6)
+                .background(
+                    RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous)
+                        .stroke(TelocareTheme.peach, lineWidth: 1)
+                )
+                .accessibilityIdentifier(AccessibilityID.exploreChatGuideImportEditor)
+
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                Button("Preview import") {
+                    onPreviewGuideImportPayload(importPayloadText)
+                }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier(AccessibilityID.exploreChatGuideImportPreviewButton)
+
+                Button("Clear preview") {
+                    onDismissPendingGuideImport()
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier(AccessibilityID.exploreChatGuideImportDismissButton)
+            }
+
+            if let pendingGuideImportPreview {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                    ForEach(pendingGuideImportPreview.summaryLines, id: \.self) { line in
+                        Text("• \(line)")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                    }
+
+                    if let validationError = pendingGuideImportPreview.validationError {
+                        Text(validationError)
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.coral)
+                    }
+
+                    if pendingGuideImportPreview.isValid {
+                        Button("Apply import") {
+                            onApplyPendingGuideImport()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier(AccessibilityID.exploreChatGuideImportApplyButton)
+                    }
+                }
+                .accessibilityIdentifier(AccessibilityID.exploreChatGuideImportPreview)
+            }
+        }
+        .padding(TelocareTheme.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.large, style: .continuous)
+                .fill(TelocareTheme.cream)
+        )
     }
 
     @ViewBuilder
@@ -256,14 +403,19 @@ struct ExploreChatScreen: View {
                 .font(TelocareTheme.Typography.headline)
                 .foregroundStyle(TelocareTheme.charcoal)
 
-            ForEach(checkpointVersions, id: \.self) { version in
+            ForEach(checkpointSummaries) { summary in
                 HStack {
-                    Text(version)
-                        .font(TelocareTheme.Typography.caption)
-                        .foregroundStyle(TelocareTheme.warmGray)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(summary.graphVersion)
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Text("\(summary.nodeCount) nodes, \(summary.edgeCount) edges")
+                            .font(TelocareTheme.Typography.small)
+                            .foregroundStyle(TelocareTheme.muted)
+                    }
                     Spacer()
                     Button("Rollback") {
-                        onRollbackGraphVersion(version)
+                        pendingRollbackSummary = summary
                     }
                     .font(TelocareTheme.Typography.caption)
                     .buttonStyle(.bordered)

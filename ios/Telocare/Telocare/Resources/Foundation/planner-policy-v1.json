@@ -1,0 +1,30 @@
+{
+  "policyID": "planner.v1.default",
+  "pillars": [
+    { "id": "sleep", "title": "Sleep", "rank": 1 },
+    { "id": "nutrition", "title": "Nutrition", "rank": 2 },
+    { "id": "exercise", "title": "Exercise", "rank": 3 },
+    { "id": "socialLife", "title": "Social Life", "rank": 4 },
+    { "id": "stressManagement", "title": "Stress Management", "rank": 5 },
+    { "id": "avoidingDrugs", "title": "Avoiding Drugs", "rank": 6 },
+    { "id": "medical", "title": "Medical", "rank": 7 },
+    { "id": "romanticPersonalCare", "title": "Romantic / Personal Care", "rank": 8 },
+    { "id": "environment", "title": "Environment", "rank": 9 },
+    { "id": "financialSecurity", "title": "Financial Security", "rank": 10 }
+  ],
+  "coreFloorPillars": ["sleep", "nutrition"],
+  "highPriorityPillarCutoff": 5,
+  "defaultAvailableMinutes": 90,
+  "flareEnterThreshold": 0.65,
+  "flareExitThreshold": 0.45,
+  "flareLookbackDays": 3,
+  "flareEnterRequiredDays": 2,
+  "flareExitStableDays": 3,
+  "ladder": {
+    "fullMultiplier": 1.0,
+    "reducedMultiplier": 0.6,
+    "minimalMultiplier": 0.3,
+    "microMultiplier": 0.1,
+    "minimumMinutes": 2
+  }
+}

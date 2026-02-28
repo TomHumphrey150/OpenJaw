@@ -1,0 +1,2236 @@
+{
+  "activeInputCount": 26,
+  "edgeCoverage": {
+    "clusterTreeNodeIDs": [
+      "ACID",
+      "CERVICAL",
+      "CORTISOL",
+      "FHP",
+      "GERD",
+      "MG_DEF",
+      "MICRO",
+      "NECK_TIGHTNESS",
+      "OSA",
+      "SALIVA",
+      "SLEEP_DEP",
+      "STRESS",
+      "SYMPATHETIC",
+      "TMD",
+      "VAGAL",
+      "VIT_D"
+    ],
+    "coveredEdgeCount": 79,
+    "entries": [
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BIOFEEDBACK_TX|RMMA|forward|#0",
+        "referenceID": "activate_emg_tracker",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BIOFEEDBACK_TX",
+        "targetInClusterTree": false,
+        "targetNodeID": "RMMA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:ALCOHOL|GERD|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "alcohol_limit",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "ALCOHOL",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:ALCOHOL|MICRO|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "alcohol_limit",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "ALCOHOL",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BED_ELEV_TX|ACID|forward|#0",
+        "referenceID": "bed_elevation",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BED_ELEV_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BED_ELEV_TX|GERD|forward|#0",
+        "referenceID": "bed_elevation",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BED_ELEV_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "referenceID": "bedtime_routine",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SLEEP_HYG_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0",
+        "referenceID": "bedtime_routine",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SLEEP_HYG_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SLEEP_DEP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BIOFEEDBACK_TX|RMMA|forward|#0",
+        "referenceID": "biofeedback",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BIOFEEDBACK_TX",
+        "targetInClusterTree": false,
+        "targetNodeID": "RMMA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+        "referenceID": "botox",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BOTOX_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "NECK_TIGHTNESS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BOTOX_TX|RMMA|forward|#0",
+        "referenceID": "botox",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BOTOX_TX",
+        "targetInClusterTree": false,
+        "targetNodeID": "RMMA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:OSA_TX|OSA|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "breathe_right_strip",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "OSA_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "OSA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CAFFEINE|GERD|dashed|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "caffeine_limit",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CAFFEINE",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CAFFEINE|MICRO|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "caffeine_limit",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CAFFEINE",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CBT_TX|STRESS|forward|#0",
+        "referenceID": "cbt",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CBT_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "STRESS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "referenceID": "diaphragm_breathing",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BREATHING_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BREATHING_TX|SYMPATHETIC|forward|#0",
+        "referenceID": "diaphragm_breathing",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BREATHING_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SYMPATHETIC"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:OSA_TX|OSA|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "dymista_nasal_spray",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "OSA_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "OSA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BIOFEEDBACK_TX|RMMA|forward|#0",
+        "referenceID": "emg_check",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BIOFEEDBACK_TX",
+        "targetInClusterTree": false,
+        "targetNodeID": "RMMA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:EXERCISE_TX|CORTISOL|forward|#0",
+        "referenceID": "exercise_minutes",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "EXERCISE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:EXERCISE_TX|SLEEP_DEP|forward|#0",
+        "referenceID": "exercise_minutes",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "EXERCISE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SLEEP_DEP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:PPI_TX|GERD|forward|#0",
+        "referenceID": "gerd_treatment",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "PPI_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+        "referenceID": "heat_therapy",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "HEAT_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "NECK_TIGHTNESS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:HEAT_TX|TMD|forward|#0",
+        "referenceID": "heat_therapy",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "HEAT_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "TMD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+        "referenceID": "jaw_massage",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MASSAGE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "NECK_TIGHTNESS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MASSAGE_TX|TMD|forward|#0",
+        "referenceID": "jaw_massage",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MASSAGE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "TMD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:JAW_RELAX_TX|RMMA|forward|#0",
+        "referenceID": "jaw_relaxation",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "JAW_RELAX_TX",
+        "targetInClusterTree": false,
+        "targetNodeID": "RMMA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+        "referenceID": "mindfulness_minutes",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MINDFULNESS_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MINDFULNESS_TX|STRESS|forward|#0",
+        "referenceID": "mindfulness_minutes",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MINDFULNESS_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "STRESS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MORNING_FAST_TX|GERD|forward|#0",
+        "referenceID": "morning_fast",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MORNING_FAST_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CIRCADIAN_TX|MICRO|forward|#0",
+        "referenceID": "morning_routine",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CIRCADIAN_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CIRCADIAN_TX|SLEEP_DEP|forward|#0",
+        "referenceID": "morning_routine",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CIRCADIAN_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SLEEP_DEP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MULTI_TX|MG_DEF|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "multivitamin",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MULTI_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "MG_DEF"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:NATURE_TX|CORTISOL|forward|#0",
+        "referenceID": "nature_exposure",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "NATURE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:NATURE_TX|STRESS|forward|#0",
+        "referenceID": "nature_exposure",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "NATURE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "STRESS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:NEUROSYM_TX|SYMPATHETIC|forward|#0",
+        "referenceID": "neurosym_device",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "NEUROSYM_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SYMPATHETIC"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:NEUROSYM_TX|VAGAL|forward|#0",
+        "referenceID": "neurosym_device",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "NEUROSYM_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "VAGAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SPLINT|TOOTH|forward|#0",
+        "referenceID": "night_guard",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SPLINT",
+        "targetInClusterTree": false,
+        "targetNodeID": "TOOTH"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SCREENS_TX|SLEEP_DEP|forward|#0",
+        "referenceID": "no_screens_prebed",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SCREENS_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SLEEP_DEP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "referenceID": "oura_score_goal",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SLEEP_HYG_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0",
+        "referenceID": "oura_score_goal",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SLEEP_HYG_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SLEEP_DEP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:PHYSIO_TX|CERVICAL|forward|#0",
+        "referenceID": "physio_stretches",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "PHYSIO_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CERVICAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:PHYSIO_TX|FHP|forward|#0",
+        "referenceID": "physio_stretches",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "PHYSIO_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "FHP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:PHYSIO_TX|TMD|forward|#0",
+        "referenceID": "physio_stretches",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "PHYSIO_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "TMD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:POSTURE_TX|CERVICAL|forward|#0",
+        "referenceID": "posture",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "POSTURE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CERVICAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:POSTURE_TX|FHP|forward|#0",
+        "referenceID": "posture",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "POSTURE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "FHP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MEAL_TIMING_TX|GERD|forward|#0",
+        "referenceID": "reflux_meal_timing",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MEAL_TIMING_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:PPI_TX|GERD|forward|#0",
+        "referenceID": "reflux_medications",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "PPI_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "referenceID": "reflux_trigger_avoidance",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "REFLUX_DIET_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:REFLUX_DIET_TX|GERD|forward|#0",
+        "referenceID": "reflux_trigger_avoidance",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "REFLUX_DIET_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:OSA_TX|OSA|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "sleep_apnea_treatment",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "OSA_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "OSA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "referenceID": "sleep_hours",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SLEEP_HYG_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0",
+        "referenceID": "sleep_hours",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "SLEEP_HYG_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SLEEP_DEP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "referenceID": "strict_diet_phase",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "REFLUX_DIET_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:REFLUX_DIET_TX|GERD|forward|#0",
+        "referenceID": "strict_diet_phase",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "REFLUX_DIET_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:TONGUE_TX|HYOID|forward|#0",
+        "referenceID": "tongue_posture",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "TONGUE_TX",
+        "targetInClusterTree": false,
+        "targetNodeID": "HYOID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:VIT_D_TX|VIT_D|forward|#0",
+        "referenceID": "vitamin_d",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "VIT_D_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "VIT_D"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0",
+        "referenceID": "warm_shower",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "WARM_SHOWER_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SYMPATHETIC"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:HYDRATION|ACID|forward|#0",
+        "referenceID": "water_intake",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "HYDRATION",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:HYDRATION|SALIVA|forward|#0",
+        "referenceID": "water_intake",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "HYDRATION",
+        "targetInClusterTree": true,
+        "targetNodeID": "SALIVA"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:YOGA_TX|CORTISOL|forward|#0",
+        "referenceID": "yoga_prebed",
+        "referenceType": "habit",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "YOGA_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:ACID|VAGAL|forward|vagal afferents#0",
+        "referenceID": "progress.acid",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "ACID",
+        "targetInClusterTree": true,
+        "targetNodeID": "VAGAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BED_ELEV_TX|ACID|forward|#0",
+        "referenceID": "progress.acid",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BED_ELEV_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:GERD|ACID|forward|#0",
+        "referenceID": "progress.acid",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "GERD",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:HYDRATION|ACID|forward|#0",
+        "referenceID": "progress.acid",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "HYDRATION",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "referenceID": "progress.acid",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "REFLUX_DIET_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:TLESR|ACID|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "progress.acid",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "TLESR",
+        "targetInClusterTree": true,
+        "targetNodeID": "ACID"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:ALCOHOL|GERD|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "progress.alcohol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "ALCOHOL",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:ALCOHOL|MICRO|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "progress.alcohol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "ALCOHOL",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "referenceID": "progress.breathing_tx",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BREATHING_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BREATHING_TX|SYMPATHETIC|forward|#0",
+        "referenceID": "progress.breathing_tx",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BREATHING_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "SYMPATHETIC"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CAFFEINE|GERD|dashed|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "progress.caffeine",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CAFFEINE",
+        "targetInClusterTree": true,
+        "targetNodeID": "GERD"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CAFFEINE|MICRO|forward|#0",
+        "edgeIsDeactivated": false,
+        "referenceID": "progress.caffeine",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "CAFFEINE",
+        "targetInClusterTree": true,
+        "targetNodeID": "MICRO"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CERVICAL|CS|forward|tcc convergence#0",
+        "referenceID": "progress.cervical",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "CERVICAL",
+        "targetInClusterTree": false,
+        "targetNodeID": "CS"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CERVICAL|FHP|dashed|#0",
+        "referenceID": "progress.cervical",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "CERVICAL",
+        "targetInClusterTree": true,
+        "targetNodeID": "FHP"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+        "referenceID": "progress.cervical",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "CERVICAL",
+        "targetInClusterTree": false,
+        "targetNodeID": "HEADACHES"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:PHYSIO_TX|CERVICAL|forward|#0",
+        "referenceID": "progress.cervical",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "PHYSIO_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CERVICAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:POSTURE_TX|CERVICAL|forward|#0",
+        "referenceID": "progress.cervical",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "POSTURE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CERVICAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:TMD|CERVICAL|forward|#0",
+        "referenceID": "progress.cervical",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "TMD",
+        "targetInClusterTree": true,
+        "targetNodeID": "CERVICAL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "BREATHING_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:CORTISOL|SYMPATHETIC|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "CORTISOL",
+        "targetInClusterTree": true,
+        "targetNodeID": "SYMPATHETIC"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:EXERCISE_TX|CORTISOL|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "EXERCISE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "MINDFULNESS_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:NATURE_TX|CORTISOL|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "NATURE_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:SLEEP_DEP|CORTISOL|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "SLEEP_DEP",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:STRESS|CORTISOL|forward|or 2.07#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": true,
+        "sourceNodeID": "STRESS",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      },
+      {
+        "edgeExists": true,
+        "edgeID": "edge:YOGA_TX|CORTISOL|forward|#0",
+        "referenceID": "progress.cortisol",
+        "referenceType": "outcome_question",
+        "sourceInClusterTree": false,
+        "sourceNodeID": "YOGA_TX",
+        "targetInClusterTree": true,
+        "targetNodeID": "CORTISOL"
+      }
+    ],
+    "referencedEdgeCount": 86,
+    "uncoveredEdgeCount": 7,
+    "uncoveredEdgeIDs": [
+      "edge:BIOFEEDBACK_TX|RMMA|forward|#0",
+      "edge:BOTOX_TX|RMMA|forward|#0",
+      "edge:JAW_RELAX_TX|RMMA|forward|#0",
+      "edge:SPLINT|TOOTH|forward|#0",
+      "edge:TONGUE_TX|HYOID|forward|#0"
+    ]
+  },
+  "generatedAt": "2026-02-28T13:47:46Z",
+  "graphEdgeCount": 120,
+  "graphNodeCount": 72,
+  "graphVersion": "graph-84435657553e2796",
+  "habitMappings": [
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:HYDRATION|ACID|forward|#0",
+        "edge:HYDRATION|SALIVA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:HYDRATION|ACID|forward|#0",
+        "edge:HYDRATION|SALIVA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "ACID",
+        "SALIVA"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "water_intake",
+      "inputName": "Water Intake",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "HYDRATION",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:VIT_D_TX|VIT_D|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:VIT_D_TX|VIT_D|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "VIT_D"
+      ],
+      "clusterPaths": [
+        "Vitamin D Status"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "vitamin_d",
+      "inputName": "Vitamin D (Morning)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "VIT_D_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:MULTI_TX|MG_DEF|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:MULTI_TX|MG_DEF|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "MG_DEF"
+      ],
+      "clusterPaths": [
+        "Magnesium Status"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "multivitamin",
+      "inputName": "Multivitamin (B6, Zinc, Magnesium)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "MULTI_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:MORNING_FAST_TX|GERD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:MORNING_FAST_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "GERD"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "morning_fast",
+      "inputName": "Delay Breakfast (1.5-2 hours)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "MORNING_FAST_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:CIRCADIAN_TX|MICRO|forward|#0",
+        "edge:CIRCADIAN_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:CIRCADIAN_TX|MICRO|forward|#0",
+        "edge:CIRCADIAN_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "MICRO",
+        "SLEEP_DEP"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "morning_routine",
+      "inputName": "Morning Light Exposure",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "CIRCADIAN_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+        "edge:MINDFULNESS_TX|STRESS|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+        "edge:MINDFULNESS_TX|STRESS|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CORTISOL",
+        "STRESS"
+      ],
+      "clusterPaths": [
+        "Cortisol Load Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "mindfulness_minutes",
+      "inputName": "Mindfulness",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "MINDFULNESS_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "MICRO",
+        "SLEEP_DEP"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "oura_score_goal",
+      "inputName": "Oura Score Goal (≥90)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "SLEEP_HYG_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "RMMA"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "emg_check",
+      "inputName": "Review EMG Data",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "BIOFEEDBACK_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "RMMA"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "biofeedback",
+      "inputName": "Charge Biofeedback Device",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "BIOFEEDBACK_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:PHYSIO_TX|CERVICAL|forward|#0",
+        "edge:PHYSIO_TX|FHP|forward|#0",
+        "edge:PHYSIO_TX|TMD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:PHYSIO_TX|CERVICAL|forward|#0",
+        "edge:PHYSIO_TX|FHP|forward|#0",
+        "edge:PHYSIO_TX|TMD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CERVICAL",
+        "FHP",
+        "TMD"
+      ],
+      "clusterPaths": [
+        "Cervical Strain Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "physio_stretches",
+      "inputName": "Physio Stretches",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "PHYSIO_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:CAFFEINE|GERD|dashed|#0",
+        "edge:CAFFEINE|MICRO|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:CAFFEINE|GERD|dashed|#0",
+        "edge:CAFFEINE|MICRO|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "GERD",
+        "MICRO"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "caffeine_limit",
+      "inputName": "Avoid Caffeine",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "CAFFEINE",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "preliminary"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:EXERCISE_TX|CORTISOL|forward|#0",
+        "edge:EXERCISE_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:EXERCISE_TX|CORTISOL|forward|#0",
+        "edge:EXERCISE_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CORTISOL",
+        "SLEEP_DEP"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network",
+        "Acid Exposure Network > Cortisol Load",
+        "Cortisol Load Network",
+        "Cortisol Load Network > Sleep Debt"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "exercise_minutes",
+      "inputName": "Exercise",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "EXERCISE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:NATURE_TX|CORTISOL|forward|#0",
+        "edge:NATURE_TX|STRESS|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:NATURE_TX|CORTISOL|forward|#0",
+        "edge:NATURE_TX|STRESS|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CORTISOL",
+        "STRESS"
+      ],
+      "clusterPaths": [
+        "Cortisol Load Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "nature_exposure",
+      "inputName": "Nature Exposure (20+ min)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "NATURE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:MEAL_TIMING_TX|GERD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:MEAL_TIMING_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "GERD"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "reflux_meal_timing",
+      "inputName": "Meal Timing & Posture (Reflux)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "MEAL_TIMING_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:POSTURE_TX|CERVICAL|forward|#0",
+        "edge:POSTURE_TX|FHP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:POSTURE_TX|CERVICAL|forward|#0",
+        "edge:POSTURE_TX|FHP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CERVICAL",
+        "FHP"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "posture",
+      "inputName": "Posture Check",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "POSTURE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:TONGUE_TX|AIRWAY_OBS|forward|#0",
+        "edge:TONGUE_TX|HYOID|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:TONGUE_TX|HYOID|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "HYOID"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:TONGUE_TX|AIRWAY_OBS|forward|#0"
+      ],
+      "inputID": "tongue_posture",
+      "inputName": "Tongue Posture",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "TONGUE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:JAW_RELAX_TX|RMMA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:JAW_RELAX_TX|RMMA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "RMMA"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "jaw_relaxation",
+      "inputName": "Jaw Relaxation",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "JAW_RELAX_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:MASSAGE_TX|TMD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:MASSAGE_TX|TMD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "NECK_TIGHTNESS",
+        "TMD"
+      ],
+      "clusterPaths": [
+        "Cervical Strain Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "jaw_massage",
+      "inputName": "Jaw Massage",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "MASSAGE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:HEAT_TX|TMD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:HEAT_TX|TMD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "NECK_TIGHTNESS",
+        "TMD"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "heat_therapy",
+      "inputName": "Heat/Cold Therapy",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "HEAT_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:ALCOHOL|GERD|forward|#0",
+        "edge:ALCOHOL|MICRO|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:ALCOHOL|GERD|forward|#0",
+        "edge:ALCOHOL|MICRO|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "GERD",
+        "MICRO"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "alcohol_limit",
+      "inputName": "Avoid Alcohol",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "ALCOHOL",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "preliminary"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:PPI_TX|GERD|forward|#0",
+        "edge:PPI_TX|MG_DEF|dashed|depletes mg#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:PPI_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "GERD"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:PPI_TX|MG_DEF|dashed|depletes mg#0"
+      ],
+      "inputID": "reflux_medications",
+      "inputName": "Reflux Medications (Evening)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "PPI_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|GERD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "ACID",
+        "GERD"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "strict_diet_phase",
+      "inputName": "Strict Diet Phase (Compliance)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "REFLUX_DIET_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|GERD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "ACID",
+        "GERD"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "reflux_trigger_avoidance",
+      "inputName": "Reflux Trigger Avoidance (Ongoing)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "REFLUX_DIET_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:BED_ELEV_TX|ACID|forward|#0",
+        "edge:BED_ELEV_TX|GERD|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:BED_ELEV_TX|ACID|forward|#0",
+        "edge:BED_ELEV_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "ACID",
+        "GERD"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "bed_elevation",
+      "inputName": "Bed Elevation",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "BED_ELEV_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:SCREENS_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:SCREENS_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "SLEEP_DEP"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "no_screens_prebed",
+      "inputName": "No Screens 1 Hour Before Bed",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "SCREENS_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "SYMPATHETIC"
+      ],
+      "clusterPaths": [
+        "Cortisol Load Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "warm_shower",
+      "inputName": "Warm Shower/Bath",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "WARM_SHOWER_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:YOGA_TX|CORTISOL|forward|#0",
+        "edge:YOGA_TX|GABA_DEF|forward|gaba +27%#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:YOGA_TX|CORTISOL|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CORTISOL"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:YOGA_TX|GABA_DEF|forward|gaba +27%#0"
+      ],
+      "inputID": "yoga_prebed",
+      "inputName": "Gentle Yoga (Upright)",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "YOGA_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:NEUROSYM_TX|SYMPATHETIC|forward|#0",
+        "edge:NEUROSYM_TX|VAGAL|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:NEUROSYM_TX|SYMPATHETIC|forward|#0",
+        "edge:NEUROSYM_TX|VAGAL|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "SYMPATHETIC",
+        "VAGAL"
+      ],
+      "clusterPaths": [
+        "Cortisol Load Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "neurosym_device",
+      "inputName": "Nurosym taVNS (30 min)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "NEUROSYM_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "intimacy_optional",
+      "inputName": "Intimacy (Optional)",
+      "isActive": false,
+      "sourceNodeExists": false,
+      "sourceNodeID": "RELATIONSHIP_TX",
+      "sourceNodeIsDeactivated": false
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "edge:BREATHING_TX|SYMPATHETIC|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "edge:BREATHING_TX|SYMPATHETIC|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "CORTISOL",
+        "SYMPATHETIC"
+      ],
+      "clusterPaths": [
+        "Cortisol Load Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "diaphragm_breathing",
+      "inputName": "Diaphragm Breathing",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "BREATHING_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:MG_SUPP|GABA_DEF|forward|#0"
+      ],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:MG_SUPP|GABA_DEF|forward|#0"
+      ],
+      "inputID": "magnesium",
+      "inputName": "Magnesium Supplement",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "MG_SUPP",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:THEANINE_TX|GABA_DEF|forward|#0"
+      ],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:THEANINE_TX|GABA_DEF|forward|#0"
+      ],
+      "inputID": "l_theanine",
+      "inputName": "L-Theanine (Optional)",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "THEANINE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:GLYCINE_TX|GABA_DEF|forward|#0"
+      ],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:GLYCINE_TX|GABA_DEF|forward|#0"
+      ],
+      "inputID": "glycine",
+      "inputName": "Glycine (Optional)",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "GLYCINE_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "RMMA"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "activate_emg_tracker",
+      "inputName": "Activate EMG Tracker",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "BIOFEEDBACK_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:SPLINT|TOOTH|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:SPLINT|TOOTH|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "TOOTH"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "night_guard",
+      "inputName": "Night Guard",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "SPLINT",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "MICRO",
+        "SLEEP_DEP"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "sleep_hours",
+      "inputName": "Sleep Duration",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "SLEEP_HYG_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "MICRO",
+        "SLEEP_DEP"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "bedtime_routine",
+      "inputName": "Bedtime Routine (Optional)",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "SLEEP_HYG_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "social_connection",
+      "inputName": "Social Connection Check-In",
+      "isActive": false,
+      "sourceNodeExists": false,
+      "sourceNodeID": "SOCIAL_TX",
+      "sourceNodeIsDeactivated": false
+    },
+    {
+      "allOutgoingEdgeIDs": [],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "relationship_care",
+      "inputName": "Relationship Care Check-In",
+      "isActive": false,
+      "sourceNodeExists": false,
+      "sourceNodeID": "RELATIONSHIP_TX",
+      "sourceNodeIsDeactivated": false
+    },
+    {
+      "allOutgoingEdgeIDs": [],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "financial_check_in",
+      "inputName": "Financial Stability Check-In",
+      "isActive": false,
+      "sourceNodeExists": false,
+      "sourceNodeID": "FINANCIAL_TX",
+      "sourceNodeIsDeactivated": false
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:PPI_TX|GERD|forward|#0",
+        "edge:PPI_TX|MG_DEF|dashed|depletes mg#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:PPI_TX|GERD|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "GERD"
+      ],
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:PPI_TX|MG_DEF|dashed|depletes mg#0"
+      ],
+      "inputID": "gerd_treatment",
+      "inputName": "GERD Treatment",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "PPI_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "OSA"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "sleep_apnea_treatment",
+      "inputName": "Sleep Apnea Treatment",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "OSA_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "OSA"
+      ],
+      "clusterPaths": [
+        "Sleep Breathing"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "dymista_nasal_spray",
+      "inputName": "Dymista (Azelastine/Fluticasone)",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "OSA_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "OSA"
+      ],
+      "clusterPaths": [
+        "Sleep Breathing"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "breathe_right_strip",
+      "inputName": "Breathe Right Nasal Strip",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "OSA_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:SSRI_TX|SSRI|forward|#0"
+      ],
+      "attachedEdgeIDs": [],
+      "attachedNodeIDs": [],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [
+        "edge:SSRI_TX|SSRI|forward|#0"
+      ],
+      "inputID": "ssri_review",
+      "inputName": "SSRI Medication Review",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "SSRI_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:CBT_TX|STRESS|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:CBT_TX|STRESS|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "STRESS"
+      ],
+      "clusterPaths": [
+        "Cortisol Load Network"
+      ],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "cbt",
+      "inputName": "Cognitive Behavioral Therapy",
+      "isActive": true,
+      "sourceNodeExists": true,
+      "sourceNodeID": "CBT_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    },
+    {
+      "allOutgoingEdgeIDs": [
+        "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:BOTOX_TX|RMMA|forward|#0"
+      ],
+      "attachedEdgeIDs": [
+        "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:BOTOX_TX|RMMA|forward|#0"
+      ],
+      "attachedNodeIDs": [
+        "NECK_TIGHTNESS",
+        "RMMA"
+      ],
+      "clusterPaths": [],
+      "deactivatedOutgoingEdgeIDs": [],
+      "inputID": "botox",
+      "inputName": "Botox Injections",
+      "isActive": false,
+      "sourceNodeExists": true,
+      "sourceNodeID": "BOTOX_TX",
+      "sourceNodeIsDeactivated": false,
+      "sourceNodeStyleClass": "intervention"
+    }
+  ],
+  "maxDepthEvaluated": 12,
+  "outcomeQuestionMappings": [
+    {
+      "clusterPaths": [],
+      "missingEdgeIDs": [],
+      "missingNodeIDs": [],
+      "questionID": "progress.alcohol",
+      "sourceEdgeIDs": [
+        "edge:ALCOHOL|GERD|forward|#0",
+        "edge:ALCOHOL|MICRO|forward|#0"
+      ],
+      "sourceNodeIDs": [
+        "ALCOHOL"
+      ],
+      "title": "How is Alcohol today?"
+    },
+    {
+      "clusterPaths": [],
+      "missingEdgeIDs": [],
+      "missingNodeIDs": [],
+      "questionID": "progress.breathing_tx",
+      "sourceEdgeIDs": [
+        "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "edge:BREATHING_TX|SYMPATHETIC|forward|#0"
+      ],
+      "sourceNodeIDs": [
+        "BREATHING_TX"
+      ],
+      "title": "How is Slow Breathing today?"
+    },
+    {
+      "clusterPaths": [],
+      "missingEdgeIDs": [],
+      "missingNodeIDs": [],
+      "questionID": "progress.caffeine",
+      "sourceEdgeIDs": [
+        "edge:CAFFEINE|GERD|dashed|#0",
+        "edge:CAFFEINE|MICRO|forward|#0"
+      ],
+      "sourceNodeIDs": [
+        "CAFFEINE"
+      ],
+      "title": "How is Caffeine today?"
+    },
+    {
+      "clusterPaths": [
+        "Acid Exposure Network"
+      ],
+      "missingEdgeIDs": [],
+      "missingNodeIDs": [],
+      "questionID": "progress.acid",
+      "sourceEdgeIDs": [
+        "edge:ACID|VAGAL|forward|vagal afferents#0",
+        "edge:BED_ELEV_TX|ACID|forward|#0",
+        "edge:GERD|ACID|forward|#0",
+        "edge:HYDRATION|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:TLESR|ACID|forward|#0"
+      ],
+      "sourceNodeIDs": [
+        "ACID"
+      ],
+      "title": "How is Acid Contact today?"
+    },
+    {
+      "clusterPaths": [
+        "Cervical Strain Network"
+      ],
+      "missingEdgeIDs": [],
+      "missingNodeIDs": [],
+      "questionID": "progress.cervical",
+      "sourceEdgeIDs": [
+        "edge:CERVICAL|CS|forward|tcc convergence#0",
+        "edge:CERVICAL|FHP|dashed|#0",
+        "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+        "edge:PHYSIO_TX|CERVICAL|forward|#0",
+        "edge:POSTURE_TX|CERVICAL|forward|#0",
+        "edge:TMD|CERVICAL|forward|#0"
+      ],
+      "sourceNodeIDs": [
+        "CERVICAL"
+      ],
+      "title": "How is Cervical Dysfunction today?"
+    },
+    {
+      "clusterPaths": [
+        "Acid Exposure Network > Cortisol Load",
+        "Cortisol Load Network"
+      ],
+      "missingEdgeIDs": [],
+      "missingNodeIDs": [],
+      "questionID": "progress.cortisol",
+      "sourceEdgeIDs": [
+        "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "edge:CORTISOL|SYMPATHETIC|forward|#0",
+        "edge:EXERCISE_TX|CORTISOL|forward|#0",
+        "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+        "edge:NATURE_TX|CORTISOL|forward|#0",
+        "edge:SLEEP_DEP|CORTISOL|forward|#0",
+        "edge:STRESS|CORTISOL|forward|or 2.07#0",
+        "edge:YOGA_TX|CORTISOL|forward|#0"
+      ],
+      "sourceNodeIDs": [
+        "CORTISOL"
+      ],
+      "title": "How is Cortisol ↑ today?"
+    }
+  ],
+  "rowUpdatedAt": "2026-02-28T12:17:30.414464+00:00",
+  "topLevelClusterCount": 6,
+  "topLevelClusters": [
+    {
+      "children": [
+        {
+          "children": [],
+          "id": "CORTISOL",
+          "memberCount": 1,
+          "memberNames": [
+            "Exercise"
+          ],
+          "members": [
+            "exercise_minutes"
+          ],
+          "nodeIDs": [
+            "CORTISOL"
+          ],
+          "title": "Cortisol Load"
+        }
+      ],
+      "id": "ACID|GERD|MICRO|SALIVA|SLEEP_DEP",
+      "memberCount": 14,
+      "memberNames": [
+        "Avoid Alcohol",
+        "Avoid Caffeine",
+        "Exercise",
+        "GERD Treatment",
+        "Delay Breakfast (1.5-2 hours)",
+        "Morning Light Exposure",
+        "No Screens 1 Hour Before Bed",
+        "Oura Score Goal (≥90)",
+        "Meal Timing & Posture (Reflux)",
+        "Reflux Medications (Evening)",
+        "Reflux Trigger Avoidance (Ongoing)",
+        "Sleep Duration",
+        "Strict Diet Phase (Compliance)",
+        "Water Intake"
+      ],
+      "members": [
+        "alcohol_limit",
+        "caffeine_limit",
+        "exercise_minutes",
+        "gerd_treatment",
+        "morning_fast",
+        "morning_routine",
+        "no_screens_prebed",
+        "oura_score_goal",
+        "reflux_meal_timing",
+        "reflux_medications",
+        "reflux_trigger_avoidance",
+        "sleep_hours",
+        "strict_diet_phase",
+        "water_intake"
+      ],
+      "nodeIDs": [
+        "ACID",
+        "GERD",
+        "MICRO",
+        "SALIVA",
+        "SLEEP_DEP"
+      ],
+      "title": "Acid Exposure Network"
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "id": "SLEEP_DEP",
+          "memberCount": 1,
+          "memberNames": [
+            "Exercise"
+          ],
+          "members": [
+            "exercise_minutes"
+          ],
+          "nodeIDs": [
+            "SLEEP_DEP"
+          ],
+          "title": "Sleep Debt"
+        }
+      ],
+      "id": "CORTISOL|STRESS|SYMPATHETIC|VAGAL",
+      "memberCount": 7,
+      "memberNames": [
+        "Cognitive Behavioral Therapy",
+        "Diaphragm Breathing",
+        "Exercise",
+        "Mindfulness",
+        "Nature Exposure (20+ min)",
+        "Nurosym taVNS (30 min)",
+        "Warm Shower/Bath"
+      ],
+      "members": [
+        "cbt",
+        "diaphragm_breathing",
+        "exercise_minutes",
+        "mindfulness_minutes",
+        "nature_exposure",
+        "neurosym_device",
+        "warm_shower"
+      ],
+      "nodeIDs": [
+        "CORTISOL",
+        "STRESS",
+        "SYMPATHETIC",
+        "VAGAL"
+      ],
+      "title": "Cortisol Load Network"
+    },
+    {
+      "children": [],
+      "id": "CERVICAL|FHP|NECK_TIGHTNESS|TMD",
+      "memberCount": 2,
+      "memberNames": [
+        "Jaw Massage",
+        "Physio Stretches"
+      ],
+      "members": [
+        "jaw_massage",
+        "physio_stretches"
+      ],
+      "nodeIDs": [
+        "CERVICAL",
+        "FHP",
+        "NECK_TIGHTNESS",
+        "TMD"
+      ],
+      "title": "Cervical Strain Network"
+    },
+    {
+      "children": [],
+      "id": "OSA",
+      "memberCount": 2,
+      "memberNames": [
+        "Breathe Right Nasal Strip",
+        "Dymista (Azelastine/Fluticasone)"
+      ],
+      "members": [
+        "breathe_right_strip",
+        "dymista_nasal_spray"
+      ],
+      "nodeIDs": [
+        "OSA"
+      ],
+      "title": "Sleep Breathing"
+    },
+    {
+      "children": [],
+      "id": "MG_DEF",
+      "memberCount": 1,
+      "memberNames": [
+        "Multivitamin (B6, Zinc, Magnesium)"
+      ],
+      "members": [
+        "multivitamin"
+      ],
+      "nodeIDs": [
+        "MG_DEF"
+      ],
+      "title": "Magnesium Status"
+    },
+    {
+      "children": [],
+      "id": "VIT_D",
+      "memberCount": 1,
+      "memberNames": [
+        "Vitamin D (Morning)"
+      ],
+      "members": [
+        "vitamin_d"
+      ],
+      "nodeIDs": [
+        "VIT_D"
+      ],
+      "title": "Vitamin D Status"
+    }
+  ],
+  "unresolvedActiveInputs": [],
+  "userID": "58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14"
+}

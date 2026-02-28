@@ -27,6 +27,9 @@ enum AccessibilityID {
     static let profileThemeGardenOption = "profile.theme.option.garden"
     static let profileMuseFeatureToggle = "profile.muse.feature.toggle"
     static let profileSignOutEntry = "profile.signout.entry"
+    static let globalLensNub = "explore.lens.nub"
+    static let globalLensSheet = "explore.lens.sheet"
+    static let globalLensResetPosition = "explore.lens.reset.position"
     static let exploreOutcomesScreen = "explore.outcomes.screen"
     static let exploreSituationScreen = "explore.situation.screen"
     static let exploreInputsScreen = "explore.inputs.screen"
@@ -38,6 +41,13 @@ enum AccessibilityID {
     static let exploreChatGraphApplyButton = "explore.chat.graph.apply.button"
     static let exploreChatGraphDismissButton = "explore.chat.graph.dismiss.button"
     static let exploreChatGraphCheckpoints = "explore.chat.graph.checkpoints"
+    static let exploreChatGuideExportButton = "explore.chat.guide.export.button"
+    static let exploreChatGuideExportText = "explore.chat.guide.export.text"
+    static let exploreChatGuideImportEditor = "explore.chat.guide.import.editor"
+    static let exploreChatGuideImportPreviewButton = "explore.chat.guide.import.preview.button"
+    static let exploreChatGuideImportDismissButton = "explore.chat.guide.import.dismiss.button"
+    static let exploreChatGuideImportApplyButton = "explore.chat.guide.import.apply.button"
+    static let exploreChatGuideImportPreview = "explore.chat.guide.import.preview"
     static let exploreFeedbackText = "explore.feedback.text"
     static let exploreOutcomeDetailSheet = "explore.outcomes.detail.sheet"
     static let exploreMorningGlobalPicker = "explore.outcomes.morning.global.picker"
@@ -104,6 +114,15 @@ enum AccessibilityID {
     static let exploreInputsGardenBreadcrumb = "explore.inputs.garden.breadcrumb"
     static let exploreInputsGardenBreadcrumbBack = "explore.inputs.garden.breadcrumb.back"
     static let exploreInputsGardenSubgardenStrip = "explore.inputs.garden.subgarden.strip"
+    static let exploreInputsPlannerCard = "explore.inputs.planner.card"
+    static let exploreInputsPlannerMinutes = "explore.inputs.planner.minutes"
+    static let exploreInputsLensAll = "explore.inputs.lens.all"
+    static let exploreInputsLensFoundation = "explore.inputs.lens.foundation"
+    static let exploreInputsLensAcute = "explore.inputs.lens.acute"
+    static let exploreInputsLensPillar = "explore.inputs.lens.pillar"
+    static let exploreOutcomesFlareSuggestion = "explore.outcomes.flare.suggestion"
+    static let exploreOutcomesFlareAccept = "explore.outcomes.flare.accept"
+    static let exploreOutcomesFlareDismiss = "explore.outcomes.flare.dismiss"
     static let exploreSituationEditButton = "explore.situation.edit.button"
     static let exploreSituationOptionsSheet = "explore.situation.options.sheet"
     static let exploreDetailsSheet = "explore.situation.details.sheet"
@@ -127,5 +146,9 @@ enum AccessibilityID {
 
     static func exploreInputsGardenSubgardenCard(nodeID: String) -> String {
         "explore.inputs.garden.subgarden.card.\(nodeID)"
+    }
+
+    static func exploreInputsLensPillar(pillar: String) -> String {
+        "explore.inputs.lens.pillar.\(pillar)"
     }
 }

@@ -102,7 +102,9 @@ struct DashboardSnapshotBuilderTests {
                     ),
                 ]
             ),
-            outcomesMetadata: .empty
+            outcomesMetadata: .empty,
+            foundationCatalog: nil,
+            planningPolicy: nil
         )
 
         let snapshot = builder.build(
@@ -347,7 +349,9 @@ struct DashboardSnapshotBuilderTests {
                     ),
                 ]
             ),
-            outcomesMetadata: .empty
+            outcomesMetadata: .empty,
+            foundationCatalog: nil,
+            planningPolicy: nil
         )
 
         let snapshot = builder.build(
@@ -424,7 +428,9 @@ struct DashboardSnapshotBuilderTests {
                 ],
                 nodes: [],
                 updatedAt: "2026-02-21T21:30:00Z"
-            )
+            ),
+            foundationCatalog: nil,
+            planningPolicy: nil
         )
 
         let snapshot = builder.build(

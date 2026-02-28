@@ -75,11 +75,15 @@ struct FirstPartyContentBundle: Equatable, Sendable {
     let graphData: CausalGraphData?
     let interventionsCatalog: InterventionsCatalog
     let outcomesMetadata: OutcomesMetadata
+    let foundationCatalog: FoundationCatalog?
+    let planningPolicy: PlanningPolicy?
 
     static let empty = FirstPartyContentBundle(
         graphData: nil,
         interventionsCatalog: .empty,
-        outcomesMetadata: .empty
+        outcomesMetadata: .empty,
+        foundationCatalog: nil,
+        planningPolicy: nil
     )
 }
 
@@ -107,6 +111,13 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
     let appleHealthAvailable: Bool?
     let appleHealthConfig: AppleHealthConfig?
     let causalPathway: String?
+    let planningTags: [HabitPlanningTag]?
+    let pillars: [HealthPillar]?
+    let acuteTargets: [String]?
+    let foundationRole: FoundationRole?
+    let defaultMinutes: Int?
+    let ladderTemplateID: String?
+    let preferredWindows: [PreferredTimeWindow]?
 
     init(
         id: String,
@@ -125,7 +136,14 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         timeOfDay: [InterventionTimeOfDay]? = nil,
         appleHealthAvailable: Bool? = nil,
         appleHealthConfig: AppleHealthConfig? = nil,
-        causalPathway: String? = nil
+        causalPathway: String? = nil,
+        planningTags: [HabitPlanningTag]? = nil,
+        pillars: [HealthPillar]? = nil,
+        acuteTargets: [String]? = nil,
+        foundationRole: FoundationRole? = nil,
+        defaultMinutes: Int? = nil,
+        ladderTemplateID: String? = nil,
+        preferredWindows: [PreferredTimeWindow]? = nil
     ) {
         self.id = id
         self.name = name
@@ -144,6 +162,13 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         self.appleHealthAvailable = appleHealthAvailable
         self.appleHealthConfig = appleHealthConfig
         self.causalPathway = causalPathway
+        self.planningTags = planningTags
+        self.pillars = pillars
+        self.acuteTargets = acuteTargets
+        self.foundationRole = foundationRole
+        self.defaultMinutes = defaultMinutes
+        self.ladderTemplateID = ladderTemplateID
+        self.preferredWindows = preferredWindows
     }
 
     var citations: [String] {

@@ -42,7 +42,7 @@ struct DashboardSnapshotBuilder {
     func graphData(from document: UserDataDocument, fallbackGraph: CausalGraphData? = nil) -> CausalGraphData {
         document.customCausalDiagram?.graphData
             ?? fallbackGraph
-            ?? CanonicalGraphLoader.loadGraphOrFallback()
+            ?? CausalGraphData(nodes: [], edges: [])
     }
 
     private func outcomeSummary(

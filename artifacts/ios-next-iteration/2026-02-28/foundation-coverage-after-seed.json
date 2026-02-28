@@ -1,0 +1,972 @@
+{
+  "userID": "58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14",
+  "userDataUpdatedAt": "2026-02-28T12:17:30.414464+00:00",
+  "activeInterventionCount": 26,
+  "resolvedMappingCount": 26,
+  "unmappedActiveInterventionCount": 0,
+  "unmappedActiveInterventionIDs": [],
+  "acuteTaggedActiveCount": 9,
+  "foundationTaggedActiveCount": 21,
+  "catalogInterventionCount": 47,
+  "catalogMappedCount": 47,
+  "pillars": [
+    {
+      "id": "sleep",
+      "title": "Sleep",
+      "rank": 1
+    },
+    {
+      "id": "nutrition",
+      "title": "Nutrition",
+      "rank": 2
+    },
+    {
+      "id": "exercise",
+      "title": "Exercise",
+      "rank": 3
+    },
+    {
+      "id": "socialLife",
+      "title": "Social Life",
+      "rank": 4
+    },
+    {
+      "id": "stressManagement",
+      "title": "Stress Management",
+      "rank": 5
+    },
+    {
+      "id": "avoidingDrugs",
+      "title": "Avoiding Drugs",
+      "rank": 6
+    },
+    {
+      "id": "medical",
+      "title": "Medical",
+      "rank": 7
+    },
+    {
+      "id": "romanticPersonalCare",
+      "title": "Romantic / Personal Care",
+      "rank": 8
+    },
+    {
+      "id": "environment",
+      "title": "Environment",
+      "rank": 9
+    },
+    {
+      "id": "financialSecurity",
+      "title": "Financial Security",
+      "rank": 10
+    }
+  ],
+  "activeCountByPillar": {
+    "nutrition": 11,
+    "medical": 10,
+    "sleep": 8,
+    "environment": 2,
+    "stressManagement": 6,
+    "exercise": 3,
+    "avoidingDrugs": 2
+  },
+  "catalogCountByPillar": {
+    "nutrition": 14,
+    "medical": 21,
+    "sleep": 13,
+    "environment": 4,
+    "stressManagement": 10,
+    "exercise": 5,
+    "avoidingDrugs": 2,
+    "romanticPersonalCare": 2,
+    "socialLife": 3,
+    "financialSecurity": 1
+  },
+  "missingPillarIDs": [
+    "socialLife",
+    "romanticPersonalCare",
+    "financialSecurity"
+  ],
+  "missingCatalogPillarIDs": [],
+  "activeInterventionMappings": [
+    {
+      "interventionID": "water_intake",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "vitamin_d",
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "multivitamin",
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "morning_fast",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "morning_routine",
+      "pillars": [
+        "sleep",
+        "environment"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "mindfulness_minutes",
+      "pillars": [
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "oura_score_goal",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "physio_stretches",
+      "pillars": [
+        "exercise",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "caffeine_limit",
+      "pillars": [
+        "sleep",
+        "nutrition",
+        "avoidingDrugs"
+      ],
+      "tags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "exercise_minutes",
+      "pillars": [
+        "exercise"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "nature_exposure",
+      "pillars": [
+        "exercise",
+        "environment",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "reflux_meal_timing",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "jaw_massage",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "alcohol_limit",
+      "pillars": [
+        "sleep",
+        "nutrition",
+        "avoidingDrugs"
+      ],
+      "tags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "reflux_medications",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "strict_diet_phase",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "reflux_trigger_avoidance",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "no_screens_prebed",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "warm_shower",
+      "pillars": [
+        "sleep",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "neurosym_device",
+      "pillars": [
+        "stressManagement",
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "diaphragm_breathing",
+      "pillars": [
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "sleep_hours",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "gerd_treatment",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "dymista_nasal_spray",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "breathe_right_strip",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "cbt",
+      "pillars": [
+        "stressManagement",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    }
+  ],
+  "catalogInterventionMappings": [
+    {
+      "interventionID": "water_intake",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "vitamin_d",
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "multivitamin",
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "morning_fast",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "morning_routine",
+      "pillars": [
+        "sleep",
+        "environment"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "mindfulness_minutes",
+      "pillars": [
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "oura_score_goal",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "emg_check",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "biofeedback",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "physio_stretches",
+      "pillars": [
+        "exercise",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "caffeine_limit",
+      "pillars": [
+        "sleep",
+        "nutrition",
+        "avoidingDrugs"
+      ],
+      "tags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "exercise_minutes",
+      "pillars": [
+        "exercise"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "nature_exposure",
+      "pillars": [
+        "exercise",
+        "environment",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "reflux_meal_timing",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "posture",
+      "pillars": [
+        "exercise",
+        "environment"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "tongue_posture",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "jaw_relaxation",
+      "pillars": [
+        "medical",
+        "stressManagement"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "jaw_massage",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "heat_therapy",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "alcohol_limit",
+      "pillars": [
+        "sleep",
+        "nutrition",
+        "avoidingDrugs"
+      ],
+      "tags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "reflux_medications",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "strict_diet_phase",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "reflux_trigger_avoidance",
+      "pillars": [
+        "nutrition"
+      ],
+      "tags": [
+        "foundation",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "bed_elevation",
+      "pillars": [
+        "sleep",
+        "environment"
+      ],
+      "tags": [
+        "foundation",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "no_screens_prebed",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "warm_shower",
+      "pillars": [
+        "sleep",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "yoga_prebed",
+      "pillars": [
+        "exercise",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "neurosym_device",
+      "pillars": [
+        "stressManagement",
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "intimacy_optional",
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "diaphragm_breathing",
+      "pillars": [
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "magnesium",
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "l_theanine",
+      "pillars": [
+        "nutrition",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "glycine",
+      "pillars": [
+        "nutrition",
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "activate_emg_tracker",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "night_guard",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "sleep_hours",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "bedtime_routine",
+      "pillars": [
+        "sleep"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "social_connection",
+      "pillars": [
+        "socialLife",
+        "stressManagement"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "relationship_care",
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "financial_check_in",
+      "pillars": [
+        "financialSecurity"
+      ],
+      "tags": [
+        "foundation",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "gerd_treatment",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "sleep_apnea_treatment",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "dymista_nasal_spray",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "breathe_right_strip",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "ssri_review",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "maintenance"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "cbt",
+      "pillars": [
+        "stressManagement",
+        "medical"
+      ],
+      "tags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    },
+    {
+      "interventionID": "botox",
+      "pillars": [
+        "medical"
+      ],
+      "tags": [
+        "acute",
+        "blocker"
+      ],
+      "source": "foundationCatalog"
+    }
+  ],
+  "contentSources": {
+    "interventionsCatalog": {
+      "source": "first_party_content",
+      "updatedAt": "2026-02-28T00:35:45.566+00:00",
+      "version": 1
+    },
+    "foundationCatalog": {
+      "source": "first_party_content",
+      "updatedAt": "2026-02-28T12:09:07.496465+00:00",
+      "version": 1
+    },
+    "planningPolicy": {
+      "source": "first_party_content",
+      "updatedAt": "2026-02-28T12:09:07.496465+00:00",
+      "version": 1
+    }
+  }
+}

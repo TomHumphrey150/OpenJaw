@@ -10,6 +10,7 @@ const CONTENT_TYPE = Object.freeze({
   graph: 'graph',
   inputs: 'inputs',
   outcomes: 'outcomes',
+  planning: 'planning',
   citations: 'citations',
   info: 'info',
 });
@@ -18,6 +19,8 @@ const CONTENT_KEY = Object.freeze({
   canonicalGraph: 'canonical_causal_graph',
   interventionsCatalog: 'interventions_catalog',
   outcomesMetadata: 'outcomes_metadata',
+  foundationCatalog: 'foundation_v1_catalog',
+  planningPolicy: 'planner_policy_v1',
   citationsCatalog: 'citations_catalog',
   bruxismInfo: 'bruxism_info',
 });
@@ -134,6 +137,14 @@ const repoRoot = path.resolve(scriptDir, '..');
 const graphSourceFile = path.join(repoRoot, 'public/js/causalEditor/defaultGraphData.js');
 const interventionsFile = path.join(repoRoot, 'data/interventions.json');
 const bruxismInfoFile = path.join(repoRoot, 'data/bruxism-info.json');
+const foundationCatalogFile = path.join(
+  repoRoot,
+  'ios/Telocare/Telocare/Resources/Foundation/foundation-v1-catalog.json'
+);
+const plannerPolicyFile = path.join(
+  repoRoot,
+  'ios/Telocare/Telocare/Resources/Foundation/planner-policy-v1.json'
+);
 
 const graphSourceURL = pathToFileURL(graphSourceFile).href;
 const graphModule = await import(graphSourceURL);
@@ -145,6 +156,8 @@ if (!isGraphData(graphData)) {
 
 const interventionsData = await loadJSON(interventionsFile);
 const bruxismInfoData = await loadJSON(bruxismInfoFile);
+const foundationCatalogData = await loadJSON(foundationCatalogFile);
+const plannerPolicyData = await loadJSON(plannerPolicyFile);
 const citations = isRecord(bruxismInfoData) && Array.isArray(bruxismInfoData.citations)
   ? bruxismInfoData.citations
   : [];
@@ -177,6 +190,18 @@ const rows = [
     content_type: CONTENT_TYPE.outcomes,
     content_key: CONTENT_KEY.outcomesMetadata,
     data: outcomesMetadata,
+    version: 1,
+  },
+  {
+    content_type: CONTENT_TYPE.planning,
+    content_key: CONTENT_KEY.foundationCatalog,
+    data: foundationCatalogData,
+    version: 1,
+  },
+  {
+    content_type: CONTENT_TYPE.planning,
+    content_key: CONTENT_KEY.planningPolicy,
+    data: plannerPolicyData,
     version: 1,
   },
   {

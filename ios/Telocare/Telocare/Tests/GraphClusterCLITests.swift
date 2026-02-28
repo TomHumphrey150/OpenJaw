@@ -30,7 +30,9 @@ struct GraphClusterCLITests {
         let firstPartyContent = FirstPartyContentBundle(
             graphData: nil,
             interventionsCatalog: interventionsCatalog,
-            outcomesMetadata: .empty
+            outcomesMetadata: .empty,
+            foundationCatalog: nil,
+            planningPolicy: nil
         )
 
         let snapshot = DashboardSnapshotBuilder().build(
@@ -52,6 +54,7 @@ struct GraphClusterCLITests {
         )
         let outgoingEdgesBySourceNodeID = Dictionary(grouping: graphData.edges.map(\.data), by: \.source)
         let progressQuestionProposalBuilder = ProgressQuestionProposalBuilder()
+        let planningMetadataByInterventionID = HabitPlanningMetadataResolver().metadataByInterventionID(for: snapshot.inputs)
         let graphVersion = document.customCausalDiagram?.graphVersion ?? "graph-unknown"
 
         let topLevelClusters = Self.buildClusterTree(
@@ -78,12 +81,12 @@ struct GraphClusterCLITests {
                     )
                 }
 
-                guard sourceNode.styleClass == "intervention" else {
+                if sourceNode.isDeactivated == true {
                     return UnresolvedInputReport(
                         inputID: input.id,
                         inputName: input.name,
                         sourceNodeID: sourceNodeID,
-                        reason: "source_node_not_intervention"
+                        reason: "source_node_deactivated"
                     )
                 }
 
@@ -121,6 +124,9 @@ struct GraphClusterCLITests {
 
         let questionProposal = progressQuestionProposalBuilder.build(
             graphData: graphData,
+            inputs: snapshot.inputs,
+            planningMetadataByInterventionID: planningMetadataByInterventionID,
+            mode: .baseline,
             graphVersion: graphVersion,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )

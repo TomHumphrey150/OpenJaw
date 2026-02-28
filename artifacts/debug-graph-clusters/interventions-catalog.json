@@ -1,0 +1,2545 @@
+{
+  "content_key": "interventions_catalog",
+  "updated_at": "2026-02-28T00:35:45.566+00:00",
+  "data": {
+    "interventions": [
+      {
+        "id": "water_intake",
+        "icon": "drop.fill",
+        "name": "Water Intake",
+        "tier": 2,
+        "emoji": "💧",
+        "pillars": [
+          "nutrition"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 8,
+        "frequency": "daily",
+        "legacyIds": [
+          "hydration_target",
+          "hydration_mid_morning",
+          "hydration_before_lunch",
+          "hydration_afternoon",
+          "hydration_before_dinner",
+          "hydration_before_bed",
+          "HYDRATION"
+        ],
+        "timeOfDay": [
+          "morning",
+          "afternoon",
+          "evening",
+          "preBed"
+        ],
+        "doseConfig": {
+          "unit": "milliliters",
+          "defaultDailyGoal": 3000,
+          "defaultIncrement": 100
+        },
+        "citationIds": [],
+        "description": "Track your total still-water intake for the day.",
+        "energyLevel": "low",
+        "graphNodeId": "HYDRATION",
+        "acuteTargets": [
+          "SALIVA"
+        ],
+        "defaultOrder": 10,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance",
+          "coreFloor"
+        ],
+        "trackingType": "dose",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "ENT guidance recommends high still-water intake for LPR symptom reduction.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "hydration",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          },
+          {
+            "endMinutes": 1020,
+            "startMinutes": 720
+          },
+          {
+            "endMinutes": 1260,
+            "startMinutes": 1020
+          },
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "appleHealthConfig": {
+          "identifier": "dietaryWater",
+          "aggregation": "cumulativeSum",
+          "dayAttribution": "localDay"
+        },
+        "detailedDescription": "Aim for 3000ml of still water each day. Use this ring to log total intake across all hydration moments.",
+        "appleHealthAvailable": true,
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "vitamin_d",
+        "icon": "sun.max.fill",
+        "name": "Vitamin D (Morning)",
+        "tier": 2,
+        "emoji": "☀️",
+        "pillars": [
+          "nutrition",
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$5-15/month",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "VIT_D_TX"
+        ],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [],
+        "description": "Take your vitamin D supplement after waking.",
+        "energyLevel": "low",
+        "graphNodeId": "VIT_D_TX",
+        "acuteTargets": [
+          "VIT_D"
+        ],
+        "defaultOrder": 20,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Vitamin D supports overall health and may influence neuromuscular regulation.",
+        "targetCondition": "general",
+        "ladderTemplateID": "supplement",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "Take vitamin D on waking, alongside your morning routine and hydration.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "multivitamin",
+        "icon": "pills.fill",
+        "name": "Multivitamin (B6, Zinc, Magnesium)",
+        "tier": 2,
+        "emoji": "💊",
+        "pillars": [
+          "nutrition",
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$10-25/month",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "MULTI_TX"
+        ],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [],
+        "description": "Take your multivitamin on waking.",
+        "energyLevel": "low",
+        "graphNodeId": "MULTI_TX",
+        "acuteTargets": [
+          "MG_DEF"
+        ],
+        "defaultOrder": 30,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Supports overall micronutrient status during reflux treatment and PPI use.",
+        "targetCondition": "general",
+        "ladderTemplateID": "supplement",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "Use a multivitamin that includes B6, zinc, and magnesium as part of the morning routine.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "morning_fast",
+        "icon": "hourglass",
+        "name": "Delay Breakfast (1.5-2 hours)",
+        "tier": 2,
+        "emoji": "⏳",
+        "pillars": [
+          "nutrition"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [
+          "MORNING_FAST_TX"
+        ],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [],
+        "description": "Wait 1.5-2 hours after waking before breakfast.",
+        "energyLevel": "low",
+        "graphNodeId": "MORNING_FAST_TX",
+        "acuteTargets": [
+          "GERD"
+        ],
+        "defaultOrder": 40,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Meal timing supports reflux control and upstream arousal reduction.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "nutrition",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "Per LPR protocol, delay breakfast for 90-120 minutes after waking to reduce reflux triggers.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "morning_routine",
+        "icon": "sunrise.fill",
+        "name": "Morning Light Exposure",
+        "tier": 2,
+        "emoji": "🌅",
+        "pillars": [
+          "sleep",
+          "environment"
+        ],
+        "roiTier": "A",
+        "costRange": "$0-30/month",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "CIRCADIAN_TX"
+        ],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [],
+        "description": "Get 5-10 minutes of outdoor or bright indoor light after waking.",
+        "energyLevel": "low",
+        "graphNodeId": "CIRCADIAN_TX",
+        "acuteTargets": [
+          "SLEEP_DEP"
+        ],
+        "defaultOrder": 50,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 20,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Morning light and mindfulness help stabilize arousal; supplements align with reflux and sleep protocols.",
+        "targetCondition": "general",
+        "ladderTemplateID": "circadian",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "Within the first 30 minutes, step outside or use bright indoor light to anchor circadian rhythm and reduce arousal.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 10
+      },
+      {
+        "id": "mindfulness_minutes",
+        "icon": "brain.head.profile",
+        "name": "Mindfulness",
+        "tier": 2,
+        "emoji": "🧘",
+        "pillars": [
+          "stressManagement"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 8,
+        "frequency": "daily",
+        "legacyIds": [
+          "stress_reduction",
+          "mindfulness_prebed",
+          "MINDFULNESS_TX"
+        ],
+        "timeOfDay": [
+          "morning",
+          "preBed"
+        ],
+        "doseConfig": {
+          "unit": "minutes",
+          "defaultDailyGoal": 20,
+          "defaultIncrement": 5
+        },
+        "citationIds": [
+          "lifestyle_factors"
+        ],
+        "description": "Track total mindfulness minutes completed today.",
+        "energyLevel": "low",
+        "graphNodeId": "MINDFULNESS_TX",
+        "acuteTargets": [
+          "STRESS",
+          "CORTISOL",
+          "SYMPATHETIC"
+        ],
+        "defaultOrder": 60,
+        "externalLink": "https://www.sleepfoundation.org/bruxism",
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "dose",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Stress is consistently associated with bruxism severity; arousal reduction supports sleep stability though direct RCT evidence for sleep bruxism is limited.",
+        "targetCondition": "both",
+        "ladderTemplateID": "stress",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          },
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "appleHealthConfig": {
+          "identifier": "mindfulSession",
+          "aggregation": "durationSum",
+          "dayAttribution": "localDay"
+        },
+        "detailedDescription": "Accumulate mindfulness or body-scan minutes throughout the day to reduce arousal and hypervigilance.",
+        "appleHealthAvailable": true,
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 20,
+        "liteVariantDurationMinutes": 5
+      },
+      {
+        "id": "oura_score_goal",
+        "icon": "checkmark.seal.fill",
+        "name": "Oura Score Goal (≥90)",
+        "tier": 3,
+        "emoji": "✅",
+        "pillars": [
+          "sleep"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 8,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [],
+        "description": "Mark complete only if last night's Oura score was 90 or higher.",
+        "energyLevel": "low",
+        "graphNodeId": "SLEEP_HYG_TX",
+        "acuteTargets": [
+          "SLEEP_DEP"
+        ],
+        "defaultOrder": 70,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "A personal recovery target to reflect sleep quality and readiness.",
+        "targetCondition": "general",
+        "ladderTemplateID": "sleep_tracking",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "Check yesterday's Oura sleep/readiness score. Aim for 90+ as a recovery goal.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "emg_check",
+        "icon": "waveform.path.ecg",
+        "name": "Review EMG Data",
+        "tier": 2,
+        "emoji": "📈",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [],
+        "description": "Check last night's EMG activity and patterns.",
+        "energyLevel": "low",
+        "graphNodeId": "BIOFEEDBACK_TX",
+        "acuteTargets": [
+          "RMMA"
+        ],
+        "defaultOrder": 80,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Regular review improves awareness and helps tailor interventions.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "Review EMG data from the previous night to spot episode frequency, duration, and trends.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 2
+      },
+      {
+        "id": "biofeedback",
+        "icon": "battery.100.bolt",
+        "name": "Charge Biofeedback Device",
+        "tier": 1,
+        "emoji": "🔋",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "C",
+        "costRange": "$150-600",
+        "easeScore": 5,
+        "frequency": "daily",
+        "legacyIds": [
+          "BIOFEEDBACK_TX"
+        ],
+        "timeOfDay": [
+          "morning"
+        ],
+        "citationIds": [
+          "biofeedback_review"
+        ],
+        "description": "Keep your Muse/EMG setup charged and ready for overnight biofeedback.",
+        "energyLevel": "low",
+        "graphNodeId": "BIOFEEDBACK_TX",
+        "acuteTargets": [
+          "RMMA"
+        ],
+        "defaultOrder": 85,
+        "externalLink": "https://pubmed.ncbi.nlm.nih.gov/29577362/",
+        "isRemindable": true,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 20,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Systematic review and RCTs show short-term reductions in EMG activity; effects can diminish over time but multi-week trials show meaningful suppression.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "detailedDescription": "EMG-based biofeedback with gentle haptic alerts can interrupt rhythmic jaw activity during the microarousal window. Charge the headband and watch, activate tracking before sleep, and use nightly for best results.",
+        "defaultReminderMinutes": 1440,
+        "estimatedDurationMinutes": 2
+      },
+      {
+        "id": "physio_stretches",
+        "icon": "mouth.fill",
+        "name": "Physio Stretches",
+        "tier": 2,
+        "emoji": "🦷",
+        "pillars": [
+          "exercise",
+          "medical"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 8,
+        "frequency": "daily",
+        "legacyIds": [
+          "physical_therapy",
+          "physio_exercises_lunch",
+          "physio_exercises_evening",
+          "PHYSIO_TX"
+        ],
+        "timeOfDay": [
+          "morning",
+          "afternoon",
+          "evening"
+        ],
+        "doseConfig": {
+          "unit": "reps",
+          "defaultDailyGoal": 3,
+          "defaultIncrement": 1
+        },
+        "citationIds": [],
+        "description": "Track total physio stretch sessions completed today.",
+        "energyLevel": "medium",
+        "graphNodeId": "PHYSIO_TX",
+        "acuteTargets": [
+          "CERVICAL",
+          "TMD"
+        ],
+        "defaultOrder": 90,
+        "externalLink": null,
+        "isRemindable": true,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "dose",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 20,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Improves pain and mouth opening but does not directly reduce grinding activity. Helpful for symptom management.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "movement",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          },
+          {
+            "endMinutes": 1020,
+            "startMinutes": 720
+          },
+          {
+            "endMinutes": 1260,
+            "startMinutes": 1020
+          }
+        ],
+        "detailedDescription": "Log each completed jaw/neck physio stretch set. Goal is three sets per day.",
+        "defaultReminderMinutes": 180,
+        "estimatedDurationMinutes": 10
+      },
+      {
+        "id": "caffeine_limit",
+        "icon": "cup.and.saucer.fill",
+        "name": "Avoid Caffeine",
+        "tier": 2,
+        "emoji": "☕️",
+        "pillars": [
+          "sleep",
+          "nutrition",
+          "avoidingDrugs"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "afternoon"
+        ],
+        "citationIds": [
+          "lifestyle_factors"
+        ],
+        "description": "Eliminate caffeine during the strict reflux phase; otherwise avoid after early afternoon.",
+        "energyLevel": "low",
+        "graphNodeId": "CAFFEINE",
+        "acuteTargets": [
+          "CAFFEINE",
+          "MICRO",
+          "GERD"
+        ],
+        "defaultOrder": 120,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Systematic review confirms caffeine-bruxism association; strict avoidance reduces reflux triggers and improves sleep.",
+        "targetCondition": "both",
+        "ladderTemplateID": "substance",
+        "preferredWindows": [
+          {
+            "endMinutes": 1020,
+            "startMinutes": 720
+          }
+        ],
+        "detailedDescription": "For the first 6 weeks of reflux healing, avoid all caffeine (including decaf coffee/tea). After the strict phase, keep caffeine minimal and stop after 2pm. Includes coffee, tea, energy drinks, and chocolate.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "exercise_minutes",
+        "icon": "figure.walk",
+        "name": "Exercise",
+        "tier": 2,
+        "emoji": "🏃",
+        "pillars": [
+          "exercise"
+        ],
+        "roiTier": "A",
+        "costRange": "$0-50/month",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [
+          "exercise_timing",
+          "EXERCISE_TX"
+        ],
+        "timeOfDay": [
+          "morning",
+          "afternoon",
+          "evening"
+        ],
+        "doseConfig": {
+          "unit": "minutes",
+          "defaultDailyGoal": 30,
+          "defaultIncrement": 10
+        },
+        "citationIds": [],
+        "description": "Track moderate exercise minutes completed today.",
+        "energyLevel": "high",
+        "graphNodeId": "EXERCISE_TX",
+        "acuteTargets": [
+          "CORTISOL",
+          "SYMPATHETIC"
+        ],
+        "defaultOrder": 150,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "dose",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 30,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Regular exercise supports sleep quality and stress regulation; late exercise can increase arousal.",
+        "targetCondition": "general",
+        "ladderTemplateID": "exercise",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          },
+          {
+            "endMinutes": 1020,
+            "startMinutes": 720
+          },
+          {
+            "endMinutes": 1260,
+            "startMinutes": 1020
+          }
+        ],
+        "appleHealthConfig": {
+          "identifier": "moderateWorkoutMinutes",
+          "aggregation": "cumulativeSum",
+          "dayAttribution": "localDay"
+        },
+        "detailedDescription": "Accumulate at least 30 moderate-intensity exercise minutes each day. Apple Exercise ring minutes are shown as a reference, but the goal metric prioritizes workout-derived moderate minutes.",
+        "appleHealthAvailable": true,
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 30
+      },
+      {
+        "id": "nature_exposure",
+        "icon": "leaf.fill",
+        "name": "Nature Exposure (20+ min)",
+        "tier": 2,
+        "emoji": "🌿",
+        "pillars": [
+          "exercise",
+          "environment",
+          "stressManagement"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "weekly",
+        "legacyIds": [
+          "NATURE_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Spend at least 20 minutes outdoors.",
+        "energyLevel": "low",
+        "graphNodeId": "NATURE_TX",
+        "acuteTargets": [
+          "STRESS",
+          "CORTISOL"
+        ],
+        "defaultOrder": 160,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "counter",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 20,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Outdoor exposure supports circadian rhythm and stress reduction.",
+        "targetCondition": "general",
+        "ladderTemplateID": "exercise",
+        "preferredWindows": [],
+        "detailedDescription": "Regular outdoor time supports stress regulation and sleep quality.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 20
+      },
+      {
+        "id": "reflux_meal_timing",
+        "icon": "fork.knife",
+        "name": "Meal Timing & Posture (Reflux)",
+        "tier": 2,
+        "emoji": "🍽️",
+        "pillars": [
+          "nutrition"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "MEAL_TIMING_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Eat upright, avoid drinking with meals, and stay upright after eating.",
+        "energyLevel": "low",
+        "graphNodeId": "MEAL_TIMING_TX",
+        "acuteTargets": [
+          "GERD",
+          "ACID"
+        ],
+        "defaultOrder": 170,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Meal timing and posture reduce reflux exposure and downstream microarousals.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "nutrition",
+        "preferredWindows": [],
+        "detailedDescription": "Eat sitting upright and unhurried. Avoid drinks with meals; drink water about 30 minutes after. Remain upright for at least 1 hour after eating. Dinner should be light and finished 3+ hours before bed, with no food and no lying down after dinner.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "posture",
+        "icon": "figure.stand",
+        "name": "Posture Check",
+        "tier": 3,
+        "emoji": "🧍",
+        "pillars": [
+          "exercise",
+          "environment"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 8,
+        "frequency": "hourly",
+        "legacyIds": [
+          "POSTURE_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Maintain good head and neck posture throughout the day. Poor posture can contribute to jaw tension.",
+        "energyLevel": "low",
+        "graphNodeId": "POSTURE_TX",
+        "acuteTargets": [
+          "CERVICAL",
+          "FHP"
+        ],
+        "defaultOrder": 180,
+        "externalLink": null,
+        "isRemindable": true,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "counter",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Low",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Theoretical benefit through reduced muscle strain. No direct bruxism research but low risk.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "movement",
+        "preferredWindows": [],
+        "detailedDescription": "Forward head posture strains jaw muscles. Take ergonomic breaks every 30-60 minutes, reset posture, and stretch. Brief check-ins should be awareness-based, not obsessive.",
+        "defaultReminderMinutes": 60,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "tongue_posture",
+        "icon": "mouth.fill",
+        "name": "Tongue Posture",
+        "tier": 2,
+        "emoji": "👅",
+        "pillars": [
+          "medical",
+          "sleep"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 10,
+        "frequency": "hourly",
+        "legacyIds": [
+          "TONGUE_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Keep tongue resting on the roof of mouth with teeth slightly apart. This position makes clenching difficult.",
+        "energyLevel": "low",
+        "graphNodeId": "TONGUE_TX",
+        "acuteTargets": [
+          "AIRWAY_OBS",
+          "HYOID"
+        ],
+        "defaultOrder": 190,
+        "externalLink": null,
+        "isRemindable": true,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "counter",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Clinical experience supports jaw positioning. Most effective for awake bruxism; limited evidence for sleep bruxism reduction.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "The 'lips together, teeth apart, tongue on palate' position physically prevents clenching. Set hourly reminders during the day to check and reset your jaw position. This is most effective for awake bruxism but builds awareness that may carry into sleep.",
+        "defaultReminderMinutes": 15,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "jaw_relaxation",
+        "icon": "face.smiling",
+        "name": "Jaw Relaxation",
+        "tier": 2,
+        "emoji": "😌",
+        "pillars": [
+          "medical",
+          "stressManagement"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 10,
+        "frequency": "hourly",
+        "legacyIds": [
+          "JAW_RELAX_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Practice letting your jaw hang loose with lips closed. Notice and release tension throughout the day.",
+        "energyLevel": "low",
+        "graphNodeId": "JAW_RELAX_TX",
+        "acuteTargets": [
+          "RMMA",
+          "TMD"
+        ],
+        "defaultOrder": 200,
+        "externalLink": null,
+        "isRemindable": true,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "counter",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Helps pre-sleep tension and awake bruxism; RCTs show no meaningful reduction in sleep bruxism episodes when used alone.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "Progressive muscle relaxation focused on the jaw. Notice clenching during stress and consciously release, paired with slow breathing. Helpful for daytime tension; not a standalone treatment for sleep bruxism.",
+        "defaultReminderMinutes": 15,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "jaw_massage",
+        "icon": "hand.raised.fingers.spread.fill",
+        "name": "Jaw Massage",
+        "tier": 2,
+        "emoji": "💆",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "MASSAGE_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [
+          "massage_rct"
+        ],
+        "description": "Gentle massage of the masseter and temporalis muscles to relieve tension and improve circulation.",
+        "energyLevel": "low",
+        "graphNodeId": "MASSAGE_TX",
+        "acuteTargets": [
+          "TMD",
+          "NECK_TIGHTNESS"
+        ],
+        "defaultOrder": 210,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "RCT evidence shows massage improves sleep quality and jaw mobility. Self-massage is free and low-risk.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "RCTs show deep-stripping massage improves sleep quality, jaw mobility, and pain pressure threshold. Self-massage of the masseter (cheek) and temporalis (temple) muscles for 5 minutes twice daily is free and effective.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 5
+      },
+      {
+        "id": "heat_therapy",
+        "icon": "thermometer.medium",
+        "name": "Heat/Cold Therapy",
+        "tier": 3,
+        "emoji": "🌡️",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$5",
+        "easeScore": 10,
+        "frequency": "asNeeded",
+        "legacyIds": [
+          "HEAT_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Apply warm compress or ice pack to jaw muscles to relieve tension and reduce inflammation.",
+        "energyLevel": "low",
+        "graphNodeId": "HEAT_TX",
+        "acuteTargets": [
+          "NECK_TIGHTNESS",
+          "CERVICAL"
+        ],
+        "defaultOrder": 220,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Low",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Symptom relief only; no evidence for reducing grinding. Very low risk and cost.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "Warm compresses before bed can relax jaw muscles. Ice packs help with acute pain or inflammation. Low-risk symptom management. Use 15-20 minutes at a time.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 15
+      },
+      {
+        "id": "alcohol_limit",
+        "icon": "wineglass.fill",
+        "name": "Avoid Alcohol",
+        "tier": 2,
+        "emoji": "🍷",
+        "pillars": [
+          "sleep",
+          "nutrition",
+          "avoidingDrugs"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "evening"
+        ],
+        "citationIds": [
+          "lifestyle_factors"
+        ],
+        "description": "Avoid alcohol, especially during reflux treatment.",
+        "energyLevel": "low",
+        "graphNodeId": "ALCOHOL",
+        "acuteTargets": [
+          "ALCOHOL",
+          "MICRO",
+          "GERD"
+        ],
+        "defaultOrder": 250,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Systematic review shows ~2x odds increase for bruxism with alcohol use; alcohol also worsens reflux and sleep quality.",
+        "targetCondition": "both",
+        "ladderTemplateID": "substance",
+        "preferredWindows": [
+          {
+            "endMinutes": 1260,
+            "startMinutes": 1020
+          }
+        ],
+        "detailedDescription": "Alcohol disrupts sleep architecture and worsens reflux. Avoid completely during the 6-week strict phase and minimize thereafter, especially within 4 hours of bedtime.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "reflux_medications",
+        "icon": "pills.fill",
+        "name": "Reflux Medications (Evening)",
+        "tier": 2,
+        "emoji": "💊",
+        "pillars": [
+          "medical",
+          "nutrition"
+        ],
+        "roiTier": "B",
+        "costRange": "$10-40/month",
+        "easeScore": 5,
+        "frequency": "daily",
+        "legacyIds": [
+          "PPI_TX"
+        ],
+        "timeOfDay": [
+          "evening"
+        ],
+        "citationIds": [
+          "gerd_bruxism"
+        ],
+        "description": "Evening PPI plus alginate after dinner and before bed.",
+        "energyLevel": "low",
+        "graphNodeId": "PPI_TX",
+        "acuteTargets": [
+          "GERD",
+          "ACID"
+        ],
+        "defaultOrder": 260,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Timed PPI plus alginate therapy reduces nighttime reflux exposure.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [
+          {
+            "endMinutes": 1260,
+            "startMinutes": 1020
+          }
+        ],
+        "detailedDescription": "Take lansoprazole 30mg after dinner for nocturnal acid suppression and Gaviscon Advance after dinner and again before bed (2 tablets or 10ml). Follow clinician guidance.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "strict_diet_phase",
+        "icon": "leaf.fill",
+        "name": "Strict Diet Phase (Compliance)",
+        "tier": 2,
+        "emoji": "🥗",
+        "pillars": [
+          "nutrition"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [
+          "REFLUX_DIET_TX"
+        ],
+        "timeOfDay": [
+          "evening"
+        ],
+        "citationIds": [],
+        "description": "Met all strict reflux diet constraints today.",
+        "energyLevel": "low",
+        "graphNodeId": "REFLUX_DIET_TX",
+        "acuteTargets": [
+          "GERD",
+          "ACID"
+        ],
+        "defaultOrder": 270,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 40,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Strict elimination supports LPR healing and reduces upstream arousal triggers.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "nutrition",
+        "preferredWindows": [
+          {
+            "endMinutes": 1260,
+            "startMinutes": 1020
+          }
+        ],
+        "detailedDescription": "During the first 6 weeks, avoid caffeine (including decaf), carbonation, alcohol, chocolate, spicy, acidic, fatty/fried foods, and irritants like onions/garlic in large amounts. Reintroduce one item at a time after 6 weeks.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "reflux_trigger_avoidance",
+        "icon": "nosign",
+        "name": "Reflux Trigger Avoidance (Ongoing)",
+        "tier": 2,
+        "emoji": "🚫",
+        "pillars": [
+          "nutrition"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [],
+        "description": "Avoid reflux trigger foods, especially during the strict phase.",
+        "energyLevel": "low",
+        "graphNodeId": "REFLUX_DIET_TX",
+        "acuteTargets": [
+          "GERD",
+          "ACID"
+        ],
+        "defaultOrder": 280,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 30,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Strict elimination reduces LPR symptoms and removes upstream bruxism triggers.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "nutrition",
+        "preferredWindows": [],
+        "detailedDescription": "During the first 6 weeks, eliminate all trigger foods. After that, reintroduce one item at a time and continue avoiding anything that brings symptoms back.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "bed_elevation",
+        "icon": "bed.double.fill",
+        "name": "Bed Elevation",
+        "tier": 2,
+        "emoji": "🛏️",
+        "pillars": [
+          "sleep",
+          "environment"
+        ],
+        "roiTier": "A",
+        "costRange": "$20-80",
+        "easeScore": 6,
+        "frequency": "continuous",
+        "legacyIds": [
+          "BED_ELEV_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Raise the head of the bed 10-25 cm.",
+        "energyLevel": "low",
+        "graphNodeId": "BED_ELEV_TX",
+        "acuteTargets": [
+          "GERD",
+          "ACID"
+        ],
+        "defaultOrder": 290,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Gravity reduces nocturnal reflux and downstream arousals.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "sleep_hygiene",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Use blocks or risers under the bed frame (not just pillows) to keep the torso inclined all night.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "no_screens_prebed",
+        "icon": "iphone.slash",
+        "name": "No Screens 1 Hour Before Bed",
+        "tier": 2,
+        "emoji": "📵",
+        "pillars": [
+          "sleep"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "SCREENS_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Avoid screens for the final hour before sleep.",
+        "energyLevel": "low",
+        "graphNodeId": "SCREENS_TX",
+        "acuteTargets": [
+          "SLEEP_DEP"
+        ],
+        "defaultOrder": 300,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Reduces pre-sleep arousal and supports sleep onset.",
+        "targetCondition": "general",
+        "ladderTemplateID": "sleep_hygiene",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Dim lights and stop screens 60 minutes before bed, or use blue-light filters if unavoidable.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "warm_shower",
+        "icon": "shower",
+        "name": "Warm Shower/Bath",
+        "tier": 2,
+        "emoji": "🚿",
+        "pillars": [
+          "sleep",
+          "stressManagement"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [
+          "WARM_SHOWER_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Warm shower or bath (40-42C) for 10-15 minutes.",
+        "energyLevel": "low",
+        "graphNodeId": "WARM_SHOWER_TX",
+        "acuteTargets": [
+          "STRESS",
+          "SLEEP_DEP"
+        ],
+        "defaultOrder": 310,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Meta-analytic evidence supports improved sleep onset.",
+        "targetCondition": "general",
+        "ladderTemplateID": "evening_winddown",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "A warm shower or bath 60-90 minutes before bed improves sleep onset and relaxation.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 15
+      },
+      {
+        "id": "yoga_prebed",
+        "icon": "figure.yoga",
+        "name": "Gentle Yoga (Upright)",
+        "tier": 2,
+        "emoji": "🧘",
+        "pillars": [
+          "exercise",
+          "stressManagement"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "YOGA_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Gentle upright yoga for about 20 minutes before bed.",
+        "energyLevel": "medium",
+        "graphNodeId": "YOGA_TX",
+        "acuteTargets": [
+          "SYMPATHETIC",
+          "CORTISOL"
+        ],
+        "defaultOrder": 320,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 20,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Reduces muscle tension and arousal before sleep.",
+        "targetCondition": "both",
+        "ladderTemplateID": "exercise",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Use slow, upright poses to avoid reflux (no deep forward folds). Aim for ~20 minutes and pair with slow breathing.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 20
+      },
+      {
+        "id": "neurosym_device",
+        "icon": "waveform.path",
+        "name": "Nurosym taVNS (30 min)",
+        "tier": 3,
+        "emoji": "⚡️",
+        "pillars": [
+          "stressManagement",
+          "medical"
+        ],
+        "roiTier": "C",
+        "costRange": "$0",
+        "easeScore": 5,
+        "frequency": "daily",
+        "legacyIds": [
+          "NEUROSYM_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Optional 30-minute Nurosym session during wind-down.",
+        "energyLevel": "low",
+        "graphNodeId": "NEUROSYM_TX",
+        "acuteTargets": [
+          "VAGAL",
+          "SYMPATHETIC"
+        ],
+        "defaultOrder": 330,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low",
+        "defaultMinutes": 30,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Optional neuromodulation tool for arousal reduction.",
+        "targetCondition": "both",
+        "ladderTemplateID": "stress",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Use taVNS during the pre-bed routine (can overlap with stretching).",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 30
+      },
+      {
+        "id": "intimacy_optional",
+        "icon": "heart.fill",
+        "name": "Intimacy (Optional)",
+        "tier": 3,
+        "emoji": "❤️",
+        "pillars": [
+          "romanticPersonalCare",
+          "socialLife"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "asNeeded",
+        "legacyIds": [],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Optional physical intimacy as part of wind-down.",
+        "energyLevel": "low",
+        "graphNodeId": "RELATIONSHIP_TX",
+        "acuteTargets": [
+          "STRESS",
+          "RMMA"
+        ],
+        "defaultOrder": 340,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Optional, personal choice.",
+        "targetCondition": "general",
+        "ladderTemplateID": "social",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "If applicable, intimacy can help downshift arousal before sleep.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 15
+      },
+      {
+        "id": "diaphragm_breathing",
+        "icon": "wind",
+        "name": "Diaphragm Breathing",
+        "tier": 2,
+        "emoji": "🌬️",
+        "pillars": [
+          "stressManagement"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 8,
+        "frequency": "daily",
+        "legacyIds": [
+          "slow_breathing",
+          "BREATHING_TX"
+        ],
+        "timeOfDay": [
+          "afternoon",
+          "preBed"
+        ],
+        "doseConfig": {
+          "unit": "breaths",
+          "defaultDailyGoal": 60,
+          "defaultIncrement": 10
+        },
+        "citationIds": [],
+        "description": "Track total diaphragmatic breaths completed today.",
+        "energyLevel": "low",
+        "graphNodeId": "BREATHING_TX",
+        "acuteTargets": [
+          "SYMPATHETIC",
+          "CORTISOL"
+        ],
+        "defaultOrder": 350,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "dose",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Promotes parasympathetic shift before sleep.",
+        "targetCondition": "both",
+        "ladderTemplateID": "stress",
+        "preferredWindows": [
+          {
+            "endMinutes": 1020,
+            "startMinutes": 720
+          },
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Use slow diaphragmatic breathing sets (for example 4s inhale and 6-8s exhale) and log cumulative breaths.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 7
+      },
+      {
+        "id": "magnesium",
+        "icon": "pills.fill",
+        "name": "Magnesium Supplement",
+        "tier": 2,
+        "emoji": "💊",
+        "pillars": [
+          "nutrition",
+          "medical"
+        ],
+        "roiTier": "E",
+        "costRange": "$10-20/month",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "MG_SUPP"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [
+          "nutrient_deficiencies"
+        ],
+        "description": "Magnesium glycinate before bed to support sleep and muscle relaxation.",
+        "energyLevel": "low",
+        "graphNodeId": "MG_SUPP",
+        "acuteTargets": [
+          "MG_DEF",
+          "GABA_DEF"
+        ],
+        "defaultOrder": 370,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Supports inhibitory tone and sleep quality; PPI use increases deficiency risk.",
+        "targetCondition": "both",
+        "ladderTemplateID": "supplement",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Magnesium glycinate 400-600mg elemental, 30-60 minutes before bed. PPIs can significantly reduce magnesium absorption, so supplementation and periodic labs may be warranted. Coordinate dosing with your clinician if you take other medications.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "l_theanine",
+        "icon": "leaf.fill",
+        "name": "L-Theanine (Optional)",
+        "tier": 3,
+        "emoji": "🍵",
+        "pillars": [
+          "nutrition",
+          "stressManagement"
+        ],
+        "roiTier": "B",
+        "costRange": "$10-20/month",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "THEANINE_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "200mg L-theanine about 30 minutes before bed.",
+        "energyLevel": "low",
+        "graphNodeId": "THEANINE_TX",
+        "acuteTargets": [
+          "GABA_DEF"
+        ],
+        "defaultOrder": 380,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "RCTs show modest stress reduction and improved sleep quality.",
+        "targetCondition": "general",
+        "ladderTemplateID": "supplement",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Supports relaxation without sedation. Take close to bedtime because the half-life is about 1 hour. Optional; discontinue if it causes vivid dreams or morning grogginess.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "glycine",
+        "icon": "capsule.fill",
+        "name": "Glycine (Optional)",
+        "tier": 3,
+        "emoji": "🧪",
+        "pillars": [
+          "nutrition",
+          "sleep"
+        ],
+        "roiTier": "B",
+        "costRange": "$10-20/month",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "GLYCINE_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "3g glycine before bed to support sleep quality.",
+        "energyLevel": "low",
+        "graphNodeId": "GLYCINE_TX",
+        "acuteTargets": [
+          "GABA_DEF",
+          "SLEEP_DEP"
+        ],
+        "defaultOrder": 390,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Small RCTs show improved subjective sleep quality.",
+        "targetCondition": "general",
+        "ladderTemplateID": "supplement",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "An inhibitory neurotransmitter that may improve subjective sleep quality and next-day fatigue. Optional.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "activate_emg_tracker",
+        "icon": "waveform",
+        "name": "Activate EMG Tracker",
+        "tier": 2,
+        "emoji": "📡",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Start EMG tracking before sleep.",
+        "energyLevel": "low",
+        "graphNodeId": "BIOFEEDBACK_TX",
+        "acuteTargets": [
+          "RMMA"
+        ],
+        "defaultOrder": 400,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Ensures the biofeedback system is active for the night.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Activate the EMG/Muse tracker before lights out so biofeedback can run overnight.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 2
+      },
+      {
+        "id": "night_guard",
+        "icon": "moon.fill",
+        "name": "Night Guard",
+        "tier": 1,
+        "emoji": "🌙",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "B",
+        "costRange": "$300-800",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [
+          "SPLINT"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [
+          "cochrane_splints"
+        ],
+        "description": "A custom hard occlusal splint worn at night to protect teeth from grinding damage.",
+        "energyLevel": "low",
+        "graphNodeId": "SPLINT",
+        "acuteTargets": [
+          "TOOTH",
+          "GRINDING"
+        ],
+        "defaultOrder": 410,
+        "externalLink": "https://www.ada.org/resources/research/science-and-research-institute/oral-health-topics/bruxism",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 5,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Cochrane review (2007) finds insufficient evidence that splints reduce grinding, but moderate evidence they protect teeth. Clinical literature reports worsening with soft splints in a sizable subset.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical_device",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Custom-fitted hard acrylic stabilization splints are recommended. Soft or OTC splints can worsen bruxism in around 50% of patients. Splints protect teeth and distribute forces; they do not reliably reduce episode frequency. A properly fitted guard should last 2-5 years with regular care.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "sleep_hours",
+        "icon": "bed.double.fill",
+        "name": "Sleep Duration",
+        "tier": 3,
+        "emoji": "🛏️",
+        "pillars": [
+          "sleep"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 10,
+        "frequency": "daily",
+        "legacyIds": [
+          "sleep_hygiene",
+          "SLEEP_HYG_TX"
+        ],
+        "timeOfDay": [
+          "morning"
+        ],
+        "doseConfig": {
+          "unit": "hours",
+          "defaultDailyGoal": 8,
+          "defaultIncrement": 1
+        },
+        "citationIds": [],
+        "description": "Track total sleep hours from last night toward your daily goal.",
+        "energyLevel": "low",
+        "graphNodeId": "SLEEP_HYG_TX",
+        "acuteTargets": [
+          "SLEEP_DEP",
+          "MICRO"
+        ],
+        "defaultOrder": 430,
+        "externalLink": "https://www.sleepfoundation.org/sleep-hygiene",
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance",
+          "coreFloor"
+        ],
+        "trackingType": "dose",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 30,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Adequate sleep duration lowers sleep fragmentation and microarousal burden.",
+        "targetCondition": "general",
+        "ladderTemplateID": "sleep_hygiene",
+        "preferredWindows": [
+          {
+            "endMinutes": 720,
+            "startMinutes": 300
+          }
+        ],
+        "appleHealthConfig": {
+          "identifier": "sleepAnalysis",
+          "aggregation": "sleepAsleepDurationSum",
+          "dayAttribution": "previousNightNoonCutoff"
+        },
+        "detailedDescription": "Log total sleep duration each morning. Goal is 8 hours per day as the primary sleep dose target.",
+        "appleHealthAvailable": true,
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "bedtime_routine",
+        "icon": "moon.stars.fill",
+        "name": "Bedtime Routine (Optional)",
+        "tier": 2,
+        "emoji": "🌙",
+        "pillars": [
+          "sleep"
+        ],
+        "roiTier": "A",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [],
+        "description": "Optional checklist to run through your pre-bed steps.",
+        "energyLevel": "low",
+        "graphNodeId": "SLEEP_HYG_TX",
+        "acuteTargets": [
+          "SLEEP_DEP",
+          "MICRO"
+        ],
+        "defaultOrder": 450,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance",
+          "coreFloor"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 45,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Wind-down routines reduce arousal and support sleep onset; warm bathing has meta-analytic evidence for sleep benefits.",
+        "targetCondition": "both",
+        "ladderTemplateID": "sleep_hygiene",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Sequence: warm bath or shower (40-42C, 10-15 min), gentle yoga/stretching with slow breathing, optional Nurosym taVNS for 30 min, optional physical intimacy/partnered sex, slow breathing (4s in, 6-8s out), brief mindfulness/body scan, insert hard occlusal splint, activate EMG tracker, lights out. Keep lights dim, avoid screens for 1 hour before bed, and wear loose clothing.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 60
+      },
+      {
+        "id": "social_connection",
+        "icon": "person.2.fill",
+        "name": "Social Connection Check-In",
+        "tier": 3,
+        "emoji": "🫶",
+        "pillars": [
+          "socialLife",
+          "stressManagement"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "SOCIAL_TX"
+        ],
+        "timeOfDay": [
+          "afternoon",
+          "evening"
+        ],
+        "citationIds": [],
+        "description": "Reach out to a friend, family member, or community contact.",
+        "energyLevel": "low",
+        "graphNodeId": "SOCIAL_TX",
+        "acuteTargets": [
+          "SOCIAL_ISOLATION",
+          "STRESS"
+        ],
+        "defaultOrder": 455,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Social connection supports stress regulation and resilience during recovery.",
+        "targetCondition": "general",
+        "ladderTemplateID": "social",
+        "preferredWindows": [
+          {
+            "endMinutes": 1260,
+            "startMinutes": 720
+          }
+        ],
+        "detailedDescription": "Make one intentional social touchpoint today, such as a call, message, or short in-person connection.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 15
+      },
+      {
+        "id": "relationship_care",
+        "icon": "heart.text.square.fill",
+        "name": "Relationship Care Check-In",
+        "tier": 3,
+        "emoji": "❤️",
+        "pillars": [
+          "romanticPersonalCare",
+          "socialLife"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [
+          "RELATIONSHIP_TX"
+        ],
+        "timeOfDay": [
+          "evening"
+        ],
+        "citationIds": [],
+        "description": "Take one concrete action to invest in your closest relationship.",
+        "energyLevel": "medium",
+        "graphNodeId": "RELATIONSHIP_TX",
+        "acuteTargets": [
+          "RELATIONSHIP_STRAIN",
+          "STRESS"
+        ],
+        "defaultOrder": 456,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 20,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Relationship stability helps reduce stress load and supports long-term adherence.",
+        "targetCondition": "general",
+        "ladderTemplateID": "social",
+        "preferredWindows": [
+          {
+            "endMinutes": 1320,
+            "startMinutes": 1020
+          }
+        ],
+        "detailedDescription": "Use a short intentional action such as appreciation, active listening, or a repair conversation opener.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 20
+      },
+      {
+        "id": "financial_check_in",
+        "icon": "chart.line.uptrend.xyaxis",
+        "name": "Financial Stability Check-In",
+        "tier": 3,
+        "emoji": "💰",
+        "pillars": [
+          "financialSecurity"
+        ],
+        "roiTier": "B",
+        "costRange": "$0",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "FINANCIAL_TX"
+        ],
+        "timeOfDay": [
+          "morning",
+          "afternoon"
+        ],
+        "citationIds": [],
+        "description": "Do one small task that reduces financial uncertainty.",
+        "energyLevel": "low",
+        "graphNodeId": "FINANCIAL_TX",
+        "acuteTargets": [
+          "FINANCIAL_STRAIN",
+          "STRESS",
+          "SLEEP_DEP"
+        ],
+        "defaultOrder": 457,
+        "externalLink": null,
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Financial stress contributes to sleep and stress burden; routine check-ins reduce avoidance loops.",
+        "targetCondition": "general",
+        "ladderTemplateID": "administrative",
+        "preferredWindows": [
+          {
+            "endMinutes": 1020,
+            "startMinutes": 540
+          }
+        ],
+        "detailedDescription": "Examples: review balances, pay a bill, set an auto-transfer, or schedule a planning task.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 15
+      },
+      {
+        "id": "gerd_treatment",
+        "icon": "pill.fill",
+        "name": "GERD Treatment",
+        "tier": 2,
+        "emoji": "💊",
+        "pillars": [
+          "medical",
+          "nutrition"
+        ],
+        "roiTier": "B",
+        "costRange": "$10-30/month",
+        "easeScore": 6,
+        "frequency": "daily",
+        "legacyIds": [],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [
+          "gerd_bruxism"
+        ],
+        "description": "Treat reflux/LPR, which can trigger sleep bruxism.",
+        "energyLevel": "low",
+        "graphNodeId": "PPI_TX",
+        "acuteTargets": [
+          "GERD",
+          "ACID"
+        ],
+        "defaultOrder": 460,
+        "externalLink": "https://pubmed.ncbi.nlm.nih.gov/27474257/",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate",
+        "defaultMinutes": 10,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Case-control and RCT evidence support a reflux-bruxism link and symptom improvement with PPI therapy.",
+        "targetCondition": "reflux",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "Evidence suggests reflux can provoke bruxism episodes. Treating reflux is an upstream strategy: meal timing, trigger avoidance, alginate therapy (Gaviscon Advance), head-of-bed elevation, and appropriate PPI timing. Coordinate medications with your clinician.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "sleep_apnea_treatment",
+        "icon": "lungs.fill",
+        "name": "Sleep Apnea Treatment",
+        "tier": 1,
+        "emoji": "😴",
+        "pillars": [
+          "medical",
+          "sleep"
+        ],
+        "roiTier": "C",
+        "costRange": "$500-2000",
+        "easeScore": 3,
+        "frequency": "daily",
+        "legacyIds": [
+          "OSA_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [
+          "sleep_apnea_bruxism"
+        ],
+        "description": "CPAP or mandibular advancement devices for patients with obstructive sleep apnea, a common bruxism comorbidity.",
+        "energyLevel": "low",
+        "graphNodeId": "OSA_TX",
+        "acuteTargets": [
+          "OSA",
+          "AIRWAY_OBS"
+        ],
+        "defaultOrder": 470,
+        "externalLink": "https://pubmed.ncbi.nlm.nih.gov/35512250/",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate-High",
+        "defaultMinutes": 20,
+        "foundationRole": "blocker",
+        "evidenceSummary": "RCTs show significant bruxism reduction when underlying OSA is treated with CPAP or mandibular advancement devices.",
+        "targetCondition": "both",
+        "ladderTemplateID": "medical_device",
+        "preferredWindows": [],
+        "detailedDescription": "Multiple RCTs show both CPAP and MADs significantly reduce bruxism in patients with confirmed OSA. If you snore, experience daytime fatigue, or have witnessed apneas, consider a sleep study. Treating the underlying sleep disorder often resolves the bruxism.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 5
+      },
+      {
+        "id": "dymista_nasal_spray",
+        "icon": "spraycan.fill",
+        "name": "Dymista (Azelastine/Fluticasone)",
+        "tier": 2,
+        "emoji": "👃",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "B",
+        "costRange": "$20-150/month",
+        "easeScore": 7,
+        "frequency": "daily",
+        "legacyIds": [
+          "DYMISTA_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [
+          "intranasal_steroids_osa_meta",
+          "intranasal_steroid_cpap_compliance",
+          "azeflu_osa_pap_adherence_trial",
+          "azeflu_allergic_rhinitis_rct"
+        ],
+        "description": "Use Dymista as prescribed to reduce nighttime nasal congestion and support easier nasal breathing.",
+        "energyLevel": "low",
+        "graphNodeId": "OSA_TX",
+        "acuteTargets": [
+          "OSA"
+        ],
+        "defaultOrder": 472,
+        "externalLink": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12033272/",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low-Moderate (adjunct)",
+        "defaultMinutes": 5,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Intranasal steroid evidence in OSA shows modest benefit in selected patients, and azelastine/fluticasone may help symptom burden; overall PAP-adherence effects are mixed.",
+        "targetCondition": "both",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "Dymista combines an intranasal antihistamine (azelastine) and corticosteroid (fluticasone). For people with OSA/UARS plus allergic-rhinitis nasal blockage, reducing congestion can improve comfort with nasal breathing and PAP use. It is an adjunct, not a replacement for CPAP/MAD when OSA is present.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "breathe_right_strip",
+        "icon": "bandage.fill",
+        "name": "Breathe Right Nasal Strip",
+        "tier": 2,
+        "emoji": "🩹",
+        "pillars": [
+          "medical",
+          "sleep"
+        ],
+        "roiTier": "B",
+        "costRange": "$10-25/month",
+        "easeScore": 9,
+        "frequency": "daily",
+        "legacyIds": [
+          "NASAL_STRIP_TX"
+        ],
+        "timeOfDay": [
+          "preBed"
+        ],
+        "citationIds": [
+          "nasal_dilator_meta_osa"
+        ],
+        "description": "Apply a nasal strip at bedtime to reduce nasal resistance and support nasal breathing.",
+        "energyLevel": "low",
+        "graphNodeId": "OSA_TX",
+        "acuteTargets": [
+          "OSA",
+          "AIRWAY_OBS"
+        ],
+        "defaultOrder": 474,
+        "externalLink": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5187471/",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Low (adjunct)",
+        "defaultMinutes": 5,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Meta-analysis shows improved nasal breathing but little/no consistent improvement in OSA outcomes for external nasal strips.",
+        "targetCondition": "both",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [
+          {
+            "endMinutes": 1440,
+            "startMinutes": 1260
+          }
+        ],
+        "detailedDescription": "External nasal dilator strips can improve perceived nasal airflow and may reduce snoring in some people. Evidence does not show meaningful improvement in core OSA metrics (AHI) for most users, so treat this as a comfort adjunct rather than a primary sleep-apnea treatment.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "ssri_review",
+        "icon": "pills.circle.fill",
+        "name": "SSRI Medication Review",
+        "tier": 1,
+        "emoji": "💬",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "A",
+        "costRange": "$0-50 copay",
+        "easeScore": 4,
+        "frequency": "asNeeded",
+        "legacyIds": [
+          "SSRI_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [
+          "ssri_bruxism"
+        ],
+        "description": "Review of SSRI medications if bruxism started after beginning antidepressants. Buspirone may help.",
+        "energyLevel": "low",
+        "graphNodeId": "SSRI_TX",
+        "acuteTargets": [
+          "SSRI",
+          "HEALTH_ANXIETY"
+        ],
+        "defaultOrder": 480,
+        "externalLink": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5914744/",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "maintenance"
+        ],
+        "trackingType": "binary",
+        "causalPathway": "upstream",
+        "evidenceLevel": "Moderate",
+        "defaultMinutes": 15,
+        "foundationRole": "maintenance",
+        "evidenceSummary": "Systematic review confirms SSRI-bruxism link (~24% vs 15% baseline risk). Case series show buspirone may help; improvement takes 2-3 weeks.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "In reported cases of antidepressant-induced bruxism, SSRIs account for about 74% (actual risk for SSRI users is ~24% vs 15% baseline). If grinding started after beginning an SSRI, discuss with your doctor—never stop SSRIs abruptly. Consider using a dental guard while awaiting improvement. Adding buspirone (5-30mg) may help but takes 2-3 weeks to work; buspirone is contraindicated with MAO inhibitors and liver disease.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 1
+      },
+      {
+        "id": "cbt",
+        "icon": "brain",
+        "name": "Cognitive Behavioral Therapy",
+        "tier": 2,
+        "emoji": "🧠",
+        "pillars": [
+          "stressManagement",
+          "medical"
+        ],
+        "roiTier": "C",
+        "costRange": "$800-2400 total",
+        "easeScore": 4,
+        "frequency": "weekly",
+        "legacyIds": [
+          "CBT_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [
+          "cbt_bruxism"
+        ],
+        "description": "Structured therapy addressing thoughts and behaviors that may contribute to bruxism.",
+        "energyLevel": "medium",
+        "graphNodeId": "CBT_TX",
+        "acuteTargets": [
+          "STRESS",
+          "HEALTH_ANXIETY"
+        ],
+        "defaultOrder": 490,
+        "externalLink": "https://www.sciencedirect.com/science/article/pii/S1882761622000059",
+        "isRemindable": false,
+        "planningTags": [
+          "foundation",
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "appointment",
+        "causalPathway": "midstream",
+        "evidenceLevel": "Low (GRADE: extremely low)",
+        "defaultMinutes": 20,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Very limited RCT evidence for sleep bruxism. May help if stress/anxiety are major contributors.",
+        "targetCondition": "both",
+        "ladderTemplateID": "stress",
+        "preferredWindows": [],
+        "detailedDescription": "Three RCTs exist but GRADE evidence is extremely low for sleep bruxism specifically. One RCT showed EMG reduction at 6-month follow-up. Better evidence for awake bruxism. Consider if stress or anxiety are significant contributors.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 60
+      },
+      {
+        "id": "botox",
+        "icon": "syringe.fill",
+        "name": "Botox Injections",
+        "tier": 1,
+        "emoji": "💉",
+        "pillars": [
+          "medical"
+        ],
+        "roiTier": "D",
+        "costRange": "$400-800 per treatment",
+        "easeScore": 3,
+        "frequency": "quarterly",
+        "legacyIds": [
+          "BOTOX_TX"
+        ],
+        "timeOfDay": [
+          "anytime"
+        ],
+        "citationIds": [
+          "botox_meta"
+        ],
+        "description": "Botulinum toxin injections into the masseter muscles to reduce grinding force. Requires professional administration.",
+        "energyLevel": "low",
+        "graphNodeId": "BOTOX_TX",
+        "acuteTargets": [
+          "RMMA",
+          "NECK_TIGHTNESS"
+        ],
+        "defaultOrder": 500,
+        "externalLink": "https://pubmed.ncbi.nlm.nih.gov/34955330/",
+        "isRemindable": false,
+        "planningTags": [
+          "acute",
+          "blocker"
+        ],
+        "trackingType": "appointment",
+        "causalPathway": "downstream",
+        "evidenceLevel": "Moderate-High",
+        "defaultMinutes": 10,
+        "foundationRole": "blocker",
+        "evidenceSummary": "Meta-analyses show significant pain reduction and decreased bruxism events. Cost and bone density concerns limit long-term use.",
+        "targetCondition": "bruxism",
+        "ladderTemplateID": "medical",
+        "preferredWindows": [],
+        "detailedDescription": "Meta-analyses show Botox significantly reduces pain (~4 points on 10-point VAS scale), bite force, and bruxism events (from ~5 to ~1.7 episodes/hour). Effects last 3-6 months. Long-term use may cause bone density concerns in the jaw. Reserve for severe or refractory cases.",
+        "defaultReminderMinutes": null,
+        "estimatedDurationMinutes": 30
+      }
+    ]
+  }
+}

@@ -14,11 +14,22 @@ struct ExploreInputsScreen: View {
     let onRefreshAppleHealth: (String) async -> Void
     let onRefreshAllAppleHealth: () async -> Void
     let onToggleActive: (String) -> Void
+    let planningMetadataByInterventionID: [String: HabitPlanningMetadata]
+    let habitRungStatusByInterventionID: [String: HabitRungStatus]
+    let plannedInterventionIDs: Set<String>
+    let dailyPlanProposal: DailyPlanProposal?
+    let planningMode: PlanningMode
+    let plannerAvailableMinutes: Int
+    let plannerTimeBudgetState: DailyTimeBudgetState
+    let onSetPlannerTimeBudgetState: (DailyTimeBudgetState) -> Void
+    let onRecordHigherRungCompletion: (String, String) -> Void
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
     @State private var filterMode: InputFilterMode
     @State private var gardenSelection = GardenHierarchySelection.all
+    @State private var isPlannerTimelinePresented = false
+    @State private var pendingHigherRungCompletion: HigherRungCompletionPrompt?
     private let gardenHierarchyBuilder = GardenHierarchyBuilder()
     private static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -44,6 +55,15 @@ struct ExploreInputsScreen: View {
         onRefreshAppleHealth: @escaping (String) async -> Void,
         onRefreshAllAppleHealth: @escaping () async -> Void,
         onToggleActive: @escaping (String) -> Void,
+        planningMetadataByInterventionID: [String: HabitPlanningMetadata],
+        habitRungStatusByInterventionID: [String: HabitRungStatus],
+        plannedInterventionIDs: Set<String>,
+        dailyPlanProposal: DailyPlanProposal?,
+        planningMode: PlanningMode,
+        plannerAvailableMinutes: Int,
+        plannerTimeBudgetState: DailyTimeBudgetState,
+        onSetPlannerTimeBudgetState: @escaping (DailyTimeBudgetState) -> Void,
+        onRecordHigherRungCompletion: @escaping (String, String) -> Void,
         selectedSkinID: TelocareSkinID
     ) {
         self.inputs = inputs
@@ -58,6 +78,15 @@ struct ExploreInputsScreen: View {
         self.onRefreshAppleHealth = onRefreshAppleHealth
         self.onRefreshAllAppleHealth = onRefreshAllAppleHealth
         self.onToggleActive = onToggleActive
+        self.planningMetadataByInterventionID = planningMetadataByInterventionID
+        self.habitRungStatusByInterventionID = habitRungStatusByInterventionID
+        self.plannedInterventionIDs = plannedInterventionIDs
+        self.dailyPlanProposal = dailyPlanProposal
+        self.planningMode = planningMode
+        self.plannerAvailableMinutes = plannerAvailableMinutes
+        self.plannerTimeBudgetState = plannerTimeBudgetState
+        self.onSetPlannerTimeBudgetState = onSetPlannerTimeBudgetState
+        self.onRecordHigherRungCompletion = onRecordHigherRungCompletion
         self.selectedSkinID = selectedSkinID
         _filterMode = State(initialValue: inputs.contains(where: \.isActive) ? .pending : .available)
     }
@@ -103,6 +132,42 @@ struct ExploreInputsScreen: View {
         }
         .tint(TelocareTheme.coral)
         .animation(.easeInOut(duration: 0.2), value: selectedSkinID)
+        .sheet(isPresented: $isPlannerTimelinePresented) {
+            PlannerTimelineSheet(
+                initialState: plannerTimeBudgetState,
+                onCancel: {
+                    isPlannerTimelinePresented = false
+                },
+                onApply: { nextState in
+                    onSetPlannerTimeBudgetState(nextState)
+                    isPlannerTimelinePresented = false
+                }
+            )
+        }
+        .confirmationDialog(
+            "Did more than suggested?",
+            isPresented: Binding(
+                get: { pendingHigherRungCompletion != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        pendingHigherRungCompletion = nil
+                    }
+                }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let prompt = pendingHigherRungCompletion {
+                ForEach(prompt.higherRungs) { rung in
+                    Button("I did \(rung.title)") {
+                        onRecordHigherRungCompletion(prompt.interventionID, rung.id)
+                        pendingHigherRungCompletion = nil
+                    }
+                }
+                Button("Keep suggested rung", role: .cancel) {
+                    pendingHigherRungCompletion = nil
+                }
+            }
+        }
     }
 
     private func showInputDetail(_ input: InputStatus) {
@@ -198,6 +263,8 @@ struct ExploreInputsScreen: View {
                 Spacer()
             }
 
+            planningCard
+
             if !hierarchyCurrentClusters.isEmpty {
                 gardenGrid
                     .transition(.opacity.combined(with: .move(edge: .trailing)))
@@ -230,6 +297,89 @@ struct ExploreInputsScreen: View {
             selectedNodeID: resolvedNodePath.last,
             onSelectNode: selectSubGarden
         )
+    }
+
+    @ViewBuilder
+    private var planningCard: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                HStack {
+                    Text("Daily Plan")
+                        .font(TelocareTheme.Typography.headline)
+                        .foregroundStyle(TelocareTheme.charcoal)
+                    Spacer()
+                    Text(planningMode.displayName)
+                        .font(TelocareTheme.Typography.small)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule().fill(planningMode == .flare ? TelocareTheme.coral : TelocareTheme.success)
+                        )
+                }
+
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Time available: \(plannerAvailableMinutes) min")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                    Spacer()
+                    Text(
+                        "\(formattedClock(plannerTimeBudgetState.timelineWindow.wakeMinutes))-\(formattedClock(plannerTimeBudgetState.timelineWindow.sleepMinutes))"
+                    )
+                    .font(TelocareTheme.Typography.small)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                }
+
+                Button {
+                    isPlannerTimelinePresented = true
+                } label: {
+                    HStack {
+                        Image(systemName: "calendar.badge.clock")
+                        Text("Edit timeline (\(plannerTimeBudgetState.selectedSlotStartMinutes.count) slots)")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                    }
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                    .padding(.horizontal, TelocareTheme.Spacing.sm)
+                    .padding(.vertical, TelocareTheme.Spacing.sm)
+                    .background(
+                        RoundedRectangle(
+                            cornerRadius: TelocareTheme.CornerRadius.medium,
+                            style: .continuous
+                        )
+                        .fill(TelocareTheme.cream)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier(AccessibilityID.exploreInputsPlannerMinutes)
+
+                if let dailyPlanProposal {
+                    Text("Planned \(dailyPlanProposal.actions.count) actions, using \(dailyPlanProposal.usedMinutes) min.")
+                        .font(TelocareTheme.Typography.caption)
+                        .foregroundStyle(TelocareTheme.warmGray)
+
+                    ForEach(dailyPlanProposal.actions.prefix(3)) { action in
+                        HStack(spacing: TelocareTheme.Spacing.xs) {
+                            Text(action.title)
+                                .font(TelocareTheme.Typography.caption)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                            Spacer()
+                            Text("\(action.estimatedMinutes)m")
+                                .font(TelocareTheme.Typography.small)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                        }
+                    }
+
+                    if let warning = dailyPlanProposal.warnings.first {
+                        Text(warning)
+                            .font(TelocareTheme.Typography.small)
+                            .foregroundStyle(TelocareTheme.coral)
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.exploreInputsPlannerCard)
     }
 
     private func selectBreadcrumbDepth(_ depth: Int) {
@@ -332,7 +482,10 @@ struct ExploreInputsScreen: View {
                 ForEach(filteredInputs) { input in
                     InputCard(
                         input: input,
-                        onToggle: { toggleInputCheckedToday(input.id) },
+                        planningMetadata: planningMetadataByInterventionID[input.id],
+                        rungStatus: habitRungStatusByInterventionID[input.id],
+                        isPlannedToday: plannedInterventionIDs.contains(input.id),
+                        onToggle: { handleCompletionTap(for: input) },
                         onIncrementDose: { onIncrementDose(input.id) },
                         onToggleActive: { onToggleActive(input.id) },
                         onShowDetails: { showInputDetail(input) }
@@ -428,6 +581,26 @@ struct ExploreInputsScreen: View {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
             onToggleCheckedToday(inputID)
         }
+    }
+
+    private func handleCompletionTap(for input: InputStatus) {
+        let wasChecked = input.isCheckedToday
+        toggleInputCheckedToday(input.id)
+
+        guard !wasChecked else {
+            return
+        }
+        guard let rungStatus = habitRungStatusByInterventionID[input.id] else {
+            return
+        }
+        guard rungStatus.canReportHigherCompletion else {
+            return
+        }
+
+        pendingHigherRungCompletion = HigherRungCompletionPrompt(
+            interventionID: input.id,
+            higherRungs: rungStatus.higherRungs
+        )
     }
 
     @ViewBuilder
@@ -608,6 +781,13 @@ struct ExploreInputsScreen: View {
         return 0
     }
 
+    private func formattedClock(_ totalMinutes: Int) -> String {
+        let clamped = max(0, min(24 * 60, totalMinutes))
+        let hour = clamped / 60
+        let minute = clamped % 60
+        return String(format: "%02d:%02d", hour, minute)
+    }
+
     private func currentStreakLength(for input: InputStatus) -> Int {
         guard input.isActive else {
             return 0
@@ -738,10 +918,267 @@ private struct FilterPill: View {
     }
 }
 
+private struct HigherRungCompletionPrompt {
+    let interventionID: String
+    let higherRungs: [HabitLadderRung]
+}
+
+private struct PlannerTimelineSheet: View {
+    let initialState: DailyTimeBudgetState
+    let onCancel: () -> Void
+    let onApply: (DailyTimeBudgetState) -> Void
+
+    @State private var timelineWindow: DailyTimelineWindow
+    @State private var selectedSlots: Set<Int>
+    @State private var rowFrames: [Int: CGRect]
+    @State private var dragSelectionMode: Bool?
+    @State private var dragTouchedSlots: Set<Int>
+
+    init(
+        initialState: DailyTimeBudgetState,
+        onCancel: @escaping () -> Void,
+        onApply: @escaping (DailyTimeBudgetState) -> Void
+    ) {
+        self.initialState = initialState
+        self.onCancel = onCancel
+        self.onApply = onApply
+        _timelineWindow = State(initialValue: initialState.timelineWindow)
+        _selectedSlots = State(initialValue: Set(initialState.selectedSlotStartMinutes))
+        _rowFrames = State(initialValue: [:])
+        _dragTouchedSlots = State(initialValue: [])
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                Text("Select the time blocks you can realistically use today.")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+
+                HStack(spacing: TelocareTheme.Spacing.md) {
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Text("Wake")
+                            .font(TelocareTheme.Typography.small)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        DatePicker(
+                            "",
+                            selection: wakeBinding,
+                            displayedComponents: [.hourAndMinute]
+                        )
+                        .labelsHidden()
+                    }
+
+                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                        Text("Sleep")
+                            .font(TelocareTheme.Typography.small)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        DatePicker(
+                            "",
+                            selection: sleepBinding,
+                            displayedComponents: [.hourAndMinute]
+                        )
+                        .labelsHidden()
+                    }
+
+                    Spacer()
+                }
+
+                Text("Selected \(selectedSlots.count * 15) min")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.charcoal)
+
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(timelineWindow.slotStartMinutes, id: \.self) { slotStartMinute in
+                            Button {
+                                toggleSlot(slotStartMinute)
+                            } label: {
+                                HStack {
+                                    Text(slotLabel(for: slotStartMinute))
+                                        .font(TelocareTheme.Typography.caption)
+                                        .foregroundStyle(TelocareTheme.charcoal)
+                                    Spacer()
+                                    if selectedSlots.contains(slotStartMinute) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(TelocareTheme.success)
+                                    } else {
+                                        Image(systemName: "circle")
+                                            .foregroundStyle(TelocareTheme.muted)
+                                    }
+                                }
+                                .padding(.horizontal, TelocareTheme.Spacing.sm)
+                                .padding(.vertical, TelocareTheme.Spacing.sm)
+                                .background(
+                                    selectedSlots.contains(slotStartMinute)
+                                        ? TelocareTheme.peach.opacity(0.45)
+                                        : Color.clear
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .background(
+                                GeometryReader { geometry in
+                                    Color.clear.preference(
+                                        key: TimelineRowFramePreferenceKey.self,
+                                        value: [slotStartMinute: geometry.frame(in: .named("planner-timeline"))]
+                                    )
+                                }
+                            )
+
+                            Divider()
+                                .background(TelocareTheme.peach)
+                        }
+                    }
+                    .coordinateSpace(name: "planner-timeline")
+                    .onPreferenceChange(TimelineRowFramePreferenceKey.self) { rowFrames = $0 }
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                handleDrag(at: value.location)
+                            }
+                            .onEnded { _ in
+                                dragSelectionMode = nil
+                                dragTouchedSlots = []
+                            }
+                    )
+                }
+                .background(TelocareTheme.cream)
+                .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+            }
+            .padding(TelocareTheme.Spacing.md)
+            .background(TelocareTheme.sand)
+            .navigationTitle("Daily Timeline")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Apply") {
+                        onApply(
+                            DailyTimeBudgetState(
+                                timelineWindow: timelineWindow,
+                                selectedSlotStartMinutes: selectedSlots.sorted(),
+                                updatedAt: initialState.updatedAt
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    private var wakeBinding: Binding<Date> {
+        Binding(
+            get: { date(for: timelineWindow.wakeMinutes) },
+            set: { date in
+                let wakeMinutes = minuteOfDay(for: date)
+                timelineWindow = DailyTimelineWindow(
+                    wakeMinutes: wakeMinutes,
+                    sleepMinutes: max(wakeMinutes + 60, timelineWindow.sleepMinutes)
+                )
+                pruneSelectedSlots()
+            }
+        )
+    }
+
+    private var sleepBinding: Binding<Date> {
+        Binding(
+            get: { date(for: timelineWindow.sleepMinutes) },
+            set: { date in
+                let sleepMinutes = minuteOfDay(for: date)
+                timelineWindow = DailyTimelineWindow(
+                    wakeMinutes: min(timelineWindow.wakeMinutes, max(0, sleepMinutes - 60)),
+                    sleepMinutes: sleepMinutes
+                )
+                pruneSelectedSlots()
+            }
+        )
+    }
+
+    private func handleDrag(at location: CGPoint) {
+        guard let touchedSlot = rowFrames.first(where: { _, frame in
+            frame.contains(location)
+        })?.key else {
+            return
+        }
+        guard !dragTouchedSlots.contains(touchedSlot) else {
+            return
+        }
+
+        let shouldSelect: Bool
+        if let dragSelectionMode {
+            shouldSelect = dragSelectionMode
+        } else {
+            shouldSelect = !selectedSlots.contains(touchedSlot)
+            dragSelectionMode = shouldSelect
+        }
+
+        dragTouchedSlots.insert(touchedSlot)
+        if shouldSelect {
+            selectedSlots.insert(touchedSlot)
+            return
+        }
+        selectedSlots.remove(touchedSlot)
+    }
+
+    private func slotLabel(for minute: Int) -> String {
+        "\(formattedClock(minute)) - \(formattedClock(minute + 15))"
+    }
+
+    private func toggleSlot(_ minute: Int) {
+        if selectedSlots.contains(minute) {
+            selectedSlots.remove(minute)
+            return
+        }
+        selectedSlots.insert(minute)
+    }
+
+    private func pruneSelectedSlots() {
+        let allowed = Set(timelineWindow.slotStartMinutes)
+        selectedSlots = Set(selectedSlots.filter { allowed.contains($0) })
+    }
+
+    private func date(for minute: Int) -> Date {
+        let clamped = max(0, min((24 * 60) - 1, minute))
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = clamped / 60
+        components.minute = clamped % 60
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    private func minuteOfDay(for date: Date) -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        let hour = components.hour ?? 0
+        let minute = components.minute ?? 0
+        let total = (hour * 60) + minute
+        return total - (total % 15)
+    }
+
+    private func formattedClock(_ minute: Int) -> String {
+        let clamped = max(0, min(24 * 60, minute))
+        let hour = (clamped / 60) % 24
+        let minuteValue = clamped % 60
+        return String(format: "%02d:%02d", hour, minuteValue)
+    }
+}
+
+private struct TimelineRowFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [Int: CGRect] = [:]
+
+    static func reduce(value: inout [Int: CGRect], nextValue: () -> [Int: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    }
+}
+
 // MARK: - Input Card
 
 private struct InputCard: View {
     let input: InputStatus
+    let planningMetadata: HabitPlanningMetadata?
+    let rungStatus: HabitRungStatus?
+    let isPlannedToday: Bool
     let onToggle: () -> Void
     let onIncrementDose: () -> Void
     let onToggleActive: () -> Void
@@ -761,6 +1198,45 @@ private struct InputCard: View {
                                 .font(TelocareTheme.Typography.headline)
                                 .foregroundStyle(input.isActive && input.isCheckedToday && input.trackingMode == .binary ? TelocareTheme.muted : TelocareTheme.charcoal)
                                 .strikethrough(input.isActive && input.isCheckedToday && input.trackingMode == .binary)
+
+                            if let planningMetadata {
+                                HStack(spacing: TelocareTheme.Spacing.xs) {
+                                    Text(planningMetadata.pillars.first?.displayName ?? "General")
+                                        .font(TelocareTheme.Typography.small)
+                                        .foregroundStyle(TelocareTheme.warmGray)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(TelocareTheme.peach.opacity(0.45))
+                                        .clipShape(Capsule())
+
+                                    if planningMetadata.isAcute {
+                                        Text("Acute")
+                                            .font(TelocareTheme.Typography.small)
+                                            .foregroundStyle(TelocareTheme.coral)
+                                    } else if planningMetadata.isFoundation {
+                                        Text("Foundation")
+                                            .font(TelocareTheme.Typography.small)
+                                            .foregroundStyle(TelocareTheme.success)
+                                    }
+
+                                    if isPlannedToday {
+                                        Text("Planned")
+                                            .font(TelocareTheme.Typography.small)
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(TelocareTheme.charcoal)
+                                            .clipShape(Capsule())
+                                    }
+                                }
+                            }
+
+                            if input.isActive, let rungStatus {
+                                Text("Rung \(rungStatus.currentRungTitle) (target \(rungStatus.targetRungTitle))")
+                                    .font(TelocareTheme.Typography.small)
+                                    .foregroundStyle(TelocareTheme.warmGray)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
 
                             HStack(spacing: TelocareTheme.Spacing.sm) {
                                 if input.trackingMode == .binary {

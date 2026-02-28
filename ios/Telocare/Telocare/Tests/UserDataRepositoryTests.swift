@@ -122,26 +122,28 @@ struct UserDataRepositoryTests {
                 ],
                 nodes: [],
                 updatedAt: "2026-02-21T21:30:00Z"
-            )
+            ),
+            foundationCatalog: nil,
+            planningPolicy: nil
         )
 
         let repository = SupabaseUserDataRepository(
             fetchRows: { _ in [] },
-            fetchFirstParty: { expected }
+            fetchFirstParty: { _ in expected }
         )
 
-        let result = try await repository.fetchFirstPartyContent()
+        let result = try await repository.fetchFirstPartyContent(userID: UUID())
         #expect(result == expected)
     }
 
     @Test func fetchFirstPartyContentPropagatesFailures() async {
         let repository = SupabaseUserDataRepository(
             fetchRows: { _ in [] },
-            fetchFirstParty: { throw RepositoryFailure.firstPartyFailed }
+            fetchFirstParty: { _ in throw RepositoryFailure.firstPartyFailed }
         )
 
         await #expect(throws: RepositoryFailure.self) {
-            _ = try await repository.fetchFirstPartyContent()
+            _ = try await repository.fetchFirstPartyContent(userID: UUID())
         }
     }
 

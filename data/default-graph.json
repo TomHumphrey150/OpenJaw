@@ -573,6 +573,48 @@
     },
     {
       "data": {
+        "id": "SOCIAL_ISOLATION",
+        "label": "Social Isolation",
+        "styleClass": "moderate",
+        "confirmed": "inactive",
+        "tooltip": {
+          "evidence": "Moderate",
+          "stat": "Strongly associated with worse health outcomes",
+          "citation": "Social health meta-analyses",
+          "mechanism": "Isolation increases stress load and reduces emotional buffering"
+        }
+      }
+    },
+    {
+      "data": {
+        "id": "RELATIONSHIP_STRAIN",
+        "label": "Relationship Strain",
+        "styleClass": "moderate",
+        "confirmed": "inactive",
+        "tooltip": {
+          "evidence": "Moderate",
+          "stat": "Relationship conflict predicts stress burden",
+          "citation": "Behavioral medicine literature",
+          "mechanism": "Interpersonal conflict elevates stress reactivity and rumination"
+        }
+      }
+    },
+    {
+      "data": {
+        "id": "FINANCIAL_STRAIN",
+        "label": "Financial Strain",
+        "styleClass": "moderate",
+        "confirmed": "inactive",
+        "tooltip": {
+          "evidence": "Moderate",
+          "stat": "Linked with sleep and stress disruption",
+          "citation": "Population health studies",
+          "mechanism": "Financial uncertainty increases persistent stress activation"
+        }
+      }
+    },
+    {
+      "data": {
         "id": "OSA_TX",
         "label": "Sleep Apnea Tx\nCPAP / MAD",
         "styleClass": "intervention",
@@ -984,6 +1026,45 @@
           "stat": "Symptom relief",
           "citation": "Clinical practice",
           "mechanism": "Local vasodilation and pain gate modulation for symptom relief"
+        }
+      }
+    },
+    {
+      "data": {
+        "id": "SOCIAL_TX",
+        "label": "Social Check-In",
+        "styleClass": "intervention",
+        "tooltip": {
+          "evidence": "Moderate",
+          "stat": "Improves resilience and mood",
+          "citation": "Social integration studies",
+          "mechanism": "Planned social contact reduces isolation-related stress load"
+        }
+      }
+    },
+    {
+      "data": {
+        "id": "RELATIONSHIP_TX",
+        "label": "Relationship Care",
+        "styleClass": "intervention",
+        "tooltip": {
+          "evidence": "Moderate",
+          "stat": "Relationship quality predicts wellbeing",
+          "citation": "Relationship health literature",
+          "mechanism": "Intentional relationship care reduces interpersonal stress burden"
+        }
+      }
+    },
+    {
+      "data": {
+        "id": "FINANCIAL_TX",
+        "label": "Financial Check-In",
+        "styleClass": "intervention",
+        "tooltip": {
+          "evidence": "Moderate",
+          "stat": "Planning reduces uncertainty stress",
+          "citation": "Behavioral economics and stress studies",
+          "mechanism": "Small planning actions reduce financial uncertainty and chronic stress"
         }
       }
     },
@@ -1629,6 +1710,42 @@
     },
     {
       "data": {
+        "source": "SOCIAL_ISOLATION",
+        "target": "STRESS",
+        "edgeType": "feedback",
+        "edgeColor": "#ef4444",
+        "tooltip": "Social isolation increases perceived stress and lowers resilience (vicious cycle)"
+      }
+    },
+    {
+      "data": {
+        "source": "RELATIONSHIP_STRAIN",
+        "target": "STRESS",
+        "edgeType": "feedback",
+        "edgeColor": "#ef4444",
+        "tooltip": "Relationship strain amplifies stress and rumination (vicious cycle)"
+      }
+    },
+    {
+      "data": {
+        "source": "FINANCIAL_STRAIN",
+        "target": "STRESS",
+        "edgeType": "feedback",
+        "edgeColor": "#ef4444",
+        "tooltip": "Financial strain sustains chronic stress activation (vicious cycle)"
+      }
+    },
+    {
+      "data": {
+        "source": "FINANCIAL_STRAIN",
+        "target": "SLEEP_DEP",
+        "edgeType": "feedback",
+        "edgeColor": "#ef4444",
+        "tooltip": "Financial stress disrupts sleep continuity and recovery (vicious cycle)"
+      }
+    },
+    {
+      "data": {
         "source": "SLEEP_DEP",
         "target": "OSA",
         "edgeType": "feedback",
@@ -1942,6 +2059,33 @@
         "edgeType": "forward",
         "edgeColor": "#065f46",
         "tooltip": "Heat/cold modulates pain via gate control mechanism"
+      }
+    },
+    {
+      "data": {
+        "source": "SOCIAL_TX",
+        "target": "SOCIAL_ISOLATION",
+        "edgeType": "forward",
+        "edgeColor": "#065f46",
+        "tooltip": "A deliberate social check-in reduces social isolation burden"
+      }
+    },
+    {
+      "data": {
+        "source": "RELATIONSHIP_TX",
+        "target": "RELATIONSHIP_STRAIN",
+        "edgeType": "forward",
+        "edgeColor": "#065f46",
+        "tooltip": "Relationship care actions reduce interpersonal strain and conflict load"
+      }
+    },
+    {
+      "data": {
+        "source": "FINANCIAL_TX",
+        "target": "FINANCIAL_STRAIN",
+        "edgeType": "forward",
+        "edgeColor": "#065f46",
+        "tooltip": "Financial planning check-ins reduce uncertainty and strain"
       }
     },
     {

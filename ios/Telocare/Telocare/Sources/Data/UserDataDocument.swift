@@ -17,6 +17,9 @@ struct UserDataDocument: Codable, Equatable {
     let morningStates: [MorningState]
     let morningQuestionnaire: MorningQuestionnaire?
     let progressQuestionSetState: ProgressQuestionSetState?
+    let plannerPreferencesState: PlannerPreferencesState?
+    let habitPlannerState: HabitPlannerState?
+    let healthLensState: HealthLensState?
     let wakeDaySleepAttributionMigrated: Bool
     let habitTrials: [HabitTrialWindow]
     let habitClassifications: [HabitClassification]
@@ -44,6 +47,9 @@ struct UserDataDocument: Codable, Equatable {
         morningStates: [],
         morningQuestionnaire: nil,
         progressQuestionSetState: nil,
+        plannerPreferencesState: nil,
+        habitPlannerState: nil,
+        healthLensState: nil,
         wakeDaySleepAttributionMigrated: false,
         habitTrials: [],
         habitClassifications: [],
@@ -72,6 +78,9 @@ struct UserDataDocument: Codable, Equatable {
         morningStates: [MorningState],
         morningQuestionnaire: MorningQuestionnaire? = nil,
         progressQuestionSetState: ProgressQuestionSetState? = nil,
+        plannerPreferencesState: PlannerPreferencesState? = nil,
+        habitPlannerState: HabitPlannerState? = nil,
+        healthLensState: HealthLensState? = nil,
         wakeDaySleepAttributionMigrated: Bool = false,
         habitTrials: [HabitTrialWindow],
         habitClassifications: [HabitClassification],
@@ -98,6 +107,9 @@ struct UserDataDocument: Codable, Equatable {
         self.morningStates = morningStates
         self.morningQuestionnaire = morningQuestionnaire
         self.progressQuestionSetState = progressQuestionSetState
+        self.plannerPreferencesState = plannerPreferencesState
+        self.habitPlannerState = habitPlannerState
+        self.healthLensState = healthLensState
         self.wakeDaySleepAttributionMigrated = wakeDaySleepAttributionMigrated
         self.habitTrials = habitTrials
         self.habitClassifications = habitClassifications
@@ -126,6 +138,9 @@ struct UserDataDocument: Codable, Equatable {
         case morningStates
         case morningQuestionnaire
         case progressQuestionSetState
+        case plannerPreferencesState
+        case habitPlannerState
+        case healthLensState
         case wakeDaySleepAttributionMigrated
         case habitTrials
         case habitClassifications
@@ -155,6 +170,9 @@ struct UserDataDocument: Codable, Equatable {
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
         morningQuestionnaire = try container.decodeIfPresent(MorningQuestionnaire.self, forKey: .morningQuestionnaire)
         progressQuestionSetState = try container.decodeIfPresent(ProgressQuestionSetState.self, forKey: .progressQuestionSetState)
+        plannerPreferencesState = try container.decodeIfPresent(PlannerPreferencesState.self, forKey: .plannerPreferencesState)
+        habitPlannerState = try container.decodeIfPresent(HabitPlannerState.self, forKey: .habitPlannerState)
+        healthLensState = try container.decodeIfPresent(HealthLensState.self, forKey: .healthLensState)
         wakeDaySleepAttributionMigrated = try container.decodeIfPresent(Bool.self, forKey: .wakeDaySleepAttributionMigrated) ?? false
         habitTrials = try container.decodeIfPresent([HabitTrialWindow].self, forKey: .habitTrials) ?? []
         habitClassifications = try container.decodeIfPresent([HabitClassification].self, forKey: .habitClassifications) ?? []

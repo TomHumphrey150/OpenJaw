@@ -1,0 +1,3363 @@
+{
+  "user_id": "58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14",
+  "updated_at": "2026-02-28T12:17:30.414464+00:00",
+  "data": {
+    "notes": [],
+    "version": 1,
+    "experiments": [],
+    "habitTrials": [],
+    "dailyCheckIns": {
+      "2026-02-14": [
+        "nature_exposure",
+        "exercise_minutes",
+        "bed_elevation",
+        "morning_routine",
+        "strict_diet_phase"
+      ],
+      "2026-02-15": [
+        "bed_elevation",
+        "morning_routine",
+        "strict_diet_phase",
+        "vitamin_d",
+        "reflux_medications"
+      ],
+      "2026-02-16": [
+        "exercise_minutes",
+        "strict_diet_phase",
+        "reflux_medications"
+      ],
+      "2026-02-22": [
+        "caffeine_limit",
+        "exercise_minutes",
+        "alcohol_limit",
+        "reflux_medications",
+        "strict_diet_phase",
+        "reflux_trigger_avoidance",
+        "morning_routine",
+        "reflux_meal_timing",
+        "oura_score_goal",
+        "gerd_treatment",
+        "biofeedback",
+        "morning_fast"
+      ],
+      "2026-02-25": [
+        "caffeine_limit",
+        "reflux_meal_timing",
+        "alcohol_limit",
+        "reflux_medications",
+        "strict_diet_phase",
+        "reflux_trigger_avoidance",
+        "vitamin_d",
+        "morning_fast",
+        "morning_routine"
+      ]
+    },
+    "morningStates": [
+      {
+        "nightId": "2026-02-23",
+        "createdAt": "2026-02-22T09:10:13Z",
+        "earFullness": 5,
+        "jawSoreness": 7,
+        "stressLevel": 5,
+        "healthAnxiety": 5,
+        "neckTightness": 5,
+        "globalSensation": 5,
+        "graphAssociation": {
+          "edgeIDs": [
+            "edge:AIRWAY_OBS|MICRO|forward|85.7% linked#0",
+            "edge:ALCOHOL|MICRO|forward|#0",
+            "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:CAFFEINE|MICRO|forward|#0",
+            "edge:CBT_TX|STRESS|forward|#0",
+            "edge:CIRCADIAN_TX|MICRO|forward|#0",
+            "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+            "edge:EAR|STRESS|feedback|health anxiety#0",
+            "edge:FHP|TMD|forward|emg f=13.7#0",
+            "edge:GENETICS|MICRO|forward|#0",
+            "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+            "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+            "edge:HEADACHES|STRESS|feedback|#0",
+            "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+            "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:HEAT_TX|TMD|forward|#0",
+            "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:MASSAGE_TX|TMD|forward|#0",
+            "edge:MICRO|RMMA|forward|79% precede#0",
+            "edge:MINDFULNESS_TX|STRESS|forward|#0",
+            "edge:NATURE_TX|STRESS|forward|#0",
+            "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+            "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+            "edge:PHYSIO_TX|TMD|forward|#0",
+            "edge:RMMA|TMD|forward|or 2.25#0",
+            "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+            "edge:SLEEP_DEP|MICRO|forward|#0",
+            "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+            "edge:SMOKING|MICRO|forward|#0",
+            "edge:STRESS|CATECHOL|forward|#0",
+            "edge:STRESS|CORTISOL|forward|or 2.07#0",
+            "edge:STRESS|GERD|forward|visceral hypersens.#0",
+            "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+            "edge:SYMPATHETIC|MICRO|forward|#0",
+            "edge:TMD|CERVICAL|forward|#0",
+            "edge:TMD|CS|forward|#0",
+            "edge:TMD|EAR|forward|v3 spillover#0",
+            "edge:TMD|HEADACHES|forward|#0",
+            "edge:TMD|HYOID|forward|#0",
+            "edge:TMD|STRESS|feedback|#0",
+            "edge:VAGAL|MICRO|forward|#0",
+            "edge:WINDUP|NECK_TIGHTNESS|forward|#0"
+          ],
+          "nodeIDs": [
+            "EAR",
+            "HEALTH_ANXIETY",
+            "MICRO",
+            "NECK_TIGHTNESS",
+            "STRESS",
+            "TMD"
+          ],
+          "graphVersion": "graph-84435657553e2796"
+        }
+      },
+      {
+        "nightId": "2026-02-22",
+        "createdAt": "2026-02-22T19:45:24Z",
+        "earFullness": 5,
+        "jawSoreness": 5,
+        "stressLevel": 5,
+        "healthAnxiety": 5,
+        "neckTightness": 5,
+        "globalSensation": 5,
+        "graphAssociation": {
+          "edgeIDs": [
+            "edge:AIRWAY_OBS|MICRO|forward|85.7% linked#0",
+            "edge:ALCOHOL|MICRO|forward|#0",
+            "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:CAFFEINE|MICRO|forward|#0",
+            "edge:CBT_TX|STRESS|forward|#0",
+            "edge:CIRCADIAN_TX|MICRO|forward|#0",
+            "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+            "edge:EAR|STRESS|feedback|health anxiety#0",
+            "edge:FHP|TMD|forward|emg f=13.7#0",
+            "edge:GENETICS|MICRO|forward|#0",
+            "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+            "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+            "edge:HEADACHES|STRESS|feedback|#0",
+            "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+            "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:HEAT_TX|TMD|forward|#0",
+            "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:MASSAGE_TX|TMD|forward|#0",
+            "edge:MICRO|RMMA|forward|79% precede#0",
+            "edge:MINDFULNESS_TX|STRESS|forward|#0",
+            "edge:NATURE_TX|STRESS|forward|#0",
+            "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+            "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+            "edge:PHYSIO_TX|TMD|forward|#0",
+            "edge:RMMA|TMD|forward|or 2.25#0",
+            "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+            "edge:SLEEP_DEP|MICRO|forward|#0",
+            "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+            "edge:SMOKING|MICRO|forward|#0",
+            "edge:STRESS|CATECHOL|forward|#0",
+            "edge:STRESS|CORTISOL|forward|or 2.07#0",
+            "edge:STRESS|GERD|forward|visceral hypersens.#0",
+            "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+            "edge:SYMPATHETIC|MICRO|forward|#0",
+            "edge:TMD|CERVICAL|forward|#0",
+            "edge:TMD|CS|forward|#0",
+            "edge:TMD|EAR|forward|v3 spillover#0",
+            "edge:TMD|HEADACHES|forward|#0",
+            "edge:TMD|HYOID|forward|#0",
+            "edge:TMD|STRESS|feedback|#0",
+            "edge:VAGAL|MICRO|forward|#0",
+            "edge:WINDUP|NECK_TIGHTNESS|forward|#0"
+          ],
+          "nodeIDs": [
+            "EAR",
+            "HEALTH_ANXIETY",
+            "MICRO",
+            "NECK_TIGHTNESS",
+            "STRESS",
+            "TMD"
+          ],
+          "graphVersion": "graph-84435657553e2796"
+        }
+      },
+      {
+        "nightId": "2026-02-25",
+        "dryMouth": 5,
+        "createdAt": "2026-02-25T20:44:35Z",
+        "earFullness": 0,
+        "jawSoreness": 3,
+        "stressLevel": 5,
+        "neckTightness": 5,
+        "morningHeadache": 5,
+        "graphAssociation": {
+          "edgeIDs": [
+            "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:CBT_TX|STRESS|forward|#0",
+            "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+            "edge:CS|HEADACHES|forward|#0",
+            "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+            "edge:EAR|STRESS|feedback|health anxiety#0",
+            "edge:FHP|TMD|forward|emg f=13.7#0",
+            "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+            "edge:GRINDING|HEADACHES|forward|#0",
+            "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+            "edge:HEADACHES|SLEEP_DEP|feedback|#0",
+            "edge:HEADACHES|STRESS|feedback|#0",
+            "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+            "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:HEAT_TX|TMD|forward|#0",
+            "edge:HYDRATION|SALIVA|forward|#0",
+            "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:MASSAGE_TX|TMD|forward|#0",
+            "edge:MINDFULNESS_TX|STRESS|forward|#0",
+            "edge:NATURE_TX|STRESS|forward|#0",
+            "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+            "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+            "edge:PHYSIO_TX|TMD|forward|#0",
+            "edge:RMMA|SALIVA|forward|periodontal reflex#0",
+            "edge:RMMA|TMD|forward|or 2.25#0",
+            "edge:SALIVA|GERD|protective|acid clearance#0",
+            "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+            "edge:STRESS|CATECHOL|forward|#0",
+            "edge:STRESS|CORTISOL|forward|or 2.07#0",
+            "edge:STRESS|GERD|forward|visceral hypersens.#0",
+            "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+            "edge:TMD|CERVICAL|forward|#0",
+            "edge:TMD|CS|forward|#0",
+            "edge:TMD|EAR|forward|v3 spillover#0",
+            "edge:TMD|HEADACHES|forward|#0",
+            "edge:TMD|HYOID|forward|#0",
+            "edge:TMD|STRESS|feedback|#0",
+            "edge:WINDUP|NECK_TIGHTNESS|forward|#0"
+          ],
+          "nodeIDs": [
+            "EAR",
+            "HEADACHES",
+            "NECK_TIGHTNESS",
+            "SALIVA",
+            "STRESS",
+            "TMD"
+          ],
+          "graphVersion": "graph-84435657553e2796"
+        }
+      },
+      {
+        "nightId": "2026-02-26",
+        "dryMouth": 5,
+        "createdAt": "2026-02-26T08:38:06Z",
+        "earFullness": 3,
+        "jawSoreness": 3,
+        "stressLevel": 3,
+        "neckTightness": 5,
+        "morningHeadache": 3,
+        "graphAssociation": {
+          "edgeIDs": [
+            "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:CBT_TX|STRESS|forward|#0",
+            "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+            "edge:CS|HEADACHES|forward|#0",
+            "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+            "edge:EAR|STRESS|feedback|health anxiety#0",
+            "edge:FHP|TMD|forward|emg f=13.7#0",
+            "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+            "edge:GRINDING|HEADACHES|forward|#0",
+            "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+            "edge:HEADACHES|SLEEP_DEP|feedback|#0",
+            "edge:HEADACHES|STRESS|feedback|#0",
+            "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+            "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:HEAT_TX|TMD|forward|#0",
+            "edge:HYDRATION|SALIVA|forward|#0",
+            "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+            "edge:MASSAGE_TX|TMD|forward|#0",
+            "edge:MINDFULNESS_TX|STRESS|forward|#0",
+            "edge:NATURE_TX|STRESS|forward|#0",
+            "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+            "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+            "edge:PHYSIO_TX|TMD|forward|#0",
+            "edge:RMMA|SALIVA|forward|periodontal reflex#0",
+            "edge:RMMA|TMD|forward|or 2.25#0",
+            "edge:SALIVA|GERD|protective|acid clearance#0",
+            "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+            "edge:STRESS|CATECHOL|forward|#0",
+            "edge:STRESS|CORTISOL|forward|or 2.07#0",
+            "edge:STRESS|GERD|forward|visceral hypersens.#0",
+            "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+            "edge:TMD|CERVICAL|forward|#0",
+            "edge:TMD|CS|forward|#0",
+            "edge:TMD|EAR|forward|v3 spillover#0",
+            "edge:TMD|HEADACHES|forward|#0",
+            "edge:TMD|HYOID|forward|#0",
+            "edge:TMD|STRESS|feedback|#0",
+            "edge:WINDUP|NECK_TIGHTNESS|forward|#0"
+          ],
+          "nodeIDs": [
+            "EAR",
+            "HEADACHES",
+            "NECK_TIGHTNESS",
+            "SALIVA",
+            "STRESS",
+            "TMD"
+          ],
+          "graphVersion": "graph-84435657553e2796"
+        }
+      }
+    ],
+    "nightOutcomes": [],
+    "experienceFlow": {
+      "lastGuidedStatus": "completed",
+      "lastGuidedEntryDate": "2026-02-21",
+      "lastGuidedCompletedDate": "2026-02-21",
+      "hasCompletedInitialGuidedFlow": true
+    },
+    "nightExposures": [
+      {
+        "tags": [
+          "daily_checkin"
+        ],
+        "enabled": true,
+        "nightId": "2026-02-16",
+        "createdAt": "2026-02-16T23:27:04.844Z",
+        "interventionId": "strict_diet_phase"
+      },
+      {
+        "tags": [
+          "daily_checkin"
+        ],
+        "enabled": true,
+        "nightId": "2026-02-16",
+        "createdAt": "2026-02-16T23:27:06.793Z",
+        "interventionId": "reflux_medications"
+      }
+    ],
+    "healthLensState": {
+      "preset": "all",
+      "updatedAt": "2026-02-28T12:16:45Z"
+    },
+    "personalStudies": [],
+    "dailyDoseProgress": {
+      "2026-02-22": {
+        "sleep_hours": 7.916666666666667,
+        "water_intake": 1800,
+        "exercise_minutes": 44,
+        "diaphragm_breathing": 10
+      },
+      "2026-02-23": {
+        "sleep_hours": 7.091666666666667,
+        "water_intake": 1700,
+        "exercise_minutes": 48
+      },
+      "2026-02-25": {
+        "sleep_hours": 8.191666666666666,
+        "water_intake": 2010,
+        "exercise_minutes": 84
+      },
+      "2026-02-26": {
+        "sleep_hours": 7.825
+      },
+      "2026-02-27": {
+        "sleep_hours": 4.283333333333333,
+        "water_intake": 420.00000000000006
+      }
+    },
+    "activeInterventions": [
+      "water_intake",
+      "vitamin_d",
+      "multivitamin",
+      "morning_fast",
+      "morning_routine",
+      "mindfulness_minutes",
+      "oura_score_goal",
+      "physio_stretches",
+      "caffeine_limit",
+      "exercise_minutes",
+      "nature_exposure",
+      "reflux_meal_timing",
+      "jaw_massage",
+      "alcohol_limit",
+      "reflux_medications",
+      "strict_diet_phase",
+      "reflux_trigger_avoidance",
+      "no_screens_prebed",
+      "warm_shower",
+      "neurosym_device",
+      "diaphragm_breathing",
+      "sleep_hours",
+      "gerd_treatment",
+      "dymista_nasal_spray",
+      "breathe_right_strip",
+      "cbt"
+    ],
+    "customCausalDiagram": {
+      "graphData": {
+        "edges": [
+          {
+            "data": {
+              "id": "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+              "source": "HEALTH_ANXIETY",
+              "target": "STRESS",
+              "tooltip": "Health anxiety feeds into stress and hypervigilance cycle",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:STRESS|CORTISOL|forward|or 2.07#0",
+              "label": "OR 2.07",
+              "source": "STRESS",
+              "target": "CORTISOL",
+              "tooltip": "Psychological stress activates the HPA axis, elevating cortisol (Chemelo 2020, OR 2.07)",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:STRESS|CATECHOL|forward|#0",
+              "source": "STRESS",
+              "target": "CATECHOL",
+              "tooltip": "Stress drives catecholamine release via sympathoadrenal pathway",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CORTISOL|SYMPATHETIC|forward|#0",
+              "source": "CORTISOL",
+              "target": "SYMPATHETIC",
+              "tooltip": "Elevated cortisol shifts autonomic balance toward sympathetic dominance",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CATECHOL|SYMPATHETIC|forward|#0",
+              "source": "CATECHOL",
+              "target": "SYMPATHETIC",
+              "tooltip": "Catecholamines amplify sympathetic nervous system activity",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#6b21a8"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SYMPATHETIC|MICRO|forward|#0",
+              "source": "SYMPATHETIC",
+              "target": "MICRO",
+              "tooltip": "Sympathetic shift lowers microarousal threshold during sleep",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#374151"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:OSA|AIRWAY_OBS|forward|#0",
+              "source": "OSA",
+              "target": "AIRWAY_OBS",
+              "tooltip": "Obstructive sleep apnea causes repeated upper airway collapse",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#b45309",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:AIRWAY_OBS|MICRO|forward|85.7% linked#0",
+              "label": "85.7% linked",
+              "source": "AIRWAY_OBS",
+              "target": "MICRO",
+              "tooltip": "Airway obstruction triggers cortical microarousals (85.7% linked, Saito 2014)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#374151",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:AIRWAY_OBS|NEG_PRESSURE|forward|#0",
+              "source": "AIRWAY_OBS",
+              "target": "NEG_PRESSURE",
+              "tooltip": "Airway obstruction creates negative intrathoracic pressure",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#374151",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NEG_PRESSURE|TLESR|forward|#0",
+              "source": "NEG_PRESSURE",
+              "target": "TLESR",
+              "tooltip": "Negative pressure triggers transient LES relaxation (Kuribayashi 2010)",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#374151",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TLESR|ACID|forward|#0",
+              "source": "TLESR",
+              "target": "ACID",
+              "tooltip": "TLESR allows gastric acid to reflux into esophagus",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#374151",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:OSA|GERD|forward|62-78% comorbid#0",
+              "label": "62-78% comorbid",
+              "source": "OSA",
+              "target": "GERD",
+              "tooltip": "OSA and GERD are highly comorbid (62-78% overlap)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#b45309",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GERD|ACID|forward|#0",
+              "source": "GERD",
+              "target": "ACID",
+              "tooltip": "GERD produces chronic acid reflux and micro-aspiration",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GERD|PEPSIN|forward|#0",
+              "source": "GERD",
+              "target": "PEPSIN",
+              "tooltip": "GERD causes pepsin reflux into esophagus and larynx",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:ACID|VAGAL|forward|vagal afferents#0",
+              "label": "vagal afferents",
+              "source": "ACID",
+              "target": "VAGAL",
+              "tooltip": "Esophageal acid contact activates vagal afferent neurons",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#374151"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:VAGAL|MICRO|forward|#0",
+              "source": "VAGAL",
+              "target": "MICRO",
+              "tooltip": "Vagal afferent firing triggers brainstem-mediated microarousals",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#374151"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:STRESS|GERD|forward|visceral hypersens.#0",
+              "label": "visceral hypersens.",
+              "source": "STRESS",
+              "target": "GERD",
+              "tooltip": "Stress increases visceral hypersensitivity to acid exposure",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+              "label": "hyperarousal",
+              "source": "STRESS",
+              "target": "SLEEP_DEP",
+              "tooltip": "Stress-induced hyperarousal is the primary driver of insomnia and sleep fragmentation",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GENETICS|MICRO|forward|#0",
+              "source": "GENETICS",
+              "target": "MICRO",
+              "tooltip": "Genetic predisposition affects arousal threshold (21-50% heritable)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#b45309",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SLEEP_DEP|MICRO|forward|#0",
+              "source": "SLEEP_DEP",
+              "target": "MICRO",
+              "tooltip": "Sleep deprivation increases microarousal frequency",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SLEEP_DEP|CORTISOL|forward|#0",
+              "source": "SLEEP_DEP",
+              "target": "CORTISOL",
+              "tooltip": "Sleep deprivation elevates cortisol via HPA axis activation",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SSRI|RMMA|forward|~24% risk#0",
+              "label": "~24% risk",
+              "source": "SSRI",
+              "target": "RMMA",
+              "tooltip": "SSRIs suppress dopaminergic inhibition of motor patterns (~24% bruxism risk)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CAFFEINE|MICRO|forward|#0",
+              "source": "CAFFEINE",
+              "target": "MICRO",
+              "tooltip": "Caffeine antagonizes adenosine receptors, increasing arousal (1.5x odds)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CAFFEINE|GERD|dashed|#0",
+              "source": "CAFFEINE",
+              "target": "GERD",
+              "tooltip": "Caffeine stimulates gastric acid secretion and may relax the lower esophageal sphincter",
+              "edgeType": "dashed",
+              "strength": 0.45,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:ALCOHOL|MICRO|forward|#0",
+              "source": "ALCOHOL",
+              "target": "MICRO",
+              "tooltip": "Alcohol causes rebound sympathetic activation during metabolism (2x odds)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:ALCOHOL|GERD|forward|#0",
+              "source": "ALCOHOL",
+              "target": "GERD",
+              "tooltip": "Alcohol directly relaxes the LES and stimulates gastric acid production",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SMOKING|MICRO|forward|#0",
+              "source": "SMOKING",
+              "target": "MICRO",
+              "tooltip": "Smoking increases sympathetic activation and arousal frequency (>2x odds)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SMOKING|GERD|dashed|#0",
+              "source": "SMOKING",
+              "target": "GERD",
+              "tooltip": "Nicotine reduces lower esophageal sphincter pressure and impairs mucosal defense",
+              "edgeType": "dashed",
+              "strength": 0.45,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GABA_DEF|RMMA|forward|#0",
+              "source": "GABA_DEF",
+              "target": "RMMA",
+              "tooltip": "GABA deficit reduces inhibitory control of motor pattern generators",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:DOPAMINE|RMMA|dashed|#0",
+              "source": "DOPAMINE",
+              "target": "RMMA",
+              "tooltip": "Dopaminergic dysregulation affects basal ganglia motor circuits (preliminary)",
+              "edgeType": "dashed",
+              "strength": 0.45,
+              "edgeColor": "#b45309",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MG_DEF|GABA_DEF|forward|gaba cofactor#0",
+              "label": "GABA cofactor",
+              "source": "MG_DEF",
+              "target": "GABA_DEF",
+              "tooltip": "Magnesium is a GABA receptor cofactor; depletion impairs inhibitory tone",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#6b21a8",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:VIT_D|RMMA|dashed|#0",
+              "source": "VIT_D",
+              "target": "RMMA",
+              "tooltip": "Vitamin D deficiency linked to neuromuscular dysfunction (OR 6.66, preliminary)",
+              "edgeType": "dashed",
+              "strength": 0.45,
+              "edgeColor": "#6b21a8"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MICRO|RMMA|forward|79% precede#0",
+              "label": "79% precede",
+              "source": "MICRO",
+              "target": "RMMA",
+              "tooltip": "79% of RMMA episodes preceded by EEG microarousal (Kato 2001)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:RMMA|GRINDING|forward|#0",
+              "source": "RMMA",
+              "target": "GRINDING",
+              "tooltip": "RMMA manifests clinically as nocturnal grinding and clenching",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:RMMA|TMD|forward|or 2.25#0",
+              "label": "OR 2.25",
+              "source": "RMMA",
+              "target": "TMD",
+              "tooltip": "Repetitive RMMA forces cause TMJ damage (OR 2.25, Mortazavi 2023)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:RMMA|SALIVA|forward|periodontal reflex#0",
+              "label": "periodontal reflex",
+              "source": "RMMA",
+              "target": "SALIVA",
+              "tooltip": "RMMA triggers salivation via periodontal mechanoreceptor reflex",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:RMMA|CS|dashed|#0",
+              "source": "RMMA",
+              "target": "CS",
+              "tooltip": "Chronic RMMA may contribute to central sensitization (preliminary)",
+              "edgeType": "dashed",
+              "strength": 0.45,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SALIVA|GERD|protective|acid clearance#0",
+              "label": "acid clearance",
+              "source": "SALIVA",
+              "target": "GERD",
+              "tooltip": "Increased salivation aids esophageal acid clearance (protective mechanism)",
+              "edgeType": "protective",
+              "strength": -0.6,
+              "edgeColor": "#3b82f6"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+              "label": "repeated swallowing",
+              "source": "SALIVA",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Nocturnal salivary clearance may cause repeated swallowing, fatiguing neck/throat muscles (hypothesised)",
+              "edgeType": "dashed",
+              "strength": 0.18000000000000002,
+              "edgeColor": "#374151"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GRINDING|TOOTH|forward|#0",
+              "source": "GRINDING",
+              "target": "TOOTH",
+              "tooltip": "Grinding forces cause progressive tooth enamel wear and fractures",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1e3a5f"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GRINDING|HEADACHES|forward|#0",
+              "source": "GRINDING",
+              "target": "HEADACHES",
+              "tooltip": "Nocturnal muscle contraction causes morning tension headaches",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1e3a5f"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+              "source": "GRINDING",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Sustained clenching may lock up jaw/neck musculature, contributing to daytime spasm (hypothesised)",
+              "edgeType": "dashed",
+              "strength": 0.18000000000000002,
+              "edgeColor": "#1e3a5f"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TMD|CERVICAL|forward|#0",
+              "source": "TMD",
+              "target": "CERVICAL",
+              "tooltip": "TMD dysfunction propagates to cervical spine via biomechanical chain",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TMD|EAR|forward|v3 spillover#0",
+              "label": "V3 spillover",
+              "source": "TMD",
+              "target": "EAR",
+              "tooltip": "TMJ proximity causes referred ear symptoms via V3 nerve spillover",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TMD|HYOID|forward|#0",
+              "source": "TMD",
+              "target": "HYOID",
+              "tooltip": "TMD alters suprahyoid muscle function and hyoid position",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TMD|CS|forward|#0",
+              "source": "TMD",
+              "target": "CS",
+              "tooltip": "Chronic TMD pain drives trigeminocervical sensitization",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TMD|HEADACHES|forward|#0",
+              "source": "TMD",
+              "target": "HEADACHES",
+              "tooltip": "TMD causes tension-type headaches via temporalis/masseteric muscle strain and TMJ dysfunction",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:FHP|TMD|forward|emg f=13.7#0",
+              "label": "EMG F=13.7",
+              "source": "FHP",
+              "target": "TMD",
+              "tooltip": "Forward head posture increases masseter EMG and TMJ loading (F=13.7)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:FHP|HYOID|forward|#0",
+              "source": "FHP",
+              "target": "HYOID",
+              "tooltip": "FHP displaces hyoid bone anteroinferiorly",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CERVICAL|CS|forward|tcc convergence#0",
+              "label": "TCC convergence",
+              "source": "CERVICAL",
+              "target": "CS",
+              "tooltip": "Cervical afferents converge at trigeminocervical complex (TCC)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+              "label": "cervicogenic",
+              "source": "CERVICAL",
+              "target": "HEADACHES",
+              "tooltip": "Cervical dysfunction causes cervicogenic headaches via C1-C3 afferent convergence on trigeminal nucleus caudalis (IHS recognised)",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CERVICAL|FHP|dashed|#0",
+              "source": "CERVICAL",
+              "target": "FHP",
+              "tooltip": "Cervical dysfunction may promote compensatory forward head posture",
+              "edgeType": "dashed",
+              "strength": 0.3375,
+              "edgeColor": "#b45309"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HYOID|GLOBUS|dashed|#0",
+              "source": "HYOID",
+              "target": "GLOBUS",
+              "tooltip": "Hyoid displacement contributes to globus sensation (preliminary)",
+              "edgeType": "dashed",
+              "strength": 0.3375,
+              "edgeColor": "#6b21a8"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CS|WINDUP|forward|#0",
+              "source": "CS",
+              "target": "WINDUP",
+              "tooltip": "Central sensitization enables temporal summation (wind-up)",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CS|HEADACHES|forward|#0",
+              "source": "CS",
+              "target": "HEADACHES",
+              "tooltip": "Central sensitization amplifies headache pain (OPPERA: 28/36 pain measures elevated, Greenspan 2011)",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+              "label": "SMD -1.10",
+              "source": "CS",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Central sensitization amplifies pain perception (SMD -1.10)",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CS|GLOBUS|forward|#0",
+              "source": "CS",
+              "target": "GLOBUS",
+              "tooltip": "Sensitization amplifies pharyngeal sensation (globus)",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:WINDUP|NECK_TIGHTNESS|forward|#0",
+              "source": "WINDUP",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Wind-up phenomenon causes progressive pain amplification",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#374151"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GERD|GLOBUS|dashed|#0",
+              "source": "GERD",
+              "target": "GLOBUS",
+              "tooltip": "GERD/LPR may contribute to globus sensation (preliminary)",
+              "edgeType": "dashed",
+              "strength": 0.3375,
+              "edgeColor": "#1b4332"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:PEPSIN|GLOBUS|dashed|#0",
+              "source": "PEPSIN",
+              "target": "GLOBUS",
+              "tooltip": "Pepsin in saliva damages pharyngeal tissue (preliminary)",
+              "edgeType": "dashed",
+              "strength": 0.3375,
+              "edgeColor": "#374151"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+              "label": "hypervigilance",
+              "source": "NECK_TIGHTNESS",
+              "target": "STRESS",
+              "tooltip": "Chronic pain drives stress and hypervigilance (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+              "label": "disrupts sleep",
+              "source": "NECK_TIGHTNESS",
+              "target": "SLEEP_DEP",
+              "tooltip": "Pain disrupts sleep continuity, worsening bruxism triggers (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TMD|STRESS|feedback|#0",
+              "source": "TMD",
+              "target": "STRESS",
+              "tooltip": "TMD pain and dysfunction increase stress and anxiety (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HEADACHES|STRESS|feedback|#0",
+              "source": "HEADACHES",
+              "target": "STRESS",
+              "tooltip": "Morning headaches contribute to stress and worry (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HEADACHES|SLEEP_DEP|feedback|#0",
+              "source": "HEADACHES",
+              "target": "SLEEP_DEP",
+              "tooltip": "Morning headaches disrupt sleep quality and continuity (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:EAR|STRESS|feedback|health anxiety#0",
+              "label": "health anxiety",
+              "source": "EAR",
+              "target": "STRESS",
+              "tooltip": "Ear fullness and tinnitus drive health anxiety and stress (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+              "label": "health anxiety",
+              "source": "GLOBUS",
+              "target": "STRESS",
+              "tooltip": "Globus sensation triggers health anxiety (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SLEEP_DEP|OSA|feedback|#0",
+              "source": "SLEEP_DEP",
+              "target": "OSA",
+              "tooltip": "Sleep deprivation worsens airway collapsibility (vicious cycle)",
+              "edgeType": "feedback",
+              "strength": 0.5249999999999999,
+              "edgeColor": "#ef4444",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:PPI_TX|GERD|forward|#0",
+              "source": "PPI_TX",
+              "target": "GERD",
+              "tooltip": "PPI reduces gastric acid, treating GERD/reflux upstream",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:PPI_TX|MG_DEF|dashed|depletes mg#0",
+              "label": "depletes Mg",
+              "source": "PPI_TX",
+              "target": "MG_DEF",
+              "tooltip": "PPI side effect: chronic use depletes magnesium (OR 1.66)",
+              "edgeType": "dashed",
+              "strength": 0.24750000000000003,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SPLINT|TOOTH|forward|#0",
+              "source": "SPLINT",
+              "target": "TOOTH",
+              "tooltip": "Hard occlusal splint protects teeth from grinding damage",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MG_SUPP|GABA_DEF|forward|#0",
+              "source": "MG_SUPP",
+              "target": "GABA_DEF",
+              "tooltip": "Magnesium supplementation restores GABA cofactor levels",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:YOGA_TX|GABA_DEF|forward|gaba +27%#0",
+              "label": "GABA +27%",
+              "source": "YOGA_TX",
+              "target": "GABA_DEF",
+              "tooltip": "Yoga increases brain GABA by 27% (Streeter 2007, P=.018)",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:YOGA_TX|CORTISOL|forward|#0",
+              "source": "YOGA_TX",
+              "target": "CORTISOL",
+              "tooltip": "Yoga reduces cortisol levels (Streeter 2007/2010)",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HYDRATION|ACID|forward|#0",
+              "source": "HYDRATION",
+              "target": "ACID",
+              "tooltip": "Hydration dilutes esophageal acid contact",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HYDRATION|SALIVA|forward|#0",
+              "source": "HYDRATION",
+              "target": "SALIVA",
+              "tooltip": "Hydration supports salivary flow for acid clearance",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:VIT_D_TX|VIT_D|forward|#0",
+              "source": "VIT_D_TX",
+              "target": "VIT_D",
+              "tooltip": "Vitamin D supplementation corrects deficiency",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MULTI_TX|MG_DEF|forward|#0",
+              "source": "MULTI_TX",
+              "target": "MG_DEF",
+              "tooltip": "Multivitamin replenishes PPI-depleted magnesium and cofactors",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MORNING_FAST_TX|GERD|forward|#0",
+              "source": "MORNING_FAST_TX",
+              "target": "GERD",
+              "tooltip": "Delayed breakfast reduces morning reflux episode severity",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CIRCADIAN_TX|SLEEP_DEP|forward|#0",
+              "source": "CIRCADIAN_TX",
+              "target": "SLEEP_DEP",
+              "tooltip": "Morning light anchors circadian rhythm, improving sleep quality",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CIRCADIAN_TX|MICRO|forward|#0",
+              "source": "CIRCADIAN_TX",
+              "target": "MICRO",
+              "tooltip": "Circadian stability reduces microarousal frequency",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MINDFULNESS_TX|STRESS|forward|#0",
+              "source": "MINDFULNESS_TX",
+              "target": "STRESS",
+              "tooltip": "Mindfulness practice reduces perceived stress and hypervigilance",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+              "source": "MINDFULNESS_TX",
+              "target": "CORTISOL",
+              "tooltip": "Regular meditation reduces cortisol levels",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:PHYSIO_TX|TMD|forward|#0",
+              "source": "PHYSIO_TX",
+              "target": "TMD",
+              "tooltip": "Physical therapy improves TMJ mobility and reduces pain",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:PHYSIO_TX|FHP|forward|#0",
+              "source": "PHYSIO_TX",
+              "target": "FHP",
+              "tooltip": "Rocabado exercises correct forward head posture",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:PHYSIO_TX|CERVICAL|forward|#0",
+              "source": "PHYSIO_TX",
+              "target": "CERVICAL",
+              "tooltip": "Cervical exercises address cervical dysfunction",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:EXERCISE_TX|SLEEP_DEP|forward|#0",
+              "source": "EXERCISE_TX",
+              "target": "SLEEP_DEP",
+              "tooltip": "Regular exercise improves sleep quality and duration",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:EXERCISE_TX|CORTISOL|forward|#0",
+              "source": "EXERCISE_TX",
+              "target": "CORTISOL",
+              "tooltip": "Exercise reduces chronic cortisol elevation",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NATURE_TX|STRESS|forward|#0",
+              "source": "NATURE_TX",
+              "target": "STRESS",
+              "tooltip": "Nature exposure reduces stress via parasympathetic activation",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NATURE_TX|CORTISOL|forward|#0",
+              "source": "NATURE_TX",
+              "target": "CORTISOL",
+              "tooltip": "Outdoor exposure lowers cortisol levels",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:REFLUX_DIET_TX|GERD|forward|#0",
+              "source": "REFLUX_DIET_TX",
+              "target": "GERD",
+              "tooltip": "Dietary modifications eliminate reflux triggers",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:REFLUX_DIET_TX|ACID|forward|#0",
+              "source": "REFLUX_DIET_TX",
+              "target": "ACID",
+              "tooltip": "Trigger avoidance reduces acid production and reflux episodes",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MEAL_TIMING_TX|GERD|forward|#0",
+              "source": "MEAL_TIMING_TX",
+              "target": "GERD",
+              "tooltip": "Meal timing and upright posture reduce reflux episode frequency",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:POSTURE_TX|FHP|forward|#0",
+              "source": "POSTURE_TX",
+              "target": "FHP",
+              "tooltip": "Posture awareness corrects forward head positioning",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:POSTURE_TX|CERVICAL|forward|#0",
+              "source": "POSTURE_TX",
+              "target": "CERVICAL",
+              "tooltip": "Improved posture reduces cervical strain",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TONGUE_TX|HYOID|forward|#0",
+              "source": "TONGUE_TX",
+              "target": "HYOID",
+              "tooltip": "Correct tongue posture improves hyoid positioning",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:TONGUE_TX|AIRWAY_OBS|forward|#0",
+              "source": "TONGUE_TX",
+              "target": "AIRWAY_OBS",
+              "tooltip": "Tongue posture improves airway patency",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:JAW_RELAX_TX|RMMA|forward|#0",
+              "source": "JAW_RELAX_TX",
+              "target": "RMMA",
+              "tooltip": "Jaw relaxation techniques reduce muscle tension and RMMA drive",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MASSAGE_TX|TMD|forward|#0",
+              "source": "MASSAGE_TX",
+              "target": "TMD",
+              "tooltip": "Massage improves TMJ mobility (RCT, Frontiers 2022)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+              "source": "MASSAGE_TX",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Massage reduces orofacial pain intensity",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HEAT_TX|TMD|forward|#0",
+              "source": "HEAT_TX",
+              "target": "TMD",
+              "tooltip": "Heat therapy provides local vasodilation and pain relief",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+              "source": "HEAT_TX",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Heat/cold modulates pain via gate control mechanism",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BED_ELEV_TX|GERD|forward|#0",
+              "source": "BED_ELEV_TX",
+              "target": "GERD",
+              "tooltip": "Bed elevation uses gravity to reduce nocturnal reflux",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BED_ELEV_TX|ACID|forward|#0",
+              "source": "BED_ELEV_TX",
+              "target": "ACID",
+              "tooltip": "Elevation reduces acid contact time in supine position",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SCREENS_TX|SLEEP_DEP|forward|#0",
+              "source": "SCREENS_TX",
+              "target": "SLEEP_DEP",
+              "tooltip": "Screen avoidance reduces pre-sleep arousal and improves sleep onset",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0",
+              "source": "WARM_SHOWER_TX",
+              "target": "SYMPATHETIC",
+              "tooltip": "Warm bathing shifts autonomic balance toward parasympathetic",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NEUROSYM_TX|VAGAL|forward|#0",
+              "source": "NEUROSYM_TX",
+              "target": "VAGAL",
+              "tooltip": "taVNS stimulates vagal afferents to shift parasympathetic balance",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:NEUROSYM_TX|SYMPATHETIC|forward|#0",
+              "source": "NEUROSYM_TX",
+              "target": "SYMPATHETIC",
+              "tooltip": "Vagal stimulation reduces sympathetic tone",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BREATHING_TX|SYMPATHETIC|forward|#0",
+              "source": "BREATHING_TX",
+              "target": "SYMPATHETIC",
+              "tooltip": "Extended exhale breathing activates vagal brake",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BREATHING_TX|CORTISOL|forward|#0",
+              "source": "BREATHING_TX",
+              "target": "CORTISOL",
+              "tooltip": "Slow breathing reduces cortisol via HPA axis modulation",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:THEANINE_TX|GABA_DEF|forward|#0",
+              "source": "THEANINE_TX",
+              "target": "GABA_DEF",
+              "tooltip": "L-theanine enhances GABAergic inhibitory neurotransmission",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:GLYCINE_TX|GABA_DEF|forward|#0",
+              "source": "GLYCINE_TX",
+              "target": "GABA_DEF",
+              "tooltip": "Glycine acts as inhibitory neurotransmitter supporting GABA pathways",
+              "edgeType": "forward",
+              "strength": 0.44000000000000006,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BIOFEEDBACK_TX|RMMA|forward|#0",
+              "source": "BIOFEEDBACK_TX",
+              "target": "RMMA",
+              "tooltip": "EMG biofeedback interrupts RMMA episodes (SMD -0.56, meta-analysis)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:OSA_TX|OSA|forward|#0",
+              "source": "OSA_TX",
+              "target": "OSA",
+              "tooltip": "CPAP/MAD treats obstructive sleep apnea, eliminating apnea-driven arousals",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SSRI_TX|SSRI|forward|#0",
+              "source": "SSRI_TX",
+              "target": "SSRI",
+              "tooltip": "Medication review + buspirone addresses SSRI-induced bruxism",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BOTOX_TX|RMMA|forward|#0",
+              "source": "BOTOX_TX",
+              "target": "RMMA",
+              "tooltip": "Botox weakens masseter, reducing RMMA force (events 5→1.7/h)",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+              "source": "BOTOX_TX",
+              "target": "NECK_TIGHTNESS",
+              "tooltip": "Botox reduces orofacial pain (VAS -4.0, meta-analysis)",
+              "edgeType": "forward",
+              "strength": 0.32000000000000006,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:CBT_TX|STRESS|forward|#0",
+              "source": "CBT_TX",
+              "target": "STRESS",
+              "tooltip": "CBT addresses stress/anxiety contributors to bruxism",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0",
+              "source": "SLEEP_HYG_TX",
+              "target": "SLEEP_DEP",
+              "tooltip": "Consistent sleep hygiene improves sleep continuity",
+              "edgeType": "forward",
+              "strength": 0.6000000000000001,
+              "edgeColor": "#065f46"
+            }
+          },
+          {
+            "data": {
+              "id": "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+              "source": "SLEEP_HYG_TX",
+              "target": "MICRO",
+              "tooltip": "Good sleep hygiene reduces microarousal triggers",
+              "edgeType": "forward",
+              "strength": 0.8,
+              "edgeColor": "#065f46"
+            }
+          }
+        ],
+        "nodes": [
+          {
+            "data": {
+              "id": "EXTERNAL_TRIGGERS",
+              "label": "External Triggers",
+              "tooltip": {
+                "stat": "Exogenous exposure group",
+                "citation": "Model taxonomy",
+                "evidence": "Classification",
+                "mechanism": "Exogenous triggers can affect sleep fragmentation, reflux, and microarousal pathways"
+              },
+              "confirmed": "yes",
+              "isExpanded": true,
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "STRESS",
+              "label": "Stress & Anxiety\nOR 2.07",
+              "tooltip": {
+                "stat": "OR 2.07 (95% CI 1.26-3.40)",
+                "citation": "Chemelo 2020, J Oral Rehabil",
+                "evidence": "Moderate (observational)",
+                "mechanism": "HPA axis activation drives cortisol and sympathetic shift"
+              },
+              "confirmed": "yes",
+              "isExpanded": true,
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "HEALTH_ANXIETY",
+              "label": "Health Anxiety",
+              "tooltip": {
+                "stat": "User-confirmed input",
+                "citation": "Clinical self-report",
+                "evidence": "Moderate",
+                "mechanism": "Health anxiety amplifies stress response and hypervigilance"
+              },
+              "parentId": "STRESS",
+              "confirmed": "yes",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "OSA",
+              "label": "Sleep Apnea / UARS",
+              "tooltip": {
+                "stat": "62-78% comorbid with GERD",
+                "citation": "Multiple systematic reviews",
+                "evidence": "Moderate",
+                "mechanism": "Airway obstruction triggers microarousals and negative pressure reflux"
+              },
+              "confirmed": "no",
+              "isExpanded": false,
+              "styleClass": "moderate",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "GERD",
+              "label": "GERD / Silent Reflux\nOR 6.87",
+              "tooltip": {
+                "stat": "OR 6.87 (Li 2018)",
+                "citation": "Li 2018; Ohmure 2011 RCT",
+                "evidence": "Robust (RCT + meta)",
+                "mechanism": "Acid micro-aspiration triggers vagal afferents and protective RMMA"
+              },
+              "confirmed": "yes",
+              "isExpanded": true,
+              "styleClass": "robust"
+            }
+          },
+          {
+            "data": {
+              "id": "SLEEP_DEP",
+              "label": "Sleep Deprivation",
+              "tooltip": {
+                "stat": "Dose-dependent arousal increase",
+                "citation": "Multiple sleep studies",
+                "evidence": "Moderate",
+                "mechanism": "Fragmented sleep architecture increases microarousal frequency"
+              },
+              "confirmed": "yes",
+              "isExpanded": true,
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "GENETICS",
+              "label": "Genetics\n21-50% heritable",
+              "tooltip": {
+                "stat": "21-50% heritability",
+                "citation": "Hublin 1998; Abe 2012",
+                "evidence": "Moderate (twin studies)",
+                "mechanism": "Polygenic predisposition to arousal threshold and motor pattern generation"
+              },
+              "parentId": "MICRO",
+              "confirmed": "inactive",
+              "parentIds": [
+                "MICRO"
+              ],
+              "styleClass": "moderate",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "SSRI",
+              "label": "SSRIs & Meds",
+              "tooltip": {
+                "stat": "~24% risk vs 15% baseline",
+                "citation": "Garrett 2018, PMC5914744",
+                "evidence": "Moderate (systematic review)",
+                "mechanism": "Serotonergic suppression of dopaminergic inhibition of motor patterns"
+              },
+              "parentId": "EXTERNAL_TRIGGERS",
+              "confirmed": "inactive",
+              "parentIds": [
+                "EXTERNAL_TRIGGERS",
+                "RMMA"
+              ],
+              "isExpanded": false,
+              "styleClass": "preliminary",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "CAFFEINE",
+              "label": "Caffeine\n1.5x odds",
+              "tooltip": {
+                "stat": "1.5x odds",
+                "citation": "Bertazzo-Silveira 2016, JADA",
+                "evidence": "Preliminary (observational)",
+                "mechanism": "Adenosine receptor antagonism increases arousal frequency"
+              },
+              "parentId": "EXTERNAL_TRIGGERS",
+              "confirmed": "external",
+              "parentIds": [
+                "EXTERNAL_TRIGGERS",
+                "SLEEP_DEP",
+                "GERD"
+              ],
+              "styleClass": "preliminary",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "ALCOHOL",
+              "label": "Alcohol\n2x odds",
+              "tooltip": {
+                "stat": "2x odds",
+                "citation": "Bertazzo-Silveira 2016, JADA",
+                "evidence": "Preliminary (observational)",
+                "mechanism": "Rebound sympathetic activation during alcohol metabolism"
+              },
+              "parentId": "EXTERNAL_TRIGGERS",
+              "confirmed": "external",
+              "parentIds": [
+                "EXTERNAL_TRIGGERS",
+                "SLEEP_DEP",
+                "GERD"
+              ],
+              "styleClass": "preliminary",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "SMOKING",
+              "label": "Smoking\n>2x odds",
+              "tooltip": {
+                "stat": ">2x odds",
+                "citation": "Bertazzo-Silveira 2016, JADA",
+                "evidence": "Preliminary (observational)",
+                "mechanism": "Nicotine increases sympathetic activation and arousal frequency"
+              },
+              "parentId": "EXTERNAL_TRIGGERS",
+              "confirmed": "inactive",
+              "parentIds": [
+                "EXTERNAL_TRIGGERS",
+                "SLEEP_DEP",
+                "GERD"
+              ],
+              "styleClass": "preliminary",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "CORTISOL",
+              "label": "Cortisol ↑\nSMD 1.10",
+              "tooltip": {
+                "stat": "SMD 1.10 (I²=4%, N=854)",
+                "citation": "Fluerasu 2021",
+                "evidence": "Moderate (meta-analysis)",
+                "mechanism": "Elevated cortisol shifts autonomic balance toward sympathetic dominance"
+              },
+              "parentId": "STRESS",
+              "confirmed": "yes",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "CATECHOL",
+              "label": "Catecholamines\n3.2x",
+              "tooltip": {
+                "stat": "Adrenaline 3.2x elevation",
+                "citation": "Seraidarian 2009",
+                "evidence": "Preliminary (N=40)",
+                "mechanism": "Catecholamine surge amplifies sympathetic tone and motor excitability"
+              },
+              "parentId": "STRESS",
+              "confirmed": "yes",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "preliminary"
+            }
+          },
+          {
+            "data": {
+              "id": "SYMPATHETIC",
+              "label": "Sympathetic Shift\n-8 min",
+              "tooltip": {
+                "stat": "Sympathovagal shift -8 min (P≤0.03)",
+                "citation": "Huynh 2006",
+                "evidence": "Moderate",
+                "mechanism": "Autonomic shift precedes and triggers microarousals"
+              },
+              "parentId": "STRESS",
+              "confirmed": "yes",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "mechanism"
+            }
+          },
+          {
+            "data": {
+              "id": "AIRWAY_OBS",
+              "label": "Airway Obstruction",
+              "tooltip": {
+                "stat": "85.7% linked to RMMA",
+                "citation": "Saito 2014",
+                "evidence": "Mechanism",
+                "mechanism": "Upper airway collapse creates negative intrathoracic pressure"
+              },
+              "parentId": "OSA",
+              "confirmed": "no",
+              "parentIds": [
+                "OSA"
+              ],
+              "styleClass": "mechanism",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "NEG_PRESSURE",
+              "label": "Neg. Intrathoracic\nPressure",
+              "tooltip": {
+                "stat": "N=25",
+                "citation": "Kuribayashi 2010",
+                "evidence": "Mechanism",
+                "mechanism": "Negative pressure gradient triggers transient lower esophageal sphincter relaxation"
+              },
+              "parentId": "AIRWAY_OBS",
+              "confirmed": "no",
+              "parentIds": [
+                "AIRWAY_OBS"
+              ],
+              "styleClass": "mechanism",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "TLESR",
+              "label": "TLESR",
+              "tooltip": {
+                "stat": "Primary reflux mechanism",
+                "citation": "Kuribayashi 2010",
+                "evidence": "Mechanism",
+                "mechanism": "Transient LES relaxation allows gastric acid into esophagus"
+              },
+              "parentId": "GERD",
+              "confirmed": "no",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "mechanism",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "ACID",
+              "label": "Acid Contact\n(Ohmure RCT)",
+              "tooltip": {
+                "stat": "Acid infusion induced RMMA (N=12)",
+                "citation": "Ohmure 2011 RCT",
+                "evidence": "Robust (RCT)",
+                "mechanism": "Esophageal acid contact activates vagal afferents triggering protective RMMA"
+              },
+              "parentId": "GERD",
+              "confirmed": "yes",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "mechanism"
+            }
+          },
+          {
+            "data": {
+              "id": "VAGAL",
+              "label": "Vagal Afferents",
+              "tooltip": {
+                "stat": "Afferent signaling pathway",
+                "citation": "Ohmure 2011",
+                "evidence": "Mechanism",
+                "mechanism": "Vagal afferent firing from acid contact triggers brainstem arousal"
+              },
+              "parentId": "GERD",
+              "confirmed": "yes",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "mechanism"
+            }
+          },
+          {
+            "data": {
+              "id": "PEPSIN",
+              "label": "Pepsin\npH<4 reactivation",
+              "tooltip": {
+                "stat": "Active at pH<4",
+                "citation": "Johnston 2007",
+                "evidence": "Mechanism",
+                "mechanism": "Pepsin reactivation in saliva causes tissue damage at low pH"
+              },
+              "parentId": "GERD",
+              "confirmed": "yes",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "mechanism"
+            }
+          },
+          {
+            "data": {
+              "id": "GABA_DEF",
+              "label": "GABA Deficit\nP=.003 / P=.011",
+              "tooltip": {
+                "stat": "DLPFC P=.003 (N=17); brainstem P=.011 (N=24)",
+                "citation": "Dharmadhikari 2015; Fan 2017",
+                "evidence": "Preliminary (small N)",
+                "mechanism": "Reduced GABAergic inhibition lowers threshold for RMMA generation"
+              },
+              "confirmed": "no",
+              "isExpanded": true,
+              "styleClass": "preliminary",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "DOPAMINE",
+              "label": "Dopamine\nL-dopa -20-30%",
+              "tooltip": {
+                "stat": "L-dopa reduced RMMA 20-30% (P<.001, N=10)",
+                "citation": "Lobbezoo 1997",
+                "evidence": "Moderate",
+                "mechanism": "Dopaminergic modulation of basal ganglia motor circuits affects RMMA"
+              },
+              "parentId": "GABA_DEF",
+              "confirmed": "no",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "moderate",
+              "isDeactivated": true
+            }
+          },
+          {
+            "data": {
+              "id": "MG_DEF",
+              "label": "Mg Depletion\nPPI OR 1.66",
+              "tooltip": {
+                "stat": "PPI→Mg deficit OR 1.66 (N=95,205)",
+                "citation": "Markovits 2014",
+                "evidence": "Preliminary",
+                "mechanism": "Magnesium is a GABA receptor cofactor; depletion impairs inhibitory tone"
+              },
+              "parentId": "GABA_DEF",
+              "confirmed": "no",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "preliminary",
+              "isDeactivated": false
+            }
+          },
+          {
+            "data": {
+              "id": "VIT_D",
+              "label": "Vit D Deficit\nOR 6.66",
+              "tooltip": {
+                "stat": "OR 6.66 (N=100)",
+                "citation": "Alkhatatbeh 2021",
+                "evidence": "Preliminary",
+                "mechanism": "Vitamin D deficiency affects neuromuscular function and sleep quality"
+              },
+              "parentId": "GABA_DEF",
+              "confirmed": "yes",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "preliminary"
+            }
+          },
+          {
+            "data": {
+              "id": "MICRO",
+              "label": "Microarousal\n79% precede RMMA",
+              "tooltip": {
+                "stat": "79% of RMMA preceded by EEG arousal, -4s lag (N=20)",
+                "citation": "Kato 2001",
+                "evidence": "Robust (replicated)",
+                "mechanism": "Cortical microarousals trigger brainstem motor pattern generators"
+              },
+              "confirmed": "yes",
+              "isExpanded": true,
+              "styleClass": "robust"
+            }
+          },
+          {
+            "data": {
+              "id": "RMMA",
+              "label": "RMMA / Sleep Bruxism\n100% evoked vs 12.5%",
+              "tooltip": {
+                "stat": "100% evoked in SB vs 12.5% controls (N=16)",
+                "citation": "Kato 2003",
+                "evidence": "Robust (replicated)",
+                "mechanism": "Rhythmic masticatory muscle activity is the core bruxism motor event"
+              },
+              "parentId": "MICRO",
+              "confirmed": "yes",
+              "parentIds": [
+                "MICRO"
+              ],
+              "isExpanded": true,
+              "styleClass": "robust"
+            }
+          },
+          {
+            "data": {
+              "id": "SALIVA",
+              "label": "Salivary Clearance\n6.9 vs 12.6 min",
+              "tooltip": {
+                "stat": "100% pH<4 episodes = RMMA + swallowing (N=20)",
+                "citation": "Miyawaki 2003",
+                "evidence": "Moderate",
+                "mechanism": "RMMA-induced salivation provides acid buffering and esophageal clearance"
+              },
+              "parentId": "RMMA",
+              "confirmed": "yes",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "mechanism"
+            }
+          },
+          {
+            "data": {
+              "id": "TMD",
+              "label": "TMD / Jaw Damage\nOR 2.25",
+              "tooltip": {
+                "stat": "OR 2.25 (95% CI 1.94-2.56)",
+                "citation": "Mortazavi 2023",
+                "evidence": "Robust (meta-analysis)",
+                "mechanism": "Repetitive RMMA forces cause TMJ disc displacement and joint damage"
+              },
+              "parentId": "RMMA",
+              "confirmed": "yes",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "robust"
+            }
+          },
+          {
+            "data": {
+              "id": "FHP",
+              "label": "Forward Head Posture\nEMG F=13.7",
+              "tooltip": {
+                "stat": "Masseter EMG F=13.7 (P<.001, N=25)",
+                "citation": "Ballenberger 2012",
+                "evidence": "Moderate",
+                "mechanism": "Forward head posture increases masseter activation and TMJ loading"
+              },
+              "parentId": "TMD",
+              "confirmed": "yes",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "CERVICAL",
+              "label": "Cervical Dysfunction\nOR 2.8-5.1",
+              "tooltip": {
+                "stat": "OR 2.8-5.1 (N=616)",
+                "citation": "Wiesinger 2009",
+                "evidence": "Moderate (dose-response)",
+                "mechanism": "Cervical dysfunction feeds into trigeminocervical complex sensitization"
+              },
+              "parentId": "TMD",
+              "confirmed": "yes",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "moderate"
+            }
+          },
+          {
+            "data": {
+              "id": "HYOID",
+              "label": "Hyoid Displacement",
+              "tooltip": {
+                "stat": "Clinical observation",
+                "citation": "Diagnostic imaging studies",
+                "evidence": "Preliminary",
+                "mechanism": "TMD-related hyoid displacement contributes to globus sensation"
+              },
+              "parentId": "TMD",
+              "confirmed": "yes",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "preliminary"
+            }
+          },
+          {
+            "data": {
+              "id": "CS",
+              "label": "Trigeminocervical Sens.\n28/36 elevated",
+              "tooltip": {
+                "stat": "28/36 pain measures elevated (N=1818)",
+                "citation": "Greenspan 2011 (OPPERA)",
+                "evidence": "Robust (large N)",
+                "mechanism": "Central sensitization amplifies pain signals from trigeminal and cervical inputs"
+              },
+              "parentId": "TMD",
+              "confirmed": "yes",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "robust"
+            }
+          },
+          {
+            "data": {
+              "id": "WINDUP",
+              "label": "Temporal Summation\nP<.001",
+              "tooltip": {
+                "stat": "P<.001",
+                "citation": "Zhang 2017",
+                "evidence": "Mechanism",
+                "mechanism": "Repeated stimulation causes progressive pain amplification (wind-up)"
+              },
+              "parentId": "CS",
+              "confirmed": "yes",
+              "parentIds": [
+                "CS"
+              ],
+              "styleClass": "mechanism"
+            }
+          },
+          {
+            "data": {
+              "id": "GRINDING",
+              "label": "Grinding / Clenching",
+              "tooltip": {
+                "stat": "Primary clinical presentation",
+                "citation": "Clinical",
+                "evidence": "Symptom",
+                "mechanism": "Audible/visible nocturnal tooth grinding and daytime clenching"
+              },
+              "parentId": "RMMA",
+              "confirmed": "yes",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "symptom"
+            }
+          },
+          {
+            "data": {
+              "id": "TOOTH",
+              "label": "Tooth Wear",
+              "tooltip": {
+                "stat": "Cumulative mechanical damage",
+                "citation": "Clinical",
+                "evidence": "Symptom",
+                "mechanism": "Repetitive grinding forces cause enamel attrition and fractures"
+              },
+              "parentId": "RMMA",
+              "confirmed": "yes",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "symptom"
+            }
+          },
+          {
+            "data": {
+              "id": "HEADACHES",
+              "label": "Morning Headaches",
+              "tooltip": {
+                "stat": "Common morning presentation",
+                "citation": "Clinical",
+                "evidence": "Symptom",
+                "mechanism": "Nocturnal masseter/temporalis contraction causes tension-type headaches"
+              },
+              "parentId": "CS",
+              "confirmed": "yes",
+              "parentIds": [
+                "CS"
+              ],
+              "styleClass": "symptom"
+            }
+          },
+          {
+            "data": {
+              "id": "EAR",
+              "label": "Ear Fullness\n74.8% in TMD",
+              "tooltip": {
+                "stat": "74.8% prevalence in TMD patients",
+                "citation": "Porto De Toledo 2017",
+                "evidence": "Moderate",
+                "mechanism": "TMJ proximity to ear canal causes referred aural symptoms via V3 nerve"
+              },
+              "parentId": "TMD",
+              "confirmed": "yes",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "symptom"
+            }
+          },
+          {
+            "data": {
+              "id": "NECK_TIGHTNESS",
+              "label": "Neck Tightness\n& Spasm",
+              "tooltip": {
+                "stat": "Chronic neck muscle tightness",
+                "citation": "Clinical",
+                "evidence": "Symptom",
+                "mechanism": "Cervical muscle tension and spasm, especially affecting swallowing"
+              },
+              "parentId": "CS",
+              "confirmed": "yes",
+              "parentIds": [
+                "CS"
+              ],
+              "styleClass": "symptom"
+            }
+          },
+          {
+            "data": {
+              "id": "GLOBUS",
+              "label": "Globus / Throat\n45% prevalence",
+              "tooltip": {
+                "stat": "45% prevalence",
+                "citation": "Clinical series",
+                "evidence": "Moderate",
+                "mechanism": "Hyoid displacement + pepsin damage = persistent globus sensation"
+              },
+              "parentId": "CS",
+              "confirmed": "yes",
+              "parentIds": [
+                "CS"
+              ],
+              "styleClass": "symptom"
+            }
+          },
+          {
+            "data": {
+              "id": "OSA_TX",
+              "label": "Sleep Apnea Tx\nCPAP / MAD",
+              "tooltip": {
+                "stat": "Significant bruxism reduction",
+                "citation": "PubMed 2022 RCT",
+                "evidence": "Moderate-High (RCTs)",
+                "mechanism": "Eliminates apnea-driven microarousals that trigger RMMA"
+              },
+              "parentId": "OSA",
+              "parentIds": [
+                "OSA"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "SSRI_TX",
+              "label": "SSRI Review\n+ Buspirone",
+              "tooltip": {
+                "stat": "~24% vs 15% baseline risk",
+                "citation": "Garrett 2018, PMC5914744",
+                "evidence": "Moderate (systematic review)",
+                "mechanism": "Medication review addresses serotonergic bruxism; buspirone 5-30mg may help"
+              },
+              "parentId": "SSRI",
+              "parentIds": [
+                "SSRI"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "MORNING_FAST_TX",
+              "label": "Delay Breakfast\n1.5-2h",
+              "tooltip": {
+                "stat": "LPR protocol component",
+                "citation": "ENT clinical protocols",
+                "evidence": "Low-Moderate",
+                "mechanism": "Reduces morning reflux surge by allowing esophageal recovery"
+              },
+              "parentId": "GERD",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "REFLUX_DIET_TX",
+              "label": "Reflux Diet\n& Avoidance",
+              "tooltip": {
+                "stat": "Eliminates acid triggers",
+                "citation": "Koufman 2012; ENT protocols",
+                "evidence": "Moderate",
+                "mechanism": "Dietary modifications remove upstream acid/reflux triggers"
+              },
+              "parentId": "GERD",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "MEAL_TIMING_TX",
+              "label": "Meal Timing\n& Posture",
+              "tooltip": {
+                "stat": "Reduces reflux exposure",
+                "citation": "ENT clinical protocols",
+                "evidence": "Moderate",
+                "mechanism": "Eating upright, no drinks with meals, staying upright after, and early dinner reduce reflux episodes"
+              },
+              "parentId": "GERD",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "BED_ELEV_TX",
+              "label": "Bed Elevation\n10-25cm",
+              "tooltip": {
+                "stat": "Gravity-based clearance",
+                "citation": "GERD treatment guidelines",
+                "evidence": "Moderate",
+                "mechanism": "Gravity reduces nocturnal acid contact time in supine position"
+              },
+              "parentId": "GERD",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "MINDFULNESS_TX",
+              "label": "Mindfulness\n& Stress Reduction",
+              "tooltip": {
+                "stat": "Cortisol reduction pathway",
+                "citation": "Stress reduction meta-analyses",
+                "evidence": "Moderate",
+                "mechanism": "Breaks hypervigilance cycle and reduces HPA axis activation"
+              },
+              "parentId": "STRESS",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "CBT_TX",
+              "label": "CBT\n(Limited SB evidence)",
+              "tooltip": {
+                "stat": "3 RCTs, 1 showed EMG reduction",
+                "citation": "Japanese Dental Science Review 2022",
+                "evidence": "Low (GRADE: extremely low)",
+                "mechanism": "Cognitive restructuring addresses stress/anxiety contributors"
+              },
+              "parentId": "STRESS",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "NATURE_TX",
+              "label": "Nature Exposure\n20+ min",
+              "tooltip": {
+                "stat": "Cortisol reduction",
+                "citation": "Nature exposure studies",
+                "evidence": "Low-Moderate",
+                "mechanism": "Outdoor exposure reduces cortisol via parasympathetic activation"
+              },
+              "parentId": "STRESS",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "SCREENS_TX",
+              "label": "No Screens\n1h before bed",
+              "tooltip": {
+                "stat": "Reduces pre-sleep arousal",
+                "citation": "Sleep hygiene meta-analyses",
+                "evidence": "Moderate",
+                "mechanism": "Eliminates blue light and cognitive stimulation before sleep"
+              },
+              "parentId": "SLEEP_DEP",
+              "parentIds": [
+                "SLEEP_DEP"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "YOGA_TX",
+              "label": "Yoga 3x/wk\nGABA +27%",
+              "tooltip": {
+                "stat": "GABA +27% (P=.018)",
+                "citation": "Streeter 2007/2010",
+                "evidence": "Moderate",
+                "mechanism": "Yoga increases brain GABA levels and reduces cortisol/sympathetic tone"
+              },
+              "parentId": "GABA_DEF",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "EXERCISE_TX",
+              "label": "Exercise\n>4h before bed",
+              "tooltip": {
+                "stat": "Supports sleep architecture",
+                "citation": "Exercise-sleep meta-analyses",
+                "evidence": "Moderate",
+                "mechanism": "Reduces cortisol and improves deep sleep proportion"
+              },
+              "parentId": "SLEEP_DEP",
+              "parentIds": [
+                "SLEEP_DEP"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "BREATHING_TX",
+              "label": "Slow Breathing\n4s in / 6-8s out",
+              "tooltip": {
+                "stat": "Parasympathetic shift",
+                "citation": "Breathing intervention studies",
+                "evidence": "Low-Moderate",
+                "mechanism": "Extended exhale activates vagal brake and reduces cortisol"
+              },
+              "parentId": "STRESS",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "WARM_SHOWER_TX",
+              "label": "Warm Shower\n40-42°C",
+              "tooltip": {
+                "stat": "Meta-analytic support",
+                "citation": "Haghayegh 2019 meta-analysis",
+                "evidence": "Moderate",
+                "mechanism": "Thermoregulatory vasodilation promotes sleep onset"
+              },
+              "parentId": "STRESS",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "PPI_TX",
+              "label": "PPI / Lansoprazole\nOhmure 2016 RCT",
+              "tooltip": {
+                "stat": "Sig. ↓ RMMA (N=12)",
+                "citation": "Ohmure 2016 RCT",
+                "evidence": "Robust (RCT)",
+                "mechanism": "Proton pump inhibitor reduces acid production, breaking reflux→RMMA cycle"
+              },
+              "parentId": "GERD",
+              "parentIds": [
+                "GERD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "HYDRATION",
+              "label": "Hydration\n3L/day target",
+              "tooltip": {
+                "stat": "ENT guidance for LPR",
+                "citation": "Clinical protocols",
+                "evidence": "Low-Moderate",
+                "mechanism": "Dilutes acid contact time and supports salivary clearance"
+              },
+              "parentId": "SALIVA",
+              "parentIds": [
+                "SALIVA"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "TONGUE_TX",
+              "label": "Tongue Posture\nLTTA",
+              "tooltip": {
+                "stat": "Clinical experience",
+                "citation": "Orofacial myology protocols",
+                "evidence": "Low-Moderate",
+                "mechanism": "Prevents clenching habit and improves airway patency"
+              },
+              "parentId": "OSA",
+              "parentIds": [
+                "OSA"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "NEUROSYM_TX",
+              "label": "Nurosym taVNS\n30 min",
+              "tooltip": {
+                "stat": "Neuromodulation",
+                "citation": "taVNS pilot studies",
+                "evidence": "Low",
+                "mechanism": "Transcutaneous vagal nerve stimulation shifts autonomic balance"
+              },
+              "parentId": "STRESS",
+              "parentIds": [
+                "STRESS"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "MG_SUPP",
+              "label": "Mg Glycinate\n400-600mg",
+              "tooltip": {
+                "stat": "Improved sleep + cortisol",
+                "citation": "Abbasi 2012 RCT",
+                "evidence": "Moderate (RCT)",
+                "mechanism": "Magnesium supplementation restores GABA cofactor and inhibitory tone"
+              },
+              "parentId": "GABA_DEF",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "THEANINE_TX",
+              "label": "L-Theanine\n200mg",
+              "tooltip": {
+                "stat": "Modest stress reduction in RCTs",
+                "citation": "L-theanine RCTs",
+                "evidence": "Low-Moderate",
+                "mechanism": "Alpha-amino acid enhances GABA-mediated inhibitory neurotransmission"
+              },
+              "parentId": "GABA_DEF",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "GLYCINE_TX",
+              "label": "Glycine\n3g",
+              "tooltip": {
+                "stat": "Small RCTs positive",
+                "citation": "Glycine sleep RCTs",
+                "evidence": "Low-Moderate",
+                "mechanism": "Inhibitory neurotransmitter improves subjective sleep quality"
+              },
+              "parentId": "GABA_DEF",
+              "parentIds": [
+                "GABA_DEF"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "MULTI_TX",
+              "label": "Multivitamin\nB6/Zn/Mg",
+              "tooltip": {
+                "stat": "Cofactor replenishment",
+                "citation": "Nutrient deficiency review 2023",
+                "evidence": "Low-Moderate",
+                "mechanism": "Replenishes PPI-depleted cofactors supporting GABA synthesis"
+              },
+              "parentId": "MG_DEF",
+              "parentIds": [
+                "MG_DEF"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "VIT_D_TX",
+              "label": "Vitamin D\nSupplementation",
+              "tooltip": {
+                "stat": "OR 6.66 deficiency link",
+                "citation": "Alkhatatbeh 2021",
+                "evidence": "Low-Moderate",
+                "mechanism": "Corrects vitamin D deficiency linked to neuromuscular dysfunction"
+              },
+              "parentId": "VIT_D",
+              "parentIds": [
+                "VIT_D"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "BIOFEEDBACK_TX",
+              "label": "EMG Biofeedback\nHaptic alerts",
+              "tooltip": {
+                "stat": "SMD -0.56 (N=219, P=.001)",
+                "citation": "J Oral Rehabil 2018",
+                "evidence": "Moderate (meta-analysis)",
+                "mechanism": "Haptic alerts interrupt RMMA during microarousal window"
+              },
+              "parentId": "RMMA",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "JAW_RELAX_TX",
+              "label": "Jaw Relaxation\n& PMR",
+              "tooltip": {
+                "stat": "Awake bruxism focus",
+                "citation": "Behavioral intervention studies",
+                "evidence": "Low-Moderate",
+                "mechanism": "Progressive muscle relaxation releases jaw tension and RMMA drive"
+              },
+              "parentId": "RMMA",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "BOTOX_TX",
+              "label": "Botox\nMasseter injection",
+              "tooltip": {
+                "stat": "VAS -4.0; events 5→1.7/h (N=320)",
+                "citation": "Br J Oral Maxillofac Surg 2022",
+                "evidence": "Moderate-High (meta-analysis)",
+                "mechanism": "Botulinum toxin weakens masseter, reducing grinding force and pain"
+              },
+              "parentId": "RMMA",
+              "parentIds": [
+                "RMMA"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "CIRCADIAN_TX",
+              "label": "Morning Light\n& Routine",
+              "tooltip": {
+                "stat": "Circadian anchoring",
+                "citation": "Sleep hygiene literature",
+                "evidence": "Low-Moderate",
+                "mechanism": "Stabilizes circadian rhythm, reducing arousal instability"
+              },
+              "parentId": "SLEEP_DEP",
+              "parentIds": [
+                "SLEEP_DEP"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "SLEEP_HYG_TX",
+              "label": "Sleep Hygiene\nConsistent schedule",
+              "tooltip": {
+                "stat": "Foundational intervention",
+                "citation": "Sleep hygiene guidelines",
+                "evidence": "Low-Moderate",
+                "mechanism": "Consistent sleep schedule reduces microarousal frequency"
+              },
+              "parentId": "SLEEP_DEP",
+              "parentIds": [
+                "SLEEP_DEP"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "PHYSIO_TX",
+              "label": "Physio Exercises\n3x/day (Rocabado)",
+              "tooltip": {
+                "stat": "Improved jaw mobility",
+                "citation": "Massage RCT, Frontiers 2022",
+                "evidence": "Moderate (RCT)",
+                "mechanism": "Addresses TMD, forward head posture, and cervical dysfunction"
+              },
+              "parentId": "TMD",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "POSTURE_TX",
+              "label": "Posture Check",
+              "tooltip": {
+                "stat": "Theoretical/clinical",
+                "citation": "Postural assessment literature",
+                "evidence": "Low",
+                "mechanism": "Reduces FHP-driven masseter strain and cervical dysfunction"
+              },
+              "parentId": "TMD",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "MASSAGE_TX",
+              "label": "Jaw Massage\n5min 2x/day",
+              "tooltip": {
+                "stat": "Improved sleep quality & mobility",
+                "citation": "Frontiers in Neurology 2022",
+                "evidence": "Moderate (RCT)",
+                "mechanism": "Deep tissue massage improves TMJ mobility and reduces pain"
+              },
+              "parentId": "TMD",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "HEAT_TX",
+              "label": "Heat/Cold\nTherapy",
+              "tooltip": {
+                "stat": "Symptom relief",
+                "citation": "Clinical practice",
+                "evidence": "Low",
+                "mechanism": "Local vasodilation and pain gate modulation for symptom relief"
+              },
+              "parentId": "TMD",
+              "parentIds": [
+                "TMD"
+              ],
+              "styleClass": "intervention"
+            }
+          },
+          {
+            "data": {
+              "id": "SPLINT",
+              "label": "Hard Splint\n-80% EMG",
+              "tooltip": {
+                "stat": "-80% EMG with hard splint; soft ↑50%",
+                "citation": "Okeson 1987; Cochrane 2007",
+                "evidence": "Moderate (Cochrane)",
+                "mechanism": "Hard acrylic stabilization splint protects teeth and distributes forces"
+              },
+              "parentId": "GRINDING",
+              "parentIds": [
+                "GRINDING"
+              ],
+              "styleClass": "intervention"
+            }
+          }
+        ]
+      },
+      "graphVersion": "graph-84435657553e2796",
+      "lastModified": "2026-02-27T20:46:30Z",
+      "baseGraphVersion": "graph-84435657553e2796"
+    },
+    "hiddenInterventions": [
+      "sleep_apnea_treatment",
+      "cbt",
+      "botox",
+      "bed_elevation",
+      "night_guard",
+      "ssri_review"
+    ],
+    "interventionRatings": [],
+    "habitClassifications": [
+      {
+        "status": "unknown",
+        "nightsOn": 0,
+        "nightsOff": 0,
+        "updatedAt": "2026-02-16T23:27:06.794Z",
+        "windowQuality": "insufficient_data",
+        "interventionId": "reflux_medications"
+      },
+      {
+        "status": "unknown",
+        "nightsOn": 0,
+        "nightsOff": 0,
+        "updatedAt": "2026-02-16T23:27:06.794Z",
+        "windowQuality": "insufficient_data",
+        "interventionId": "strict_diet_phase"
+      }
+    ],
+    "morningQuestionnaire": {
+      "enabledFields": [
+        "neckTightness",
+        "jawSoreness",
+        "earFullness",
+        "stressLevel",
+        "morningHeadache",
+        "dryMouth"
+      ],
+      "requiredFields": [
+        "neckTightness",
+        "jawSoreness",
+        "earFullness",
+        "stressLevel",
+        "morningHeadache",
+        "dryMouth"
+      ]
+    },
+    "unlockedAchievements": [],
+    "appleHealthConnections": {
+      "sleep_hours": {
+        "lastSyncAt": "2026-02-28T09:46:27Z",
+        "connectedAt": "2026-02-22T11:52:14Z",
+        "isConnected": true,
+        "lastSyncStatus": "noData"
+      },
+      "water_intake": {
+        "lastSyncAt": "2026-02-28T12:12:16Z",
+        "connectedAt": "2026-02-22T11:52:04Z",
+        "isConnected": true,
+        "lastSyncStatus": "noData"
+      },
+      "exercise_minutes": {
+        "lastSyncAt": "2026-02-28T12:12:23Z",
+        "connectedAt": "2026-02-22T11:51:37Z",
+        "isConnected": true,
+        "lastSyncStatus": "noData"
+      },
+      "mindfulness_minutes": {
+        "lastSyncAt": "2026-02-28T12:12:16Z",
+        "connectedAt": "2026-02-22T11:51:08Z",
+        "isConnected": true,
+        "lastSyncStatus": "noData"
+      }
+    },
+    "plannerPreferencesState": {
+      "updatedAt": "2026-02-28T12:17:30Z",
+      "flareSensitivity": "balanced",
+      "defaultAvailableMinutes": 85
+    },
+    "interventionDoseSettings": {
+      "sleep_hours": {
+        "dailyGoal": 8,
+        "increment": 1
+      },
+      "water_intake": {
+        "dailyGoal": 3000,
+        "increment": 100
+      },
+      "exercise_minutes": {
+        "dailyGoal": 30,
+        "increment": 10
+      },
+      "physio_stretches": {
+        "dailyGoal": 3,
+        "increment": 1
+      },
+      "diaphragm_breathing": {
+        "dailyGoal": 60,
+        "increment": 10
+      },
+      "mindfulness_minutes": {
+        "dailyGoal": 20,
+        "increment": 5
+      }
+    },
+    "progressQuestionSetState": {
+      "updatedAt": "2026-02-28T00:35:45.566Z",
+      "pendingProposal": {
+        "createdAt": "2026-02-28T00:35:45.566Z",
+        "questions": [
+          {
+            "id": "morning.globalSensation",
+            "title": "How is globalSensation this morning?",
+            "sourceEdgeIDs": [
+              "edge:AIRWAY_OBS|MICRO|forward|85.7% linked#0",
+              "edge:ALCOHOL|MICRO|forward|#0",
+              "edge:CAFFEINE|MICRO|forward|#0",
+              "edge:CIRCADIAN_TX|MICRO|forward|#0",
+              "edge:GENETICS|MICRO|forward|#0",
+              "edge:MICRO|RMMA|forward|79% precede#0",
+              "edge:SLEEP_DEP|MICRO|forward|#0",
+              "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+              "edge:SMOKING|MICRO|forward|#0",
+              "edge:SYMPATHETIC|MICRO|forward|#0",
+              "edge:VAGAL|MICRO|forward|#0"
+            ],
+            "sourceNodeIDs": [
+              "MICRO"
+            ]
+          },
+          {
+            "id": "morning.neckTightness",
+            "title": "How is neckTightness this morning?",
+            "sourceEdgeIDs": [
+              "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+              "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+              "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+              "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+              "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+              "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+              "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+              "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+              "edge:WINDUP|NECK_TIGHTNESS|forward|#0"
+            ],
+            "sourceNodeIDs": [
+              "NECK_TIGHTNESS"
+            ]
+          },
+          {
+            "id": "morning.jawSoreness",
+            "title": "How is jawSoreness this morning?",
+            "sourceEdgeIDs": [
+              "edge:FHP|TMD|forward|emg f=13.7#0",
+              "edge:HEAT_TX|TMD|forward|#0",
+              "edge:MASSAGE_TX|TMD|forward|#0",
+              "edge:PHYSIO_TX|TMD|forward|#0",
+              "edge:RMMA|TMD|forward|or 2.25#0",
+              "edge:TMD|CERVICAL|forward|#0",
+              "edge:TMD|CS|forward|#0",
+              "edge:TMD|EAR|forward|v3 spillover#0",
+              "edge:TMD|HEADACHES|forward|#0",
+              "edge:TMD|HYOID|forward|#0",
+              "edge:TMD|STRESS|feedback|#0"
+            ],
+            "sourceNodeIDs": [
+              "TMD"
+            ]
+          },
+          {
+            "id": "morning.earFullness",
+            "title": "How is earFullness this morning?",
+            "sourceEdgeIDs": [
+              "edge:EAR|STRESS|feedback|health anxiety#0",
+              "edge:TMD|EAR|forward|v3 spillover#0"
+            ],
+            "sourceNodeIDs": [
+              "EAR"
+            ]
+          },
+          {
+            "id": "morning.healthAnxiety",
+            "title": "How is healthAnxiety this morning?",
+            "sourceEdgeIDs": [
+              "edge:HEALTH_ANXIETY|STRESS|forward|#0"
+            ],
+            "sourceNodeIDs": [
+              "HEALTH_ANXIETY"
+            ]
+          },
+          {
+            "id": "morning.stressLevel",
+            "title": "How is stressLevel this morning?",
+            "sourceEdgeIDs": [
+              "edge:CBT_TX|STRESS|forward|#0",
+              "edge:EAR|STRESS|feedback|health anxiety#0",
+              "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+              "edge:HEADACHES|STRESS|feedback|#0",
+              "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+              "edge:MINDFULNESS_TX|STRESS|forward|#0",
+              "edge:NATURE_TX|STRESS|forward|#0",
+              "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+              "edge:STRESS|CATECHOL|forward|#0",
+              "edge:STRESS|CORTISOL|forward|or 2.07#0",
+              "edge:STRESS|GERD|forward|visceral hypersens.#0",
+              "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+              "edge:TMD|STRESS|feedback|#0"
+            ],
+            "sourceNodeIDs": [
+              "STRESS"
+            ]
+          },
+          {
+            "id": "morning.morningHeadache",
+            "title": "How is morningHeadache this morning?",
+            "sourceEdgeIDs": [
+              "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+              "edge:CS|HEADACHES|forward|#0",
+              "edge:GRINDING|HEADACHES|forward|#0",
+              "edge:HEADACHES|SLEEP_DEP|feedback|#0",
+              "edge:HEADACHES|STRESS|feedback|#0",
+              "edge:TMD|HEADACHES|forward|#0"
+            ],
+            "sourceNodeIDs": [
+              "HEADACHES"
+            ]
+          },
+          {
+            "id": "morning.dryMouth",
+            "title": "How is dryMouth this morning?",
+            "sourceEdgeIDs": [
+              "edge:HYDRATION|SALIVA|forward|#0",
+              "edge:RMMA|SALIVA|forward|periodontal reflex#0",
+              "edge:SALIVA|GERD|protective|acid clearance#0",
+              "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0"
+            ],
+            "sourceNodeIDs": [
+              "SALIVA"
+            ]
+          }
+        ],
+        "sourceGraphVersion": "graph-84435657553e2796",
+        "proposedQuestionSetVersion": "questions-graph-84435657553e2796-mapped-v1"
+      },
+      "declinedGraphVersions": [],
+      "activeQuestionSetVersion": "questions-graph-84435657553e2796-mapped-v1",
+      "activeSourceGraphVersion": "graph-84435657553e2796"
+    },
+    "interventionCompletionEvents": [
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:10:04Z",
+        "interventionId": "vitamin_d"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:10:07Z",
+        "interventionId": "morning_fast"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-22T20:10:21Z",
+        "interventionId": "morning_fast"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:10:08Z",
+        "interventionId": "morning_routine"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-22T17:48:44Z",
+        "interventionId": "oura_score_goal"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-22T20:09:43Z",
+        "interventionId": "biofeedback"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:09:53Z",
+        "interventionId": "caffeine_limit"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:09:55Z",
+        "interventionId": "reflux_meal_timing"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-22T17:48:07Z",
+        "interventionId": "reflux_meal_timing"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:09:56Z",
+        "interventionId": "alcohol_limit"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:09:57Z",
+        "interventionId": "reflux_medications"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:10:00Z",
+        "interventionId": "strict_diet_phase"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-25T21:10:02Z",
+        "interventionId": "reflux_trigger_avoidance"
+      },
+      {
+        "source": "binaryCheck",
+        "occurredAt": "2026-02-22T20:09:02Z",
+        "interventionId": "gerd_treatment"
+      },
+      {
+        "source": "doseIncrement",
+        "occurredAt": "2026-02-25T23:59:05Z",
+        "interventionId": "water_intake"
+      }
+    ],
+    "wakeDaySleepAttributionMigrated": true
+  }
+}

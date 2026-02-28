@@ -2,7 +2,7 @@
 
 import process from 'node:process';
 import path from 'node:path';
-import { writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { writeFileSync, readFileSync, rmSync, mkdirSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
 
@@ -46,15 +46,24 @@ function previewList(values, limit = 5) {
 
 const repoRoot = process.cwd();
 const iosDirectory = path.join(repoRoot, 'ios', 'Telocare');
-const inputPath = getArg('input-path') || '/tmp/telocare-cluster-user-row.json';
-const catalogPath = getArg('catalog-path') || '/tmp/telocare-cluster-interventions-catalog.json';
-const reportPath = getArg('report-out') || '/tmp/telocare-cluster-report.json';
-const configPath = getArg('config-path') || '/tmp/telocare-cluster-config.json';
+const inputPath = resolvePathArg('input-path', '/tmp/telocare-cluster-user-row.json');
+const catalogPath = resolvePathArg('catalog-path', '/tmp/telocare-cluster-interventions-catalog.json');
+const configPath = resolvePathArg('config-path', '/tmp/telocare-cluster-config.json');
+const runtimeReportPath = '/tmp/telocare-cluster-report.json';
+const requestedReportPath = resolvePathArg('report-out', runtimeReportPath);
 const maxDepthRaw = getArg('max-depth') || '4';
 const maxDepth = Number(maxDepthRaw);
 const listUsers = hasFlag('list-users');
 const limitRaw = getArg('limit') || '10';
 const limit = Number(limitRaw);
+
+function resolvePathArg(argName, defaultPath) {
+  const rawPath = getArg(argName);
+  if (!rawPath) {
+    return defaultPath;
+  }
+  return path.isAbsolute(rawPath) ? rawPath : path.resolve(repoRoot, rawPath);
+}
 
 if (!Number.isFinite(maxDepth) || maxDepth < 1 || maxDepth > 12) {
   console.error(`Invalid --max-depth value: ${maxDepthRaw}. Use 1..12.`);
@@ -140,6 +149,10 @@ if (!catalogRow) {
   process.exit(1);
 }
 
+mkdirSync(path.dirname(inputPath), { recursive: true });
+mkdirSync(path.dirname(catalogPath), { recursive: true });
+mkdirSync(path.dirname(configPath), { recursive: true });
+mkdirSync(path.dirname(runtimeReportPath), { recursive: true });
 writeFileSync(inputPath, JSON.stringify(userRow, null, 2));
 writeFileSync(catalogPath, JSON.stringify(catalogRow, null, 2));
 writeFileSync(
@@ -148,7 +161,7 @@ writeFileSync(
     {
       inputPath,
       catalogPath,
-      reportPath,
+      reportPath: runtimeReportPath,
       maxDepth,
     },
     null,
@@ -186,7 +199,19 @@ if (testRun.status !== 0) {
   process.exit(testRun.status ?? 1);
 }
 
-const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+if (!existsSync(runtimeReportPath)) {
+  rmSync(configPath, { force: true });
+  console.error(`Swift cluster test did not emit a report file: ${runtimeReportPath}`);
+  process.exit(1);
+}
+
+const report = JSON.parse(readFileSync(runtimeReportPath, 'utf8'));
+let outputReportPath = runtimeReportPath;
+if (requestedReportPath !== runtimeReportPath) {
+  mkdirSync(path.dirname(requestedReportPath), { recursive: true });
+  writeFileSync(requestedReportPath, JSON.stringify(report, null, 2));
+  outputReportPath = requestedReportPath;
+}
 rmSync(configPath, { force: true });
 
 console.log('');
@@ -251,4 +276,4 @@ if (edgeCoverage) {
 console.log('');
 printClusterTree(report.topLevelClusters || []);
 console.log('');
-console.log(`Full report: ${reportPath}`);
+console.log(`Full report: ${outputReportPath}`);

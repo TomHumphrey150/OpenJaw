@@ -24,6 +24,20 @@ struct ExploreTabShell: View {
                     await viewModel.refreshAllConnectedAppleHealth(trigger: .manual)
                 },
                 onToggleActive: viewModel.toggleInputActive,
+                planningMetadataByInterventionID: viewModel.projectedPlanningMetadataByInterventionID,
+                habitRungStatusByInterventionID: viewModel.projectedHabitRungStatusByInterventionID,
+                plannedInterventionIDs: viewModel.projectedPlannedInterventionIDs,
+                dailyPlanProposal: viewModel.projectedDailyPlanProposal,
+                planningMode: viewModel.planningMode,
+                plannerAvailableMinutes: viewModel.plannerAvailableMinutes,
+                plannerTimeBudgetState: viewModel.projectedPlannerTimeBudgetState,
+                onSetPlannerTimeBudgetState: viewModel.setPlannerTimeBudgetState,
+                onRecordHigherRungCompletion: { interventionID, rungID in
+                    viewModel.recordHigherRungCompletion(
+                        interventionID: interventionID,
+                        achievedRungID: rungID
+                    )
+                },
                 selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.inputs.title, systemImage: ExploreTab.inputs.symbolName) }
@@ -32,7 +46,7 @@ struct ExploreTabShell: View {
 
             ExploreSituationScreen(
                 situation: viewModel.snapshot.situation,
-                graphData: viewModel.graphData,
+                graphData: viewModel.projectedSituationGraphData,
                 displayFlags: viewModel.graphDisplayFlags,
                 focusedNodeID: viewModel.focusedNodeID,
                 graphSelectionText: viewModel.graphSelectionText,
@@ -53,6 +67,9 @@ struct ExploreTabShell: View {
                         edgeType: edgeType
                     )
                 },
+                isLensFilteredEmpty: viewModel.projectedSituationGraphIsLensFilteredEmpty,
+                emptyLensMessage: viewModel.projectedSituationGraphEmptyMessage,
+                onClearLensFilter: { viewModel.setHealthLensPreset(.all) },
                 selectedSkinID: selectedSkinID
             )
             .tabItem { Label(ExploreTab.situation.title, systemImage: ExploreTab.situation.symbolName) }
@@ -64,6 +81,9 @@ struct ExploreTabShell: View {
                 outcomeRecords: viewModel.snapshot.outcomeRecords,
                 outcomesMetadata: viewModel.snapshot.outcomesMetadata,
                 morningStates: viewModel.morningStateHistory,
+                chartMorningStates: viewModel.projectedProgressMorningStatesForCharts,
+                chartNightOutcomes: viewModel.projectedProgressNightOutcomesForCharts,
+                chartExclusionNote: viewModel.projectedProgressExcludedChartsNote,
                 morningOutcomeSelection: viewModel.morningOutcomeSelection,
                 morningCheckInFields: viewModel.morningCheckInFields,
                 requiredMorningCheckInFields: viewModel.requiredMorningCheckInFields,
@@ -103,6 +123,9 @@ struct ExploreTabShell: View {
                 onStopMuseRecording: viewModel.stopMuseRecording,
                 onSaveMuseNightOutcome: viewModel.saveMuseNightOutcome,
                 isMuseSessionEnabled: isMuseSessionEnabled,
+                flareSuggestion: viewModel.projectedFlareSuggestion,
+                onAcceptFlareSuggestion: viewModel.acceptFlareSuggestion,
+                onDismissFlareSuggestion: viewModel.dismissFlareSuggestion,
                 selectedSkinID: selectedSkinID
             )
                 .tabItem { Label(ExploreTab.outcomes.title, systemImage: ExploreTab.outcomes.symbolName) }
@@ -115,14 +138,20 @@ struct ExploreTabShell: View {
                 pendingGraphPatchPreview: viewModel.pendingGraphPatchPreview,
                 pendingGraphPatchConflicts: viewModel.pendingGraphPatchConflicts,
                 pendingGraphPatchConflictResolutions: viewModel.pendingGraphPatchConflictResolutions,
-                checkpointVersions: viewModel.graphCheckpointVersions,
+                checkpointSummaries: viewModel.projectedGraphCheckpointSummaries,
                 graphVersion: viewModel.projectedGuideGraphVersion,
+                guideExportEnvelopeText: viewModel.projectedGuideExportEnvelopeText,
+                pendingGuideImportPreview: viewModel.projectedGuideImportPreview,
                 onSetConflictResolution: { operationIndex, choice in
                     viewModel.setPendingGraphPatchConflictResolution(
                         operationIndex: operationIndex,
                         choice: choice
                     )
                 },
+                onExportGuideSections: viewModel.exportGuideSections,
+                onPreviewGuideImportPayload: viewModel.previewGuideImportPayload,
+                onApplyPendingGuideImport: viewModel.applyPendingGuideImportPayload,
+                onDismissPendingGuideImport: viewModel.clearPendingGuideImportPreview,
                 onApplyPendingPatch: viewModel.applyPendingGraphPatchFromReview,
                 onDismissPendingPatch: viewModel.clearPendingGraphPatchPreview,
                 onRollbackGraphVersion: viewModel.rollbackGraph(to:),

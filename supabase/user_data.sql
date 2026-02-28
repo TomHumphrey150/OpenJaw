@@ -124,7 +124,7 @@ create table if not exists public.first_party_content (
   updated_at timestamptz not null default timezone('utc'::text, now()),
   primary key (content_type, content_key),
   constraint first_party_content_type_check check (
-    content_type in ('graph', 'inputs', 'outcomes', 'citations', 'info')
+    content_type in ('graph', 'inputs', 'outcomes', 'planning', 'citations', 'info')
   )
 );
 
@@ -138,7 +138,7 @@ create table if not exists public.user_content (
   updated_at timestamptz not null default timezone('utc'::text, now()),
   primary key (user_id, content_type, content_key),
   constraint user_content_type_check check (
-    content_type in ('graph', 'inputs', 'outcomes', 'citations', 'info')
+    content_type in ('graph', 'inputs', 'outcomes', 'planning', 'citations', 'info')
   )
 );
 

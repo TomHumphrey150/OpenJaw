@@ -9,7 +9,6 @@ protocol UserDataMigrationPipeline {
 
 struct UserDataMigrationPipelineResult {
     let document: UserDataDocument
-    let fallbackGraph: CausalGraphData
     let canonicalBackfillDiagram: CustomCausalDiagram?
     let dormantGraphMigrationDiagram: CustomCausalDiagram?
     let sleepAttributionMigrationPatch: UserDataPatch?
@@ -20,16 +19,17 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
         fetchedDocument: UserDataDocument,
         firstPartyContent: FirstPartyContentBundle
     ) -> UserDataMigrationPipelineResult {
-        let fallbackGraph = firstPartyContent.graphData ?? CanonicalGraphLoader.loadGraphOrFallback()
+        let canonicalGraph = firstPartyContent.graphData ?? CausalGraphData(nodes: [], edges: [])
         let hydratedDocument = withCanonicalGraphIfMissing(
             fetchedDocument,
-            fallbackGraph: fallbackGraph
+            canonicalGraph: canonicalGraph
         )
         let dormantGraphMigratedDocument = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
         let graphMetadataMigratedDocument = withGraphMetadataMigrationIfNeeded(dormantGraphMigratedDocument)
         let questionSetMigratedDocument = withProgressQuestionSetStateIfMissing(graphMetadataMigratedDocument)
+        let planningStateMigratedDocument = withPlanningStateDefaultsIfMissing(questionSetMigratedDocument)
         let migratedDocument = withWakeDaySleepAttributionMigrationIfNeeded(
-            questionSetMigratedDocument,
+            planningStateMigratedDocument,
             interventionsCatalog: firstPartyContent.interventionsCatalog
         )
 
@@ -50,7 +50,7 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
 
         let sleepAttributionMigrationPatch: UserDataPatch?
         if shouldPersistWakeDaySleepAttributionMigration(
-            from: questionSetMigratedDocument,
+            from: planningStateMigratedDocument,
             migrated: migratedDocument
         ) {
             sleepAttributionMigrationPatch = .sleepAttributionMigration(
@@ -64,7 +64,6 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
 
         return UserDataMigrationPipelineResult(
             document: migratedDocument,
-            fallbackGraph: fallbackGraph,
             canonicalBackfillDiagram: canonicalBackfillDiagram,
             dormantGraphMigrationDiagram: dormantGraphMigrationDiagram,
             sleepAttributionMigrationPatch: sleepAttributionMigrationPatch
@@ -73,13 +72,13 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
 
     private func withCanonicalGraphIfMissing(
         _ document: UserDataDocument,
-        fallbackGraph: CausalGraphData
+        canonicalGraph: CausalGraphData
     ) -> UserDataDocument {
         guard document.customCausalDiagram == nil else {
             return document
         }
 
-        let graphData = Self.seedLegacyDormantGraphDeactivationIfNeeded(fallbackGraph) ?? fallbackGraph
+        let graphData = Self.seedLegacyDormantGraphDeactivationIfNeeded(canonicalGraph) ?? canonicalGraph
         let canonicalDiagram = CustomCausalDiagram(
             graphData: graphData,
             lastModified: Self.timestampNow()
@@ -205,6 +204,41 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             updatedAt: Self.timestampNow()
         )
         return document.withProgressQuestionSetState(state)
+    }
+
+    private func withPlanningStateDefaultsIfMissing(_ document: UserDataDocument) -> UserDataDocument {
+        let timestamp = Self.timestampNow()
+
+        let plannerPreferences = document.plannerPreferencesState ?? PlannerPreferencesState(
+            defaultAvailableMinutes: PlannerPreferencesState.default.defaultAvailableMinutes,
+            modeOverride: nil,
+            flareSensitivity: .balanced,
+            updatedAt: timestamp,
+            dailyTimeBudgetState: DailyTimeBudgetState.from(
+                availableMinutes: PlannerPreferencesState.default.defaultAvailableMinutes,
+                updatedAt: timestamp
+            )
+        )
+        let plannerState = document.habitPlannerState ?? HabitPlannerState(
+            entriesByInterventionID: [:],
+            updatedAt: timestamp
+        )
+        let lensState = document.healthLensState ?? HealthLensState(
+            preset: .all,
+            selectedPillar: nil,
+            updatedAt: timestamp
+        )
+
+        if document.plannerPreferencesState != nil,
+           document.habitPlannerState != nil,
+           document.healthLensState != nil {
+            return document
+        }
+
+        return document
+            .withPlannerPreferencesState(plannerPreferences)
+            .withHabitPlannerState(plannerState)
+            .withHealthLensState(lensState)
     }
 
     private func withWakeDaySleepAttributionMigrationIfNeeded(

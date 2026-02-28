@@ -50,7 +50,39 @@
         "identifier": "dietaryWater",
         "aggregation": "cumulativeSum",
         "dayAttribution": "localDay"
-      }
+      },
+      "planningTags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "pillars": [
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "SALIVA"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "hydration",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        },
+        {
+          "startMinutes": 720,
+          "endMinutes": 1020
+        },
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1260
+        },
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "vitamin_d",
@@ -82,7 +114,27 @@
       "legacyIds": [
         "VIT_D_TX"
       ],
-      "graphNodeId": "VIT_D_TX"
+      "graphNodeId": "VIT_D_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "acuteTargets": [
+        "VIT_D"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "supplement",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "multivitamin",
@@ -114,7 +166,27 @@
       "legacyIds": [
         "MULTI_TX"
       ],
-      "graphNodeId": "MULTI_TX"
+      "graphNodeId": "MULTI_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "acuteTargets": [
+        "MG_DEF"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "supplement",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "morning_fast",
@@ -146,7 +218,26 @@
       "legacyIds": [
         "MORNING_FAST_TX"
       ],
-      "graphNodeId": "MORNING_FAST_TX"
+      "graphNodeId": "MORNING_FAST_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "GERD"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "nutrition",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "morning_routine",
@@ -178,7 +269,27 @@
       "legacyIds": [
         "CIRCADIAN_TX"
       ],
-      "graphNodeId": "CIRCADIAN_TX"
+      "graphNodeId": "CIRCADIAN_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "sleep",
+        "environment"
+      ],
+      "acuteTargets": [
+        "SLEEP_DEP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "circadian",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "mindfulness_minutes",
@@ -227,7 +338,32 @@
         "identifier": "mindfulSession",
         "aggregation": "durationSum",
         "dayAttribution": "localDay"
-      }
+      },
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "STRESS",
+        "CORTISOL",
+        "SYMPATHETIC"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "stress",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        },
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "oura_score_goal",
@@ -257,7 +393,26 @@
       "targetCondition": "general",
       "causalPathway": "midstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "SLEEP_HYG_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "sleep"
+      ],
+      "acuteTargets": [
+        "SLEEP_DEP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "sleep_tracking",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "emg_check",
@@ -287,7 +442,26 @@
       "targetCondition": "bruxism",
       "causalPathway": "downstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "BIOFEEDBACK_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "RMMA"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "medical",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "biofeedback",
@@ -321,7 +495,26 @@
       "legacyIds": [
         "BIOFEEDBACK_TX"
       ],
-      "graphNodeId": "BIOFEEDBACK_TX"
+      "graphNodeId": "BIOFEEDBACK_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "RMMA"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "medical",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "physio_stretches",
@@ -363,7 +556,36 @@
         "unit": "reps",
         "defaultDailyGoal": 3,
         "defaultIncrement": 1
-      }
+      },
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "exercise",
+        "medical"
+      ],
+      "acuteTargets": [
+        "CERVICAL",
+        "TMD"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "movement",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        },
+        {
+          "startMinutes": 720,
+          "endMinutes": 1020
+        },
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1260
+        }
+      ]
     },
     {
       "id": "caffeine_limit",
@@ -395,7 +617,31 @@
       "targetCondition": "both",
       "causalPathway": "upstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "CAFFEINE",
+      "planningTags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "sleep",
+        "nutrition",
+        "avoidingDrugs"
+      ],
+      "acuteTargets": [
+        "CAFFEINE",
+        "MICRO",
+        "GERD"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "substance",
+      "preferredWindows": [
+        {
+          "startMinutes": 720,
+          "endMinutes": 1020
+        }
+      ]
     },
     {
       "id": "exercise_minutes",
@@ -441,7 +687,35 @@
         "identifier": "moderateWorkoutMinutes",
         "aggregation": "cumulativeSum",
         "dayAttribution": "localDay"
-      }
+      },
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "exercise"
+      ],
+      "acuteTargets": [
+        "CORTISOL",
+        "SYMPATHETIC"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 30,
+      "ladderTemplateID": "exercise",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        },
+        {
+          "startMinutes": 720,
+          "endMinutes": 1020
+        },
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1260
+        }
+      ]
     },
     {
       "id": "nature_exposure",
@@ -473,7 +747,24 @@
       "legacyIds": [
         "NATURE_TX"
       ],
-      "graphNodeId": "NATURE_TX"
+      "graphNodeId": "NATURE_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "exercise",
+        "environment",
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "STRESS",
+        "CORTISOL"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "exercise",
+      "preferredWindows": []
     },
     {
       "id": "reflux_meal_timing",
@@ -505,7 +796,22 @@
       "legacyIds": [
         "MEAL_TIMING_TX"
       ],
-      "graphNodeId": "MEAL_TIMING_TX"
+      "graphNodeId": "MEAL_TIMING_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "GERD",
+        "ACID"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "nutrition",
+      "preferredWindows": []
     },
     {
       "id": "posture",
@@ -537,7 +843,23 @@
       "legacyIds": [
         "POSTURE_TX"
       ],
-      "graphNodeId": "POSTURE_TX"
+      "graphNodeId": "POSTURE_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "exercise",
+        "environment"
+      ],
+      "acuteTargets": [
+        "CERVICAL",
+        "FHP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "movement",
+      "preferredWindows": []
     },
     {
       "id": "tongue_posture",
@@ -569,7 +891,23 @@
       "legacyIds": [
         "TONGUE_TX"
       ],
-      "graphNodeId": "TONGUE_TX"
+      "graphNodeId": "TONGUE_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "acuteTargets": [
+        "AIRWAY_OBS",
+        "HYOID"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     },
     {
       "id": "jaw_relaxation",
@@ -601,7 +939,23 @@
       "legacyIds": [
         "JAW_RELAX_TX"
       ],
-      "graphNodeId": "JAW_RELAX_TX"
+      "graphNodeId": "JAW_RELAX_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical",
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "RMMA",
+        "TMD"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     },
     {
       "id": "jaw_massage",
@@ -635,7 +989,22 @@
       "legacyIds": [
         "MASSAGE_TX"
       ],
-      "graphNodeId": "MASSAGE_TX"
+      "graphNodeId": "MASSAGE_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "TMD",
+        "NECK_TIGHTNESS"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     },
     {
       "id": "heat_therapy",
@@ -667,7 +1036,22 @@
       "legacyIds": [
         "HEAT_TX"
       ],
-      "graphNodeId": "HEAT_TX"
+      "graphNodeId": "HEAT_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "NECK_TIGHTNESS",
+        "CERVICAL"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     },
     {
       "id": "alcohol_limit",
@@ -699,7 +1083,31 @@
       "targetCondition": "both",
       "causalPathway": "upstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "ALCOHOL",
+      "planningTags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "sleep",
+        "nutrition",
+        "avoidingDrugs"
+      ],
+      "acuteTargets": [
+        "ALCOHOL",
+        "MICRO",
+        "GERD"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "substance",
+      "preferredWindows": [
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1260
+        }
+      ]
     },
     {
       "id": "reflux_medications",
@@ -733,7 +1141,28 @@
       "legacyIds": [
         "PPI_TX"
       ],
-      "graphNodeId": "PPI_TX"
+      "graphNodeId": "PPI_TX",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "GERD",
+        "ACID"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "medical",
+      "preferredWindows": [
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1260
+        }
+      ]
     },
     {
       "id": "strict_diet_phase",
@@ -765,7 +1194,27 @@
       "legacyIds": [
         "REFLUX_DIET_TX"
       ],
-      "graphNodeId": "REFLUX_DIET_TX"
+      "graphNodeId": "REFLUX_DIET_TX",
+      "planningTags": [
+        "foundation",
+        "blocker"
+      ],
+      "pillars": [
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "GERD",
+        "ACID"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 40,
+      "ladderTemplateID": "nutrition",
+      "preferredWindows": [
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1260
+        }
+      ]
     },
     {
       "id": "reflux_trigger_avoidance",
@@ -795,7 +1244,22 @@
       "targetCondition": "reflux",
       "causalPathway": "upstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "REFLUX_DIET_TX",
+      "planningTags": [
+        "foundation",
+        "blocker"
+      ],
+      "pillars": [
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "GERD",
+        "ACID"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 30,
+      "ladderTemplateID": "nutrition",
+      "preferredWindows": []
     },
     {
       "id": "bed_elevation",
@@ -827,7 +1291,28 @@
       "legacyIds": [
         "BED_ELEV_TX"
       ],
-      "graphNodeId": "BED_ELEV_TX"
+      "graphNodeId": "BED_ELEV_TX",
+      "planningTags": [
+        "foundation",
+        "blocker"
+      ],
+      "pillars": [
+        "sleep",
+        "environment"
+      ],
+      "acuteTargets": [
+        "GERD",
+        "ACID"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "sleep_hygiene",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "no_screens_prebed",
@@ -859,7 +1344,26 @@
       "legacyIds": [
         "SCREENS_TX"
       ],
-      "graphNodeId": "SCREENS_TX"
+      "graphNodeId": "SCREENS_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "sleep"
+      ],
+      "acuteTargets": [
+        "SLEEP_DEP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "sleep_hygiene",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "warm_shower",
@@ -891,7 +1395,28 @@
       "legacyIds": [
         "WARM_SHOWER_TX"
       ],
-      "graphNodeId": "WARM_SHOWER_TX"
+      "graphNodeId": "WARM_SHOWER_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "sleep",
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "STRESS",
+        "SLEEP_DEP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "evening_winddown",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "yoga_prebed",
@@ -923,7 +1448,28 @@
       "legacyIds": [
         "YOGA_TX"
       ],
-      "graphNodeId": "YOGA_TX"
+      "graphNodeId": "YOGA_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "exercise",
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "SYMPATHETIC",
+        "CORTISOL"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "exercise",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "neurosym_device",
@@ -955,7 +1501,29 @@
       "legacyIds": [
         "NEUROSYM_TX"
       ],
-      "graphNodeId": "NEUROSYM_TX"
+      "graphNodeId": "NEUROSYM_TX",
+      "planningTags": [
+        "acute",
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "stressManagement",
+        "medical"
+      ],
+      "acuteTargets": [
+        "VAGAL",
+        "SYMPATHETIC"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 30,
+      "ladderTemplateID": "stress",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "intimacy_optional",
@@ -985,7 +1553,28 @@
       "targetCondition": "general",
       "causalPathway": "midstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "RELATIONSHIP_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "acuteTargets": [
+        "STRESS",
+        "RMMA"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "social",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "diaphragm_breathing",
@@ -1024,7 +1613,31 @@
         "unit": "breaths",
         "defaultDailyGoal": 60,
         "defaultIncrement": 10
-      }
+      },
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "SYMPATHETIC",
+        "CORTISOL"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "stress",
+      "preferredWindows": [
+        {
+          "startMinutes": 720,
+          "endMinutes": 1020
+        },
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "magnesium",
@@ -1058,7 +1671,28 @@
       "legacyIds": [
         "MG_SUPP"
       ],
-      "graphNodeId": "MG_SUPP"
+      "graphNodeId": "MG_SUPP",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition",
+        "medical"
+      ],
+      "acuteTargets": [
+        "MG_DEF",
+        "GABA_DEF"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "supplement",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "l_theanine",
@@ -1090,7 +1724,27 @@
       "legacyIds": [
         "THEANINE_TX"
       ],
-      "graphNodeId": "THEANINE_TX"
+      "graphNodeId": "THEANINE_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition",
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "GABA_DEF"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "supplement",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "glycine",
@@ -1122,7 +1776,28 @@
       "legacyIds": [
         "GLYCINE_TX"
       ],
-      "graphNodeId": "GLYCINE_TX"
+      "graphNodeId": "GLYCINE_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "nutrition",
+        "sleep"
+      ],
+      "acuteTargets": [
+        "GABA_DEF",
+        "SLEEP_DEP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "supplement",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "activate_emg_tracker",
@@ -1152,7 +1827,26 @@
       "targetCondition": "bruxism",
       "causalPathway": "midstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "BIOFEEDBACK_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "RMMA"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "medical",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "night_guard",
@@ -1186,7 +1880,27 @@
       "legacyIds": [
         "SPLINT"
       ],
-      "graphNodeId": "SPLINT"
+      "graphNodeId": "SPLINT",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "TOOTH",
+        "GRINDING"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "medical_device",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "sleep_hours",
@@ -1230,7 +1944,28 @@
         "identifier": "sleepAnalysis",
         "aggregation": "sleepAsleepDurationSum",
         "dayAttribution": "previousNightNoonCutoff"
-      }
+      },
+      "planningTags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "pillars": [
+        "sleep"
+      ],
+      "acuteTargets": [
+        "SLEEP_DEP",
+        "MICRO"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 30,
+      "ladderTemplateID": "sleep_hygiene",
+      "preferredWindows": [
+        {
+          "startMinutes": 300,
+          "endMinutes": 720
+        }
+      ]
     },
     {
       "id": "bedtime_routine",
@@ -1260,7 +1995,189 @@
       "targetCondition": "both",
       "causalPathway": "midstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "SLEEP_HYG_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance",
+        "coreFloor"
+      ],
+      "pillars": [
+        "sleep"
+      ],
+      "acuteTargets": [
+        "SLEEP_DEP",
+        "MICRO"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 45,
+      "ladderTemplateID": "sleep_hygiene",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
+    },
+    {
+      "id": "social_connection",
+      "name": "Social Connection Check-In",
+      "emoji": "🫶",
+      "icon": "person.2.fill",
+      "description": "Reach out to a friend, family member, or community contact.",
+      "detailedDescription": "Make one intentional social touchpoint today, such as a call, message, or short in-person connection.",
+      "tier": 3,
+      "frequency": "daily",
+      "trackingType": "binary",
+      "isRemindable": false,
+      "defaultReminderMinutes": null,
+      "externalLink": null,
+      "evidenceLevel": "Moderate",
+      "evidenceSummary": "Social connection supports stress regulation and resilience during recovery.",
+      "citationIds": [],
+      "roiTier": "B",
+      "easeScore": 7,
+      "costRange": "$0",
+      "timeOfDay": [
+        "afternoon",
+        "evening"
+      ],
+      "defaultOrder": 455,
+      "estimatedDurationMinutes": 15,
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "upstream",
+      "legacyIds": [
+        "SOCIAL_TX"
+      ],
+      "graphNodeId": "SOCIAL_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "socialLife",
+        "stressManagement"
+      ],
+      "acuteTargets": [
+        "SOCIAL_ISOLATION",
+        "STRESS"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "social",
+      "preferredWindows": [
+        {
+          "startMinutes": 720,
+          "endMinutes": 1260
+        }
+      ]
+    },
+    {
+      "id": "relationship_care",
+      "name": "Relationship Care Check-In",
+      "emoji": "❤️",
+      "icon": "heart.text.square.fill",
+      "description": "Take one concrete action to invest in your closest relationship.",
+      "detailedDescription": "Use a short intentional action such as appreciation, active listening, or a repair conversation opener.",
+      "tier": 3,
+      "frequency": "daily",
+      "trackingType": "binary",
+      "isRemindable": false,
+      "defaultReminderMinutes": null,
+      "externalLink": null,
+      "evidenceLevel": "Low-Moderate",
+      "evidenceSummary": "Relationship stability helps reduce stress load and supports long-term adherence.",
+      "citationIds": [],
+      "roiTier": "B",
+      "easeScore": 6,
+      "costRange": "$0",
+      "timeOfDay": [
+        "evening"
+      ],
+      "defaultOrder": 456,
+      "estimatedDurationMinutes": 20,
+      "energyLevel": "medium",
+      "targetCondition": "general",
+      "causalPathway": "upstream",
+      "legacyIds": [
+        "RELATIONSHIP_TX"
+      ],
+      "graphNodeId": "RELATIONSHIP_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "acuteTargets": [
+        "RELATIONSHIP_STRAIN",
+        "STRESS"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "social",
+      "preferredWindows": [
+        {
+          "startMinutes": 1020,
+          "endMinutes": 1320
+        }
+      ]
+    },
+    {
+      "id": "financial_check_in",
+      "name": "Financial Stability Check-In",
+      "emoji": "💰",
+      "icon": "chart.line.uptrend.xyaxis",
+      "description": "Do one small task that reduces financial uncertainty.",
+      "detailedDescription": "Examples: review balances, pay a bill, set an auto-transfer, or schedule a planning task.",
+      "tier": 3,
+      "frequency": "daily",
+      "trackingType": "binary",
+      "isRemindable": false,
+      "defaultReminderMinutes": null,
+      "externalLink": null,
+      "evidenceLevel": "Low-Moderate",
+      "evidenceSummary": "Financial stress contributes to sleep and stress burden; routine check-ins reduce avoidance loops.",
+      "citationIds": [],
+      "roiTier": "B",
+      "easeScore": 7,
+      "costRange": "$0",
+      "timeOfDay": [
+        "morning",
+        "afternoon"
+      ],
+      "defaultOrder": 457,
+      "estimatedDurationMinutes": 15,
+      "energyLevel": "low",
+      "targetCondition": "general",
+      "causalPathway": "upstream",
+      "legacyIds": [
+        "FINANCIAL_TX"
+      ],
+      "graphNodeId": "FINANCIAL_TX",
+      "planningTags": [
+        "foundation",
+        "maintenance"
+      ],
+      "pillars": [
+        "financialSecurity"
+      ],
+      "acuteTargets": [
+        "FINANCIAL_STRAIN",
+        "STRESS",
+        "SLEEP_DEP"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "administrative",
+      "preferredWindows": [
+        {
+          "startMinutes": 540,
+          "endMinutes": 1020
+        }
+      ]
     },
     {
       "id": "gerd_treatment",
@@ -1292,7 +2209,23 @@
       "targetCondition": "reflux",
       "causalPathway": "upstream",
       "legacyIds": [],
-      "graphNodeId": null
+      "graphNodeId": "PPI_TX",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "acuteTargets": [
+        "GERD",
+        "ACID"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     },
     {
       "id": "sleep_apnea_treatment",
@@ -1326,7 +2259,23 @@
       "legacyIds": [
         "OSA_TX"
       ],
-      "graphNodeId": "OSA_TX"
+      "graphNodeId": "OSA_TX",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "acuteTargets": [
+        "OSA",
+        "AIRWAY_OBS"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "medical_device",
+      "preferredWindows": []
     },
     {
       "id": "dymista_nasal_spray",
@@ -1363,7 +2312,26 @@
       "legacyIds": [
         "DYMISTA_TX"
       ],
-      "graphNodeId": "OSA_TX"
+      "graphNodeId": "OSA_TX",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "OSA"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "medical",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "breathe_right_strip",
@@ -1397,7 +2365,28 @@
       "legacyIds": [
         "NASAL_STRIP_TX"
       ],
-      "graphNodeId": "OSA_TX"
+      "graphNodeId": "OSA_TX",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "acuteTargets": [
+        "OSA",
+        "AIRWAY_OBS"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 5,
+      "ladderTemplateID": "medical",
+      "preferredWindows": [
+        {
+          "startMinutes": 1260,
+          "endMinutes": 1440
+        }
+      ]
     },
     {
       "id": "ssri_review",
@@ -1431,7 +2420,22 @@
       "legacyIds": [
         "SSRI_TX"
       ],
-      "graphNodeId": "SSRI_TX"
+      "graphNodeId": "SSRI_TX",
+      "planningTags": [
+        "acute",
+        "maintenance"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "SSRI",
+        "HEALTH_ANXIETY"
+      ],
+      "foundationRole": "maintenance",
+      "defaultMinutes": 15,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     },
     {
       "id": "cbt",
@@ -1465,7 +2469,24 @@
       "legacyIds": [
         "CBT_TX"
       ],
-      "graphNodeId": "CBT_TX"
+      "graphNodeId": "CBT_TX",
+      "planningTags": [
+        "foundation",
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "stressManagement",
+        "medical"
+      ],
+      "acuteTargets": [
+        "STRESS",
+        "HEALTH_ANXIETY"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 20,
+      "ladderTemplateID": "stress",
+      "preferredWindows": []
     },
     {
       "id": "botox",
@@ -1499,7 +2520,22 @@
       "legacyIds": [
         "BOTOX_TX"
       ],
-      "graphNodeId": "BOTOX_TX"
+      "graphNodeId": "BOTOX_TX",
+      "planningTags": [
+        "acute",
+        "blocker"
+      ],
+      "pillars": [
+        "medical"
+      ],
+      "acuteTargets": [
+        "RMMA",
+        "NECK_TIGHTNESS"
+      ],
+      "foundationRole": "blocker",
+      "defaultMinutes": 10,
+      "ladderTemplateID": "medical",
+      "preferredWindows": []
     }
   ]
 }

@@ -14,6 +14,9 @@ struct ExploreSituationScreen: View {
     let onToggleNodeDeactivated: (String) -> Void
     let onToggleNodeExpanded: (String) -> Void
     let onToggleEdgeDeactivated: (String, String, String?, String?) -> Void
+    let isLensFilteredEmpty: Bool
+    let emptyLensMessage: String
+    let onClearLensFilter: () -> Void
     let selectedSkinID: TelocareSkinID
 
     @State private var isOptionsPresented = false
@@ -57,6 +60,32 @@ struct ExploreSituationScreen: View {
                     .padding(24)
                     .allowsHitTesting(false)
                     .accessibilityIdentifier(AccessibilityID.graphSelectionText)
+            }
+            .overlay {
+                if isLensFilteredEmpty {
+                    VStack(spacing: TelocareTheme.Spacing.sm) {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.system(size: 28))
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Text(emptyLensMessage)
+                            .font(TelocareTheme.Typography.body)
+                            .foregroundStyle(TelocareTheme.charcoal)
+                            .multilineTextAlignment(.center)
+                        Button("Clear filter") {
+                            onClearLensFilter()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding(TelocareTheme.Spacing.lg)
+                    .background(
+                        RoundedRectangle(
+                            cornerRadius: TelocareTheme.CornerRadius.large,
+                            style: .continuous
+                        )
+                        .fill(TelocareTheme.cream)
+                    )
+                    .padding(TelocareTheme.Spacing.lg)
+                }
             }
             .navigationTitle("My Map")
             .navigationBarTitleDisplayMode(.inline)
@@ -264,4 +293,3 @@ struct ExploreSituationScreen: View {
         return trimmed
     }
 }
-

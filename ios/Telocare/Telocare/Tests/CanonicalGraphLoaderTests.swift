@@ -4,7 +4,7 @@ import Testing
 struct CanonicalGraphLoaderTests {
     @Test func loadsFullCanonicalGraphFromBundledJSON() throws {
         let graph = try CanonicalGraphLoader.loadGraph()
-        #expect(graph.nodes.count == 72)
-        #expect(graph.edges.count == 120)
+        #expect(graph.nodes.count == 78)
+        #expect(graph.edges.count == 127)
     }
 }

@@ -6,7 +6,7 @@ struct MockUserDataRepository: UserDataRepository {
 
     init(
         document: UserDataDocument = .mockForUI,
-        firstPartyContent: FirstPartyContentBundle = .empty
+        firstPartyContent: FirstPartyContentBundle = Self.defaultFirstPartyContent
     ) {
         self.document = document
         self.firstPartyContent = firstPartyContent
@@ -17,8 +17,9 @@ struct MockUserDataRepository: UserDataRepository {
         return document
     }
 
-    func fetchFirstPartyContent() async throws -> FirstPartyContentBundle {
-        firstPartyContent
+    func fetchFirstPartyContent(userID: UUID) async throws -> FirstPartyContentBundle {
+        _ = userID
+        return firstPartyContent
     }
 
     func backfillDefaultGraphIfMissing(canonicalGraph: CausalGraphData, lastModified: String) async throws -> Bool {
@@ -31,4 +32,18 @@ struct MockUserDataRepository: UserDataRepository {
         _ = patch
         return true
     }
+
+    private static let defaultFirstPartyContent = FirstPartyContentBundle(
+        graphData: .defaultGraph,
+        interventionsCatalog: .empty,
+        outcomesMetadata: .empty,
+        foundationCatalog: FoundationCatalog(
+            schemaVersion: "mock.foundation.v1",
+            sourceReportPath: "mock",
+            generatedAt: "mock",
+            pillars: [],
+            interventionMappings: []
+        ),
+        planningPolicy: .default
+    )
 }
