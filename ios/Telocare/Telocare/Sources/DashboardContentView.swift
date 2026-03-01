@@ -7,23 +7,11 @@ struct DashboardContentView: View {
     let isMuseEnabled: Bool
 
     var body: some View {
-        ZStack {
-            ExploreTabShell(
-                viewModel: viewModel,
-                selectedSkinID: selectedSkinID,
-                isMuseSessionEnabled: isMuseEnabled
-            )
-
-            VStack {
-                HStack {
-                    Spacer()
-                    ProfileAvatarButton(mode: viewModel.mode) {
-                        viewModel.openProfileSheet()
-                    }
-                }
-                Spacer()
-            }
-        }
+        ExploreTabShell(
+            viewModel: viewModel,
+            selectedSkinID: selectedSkinID,
+            isMuseSessionEnabled: isMuseEnabled
+        )
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
                 viewModel.handleAppMovedToBackground()

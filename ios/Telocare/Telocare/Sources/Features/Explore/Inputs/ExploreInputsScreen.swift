@@ -114,8 +114,6 @@ struct ExploreInputsScreen: View {
                 await onRefreshAllAppleHealth()
             }
             .accessibilityIdentifier(AccessibilityID.exploreInputsUnifiedScroll)
-            .navigationTitle("Habits")
-            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: String.self) { inputID in
                 if let input = inputStatus(for: inputID) {
                     InputDetailView(

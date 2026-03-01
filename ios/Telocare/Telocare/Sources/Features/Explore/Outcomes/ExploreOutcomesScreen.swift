@@ -213,8 +213,6 @@ struct ExploreOutcomesScreen: View {
                 .padding(.vertical, TelocareTheme.Spacing.lg)
             }
             .background(TelocareTheme.sand.ignoresSafeArea())
-            .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: OutcomeRecord.self) { record in
                 OutcomeDetailView(record: record, outcomesMetadata: outcomesMetadata)
                     .accessibilityIdentifier(AccessibilityID.exploreOutcomeDetailSheet)

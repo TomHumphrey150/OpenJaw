@@ -70,22 +70,17 @@ private struct ReadyDashboardRootView: View {
     let onSignOut: () -> Void
 
     var body: some View {
-        ZStack {
+        VStack(spacing: 0) {
+            topChrome
+
             DashboardContentView(
                 viewModel: dashboardViewModel,
                 selectedSkinID: selectedSkinID,
                 isMuseEnabled: isMuseEnabled
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .safeAreaInset(edge: .top) {
-            GlobalLensStatusBar(
-                label: dashboardViewModel.projectedHealthLensLabel,
-                visiblePillars: dashboardViewModel.projectedVisibleHealthLensPillars,
-                onTap: {
-                    dashboardViewModel.setLensControlExpanded(true)
-                }
-            )
-        }
+        .background(TelocareTheme.sand.ignoresSafeArea(edges: .top))
         .sheet(item: rootModalBinding(for: dashboardViewModel)) { modal in
             switch modal {
             case .globalLens:
@@ -154,6 +149,24 @@ private struct ReadyDashboardRootView: View {
         }
 
         return nil
+    }
+
+    @ViewBuilder
+    private var topChrome: some View {
+        ZStack(alignment: .topTrailing) {
+            GlobalLensStatusBar(
+                label: dashboardViewModel.projectedHealthLensLabel,
+                visiblePillars: dashboardViewModel.projectedVisibleHealthLensPillars,
+                onTap: {
+                    dashboardViewModel.setLensControlExpanded(true)
+                }
+            )
+
+            ProfileAvatarButton(mode: dashboardViewModel.mode) {
+                dashboardViewModel.openProfileSheet()
+            }
+        }
+        .background(TelocareTheme.sand.opacity(0.97))
     }
 }
 

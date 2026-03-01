@@ -87,8 +87,6 @@ struct ExploreSituationScreen: View {
                         .padding(.bottom, 8)
                 }
             }
-            .navigationTitle("My Map")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Edit") {
