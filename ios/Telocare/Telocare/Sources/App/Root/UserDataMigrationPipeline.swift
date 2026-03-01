@@ -26,10 +26,22 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
         )
         let dormantGraphMigratedDocument = withLegacyDormantGraphDeactivationMigrationIfNeeded(hydratedDocument)
         let graphMetadataMigratedDocument = withGraphMetadataMigrationIfNeeded(dormantGraphMigratedDocument)
-        let questionSetMigratedDocument = withProgressQuestionSetStateIfMissing(graphMetadataMigratedDocument)
-        let planningStateMigratedDocument = withPlanningStateDefaultsIfMissing(questionSetMigratedDocument)
-        let migratedDocument = withWakeDaySleepAttributionMigrationIfNeeded(
+        let resolvedPlanningPolicy = firstPartyContent.planningPolicy ?? .default
+        let questionSetMigratedDocument = withProgressQuestionSetStateIfMissing(
+            graphMetadataMigratedDocument,
+            planningPolicy: resolvedPlanningPolicy
+        )
+        let questionSetBackfilledDocument = withProgressQuestionSetActiveQuestionsMigrationIfNeeded(
+            questionSetMigratedDocument,
+            planningPolicy: resolvedPlanningPolicy
+        )
+        let planningStateMigratedDocument = withPlanningStateDefaultsIfMissing(questionSetBackfilledDocument)
+        let acutePillarMigratedDocument = withLegacyAcuteCustomPillarMigrationIfNeeded(
             planningStateMigratedDocument,
+            interventionsCatalog: firstPartyContent.interventionsCatalog
+        )
+        let migratedDocument = withWakeDaySleepAttributionMigrationIfNeeded(
+            acutePillarMigratedDocument,
             interventionsCatalog: firstPartyContent.interventionsCatalog
         )
 
@@ -50,7 +62,7 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
 
         let sleepAttributionMigrationPatch: UserDataPatch?
         if shouldPersistWakeDaySleepAttributionMigration(
-            from: planningStateMigratedDocument,
+            from: acutePillarMigratedDocument,
             migrated: migratedDocument
         ) {
             sleepAttributionMigrationPatch = .sleepAttributionMigration(
@@ -170,7 +182,10 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
         return document.withCustomCausalDiagram(migratedDiagram)
     }
 
-    private func withProgressQuestionSetStateIfMissing(_ document: UserDataDocument) -> UserDataDocument {
+    private func withProgressQuestionSetStateIfMissing(
+        _ document: UserDataDocument,
+        planningPolicy: PlanningPolicy
+    ) -> UserDataDocument {
         guard document.progressQuestionSetState == nil else {
             return document
         }
@@ -183,7 +198,7 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             .earFullness,
             .healthAnxiety,
         ]
-        let questions = fields.map { field in
+        var questions = fields.map { field in
             GraphDerivedProgressQuestion(
                 id: "morning.\(field.rawValue)",
                 title: Self.defaultQuestionTitle(for: field),
@@ -191,19 +206,83 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
                 sourceEdgeIDs: []
             )
         }
+        questions.append(contentsOf: Self.defaultPillarQuestions(
+            policy: planningPolicy,
+            userDefinedPillars: document.userDefinedPillars
+        ))
         let state = ProgressQuestionSetState(
             activeQuestionSetVersion: "question-set.v1",
             activeSourceGraphVersion: sourceGraphVersion,
+            activeQuestions: questions,
             declinedGraphVersions: [],
-            pendingProposal: ProgressQuestionSetProposal(
-                sourceGraphVersion: sourceGraphVersion,
-                proposedQuestionSetVersion: "question-set.v1",
-                questions: questions,
-                createdAt: Self.timestampNow()
-            ),
+            pendingProposal: nil,
             updatedAt: Self.timestampNow()
         )
         return document.withProgressQuestionSetState(state)
+    }
+
+    private func withProgressQuestionSetActiveQuestionsMigrationIfNeeded(
+        _ document: UserDataDocument,
+        planningPolicy: PlanningPolicy
+    ) -> UserDataDocument {
+        guard let state = document.progressQuestionSetState else {
+            return document
+        }
+
+        var activeQuestions = state.activeQuestions
+        var pendingProposal = state.pendingProposal
+        var didChange = false
+
+        if activeQuestions.isEmpty,
+           let pending = pendingProposal,
+           pending.proposedQuestionSetVersion == state.activeQuestionSetVersion {
+            activeQuestions = pending.questions
+            pendingProposal = nil
+            didChange = true
+        }
+
+        if activeQuestions.isEmpty {
+            let morningFields = document.morningQuestionnaire?.enabledFields ?? [
+                .globalSensation,
+                .neckTightness,
+                .jawSoreness,
+                .earFullness,
+                .healthAnxiety,
+                .stressLevel,
+                .morningHeadache,
+                .dryMouth,
+            ]
+            var synthesizedQuestions = morningFields.map { field in
+                GraphDerivedProgressQuestion(
+                    id: "morning.\(field.rawValue)",
+                    title: Self.defaultQuestionTitle(for: field),
+                    sourceNodeIDs: [],
+                    sourceEdgeIDs: []
+                )
+            }
+
+            synthesizedQuestions.append(contentsOf: Self.defaultPillarQuestions(
+                policy: planningPolicy,
+                userDefinedPillars: document.userDefinedPillars
+            ))
+
+            activeQuestions = Self.deduplicatedQuestions(synthesizedQuestions)
+            didChange = true
+        }
+
+        guard didChange else {
+            return document
+        }
+
+        let nextState = ProgressQuestionSetState(
+            activeQuestionSetVersion: state.activeQuestionSetVersion,
+            activeSourceGraphVersion: state.activeSourceGraphVersion,
+            activeQuestions: activeQuestions,
+            declinedGraphVersions: state.declinedGraphVersions,
+            pendingProposal: pendingProposal,
+            updatedAt: Self.timestampNow()
+        )
+        return document.withProgressQuestionSetState(nextState)
     }
 
     private func withPlanningStateDefaultsIfMissing(_ document: UserDataDocument) -> UserDataDocument {
@@ -224,8 +303,8 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             updatedAt: timestamp
         )
         let lensState = document.healthLensState ?? HealthLensState(
-            preset: .all,
-            selectedPillar: nil,
+            mode: .all,
+            pillarSelection: .all,
             updatedAt: timestamp
         )
 
@@ -239,6 +318,69 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             .withPlannerPreferencesState(plannerPreferences)
             .withHabitPlannerState(plannerState)
             .withHealthLensState(lensState)
+    }
+
+    private func withLegacyAcuteCustomPillarMigrationIfNeeded(
+        _ document: UserDataDocument,
+        interventionsCatalog: InterventionsCatalog
+    ) -> UserDataDocument {
+        let acuteInterventions = interventionsCatalog.interventions.filter { definition in
+            (definition.planningTags ?? []).contains(.acute)
+        }
+        if acuteInterventions.isEmpty {
+            return document
+        }
+
+        let pillarID = "neck"
+        let timestamp = Self.timestampNow()
+        var userDefinedPillars = document.userDefinedPillars
+        if !userDefinedPillars.contains(where: { $0.id == pillarID }) {
+            userDefinedPillars.append(
+                UserDefinedPillar(
+                    id: pillarID,
+                    title: "My Neck",
+                    templateId: "acute-neck-template",
+                    createdAt: timestamp,
+                    updatedAt: timestamp,
+                    isArchived: false
+                )
+            )
+        }
+
+        let graphNodeIDs = Set(acuteInterventions.compactMap(\.graphNodeId))
+        let graphEdgeIDs = Set(acuteInterventions.flatMap { $0.graphEdgeIds ?? [] })
+        let interventionIDs = Set(acuteInterventions.map(\.id))
+        var pillarAssignments = document.pillarAssignments
+        if let assignmentIndex = pillarAssignments.firstIndex(where: { $0.pillarId == pillarID }) {
+            let existing = pillarAssignments[assignmentIndex]
+            pillarAssignments[assignmentIndex] = PillarAssignment(
+                pillarId: pillarID,
+                graphNodeIds: Set(existing.graphNodeIds).union(graphNodeIDs).sorted(),
+                graphEdgeIds: Set(existing.graphEdgeIds).union(graphEdgeIDs).sorted(),
+                interventionIds: Set(existing.interventionIds).union(interventionIDs).sorted(),
+                questionId: existing.questionId ?? "pillar.\(pillarID)"
+            )
+        } else {
+            pillarAssignments.append(
+                PillarAssignment(
+                    pillarId: pillarID,
+                    graphNodeIds: graphNodeIDs.sorted(),
+                    graphEdgeIds: graphEdgeIDs.sorted(),
+                    interventionIds: interventionIDs.sorted(),
+                    questionId: "pillar.\(pillarID)"
+                )
+            )
+        }
+
+        let didChange = userDefinedPillars != document.userDefinedPillars
+            || pillarAssignments != document.pillarAssignments
+        if !didChange {
+            return document
+        }
+
+        return document
+            .withUserDefinedPillars(userDefinedPillars)
+            .withPillarAssignments(pillarAssignments)
     }
 
     private func withWakeDaySleepAttributionMigrationIfNeeded(
@@ -629,6 +771,50 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             hash &*= 0x100000001b3
         }
         return String(format: "graph-%016llx", hash)
+    }
+
+    private static func defaultPillarQuestions(
+        policy: PlanningPolicy,
+        userDefinedPillars: [UserDefinedPillar]
+    ) -> [GraphDerivedProgressQuestion] {
+        let corePillars = policy.orderedPillars
+        let customPillars = userDefinedPillars
+            .filter { !$0.isArchived }
+            .sorted { left, right in
+                if left.createdAt != right.createdAt {
+                    return left.createdAt < right.createdAt
+                }
+                return left.id.localizedCaseInsensitiveCompare(right.id) == .orderedAscending
+            }
+            .map { pillar in
+                HealthPillarDefinition(
+                    id: HealthPillar(id: pillar.id),
+                    title: pillar.title,
+                    rank: 0
+                )
+            }
+
+        return (corePillars + customPillars).map { pillar in
+            GraphDerivedProgressQuestion(
+                id: "pillar.\(pillar.id.id)",
+                title: "How was your \(pillar.title.lowercased()) today?",
+                sourceNodeIDs: [],
+                sourceEdgeIDs: []
+            )
+        }
+    }
+
+    private static func deduplicatedQuestions(_ questions: [GraphDerivedProgressQuestion]) -> [GraphDerivedProgressQuestion] {
+        var deduped: [GraphDerivedProgressQuestion] = []
+        var seenIDs = Set<String>()
+
+        for question in questions {
+            if seenIDs.insert(question.id).inserted {
+                deduped.append(question)
+            }
+        }
+
+        return deduped
     }
 
     private static func defaultQuestionTitle(for field: MorningQuestionField) -> String {

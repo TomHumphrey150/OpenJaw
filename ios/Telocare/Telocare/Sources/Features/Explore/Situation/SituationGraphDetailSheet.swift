@@ -393,6 +393,10 @@ struct SituationOptionsSheet: View {
     let situation: SituationSummary
     let graphSelectionText: String
     let displayFlags: GraphDisplayFlags
+    let mapMode: SituationMapMode
+    let showPagerInterventions: Bool
+    let onMapModeChanged: (SituationMapMode) -> Void
+    let onShowPagerInterventionsChanged: (Bool) -> Void
     let onAction: (ExploreContextAction) -> Void
     let onShowInterventionsChanged: (Bool) -> Void
     let onShowFeedbackEdgesChanged: (Bool) -> Void
@@ -457,6 +461,39 @@ struct SituationOptionsSheet: View {
                 }
 
                 Section {
+                    Picker(
+                        "Map mode",
+                        selection: Binding(
+                            get: { mapMode },
+                            set: onMapModeChanged
+                        )
+                    ) {
+                        ForEach(SituationMapMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier(AccessibilityID.exploreSituationMapModePicker)
+
+                    Toggle(
+                        "Show interventions in pager",
+                        isOn: Binding(
+                            get: { showPagerInterventions },
+                            set: onShowPagerInterventionsChanged
+                        )
+                    )
+                    .tint(TelocareTheme.coral)
+                    .disabled(mapMode != .pager)
+                    .accessibilityIdentifier(AccessibilityID.exploreSituationPagerInterventionsToggle)
+                } header: {
+                    Text("Mode")
+                        .font(TelocareTheme.Typography.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(TelocareTheme.coral)
+                        .textCase(nil)
+                }
+
+                Section {
                     ForEach(ExploreContextAction.allCases) { action in
                         Button(action.title) {
                             onAction(action)
@@ -472,6 +509,7 @@ struct SituationOptionsSheet: View {
                         .textCase(nil)
                 }
             }
+            .accessibilityIdentifier(AccessibilityID.exploreSituationOptionsSheet)
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(TelocareTheme.sand)
@@ -488,4 +526,3 @@ struct SituationOptionsSheet: View {
         }
     }
 }
-

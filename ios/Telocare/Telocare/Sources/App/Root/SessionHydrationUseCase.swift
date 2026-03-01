@@ -6,7 +6,6 @@ struct SessionHydrationResult {
 }
 
 protocol SessionHydrationUseCase {
-    @MainActor
     func hydrate(session: AuthSession) async throws -> SessionHydrationResult
 }
 
@@ -25,22 +24,22 @@ struct DefaultSessionHydrationUseCase: SessionHydrationUseCase {
         self.dashboardFactory = dashboardFactory
     }
 
-    @MainActor
     func hydrate(session: AuthSession) async throws -> SessionHydrationResult {
-        let fetchedDocument = try await userDataRepository.fetch(userID: session.userID)
-        let firstPartyContent = try await loadFirstPartyContent(userID: session.userID)
+        async let fetchedDocument = userDataRepository.fetch(userID: session.userID)
+        async let firstPartyContent = loadFirstPartyContent(userID: session.userID)
+        let (resolvedDocument, resolvedFirstPartyContent) = try await (fetchedDocument, firstPartyContent)
         let migrationResult = migrationPipeline.run(
-            fetchedDocument: fetchedDocument,
-            firstPartyContent: firstPartyContent
+            fetchedDocument: resolvedDocument,
+            firstPartyContent: resolvedFirstPartyContent
         )
 
         backfillCanonicalGraphIfMissing(migrationResult.canonicalBackfillDiagram)
         persistDormantGraphMigrationIfNeeded(migrationResult.dormantGraphMigrationDiagram)
         persistSleepAttributionMigrationIfNeeded(migrationResult.sleepAttributionMigrationPatch)
 
-        let dashboardViewModel = dashboardFactory.makeDashboard(
+        let dashboardViewModel = await dashboardFactory.makeDashboard(
             document: migrationResult.document,
-            firstPartyContent: firstPartyContent
+            firstPartyContent: resolvedFirstPartyContent
         )
 
         return SessionHydrationResult(

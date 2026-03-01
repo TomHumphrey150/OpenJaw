@@ -79,8 +79,7 @@ private struct ReadyDashboardRootView: View {
         }
         .safeAreaInset(edge: .top) {
             GlobalLensStatusBar(
-                preset: dashboardViewModel.projectedHealthLensPreset,
-                selectedPillar: dashboardViewModel.projectedHealthLensPillar,
+                label: dashboardViewModel.projectedHealthLensLabel,
                 onTap: {
                     dashboardViewModel.setLensControlExpanded(true)
                 }
@@ -90,14 +89,22 @@ private struct ReadyDashboardRootView: View {
             switch modal {
             case .globalLens:
                 GlobalLensSheet(
-                    preset: dashboardViewModel.projectedHealthLensPreset,
-                    pillars: dashboardViewModel.projectedHealthLensPillars,
-                    selectedPillar: dashboardViewModel.projectedHealthLensPillar,
-                    onSetPreset: { preset in
-                        dashboardViewModel.setHealthLensPreset(preset)
+                    mode: dashboardViewModel.projectedHealthLensMode,
+                    selection: dashboardViewModel.projectedHealthLensSelection,
+                    corePillars: dashboardViewModel.projectedCoreHealthLensPillars,
+                    userDefinedPillars: dashboardViewModel.projectedUserDefinedHealthLensPillars,
+                    userDefinedPillarRows: dashboardViewModel.projectedUserDefinedPillars,
+                    onSelectAll: dashboardViewModel.selectAllHealthLensPillars,
+                    onSelectNone: dashboardViewModel.clearHealthLensPillars,
+                    onTogglePillar: dashboardViewModel.toggleHealthLensPillar,
+                    onCreatePillar: { templateID, title in
+                        dashboardViewModel.createUserDefinedPillar(templateID: templateID, title: title)
                     },
-                    onSetPillar: { pillar in
-                        dashboardViewModel.setHealthLensPillar(pillar)
+                    onRenamePillar: { pillarID, title in
+                        dashboardViewModel.renameUserDefinedPillar(pillarID: pillarID, title: title)
+                    },
+                    onSetPillarArchived: { pillarID, isArchived in
+                        dashboardViewModel.setUserDefinedPillarArchived(pillarID: pillarID, isArchived: isArchived)
                     },
                     onClose: {
                         dashboardViewModel.setLensControlExpanded(false)
@@ -150,8 +157,7 @@ private struct ReadyDashboardRootView: View {
 }
 
 private struct GlobalLensStatusBar: View {
-    let preset: HealthLensPreset
-    let selectedPillar: HealthPillar?
+    let label: String
     let onTap: () -> Void
 
     var body: some View {
@@ -165,7 +171,7 @@ private struct GlobalLensStatusBar: View {
                     Text("Global Lens")
                         .font(.caption)
                         .foregroundStyle(TelocareTheme.warmGray)
-                    Text(filterLabel)
+                    Text(label)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(TelocareTheme.charcoal)
                         .lineLimit(1)
@@ -194,22 +200,9 @@ private struct GlobalLensStatusBar: View {
         .padding(.bottom, 6)
         .background(TelocareTheme.sand.opacity(0.97))
         .accessibilityLabel("Global lens")
-        .accessibilityValue(filterLabel)
+        .accessibilityValue(label)
         .accessibilityHint("Opens global lens controls.")
         .accessibilityIdentifier(AccessibilityID.globalLensNub)
-    }
-
-    private var filterLabel: String {
-        switch preset {
-        case .all:
-            return "All"
-        case .foundation:
-            return "Foundation"
-        case .acute:
-            return "Acute"
-        case .pillar:
-            return selectedPillar?.displayName ?? "Pillar"
-        }
     }
 }
 

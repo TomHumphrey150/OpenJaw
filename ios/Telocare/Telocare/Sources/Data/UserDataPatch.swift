@@ -9,6 +9,10 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let appleHealthConnections: [String: AppleHealthConnection]?
     let nightOutcomes: [NightOutcome]?
     let morningStates: [MorningState]?
+    let foundationCheckIns: [FoundationCheckIn]?
+    let userDefinedPillars: [UserDefinedPillar]?
+    let pillarAssignments: [PillarAssignment]?
+    let pillarCheckIns: [PillarCheckIn]?
     let activeInterventions: [String]?
     let hiddenInterventions: [String]?
     let customCausalDiagram: CustomCausalDiagram?
@@ -18,6 +22,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let plannerPreferencesState: PlannerPreferencesState?
     let habitPlannerState: HabitPlannerState?
     let healthLensState: HealthLensState?
+    let globalLensSelection: HealthLensState?
 
     init(
         experienceFlow: ExperienceFlow?,
@@ -28,6 +33,10 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         appleHealthConnections: [String: AppleHealthConnection]?,
         nightOutcomes: [NightOutcome]? = nil,
         morningStates: [MorningState]?,
+        foundationCheckIns: [FoundationCheckIn]? = nil,
+        userDefinedPillars: [UserDefinedPillar]? = nil,
+        pillarAssignments: [PillarAssignment]? = nil,
+        pillarCheckIns: [PillarCheckIn]? = nil,
         activeInterventions: [String]?,
         hiddenInterventions: [String]?,
         customCausalDiagram: CustomCausalDiagram? = nil,
@@ -36,7 +45,8 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         gardenAliasOverrides: [GardenAliasOverride]? = nil,
         plannerPreferencesState: PlannerPreferencesState? = nil,
         habitPlannerState: HabitPlannerState? = nil,
-        healthLensState: HealthLensState? = nil
+        healthLensState: HealthLensState? = nil,
+        globalLensSelection: HealthLensState? = nil
     ) {
         self.experienceFlow = experienceFlow
         self.dailyCheckIns = dailyCheckIns
@@ -46,6 +56,10 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         self.appleHealthConnections = appleHealthConnections
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
+        self.foundationCheckIns = foundationCheckIns
+        self.userDefinedPillars = userDefinedPillars
+        self.pillarAssignments = pillarAssignments
+        self.pillarCheckIns = pillarCheckIns
         self.activeInterventions = activeInterventions
         self.hiddenInterventions = hiddenInterventions
         self.customCausalDiagram = customCausalDiagram
@@ -55,6 +69,7 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         self.plannerPreferencesState = plannerPreferencesState
         self.habitPlannerState = habitPlannerState
         self.healthLensState = healthLensState
+        self.globalLensSelection = globalLensSelection
     }
 
     static func experienceFlow(_ value: ExperienceFlow) -> UserDataPatch {
@@ -221,6 +236,21 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
         )
     }
 
+    static func foundationCheckIns(_ value: [FoundationCheckIn]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            foundationCheckIns: value,
+            activeInterventions: nil,
+            hiddenInterventions: nil
+        )
+    }
+
     static func sleepAttributionMigration(
         dailyDoseProgress: [String: [String: Double]],
         nightOutcomes: [NightOutcome],
@@ -359,7 +389,68 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
             morningStates: nil,
             activeInterventions: nil,
             hiddenInterventions: nil,
-            healthLensState: value
+            healthLensState: value,
+            globalLensSelection: value
+        )
+    }
+
+    static func globalLensSelection(_ value: HealthLensState) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            activeInterventions: nil,
+            hiddenInterventions: nil,
+            globalLensSelection: value
+        )
+    }
+
+    static func userDefinedPillars(_ value: [UserDefinedPillar]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            userDefinedPillars: value,
+            activeInterventions: nil,
+            hiddenInterventions: nil
+        )
+    }
+
+    static func pillarAssignments(_ value: [PillarAssignment]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            pillarAssignments: value,
+            activeInterventions: nil,
+            hiddenInterventions: nil
+        )
+    }
+
+    static func pillarCheckIns(_ value: [PillarCheckIn]) -> UserDataPatch {
+        UserDataPatch(
+            experienceFlow: nil,
+            dailyCheckIns: nil,
+            dailyDoseProgress: nil,
+            interventionCompletionEvents: nil,
+            interventionDoseSettings: nil,
+            appleHealthConnections: nil,
+            morningStates: nil,
+            pillarCheckIns: value,
+            activeInterventions: nil,
+            hiddenInterventions: nil
         )
     }
 }

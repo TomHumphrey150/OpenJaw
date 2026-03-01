@@ -193,7 +193,7 @@ function buildBaseInput() {
 test('buildAuditReport returns required top-level and detail shape', () => {
   const report = buildAuditReport(buildBaseInput());
 
-  assert.equal(report.audit_version, 'user-graph-audit.v1');
+  assert.equal(report.audit_version, 'user-graph-audit.v2');
   assert.equal(report.input.user_id, 'test-user');
   assert.ok(report.generated_at);
 

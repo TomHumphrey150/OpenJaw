@@ -1306,13 +1306,15 @@ struct AppViewModelTests {
     }
 
     @Test func globalLensRowsUseExpectedAccessibilityIDs() {
-        #expect(globalLensAccessibilityIdentifier(for: .all) == AccessibilityID.exploreInputsLensAll)
-        #expect(globalLensAccessibilityIdentifier(for: .foundation) == AccessibilityID.exploreInputsLensFoundation)
-        #expect(globalLensAccessibilityIdentifier(for: .acute) == AccessibilityID.exploreInputsLensAcute)
-        #expect(globalLensAccessibilityIdentifier(for: .pillar) == AccessibilityID.exploreInputsLensPillar)
+        let identifiers = Set([
+            AccessibilityID.exploreInputsLensAll,
+            AccessibilityID.exploreInputsLensNone,
+            AccessibilityID.exploreInputsLensManagePillars,
+            AccessibilityID.exploreInputsLensPillar(pillar: "sleep"),
+            AccessibilityID.exploreInputsLensPillar(pillar: "my-neck"),
+        ])
 
-        let identifiers = Set(HealthLensPreset.allCases.map(globalLensAccessibilityIdentifier(for:)))
-        #expect(identifiers.count == HealthLensPreset.allCases.count)
+        #expect(identifiers.count == 5)
     }
 
     @Test func coldStartAlwaysCollapsesLensPanelEvenWhenSavedExpanded() {
@@ -1327,7 +1329,7 @@ struct AppViewModelTests {
             )
         )
 
-        #expect(harness.viewModel.projectedHealthLensPreset == .acute)
+        #expect(harness.viewModel.projectedHealthLensPreset == .all)
         #expect(harness.viewModel.projectedLensControlState.position == expectedStartupPosition)
         #expect(harness.viewModel.projectedLensControlState.position != savedPosition)
         #expect(harness.viewModel.projectedLensControlState.isExpanded == false)
@@ -1448,7 +1450,8 @@ struct AppViewModelTests {
 
         let projectedInputIDs = Set(harness.viewModel.projectedInputs.map { $0.id })
         #expect(projectedInputIDs == Set(["sleep_habit"]))
-        #expect(harness.viewModel.projectedSituationGraphData.nodes.contains { $0.data.id == "SLEEP_DEP" })
+        #expect(harness.viewModel.projectedSituationGraphData.nodes.contains { $0.data.id == "SLEEP_HYG_TX" })
+        #expect(harness.viewModel.projectedSituationGraphData.nodes.contains { $0.data.id == "SLEEP_DEP" } == false)
         #expect(harness.viewModel.projectedProgressMorningStatesForCharts.count == 1)
         #expect(harness.viewModel.projectedProgressMorningStatesForCharts.first?.nightId == "2026-02-21")
         let exclusionNote = harness.viewModel.projectedProgressExcludedChartsNote

@@ -760,16 +760,27 @@
     const positions = {};
     const minX = 56;
     const maxX = Math.max(minX + 1, width - 56);
+    const minY = 60;
+    const maxY = Math.max(minY + 1, height - 60);
 
     for (let tier = 1; tier <= 10; tier += 1) {
       const ids = buckets.get(tier) || [];
       if (ids.length === 0) continue;
 
-      const y = rowY(tier, height);
+      const baseY = rowY(tier, height);
+      const columnCount = Math.max(1, Math.min(ids.length, Math.ceil(Math.sqrt(ids.length)) * 2));
+      const rowCount = Math.ceil(ids.length / columnCount);
+      const rowSpacing = 26;
+      const yStart = baseY - ((rowCount - 1) * rowSpacing) / 2;
+
       ids.forEach((id, index) => {
-        const x = ids.length === 1
+        const row = Math.floor(index / columnCount);
+        const column = index % columnCount;
+        const rowItemCount = Math.min(columnCount, ids.length - row * columnCount);
+        const x = rowItemCount <= 1
           ? (minX + maxX) / 2
-          : minX + (index / (ids.length - 1)) * (maxX - minX);
+          : minX + (column / (rowItemCount - 1)) * (maxX - minX);
+        const y = Math.max(minY, Math.min(maxY, yStart + row * rowSpacing));
         positions[id] = { x, y };
       });
     }
@@ -1023,7 +1034,8 @@
     if (envelope.command === 'setSkin') {
       applySkin(envelope.payload);
       if (cy) {
-        renderGraph(currentGraphData, { preserveViewport: true });
+        cy.style(cyStyles());
+        applyZoomAdaptiveStyle();
       }
       return;
     }

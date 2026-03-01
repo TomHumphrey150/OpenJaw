@@ -3,7 +3,7 @@ import Foundation
 struct ProgressQuestionProposalBuilder {
     private let maximumQuestionCount: Int
 
-    init(maximumQuestionCount: Int = 6) {
+    init(maximumQuestionCount: Int = 12) {
         self.maximumQuestionCount = max(1, maximumQuestionCount)
     }
 

@@ -19,8 +19,7 @@ struct GardenHierarchyBuilder {
         graphData: CausalGraphData,
         selection: GardenHierarchySelection
     ) -> GardenHierarchyBuildResult {
-        let rootInputs = inputs.filter(\.isActive)
-        let initialInputs = rootInputs.isEmpty ? inputs : rootInputs
+        let initialInputs = inputs
         let index = GraphHierarchyIndex(graphData: graphData, inputs: initialInputs, nameResolver: nameResolver)
 
         var currentInputs = initialInputs

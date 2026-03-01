@@ -20,6 +20,11 @@ struct GraphCheckpointSummary: Equatable, Sendable, Identifiable {
     }
 }
 
+private struct ResolvedGraphEdgeRow {
+    let id: String
+    let data: GraphEdgeData
+}
+
 @Observable
 @MainActor
 final class AppViewModel {
@@ -78,6 +83,11 @@ final class AppViewModel {
     private var appleHealthReferenceValues: [String: Double]
     private var nightOutcomes: [NightOutcome]
     private var morningStates: [MorningState]
+    private var foundationCheckIns: [FoundationCheckIn]
+    private var userDefinedPillars: [UserDefinedPillar]
+    private var pillarAssignments: [PillarAssignment]
+    private var pillarCheckIns: [PillarCheckIn]
+    private(set) var foundationCheckInResponsesByQuestionID: [String: Int]
     private var activeInterventions: [String]
     private var inputCheckOperationToken: Int
     private var inputDoseOperationToken: Int
@@ -85,6 +95,7 @@ final class AppViewModel {
     private var inputActiveOperationToken: Int
     private var appleHealthConnectionOperationToken: Int
     private var morningOutcomeOperationToken: Int
+    private var foundationCheckInOperationToken: Int
     private var graphDeactivationOperationToken: Int
     private var museSessionOperationToken: Int
     private var museOutcomeSaveOperationToken: Int
@@ -260,6 +271,10 @@ final class AppViewModel {
         initialAppleHealthConnections: [String: AppleHealthConnection] = [:],
         initialNightOutcomes: [NightOutcome] = [],
         initialMorningStates: [MorningState] = [],
+        initialFoundationCheckIns: [FoundationCheckIn] = [],
+        initialUserDefinedPillars: [UserDefinedPillar] = [],
+        initialPillarAssignments: [PillarAssignment] = [],
+        initialPillarCheckIns: [PillarCheckIn] = [],
         initialMorningQuestionnaire: MorningQuestionnaire? = nil,
         initialProgressQuestionSetState: ProgressQuestionSetState? = nil,
         initialPlannerPreferencesState: PlannerPreferencesState? = nil,
@@ -381,6 +396,15 @@ final class AppViewModel {
         appleHealthReferenceValues = [:]
         nightOutcomes = initialNightOutcomes
         morningStates = initialMorningStates
+        foundationCheckIns = initialFoundationCheckIns
+        userDefinedPillars = initialUserDefinedPillars
+        pillarAssignments = initialPillarAssignments
+        pillarCheckIns = initialPillarCheckIns
+        foundationCheckInResponsesByQuestionID = Self.foundationResponses(
+            for: todayKey,
+            foundationCheckIns: initialFoundationCheckIns,
+            pillarCheckIns: initialPillarCheckIns
+        )
         let snapshotActiveInterventions = snapshot.inputs.compactMap { input -> String? in
             input.isActive ? input.id : nil
         }
@@ -392,6 +416,7 @@ final class AppViewModel {
         inputActiveOperationToken = 0
         appleHealthConnectionOperationToken = 0
         morningOutcomeOperationToken = 0
+        foundationCheckInOperationToken = 0
         graphDeactivationOperationToken = 0
         museSessionOperationToken = 0
         museOutcomeSaveOperationToken = 0
@@ -466,8 +491,8 @@ final class AppViewModel {
 
         guard let savedState else {
             return HealthLensState(
-                preset: .all,
-                selectedPillar: nil,
+                mode: .all,
+                pillarSelection: .all,
                 updatedAt: Self.timestamp(from: nowProvider()),
                 controlState: LensControlState(
                     position: startupPosition,
@@ -477,8 +502,8 @@ final class AppViewModel {
         }
 
         return HealthLensState(
-            preset: savedState.preset,
-            selectedPillar: savedState.selectedPillar,
+            mode: savedState.mode,
+            pillarSelection: savedState.pillarSelection,
             updatedAt: savedState.updatedAt,
             controlState: LensControlState(
                 position: startupPosition,
@@ -496,15 +521,79 @@ final class AppViewModel {
     }
 
     var morningCheckInFields: [MorningOutcomeField] {
-        configuredMorningOutcomeFields
+        let questionFields = questionDrivenMorningOutcomeFields()
+        if questionFields.isEmpty {
+            return configuredMorningOutcomeFields
+        }
+        return questionFields
     }
 
     var requiredMorningCheckInFields: [MorningOutcomeField] {
-        requiredMorningOutcomeFields
+        let questionFields = questionDrivenMorningOutcomeFields()
+        if questionFields.isEmpty {
+            return requiredMorningOutcomeFields
+        }
+        return questionFields
     }
 
     var morningTrendMetricOptions: [MorningTrendMetric] {
-        configuredMorningTrendMetrics
+        let questionFields = questionDrivenMorningOutcomeFields()
+        if questionFields.isEmpty {
+            return configuredMorningTrendMetrics
+        }
+        return Self.resolveMorningTrendMetrics(from: questionFields)
+    }
+
+    var foundationCheckInQuestions: [GraphDerivedProgressQuestion] {
+        let questionByID = Dictionary(uniqueKeysWithValues: resolvedProgressQuestions().map { ($0.id, $0) })
+        return activePillarsForProgress.map { pillar in
+            let questionID = pillarQuestionID(for: pillar.id)
+            if let resolved = questionByID[questionID] {
+                return resolved
+            }
+            return defaultPillarQuestion(for: pillar)
+        }
+    }
+
+    var foundationRequiredQuestionIDs: [String] {
+        activePillarsForProgress.map { pillar in
+            pillarQuestionID(for: pillar.id)
+        }
+    }
+
+    var foundationCheckInNightID: String {
+        morningOutcomeSelection.nightID
+    }
+
+    var foundationCheckInIsComplete: Bool {
+        !foundationRequiredQuestionIDs.contains { questionID in
+            foundationCheckInResponsesByQuestionID[questionID] == nil
+        }
+    }
+
+    private func questionDrivenMorningOutcomeFields() -> [MorningOutcomeField] {
+        let questions = resolvedProgressQuestions()
+        if questions.isEmpty {
+            return []
+        }
+
+        let mapped = questions.compactMap { question in
+            Self.morningOutcomeField(fromProgressQuestionID: question.id)
+        }
+        return Self.deduplicatedMorningOutcomeFields(mapped)
+    }
+
+    private func resolvedProgressQuestions() -> [GraphDerivedProgressQuestion] {
+        if let proposal = progressQuestionProposal {
+            return proposal.questions
+        }
+
+        let activeQuestions = progressQuestionSetState?.activeQuestions ?? []
+        if !activeQuestions.isEmpty {
+            return activeQuestions
+        }
+
+        return []
     }
 
     var projectedInputs: [InputStatus] {
@@ -514,32 +603,48 @@ final class AppViewModel {
     }
 
     var projectedSituationGraphData: CausalGraphData {
-        guard healthLensState.preset != .all else {
+        guard !isGlobalLensAllSelected else {
             return graphData
         }
 
-        let sourceNodeIDs = healthLensNodeIDs
+        let selectedPillarIDs = selectedLensPillarIDs()
+        guard !selectedPillarIDs.isEmpty else {
+            return CausalGraphData(nodes: [], edges: [])
+        }
+        let ownedNodeIDsByPillarID = ownedGraphNodeIDsByPillarID()
+        let ownedEdgeIDsByPillarID = ownedGraphEdgeIDsByPillarID()
+        let sourceNodeIDs = selectedPillarIDs.reduce(into: Set<String>()) { result, pillarID in
+            result.formUnion(ownedNodeIDsByPillarID[pillarID, default: []])
+        }
+        let sourceEdgeIDs = selectedPillarIDs.reduce(into: Set<String>()) { result, pillarID in
+            result.formUnion(ownedEdgeIDsByPillarID[pillarID, default: []])
+        }
+
         if sourceNodeIDs.isEmpty {
             return CausalGraphData(nodes: [], edges: [])
         }
 
-        let edges = graphData.edges.filter { edge in
-            sourceNodeIDs.contains(edge.data.source) || sourceNodeIDs.contains(edge.data.target)
-        }
-        let connectedNodeIDs = Set(
-            edges.flatMap { edge in
-                [edge.data.source, edge.data.target]
+        let edges = resolvedGraphEdgeRows().compactMap { row -> GraphEdgeElement? in
+            guard sourceEdgeIDs.contains(row.id) else {
+                return nil
             }
-        ).union(sourceNodeIDs)
+            guard sourceNodeIDs.contains(row.data.source), sourceNodeIDs.contains(row.data.target) else {
+                return nil
+            }
+            return GraphEdgeElement(data: row.data)
+        }
+        let connectedNodeIDs = Set(edges.flatMap { edge in
+            [edge.data.source, edge.data.target]
+        }).union(sourceNodeIDs)
         let nodes = graphData.nodes.filter { node in
-            connectedNodeIDs.contains(node.data.id)
+            connectedNodeIDs.contains(node.data.id) && sourceNodeIDs.contains(node.data.id)
         }
 
         return CausalGraphData(nodes: nodes, edges: edges)
     }
 
     var projectedSituationGraphIsLensFilteredEmpty: Bool {
-        healthLensState.preset != .all && projectedSituationGraphData.nodes.isEmpty
+        !isGlobalLensAllSelected && projectedSituationGraphData.nodes.isEmpty
     }
 
     var projectedSituationGraphEmptyMessage: String {
@@ -587,13 +692,32 @@ final class AppViewModel {
     }
 
     var projectedHealthLensLabel: String {
-        if healthLensState.preset == .pillar {
-            guard let selectedPillar = healthLensState.selectedPillar else {
-                return HealthLensPreset.pillar.displayName
-            }
-            return planningPolicy.title(for: selectedPillar)
+        if healthLensState.mode == .all || healthLensState.pillarSelection.isAllSelected {
+            return HealthLensMode.all.displayName
         }
-        return healthLensState.preset.displayName
+
+        let selectedPillars = healthLensState.selectedPillarIDs
+        if selectedPillars.isEmpty {
+            return "None"
+        }
+
+        if selectedPillars.count == 1, let selectedPillar = selectedPillars.first {
+            return titleForPillarID(selectedPillar.id)
+        }
+
+        return "\(selectedPillars.count) pillars"
+    }
+
+    var projectedHealthLensMode: HealthLensMode {
+        healthLensState.mode
+    }
+
+    var projectedHealthLensSelection: PillarLensSelection {
+        healthLensState.pillarSelection
+    }
+
+    var projectedSelectedHealthLensPillars: [HealthPillar] {
+        healthLensState.selectedPillarIDs
     }
 
     var projectedHealthLensPreset: HealthLensPreset {
@@ -605,7 +729,38 @@ final class AppViewModel {
     }
 
     var projectedHealthLensPillars: [HealthPillarDefinition] {
+        projectedCoreHealthLensPillars + projectedUserDefinedHealthLensPillars
+    }
+
+    var projectedCoreHealthLensPillars: [HealthPillarDefinition] {
         planningPolicy.orderedPillars
+    }
+
+    var projectedUserDefinedHealthLensPillars: [HealthPillarDefinition] {
+        userDefinedPillars
+            .filter { !$0.isArchived }
+            .sorted { left, right in
+                if left.createdAt != right.createdAt {
+                    return left.createdAt < right.createdAt
+                }
+                return left.id.localizedCaseInsensitiveCompare(right.id) == .orderedAscending
+            }
+            .enumerated()
+            .map { offset, pillar in
+                HealthPillarDefinition(
+                    id: HealthPillar(id: pillar.id),
+                    title: pillar.title,
+                    rank: planningPolicy.orderedPillars.count + offset + 1
+                )
+            }
+    }
+
+    var projectedPillarAssignments: [PillarAssignment] {
+        pillarAssignments
+    }
+
+    var projectedUserDefinedPillars: [UserDefinedPillar] {
+        userDefinedPillars
     }
 
     var projectedProgressMorningStatesForCharts: [MorningState] {
@@ -617,7 +772,7 @@ final class AppViewModel {
     }
 
     var projectedProgressExcludedChartsNote: String? {
-        guard healthLensState.preset != .all else {
+        guard !isGlobalLensAllSelected else {
             return nil
         }
 
@@ -1109,6 +1264,7 @@ final class AppViewModel {
         let nextState = ProgressQuestionSetState(
             activeQuestionSetVersion: proposal.proposedQuestionSetVersion,
             activeSourceGraphVersion: proposal.sourceGraphVersion,
+            activeQuestions: proposal.questions,
             declinedGraphVersions: nextDeclines,
             pendingProposal: nil,
             updatedAt: Self.timestamp(from: nowProvider())
@@ -1137,6 +1293,7 @@ final class AppViewModel {
         let nextState = ProgressQuestionSetState(
             activeQuestionSetVersion: current.activeQuestionSetVersion,
             activeSourceGraphVersion: current.activeSourceGraphVersion,
+            activeQuestions: current.activeQuestions,
             declinedGraphVersions: nextDeclines,
             pendingProposal: nil,
             updatedAt: Self.timestamp(from: nowProvider())
@@ -1694,12 +1851,20 @@ final class AppViewModel {
         }
 
         if existingState.activeSourceGraphVersion == graphVersion {
+            if let pendingProposal = existingState.pendingProposal,
+               pendingProposal.sourceGraphVersion == graphVersion,
+               pendingProposal.proposedQuestionSetVersion != existingState.activeQuestionSetVersion {
+                progressQuestionProposal = pendingProposal
+                return
+            }
+
             progressQuestionProposal = nil
             isProgressQuestionProposalPresented = false
             if existingState.pendingProposal != nil {
                 let nextState = ProgressQuestionSetState(
                     activeQuestionSetVersion: existingState.activeQuestionSetVersion,
                     activeSourceGraphVersion: existingState.activeSourceGraphVersion,
+                    activeQuestions: existingState.activeQuestions,
                     declinedGraphVersions: existingState.declinedGraphVersions,
                     pendingProposal: nil,
                     updatedAt: Self.timestamp(from: nowProvider())
@@ -1726,6 +1891,7 @@ final class AppViewModel {
         let nextState = ProgressQuestionSetState(
             activeQuestionSetVersion: existingState.activeQuestionSetVersion,
             activeSourceGraphVersion: existingState.activeSourceGraphVersion,
+            activeQuestions: existingState.activeQuestions,
             declinedGraphVersions: existingState.declinedGraphVersions,
             pendingProposal: proposal,
             updatedAt: Self.timestamp(from: nowProvider())
@@ -1740,7 +1906,10 @@ final class AppViewModel {
         guard let proposal = progressQuestionProposal else {
             return
         }
-        guard proposal.sourceGraphVersion != progressQuestionSetState?.activeSourceGraphVersion else {
+        let activeSourceGraphVersion = progressQuestionSetState?.activeSourceGraphVersion
+        let activeQuestionSetVersion = progressQuestionSetState?.activeQuestionSetVersion
+        if proposal.sourceGraphVersion == activeSourceGraphVersion,
+           proposal.proposedQuestionSetVersion == activeQuestionSetVersion {
             return
         }
         isProgressQuestionProposalPresented = true
@@ -1750,10 +1919,24 @@ final class AppViewModel {
         ProgressQuestionSetState(
             activeQuestionSetVersion: "questions-\(graphVersion)",
             activeSourceGraphVersion: graphVersion,
+            activeQuestions: defaultActiveProgressQuestions(),
             declinedGraphVersions: [],
             pendingProposal: nil,
             updatedAt: Self.timestamp(from: nowProvider())
         )
+    }
+
+    private func defaultActiveProgressQuestions() -> [GraphDerivedProgressQuestion] {
+        var questions = configuredMorningOutcomeFields.map { field in
+            GraphDerivedProgressQuestion(
+                id: Self.progressQuestionID(from: field),
+                title: field.displayTitle,
+                sourceNodeIDs: [],
+                sourceEdgeIDs: []
+            )
+        }
+        questions.append(contentsOf: activePillarsForProgress.map(defaultPillarQuestion(for:)))
+        return Self.deduplicatedProgressQuestions(questions)
     }
 
     private func buildProgressQuestionSetProposal(for graphVersion: String) -> ProgressQuestionSetProposal {
@@ -1817,8 +2000,8 @@ final class AppViewModel {
             return
         }
         healthLensState = HealthLensState(
-            preset: healthLensState.preset,
-            selectedPillar: healthLensState.selectedPillar,
+            mode: healthLensState.mode,
+            pillarSelection: healthLensState.pillarSelection,
             updatedAt: Self.timestamp(from: nowProvider()),
             controlState: LensControlState(
                 position: healthLensState.controlState.position,
@@ -1838,18 +2021,34 @@ final class AppViewModel {
     }
 
     func setHealthLensPreset(_ preset: HealthLensPreset) {
-        guard preset != healthLensState.preset else {
+        switch preset {
+        case .all, .acute, .foundation:
+            selectAllHealthLensPillars()
+        case .pillar:
+            if !healthLensState.selectedPillarIDs.isEmpty && healthLensState.mode == .pillars {
+                return
+            }
+            if let firstPillar = projectedHealthLensPillars.first?.id {
+                setHealthLensPillar(firstPillar)
+                return
+            }
+            clearHealthLensPillars()
+        }
+    }
+
+    func setHealthLensPillar(_ pillar: HealthPillar) {
+        guard healthLensState.mode != .pillars
+            || healthLensState.pillarSelection.isAllSelected
+            || healthLensState.selectedPillarIDs != [pillar] else {
             return
         }
-        let nextPillar: HealthPillar?
-        if preset == .pillar {
-            nextPillar = healthLensState.selectedPillar ?? planningPolicy.pillarOrder.first
-        } else {
-            nextPillar = nil
-        }
+
         healthLensState = HealthLensState(
-            preset: preset,
-            selectedPillar: nextPillar,
+            mode: .pillars,
+            pillarSelection: PillarLensSelection(
+                selectedPillarIDs: [pillar],
+                isAllSelected: false
+            ),
             updatedAt: Self.timestamp(from: nowProvider()),
             controlState: healthLensState.controlState
         )
@@ -1857,18 +2056,197 @@ final class AppViewModel {
         persistHealthLensState()
     }
 
-    func setHealthLensPillar(_ pillar: HealthPillar) {
-        guard healthLensState.preset != .pillar || healthLensState.selectedPillar != pillar else {
+    func selectAllHealthLensPillars() {
+        guard !isGlobalLensAllSelected else {
             return
         }
+
         healthLensState = HealthLensState(
-            preset: .pillar,
-            selectedPillar: pillar,
+            mode: .all,
+            pillarSelection: .all,
             updatedAt: Self.timestamp(from: nowProvider()),
             controlState: healthLensState.controlState
         )
         scheduleProjectionPublish()
         persistHealthLensState()
+    }
+
+    func clearHealthLensPillars() {
+        if healthLensState.mode == .pillars
+            && !healthLensState.pillarSelection.isAllSelected
+            && healthLensState.selectedPillarIDs.isEmpty {
+            return
+        }
+
+        healthLensState = HealthLensState(
+            mode: .pillars,
+            pillarSelection: PillarLensSelection(
+                selectedPillarIDs: [],
+                isAllSelected: false
+            ),
+            updatedAt: Self.timestamp(from: nowProvider()),
+            controlState: healthLensState.controlState
+        )
+        scheduleProjectionPublish()
+        persistHealthLensState()
+    }
+
+    func toggleHealthLensPillar(_ pillar: HealthPillar) {
+        var selectedPillarIDs = Set(healthLensState.selectedPillarIDs.map(\.id))
+        if selectedPillarIDs.contains(pillar.id) {
+            selectedPillarIDs.remove(pillar.id)
+        } else {
+            selectedPillarIDs.insert(pillar.id)
+        }
+
+        let orderedSelected = projectedHealthLensPillars
+            .map(\.id)
+            .filter { selectedPillarIDs.contains($0.id) }
+        healthLensState = HealthLensState(
+            mode: .pillars,
+            pillarSelection: PillarLensSelection(
+                selectedPillarIDs: orderedSelected,
+                isAllSelected: false
+            ),
+            updatedAt: Self.timestamp(from: nowProvider()),
+            controlState: healthLensState.controlState
+        )
+        scheduleProjectionPublish()
+        persistHealthLensState()
+    }
+
+    func createUserDefinedPillar(templateID: String, title: String) {
+        guard mode == .explore else { return }
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            return
+        }
+
+        let nowTimestamp = Self.timestamp(from: nowProvider())
+        let baseIdentifier = Self.slug(from: trimmedTitle)
+        let existingIDs = Set(userDefinedPillars.map(\.id))
+        var resolvedID = baseIdentifier
+        var suffix = 2
+        while existingIDs.contains(resolvedID) {
+            resolvedID = "\(baseIdentifier)-\(suffix)"
+            suffix += 1
+        }
+
+        let nextPillar = UserDefinedPillar(
+            id: resolvedID,
+            title: trimmedTitle,
+            templateId: templateID,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
+            isArchived: false
+        )
+        userDefinedPillars.append(nextPillar)
+        userDefinedPillars.sort { left, right in
+            if left.createdAt != right.createdAt {
+                return left.createdAt < right.createdAt
+            }
+            return left.id.localizedCaseInsensitiveCompare(right.id) == .orderedAscending
+        }
+        pillarAssignments.append(
+            PillarAssignment(
+                pillarId: resolvedID,
+                graphNodeIds: [],
+                graphEdgeIds: [],
+                interventionIds: [],
+                questionId: "pillar.\(resolvedID)"
+            )
+        )
+        refreshPlanningState()
+        persistPillarConfiguration()
+    }
+
+    func renameUserDefinedPillar(pillarID: String, title: String) {
+        guard mode == .explore else { return }
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            return
+        }
+
+        guard let index = userDefinedPillars.firstIndex(where: { $0.id == pillarID }) else {
+            return
+        }
+        let existing = userDefinedPillars[index]
+        guard existing.title != trimmedTitle else {
+            return
+        }
+
+        userDefinedPillars[index] = UserDefinedPillar(
+            id: existing.id,
+            title: trimmedTitle,
+            templateId: existing.templateId,
+            createdAt: existing.createdAt,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            isArchived: existing.isArchived
+        )
+        refreshPlanningState()
+        persistPillarConfiguration()
+    }
+
+    func setUserDefinedPillarArchived(pillarID: String, isArchived: Bool) {
+        guard mode == .explore else { return }
+        guard let index = userDefinedPillars.firstIndex(where: { $0.id == pillarID }) else {
+            return
+        }
+        let existing = userDefinedPillars[index]
+        guard existing.isArchived != isArchived else {
+            return
+        }
+
+        userDefinedPillars[index] = UserDefinedPillar(
+            id: existing.id,
+            title: existing.title,
+            templateId: existing.templateId,
+            createdAt: existing.createdAt,
+            updatedAt: Self.timestamp(from: nowProvider()),
+            isArchived: isArchived
+        )
+
+        if isArchived {
+            let selectedIDs = Set(healthLensState.selectedPillarIDs.map(\.id))
+            if selectedIDs.contains(pillarID) {
+                let filtered = healthLensState.selectedPillarIDs.filter { $0.id != pillarID }
+                healthLensState = HealthLensState(
+                    mode: .pillars,
+                    pillarSelection: PillarLensSelection(
+                        selectedPillarIDs: filtered,
+                        isAllSelected: false
+                    ),
+                    updatedAt: Self.timestamp(from: nowProvider()),
+                    controlState: healthLensState.controlState
+                )
+            }
+        }
+
+        refreshPlanningState()
+        persistPillarConfiguration()
+        persistHealthLensState()
+    }
+
+    private func persistPillarConfiguration() {
+        Task {
+            do {
+                let patch = UserDataPatch(
+                    experienceFlow: nil,
+                    dailyCheckIns: nil,
+                    dailyDoseProgress: nil,
+                    interventionCompletionEvents: nil,
+                    interventionDoseSettings: nil,
+                    appleHealthConnections: nil,
+                    morningStates: nil,
+                    userDefinedPillars: userDefinedPillars,
+                    pillarAssignments: pillarAssignments,
+                    activeInterventions: nil,
+                    hiddenInterventions: nil
+                )
+                try await persistPatch(patch)
+            } catch {
+            }
+        }
     }
 
     func acceptFlareSuggestion() {
@@ -1900,7 +2278,20 @@ final class AppViewModel {
     private func persistHealthLensState() {
         Task {
             do {
-                try await persistPatch(.healthLensState(healthLensState))
+                let patch = UserDataPatch(
+                    experienceFlow: nil,
+                    dailyCheckIns: nil,
+                    dailyDoseProgress: nil,
+                    interventionCompletionEvents: nil,
+                    interventionDoseSettings: nil,
+                    appleHealthConnections: nil,
+                    morningStates: nil,
+                    activeInterventions: nil,
+                    hiddenInterventions: nil,
+                    healthLensState: healthLensState,
+                    globalLensSelection: healthLensState
+                )
+                try await persistPatch(patch)
             } catch {
             }
         }
@@ -1939,19 +2330,27 @@ final class AppViewModel {
     }
 
     private var healthLensNodeIDs: Set<String> {
-        Set(
-            snapshot.inputs
-                .filter { input in
-                    matchesHealthLens(input: input)
-                }
-                .compactMap { input in
+        if isGlobalLensAllSelected {
+            return Set(
+                snapshot.inputs.compactMap { input in
                     input.graphNodeID ?? input.id
                 }
-        )
+            )
+        }
+
+        let selectedPillarIDs = selectedLensPillarIDs()
+        if selectedPillarIDs.isEmpty {
+            return []
+        }
+
+        let nodeIDsByPillarID = ownedGraphNodeIDsByPillarID()
+        return selectedPillarIDs.reduce(into: Set<String>()) { result, pillarID in
+            result.formUnion(nodeIDsByPillarID[pillarID, default: []])
+        }
     }
 
     private var morningStatesFilteredForCurrentLens: [MorningState] {
-        guard healthLensState.preset != .all else {
+        guard !isGlobalLensAllSelected else {
             return morningStates
         }
         return morningStates.filter { state in
@@ -1960,7 +2359,7 @@ final class AppViewModel {
     }
 
     private var nightOutcomesFilteredForCurrentLens: [NightOutcome] {
-        guard healthLensState.preset != .all else {
+        guard !isGlobalLensAllSelected else {
             return nightOutcomes
         }
         return nightOutcomes.filter { outcome in
@@ -1969,7 +2368,7 @@ final class AppViewModel {
     }
 
     private func graphAssociationMatchesLens(_ association: GraphAssociationRef?) -> Bool {
-        guard healthLensState.preset != .all else {
+        guard !isGlobalLensAllSelected else {
             return true
         }
         guard let association else {
@@ -1987,23 +2386,152 @@ final class AppViewModel {
     }
 
     private func matchesHealthLens(input: InputStatus) -> Bool {
-        guard let metadata = planningMetadataByInterventionID[input.id] else {
+        if isGlobalLensAllSelected {
             return true
         }
 
-        switch healthLensState.preset {
-        case .all:
-            return true
-        case .foundation:
-            return metadata.isFoundation
-        case .acute:
-            return metadata.isAcute
-        case .pillar:
-            guard let pillar = healthLensState.selectedPillar else {
-                return true
-            }
-            return metadata.pillars.contains(pillar)
+        let selectedPillarIDs = selectedLensPillarIDs()
+        if selectedPillarIDs.isEmpty {
+            return false
         }
+
+        let inputPillarIDs = pillarIDs(for: input.id)
+        if inputPillarIDs.isEmpty {
+            return false
+        }
+
+        return !selectedPillarIDs.isDisjoint(with: inputPillarIDs)
+    }
+
+    private var isGlobalLensAllSelected: Bool {
+        healthLensState.mode == .all || healthLensState.pillarSelection.isAllSelected
+    }
+
+    private func selectedLensPillarIDs() -> Set<String> {
+        if isGlobalLensAllSelected {
+            return Set(projectedHealthLensPillars.map { $0.id.id })
+        }
+        return Set(healthLensState.selectedPillarIDs.map(\.id))
+    }
+
+    private func titleForPillarID(_ pillarID: String) -> String {
+        if let definition = projectedHealthLensPillars.first(where: { $0.id.id == pillarID }) {
+            return definition.title
+        }
+        return HealthPillar(id: pillarID).displayName
+    }
+
+    private func pillarIDs(for interventionID: String) -> Set<String> {
+        var pillarIDs = Set(
+            planningMetadataByInterventionID[interventionID]?.pillars.map(\.id) ?? []
+        )
+        for assignment in pillarAssignments where assignment.interventionIds.contains(interventionID) {
+            let pillarID = assignment.pillarId.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !pillarID.isEmpty {
+                pillarIDs.insert(pillarID)
+            }
+        }
+        return pillarIDs
+    }
+
+    private func resolvedGraphEdgeRows() -> [ResolvedGraphEdgeRow] {
+        var duplicateCounterByBase: [String: Int] = [:]
+        return graphData.edges.map { edge in
+            let edgeType = edge.data.edgeType?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let label = edge.data.label?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let base = "edge:\(edge.data.source)|\(edge.data.target)|\(edgeType)|\(label)"
+            let duplicateIndex = duplicateCounterByBase[base] ?? 0
+            duplicateCounterByBase[base] = duplicateIndex + 1
+            return ResolvedGraphEdgeRow(
+                id: resolvedGraphEdgeID(edge: edge.data, duplicateIndex: duplicateIndex),
+                data: edge.data
+            )
+        }
+    }
+
+    private func resolvedGraphEdgeID(edge: GraphEdgeData, duplicateIndex: Int) -> String {
+        if let explicitID = edge.id?.trimmingCharacters(in: .whitespacesAndNewlines), !explicitID.isEmpty {
+            return explicitID
+        }
+
+        let edgeType = edge.edgeType?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let label = edge.label?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return "edge:\(edge.source)|\(edge.target)|\(edgeType)|\(label)#\(duplicateIndex)"
+    }
+
+    private func ownedGraphNodeIDsByPillarID() -> [String: Set<String>] {
+        let graphNodeIDSet = Set(graphData.nodes.map { $0.data.id })
+        var nodeIDsByPillarID: [String: Set<String>] = [:]
+
+        for node in graphData.nodes {
+            for pillarID in node.data.pillarIds ?? [] where !pillarID.isEmpty {
+                nodeIDsByPillarID[pillarID, default: []].insert(node.data.id)
+            }
+        }
+
+        for input in snapshot.inputs {
+            guard let graphNodeID = input.graphNodeID, graphNodeIDSet.contains(graphNodeID) else {
+                continue
+            }
+
+            for pillarID in pillarIDs(for: input.id) {
+                nodeIDsByPillarID[pillarID, default: []].insert(graphNodeID)
+            }
+        }
+
+        for assignment in pillarAssignments {
+            let pillarID = assignment.pillarId.trimmingCharacters(in: .whitespacesAndNewlines)
+            if pillarID.isEmpty {
+                continue
+            }
+
+            for nodeID in assignment.graphNodeIds where graphNodeIDSet.contains(nodeID) {
+                nodeIDsByPillarID[pillarID, default: []].insert(nodeID)
+            }
+
+            for interventionID in assignment.interventionIds {
+                guard let graphNodeID = snapshot.inputs.first(where: { $0.id == interventionID })?.graphNodeID else {
+                    continue
+                }
+                guard graphNodeIDSet.contains(graphNodeID) else {
+                    continue
+                }
+                nodeIDsByPillarID[pillarID, default: []].insert(graphNodeID)
+            }
+        }
+
+        return nodeIDsByPillarID
+    }
+
+    private func ownedGraphEdgeIDsByPillarID() -> [String: Set<String>] {
+        let resolvedEdges = resolvedGraphEdgeRows()
+        let edgeByID = Dictionary(uniqueKeysWithValues: resolvedEdges.map { ($0.id, $0.data) })
+        let nodeIDsByPillarID = ownedGraphNodeIDsByPillarID()
+        var edgeIDsByPillarID: [String: Set<String>] = [:]
+
+        for edge in resolvedEdges {
+            for pillarID in edge.data.pillarIds ?? [] where !pillarID.isEmpty {
+                edgeIDsByPillarID[pillarID, default: []].insert(edge.id)
+            }
+        }
+
+        for assignment in pillarAssignments {
+            let pillarID = assignment.pillarId.trimmingCharacters(in: .whitespacesAndNewlines)
+            if pillarID.isEmpty {
+                continue
+            }
+            for edgeID in assignment.graphEdgeIds where edgeByID[edgeID] != nil {
+                edgeIDsByPillarID[pillarID, default: []].insert(edgeID)
+            }
+        }
+
+        for edge in resolvedEdges {
+            for (pillarID, ownedNodeIDs) in nodeIDsByPillarID where ownedNodeIDs.contains(edge.data.source) && ownedNodeIDs.contains(edge.data.target) {
+                edgeIDsByPillarID[pillarID, default: []].insert(edge.id)
+            }
+        }
+
+        return edgeIDsByPillarID
     }
 
 
@@ -2653,7 +3181,7 @@ final class AppViewModel {
             field: field,
             selection: morningOutcomeSelection,
             morningStates: morningStates,
-            configuredFields: configuredMorningOutcomeFields,
+            configuredFields: morningCheckInFields,
             at: nowProvider()
         ) else { return }
 
@@ -2676,6 +3204,88 @@ final class AppViewModel {
                 refreshPlanningState()
                 exploreFeedback = mutation.failureMessage
                 announce(mutation.failureMessage)
+            }
+        }
+    }
+
+    func setFoundationCheckInValue(_ value: Int?, for questionID: String) {
+        guard mode == .explore else { return }
+        guard foundationRequiredQuestionIDs.contains(questionID) else { return }
+        if let value, !(0...10).contains(value) {
+            return
+        }
+
+        let nightID = morningOutcomeSelection.nightID
+        let previousCheckIns = foundationCheckIns
+        let previousPillarCheckIns = pillarCheckIns
+        let previousResponses = foundationCheckInResponsesByQuestionID
+
+        var nextResponses = foundationCheckInResponsesByQuestionID
+        if let value {
+            nextResponses[questionID] = value
+        } else {
+            nextResponses.removeValue(forKey: questionID)
+        }
+        foundationCheckInResponsesByQuestionID = nextResponses
+
+        let graphVersion = progressQuestionSetState?.activeSourceGraphVersion
+            ?? graphProjectionHub.guide.graphVersion
+            ?? "graph-unknown"
+        let sourceQuestions = foundationCheckInQuestions
+        let associatedNodeIDs = sourceQuestions.flatMap(\.sourceNodeIDs)
+        let associatedEdgeIDs = sourceQuestions.flatMap(\.sourceEdgeIDs)
+        let association = GraphAssociationRef(
+            graphVersion: graphVersion,
+            nodeIDs: associatedNodeIDs,
+            edgeIDs: associatedEdgeIDs
+        )
+        let createdAt = Self.timestamp(from: nowProvider())
+        let nextCheckIn = FoundationCheckIn(
+            nightId: nightID,
+            responsesByQuestionId: nextResponses,
+            createdAt: createdAt,
+            graphAssociation: association
+        )
+        var responsesByPillarID: [String: Int] = [:]
+        for (responseQuestionID, responseValue) in nextResponses {
+            guard let pillarID = pillarID(fromQuestionID: responseQuestionID) else {
+                continue
+            }
+            responsesByPillarID[pillarID] = responseValue
+        }
+        let nextPillarCheckIn = PillarCheckIn(
+            nightId: nightID,
+            responsesByPillarId: responsesByPillarID,
+            createdAt: createdAt,
+            graphAssociation: association
+        )
+        foundationCheckIns = Self.upsertFoundationCheckIn(nextCheckIn, in: foundationCheckIns)
+        pillarCheckIns = Self.upsertPillarCheckIn(nextPillarCheckIn, in: pillarCheckIns)
+        refreshPlanningState()
+
+        let operationToken = nextFoundationCheckInOperationToken()
+        Task {
+            do {
+                let patch = UserDataPatch(
+                    experienceFlow: nil,
+                    dailyCheckIns: nil,
+                    dailyDoseProgress: nil,
+                    interventionCompletionEvents: nil,
+                    interventionDoseSettings: nil,
+                    appleHealthConnections: nil,
+                    morningStates: nil,
+                    foundationCheckIns: foundationCheckIns,
+                    pillarCheckIns: pillarCheckIns,
+                    activeInterventions: nil,
+                    hiddenInterventions: nil
+                )
+                try await persistPatch(patch)
+            } catch {
+                guard operationToken == foundationCheckInOperationToken else { return }
+                foundationCheckIns = previousCheckIns
+                pillarCheckIns = previousPillarCheckIns
+                foundationCheckInResponsesByQuestionID = previousResponses
+                refreshPlanningState()
             }
         }
     }
@@ -3036,6 +3646,11 @@ final class AppViewModel {
         return morningOutcomeOperationToken
     }
 
+    private func nextFoundationCheckInOperationToken() -> Int {
+        foundationCheckInOperationToken += 1
+        return foundationCheckInOperationToken
+    }
+
     private func nextGraphDeactivationOperationToken() -> Int {
         graphDeactivationOperationToken += 1
         return graphDeactivationOperationToken
@@ -3153,6 +3768,10 @@ final class AppViewModel {
             appleHealthConnections: patch.appleHealthConnections,
             nightOutcomes: patch.nightOutcomes,
             morningStates: patch.morningStates,
+            foundationCheckIns: patch.foundationCheckIns,
+            userDefinedPillars: patch.userDefinedPillars,
+            pillarAssignments: patch.pillarAssignments,
+            pillarCheckIns: patch.pillarCheckIns,
             activeInterventions: patch.activeInterventions,
             hiddenInterventions: patch.hiddenInterventions,
             customCausalDiagram: patch.customCausalDiagram,
@@ -3161,7 +3780,8 @@ final class AppViewModel {
             gardenAliasOverrides: patch.gardenAliasOverrides,
             plannerPreferencesState: patch.plannerPreferencesState,
             habitPlannerState: habitPlannerState,
-            healthLensState: patch.healthLensState
+            healthLensState: patch.healthLensState,
+            globalLensSelection: patch.globalLensSelection
         )
     }
 
@@ -3473,6 +4093,77 @@ final class AppViewModel {
         }
     }
 
+    private static func morningOutcomeField(fromProgressQuestionID questionID: String) -> MorningOutcomeField? {
+        switch questionID {
+        case "morning.globalSensation":
+            return .globalSensation
+        case "morning.neckTightness":
+            return .neckTightness
+        case "morning.jawSoreness":
+            return .jawSoreness
+        case "morning.earFullness":
+            return .earFullness
+        case "morning.healthAnxiety":
+            return .healthAnxiety
+        case "morning.stressLevel":
+            return .stressLevel
+        case "morning.morningHeadache":
+            return .morningHeadache
+        case "morning.dryMouth":
+            return .dryMouth
+        default:
+            return nil
+        }
+    }
+
+    private var activePillarsForProgress: [HealthPillarDefinition] {
+        projectedHealthLensPillars
+    }
+
+    private func pillarQuestionID(for pillar: HealthPillar) -> String {
+        "pillar.\(pillar.id)"
+    }
+
+    private func pillarID(fromQuestionID questionID: String) -> String? {
+        guard questionID.hasPrefix("pillar.") else {
+            return nil
+        }
+        let pillarID = String(questionID.dropFirst("pillar.".count))
+        return pillarID.isEmpty ? nil : pillarID
+    }
+
+    private func defaultPillarQuestion(for pillar: HealthPillarDefinition) -> GraphDerivedProgressQuestion {
+        let sourceNodeIDs = (ownedGraphNodeIDsByPillarID()[pillar.id.id] ?? []).sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+        let sourceEdgeIDs = (ownedGraphEdgeIDsByPillarID()[pillar.id.id] ?? []).sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+        return GraphDerivedProgressQuestion(
+            id: pillarQuestionID(for: pillar.id),
+            title: "How was your \(pillar.title.lowercased()) today?",
+            sourceNodeIDs: sourceNodeIDs,
+            sourceEdgeIDs: sourceEdgeIDs
+        )
+    }
+
+    private static func progressQuestionID(from outcomeField: MorningOutcomeField) -> String {
+        "morning.\(outcomeField.rawValue)"
+    }
+
+    private static func deduplicatedProgressQuestions(
+        _ questions: [GraphDerivedProgressQuestion]
+    ) -> [GraphDerivedProgressQuestion] {
+        var dedupedQuestions: [GraphDerivedProgressQuestion] = []
+        var seenQuestionIDs = Set<String>()
+
+        for question in questions where seenQuestionIDs.insert(question.id).inserted {
+            dedupedQuestions.append(question)
+        }
+
+        return dedupedQuestions
+    }
+
     private static func morningTrendMetric(
         from outcomeField: MorningOutcomeField
     ) -> MorningTrendMetric {
@@ -3537,6 +4228,50 @@ final class AppViewModel {
         return mutableStates
     }
 
+    private static func foundationResponses(
+        for nightID: String,
+        foundationCheckIns: [FoundationCheckIn],
+        pillarCheckIns: [PillarCheckIn]
+    ) -> [String: Int] {
+        if let pillarCheckIn = pillarCheckIns.first(where: { $0.nightId == nightID }) {
+            var responsesByQuestionID: [String: Int] = [:]
+            for (pillarID, value) in pillarCheckIn.responsesByPillarId {
+                responsesByQuestionID["pillar.\(pillarID)"] = value
+            }
+            return responsesByQuestionID
+        }
+
+        return foundationCheckIns.first(where: { $0.nightId == nightID })?.responsesByQuestionId ?? [:]
+    }
+
+    private static func upsertFoundationCheckIn(
+        _ checkIn: FoundationCheckIn,
+        in existingCheckIns: [FoundationCheckIn]
+    ) -> [FoundationCheckIn] {
+        var mutableCheckIns = existingCheckIns
+        guard let existingIndex = mutableCheckIns.firstIndex(where: { $0.nightId == checkIn.nightId }) else {
+            mutableCheckIns.append(checkIn)
+            return mutableCheckIns.sorted { $0.nightId > $1.nightId }
+        }
+
+        mutableCheckIns[existingIndex] = checkIn
+        return mutableCheckIns.sorted { $0.nightId > $1.nightId }
+    }
+
+    private static func upsertPillarCheckIn(
+        _ checkIn: PillarCheckIn,
+        in existingCheckIns: [PillarCheckIn]
+    ) -> [PillarCheckIn] {
+        var mutableCheckIns = existingCheckIns
+        guard let existingIndex = mutableCheckIns.firstIndex(where: { $0.nightId == checkIn.nightId }) else {
+            mutableCheckIns.append(checkIn)
+            return mutableCheckIns.sorted { $0.nightId > $1.nightId }
+        }
+
+        mutableCheckIns[existingIndex] = checkIn
+        return mutableCheckIns.sorted { $0.nightId > $1.nightId }
+    }
+
     private static func upsert(nightOutcome: NightOutcome, in existingOutcomes: [NightOutcome]) -> [NightOutcome] {
         var mutableOutcomes = existingOutcomes
         guard let existingIndex = mutableOutcomes.firstIndex(where: { $0.nightId == nightOutcome.nightId }) else {
@@ -3568,6 +4303,17 @@ final class AppViewModel {
         let hours = safeMinutes / 60
         let remainingMinutes = safeMinutes % 60
         return "\(hours)h \(remainingMinutes)m"
+    }
+
+    private static func slug(from value: String) -> String {
+        let normalized = value
+            .lowercased()
+            .replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        if normalized.isEmpty {
+            return "pillar"
+        }
+        return normalized
     }
 
     private static func timestampNow() -> String {

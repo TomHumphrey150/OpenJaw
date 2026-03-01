@@ -16,6 +16,10 @@ struct UserDataDocument: Codable, Equatable {
     let nightOutcomes: [NightOutcome]
     let morningStates: [MorningState]
     let morningQuestionnaire: MorningQuestionnaire?
+    let foundationCheckIns: [FoundationCheckIn]
+    let userDefinedPillars: [UserDefinedPillar]
+    let pillarAssignments: [PillarAssignment]
+    let pillarCheckIns: [PillarCheckIn]
     let progressQuestionSetState: ProgressQuestionSetState?
     let plannerPreferencesState: PlannerPreferencesState?
     let habitPlannerState: HabitPlannerState?
@@ -46,6 +50,10 @@ struct UserDataDocument: Codable, Equatable {
         nightOutcomes: [],
         morningStates: [],
         morningQuestionnaire: nil,
+        foundationCheckIns: [],
+        userDefinedPillars: [],
+        pillarAssignments: [],
+        pillarCheckIns: [],
         progressQuestionSetState: nil,
         plannerPreferencesState: nil,
         habitPlannerState: nil,
@@ -77,6 +85,10 @@ struct UserDataDocument: Codable, Equatable {
         nightOutcomes: [NightOutcome],
         morningStates: [MorningState],
         morningQuestionnaire: MorningQuestionnaire? = nil,
+        foundationCheckIns: [FoundationCheckIn] = [],
+        userDefinedPillars: [UserDefinedPillar] = [],
+        pillarAssignments: [PillarAssignment] = [],
+        pillarCheckIns: [PillarCheckIn] = [],
         progressQuestionSetState: ProgressQuestionSetState? = nil,
         plannerPreferencesState: PlannerPreferencesState? = nil,
         habitPlannerState: HabitPlannerState? = nil,
@@ -106,6 +118,10 @@ struct UserDataDocument: Codable, Equatable {
         self.nightOutcomes = nightOutcomes
         self.morningStates = morningStates
         self.morningQuestionnaire = morningQuestionnaire
+        self.foundationCheckIns = foundationCheckIns
+        self.userDefinedPillars = userDefinedPillars
+        self.pillarAssignments = pillarAssignments
+        self.pillarCheckIns = pillarCheckIns
         self.progressQuestionSetState = progressQuestionSetState
         self.plannerPreferencesState = plannerPreferencesState
         self.habitPlannerState = habitPlannerState
@@ -137,6 +153,10 @@ struct UserDataDocument: Codable, Equatable {
         case nightOutcomes
         case morningStates
         case morningQuestionnaire
+        case foundationCheckIns
+        case userDefinedPillars
+        case pillarAssignments
+        case pillarCheckIns
         case progressQuestionSetState
         case plannerPreferencesState
         case habitPlannerState
@@ -150,6 +170,10 @@ struct UserDataDocument: Codable, Equatable {
         case customCausalDiagram
         case gardenAliasOverrides
         case experienceFlow
+    }
+
+    private enum LegacyCodingKeys: String, CodingKey {
+        case globalLensSelection
     }
 
     init(from decoder: Decoder) throws {
@@ -169,10 +193,16 @@ struct UserDataDocument: Codable, Equatable {
         nightOutcomes = try container.decodeIfPresent([NightOutcome].self, forKey: .nightOutcomes) ?? []
         morningStates = try container.decodeIfPresent([MorningState].self, forKey: .morningStates) ?? []
         morningQuestionnaire = try container.decodeIfPresent(MorningQuestionnaire.self, forKey: .morningQuestionnaire)
+        foundationCheckIns = try container.decodeIfPresent([FoundationCheckIn].self, forKey: .foundationCheckIns) ?? []
+        userDefinedPillars = try container.decodeIfPresent([UserDefinedPillar].self, forKey: .userDefinedPillars) ?? []
+        pillarAssignments = try container.decodeIfPresent([PillarAssignment].self, forKey: .pillarAssignments) ?? []
+        pillarCheckIns = try container.decodeIfPresent([PillarCheckIn].self, forKey: .pillarCheckIns) ?? []
         progressQuestionSetState = try container.decodeIfPresent(ProgressQuestionSetState.self, forKey: .progressQuestionSetState)
         plannerPreferencesState = try container.decodeIfPresent(PlannerPreferencesState.self, forKey: .plannerPreferencesState)
         habitPlannerState = try container.decodeIfPresent(HabitPlannerState.self, forKey: .habitPlannerState)
+        let legacyContainer = try decoder.container(keyedBy: LegacyCodingKeys.self)
         healthLensState = try container.decodeIfPresent(HealthLensState.self, forKey: .healthLensState)
+            ?? legacyContainer.decodeIfPresent(HealthLensState.self, forKey: .globalLensSelection)
         wakeDaySleepAttributionMigrated = try container.decodeIfPresent(Bool.self, forKey: .wakeDaySleepAttributionMigrated) ?? false
         habitTrials = try container.decodeIfPresent([HabitTrialWindow].self, forKey: .habitTrials) ?? []
         habitClassifications = try container.decodeIfPresent([HabitClassification].self, forKey: .habitClassifications) ?? []
@@ -538,6 +568,37 @@ struct MorningQuestionnaire: Codable, Equatable, Sendable {
     let requiredFields: [MorningQuestionField]?
 }
 
+struct FoundationCheckIn: Codable, Equatable, Sendable {
+    let nightId: String
+    let responsesByQuestionId: [String: Int]
+    let createdAt: String
+    let graphAssociation: GraphAssociationRef?
+}
+
+struct UserDefinedPillar: Codable, Equatable, Hashable, Sendable, Identifiable {
+    let id: String
+    let title: String
+    let templateId: String
+    let createdAt: String
+    let updatedAt: String
+    let isArchived: Bool
+}
+
+struct PillarAssignment: Codable, Equatable, Hashable, Sendable {
+    let pillarId: String
+    let graphNodeIds: [String]
+    let graphEdgeIds: [String]
+    let interventionIds: [String]
+    let questionId: String?
+}
+
+struct PillarCheckIn: Codable, Equatable, Sendable {
+    let nightId: String
+    let responsesByPillarId: [String: Int]
+    let createdAt: String
+    let graphAssociation: GraphAssociationRef?
+}
+
 struct GraphAssociationRef: Codable, Equatable, Hashable, Sendable {
     let graphVersion: String
     let nodeIDs: [String]
@@ -574,9 +635,55 @@ struct ProgressQuestionSetProposal: Codable, Equatable, Sendable {
 struct ProgressQuestionSetState: Codable, Equatable, Sendable {
     let activeQuestionSetVersion: String
     let activeSourceGraphVersion: String
+    let activeQuestions: [GraphDerivedProgressQuestion]
     let declinedGraphVersions: [String]
     let pendingProposal: ProgressQuestionSetProposal?
     let updatedAt: String
+
+    init(
+        activeQuestionSetVersion: String,
+        activeSourceGraphVersion: String,
+        activeQuestions: [GraphDerivedProgressQuestion] = [],
+        declinedGraphVersions: [String],
+        pendingProposal: ProgressQuestionSetProposal?,
+        updatedAt: String
+    ) {
+        self.activeQuestionSetVersion = activeQuestionSetVersion
+        self.activeSourceGraphVersion = activeSourceGraphVersion
+        self.activeQuestions = activeQuestions
+        self.declinedGraphVersions = declinedGraphVersions
+        self.pendingProposal = pendingProposal
+        self.updatedAt = updatedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case activeQuestionSetVersion
+        case activeSourceGraphVersion
+        case activeQuestions
+        case declinedGraphVersions
+        case pendingProposal
+        case updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        activeQuestionSetVersion = try container.decode(String.self, forKey: .activeQuestionSetVersion)
+        activeSourceGraphVersion = try container.decode(String.self, forKey: .activeSourceGraphVersion)
+        activeQuestions = try container.decodeIfPresent([GraphDerivedProgressQuestion].self, forKey: .activeQuestions) ?? []
+        declinedGraphVersions = try container.decodeIfPresent([String].self, forKey: .declinedGraphVersions) ?? []
+        pendingProposal = try container.decodeIfPresent(ProgressQuestionSetProposal.self, forKey: .pendingProposal)
+        updatedAt = try container.decode(String.self, forKey: .updatedAt)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(activeQuestionSetVersion, forKey: .activeQuestionSetVersion)
+        try container.encode(activeSourceGraphVersion, forKey: .activeSourceGraphVersion)
+        try container.encode(activeQuestions, forKey: .activeQuestions)
+        try container.encode(declinedGraphVersions, forKey: .declinedGraphVersions)
+        try container.encodeIfPresent(pendingProposal, forKey: .pendingProposal)
+        try container.encode(updatedAt, forKey: .updatedAt)
+    }
 }
 
 struct GardenAliasOverride: Codable, Equatable, Hashable, Sendable {
@@ -733,6 +840,7 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         case parentId
         case parentIds
         case isExpanded
+        case pillarIds
     }
 
     let id: String
@@ -745,6 +853,7 @@ struct GraphNodeData: Codable, Equatable, Sendable {
     let parentIds: [String]?
     let parentId: String?
     let isExpanded: Bool?
+    let pillarIds: [String]?
 
     init(
         id: String,
@@ -756,7 +865,8 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         isDeactivated: Bool? = nil,
         parentIds: [String]? = nil,
         parentId: String? = nil,
-        isExpanded: Bool? = nil
+        isExpanded: Bool? = nil,
+        pillarIds: [String]? = nil
     ) {
         let resolvedParentIDs: [String]?
         if let parentIds, !parentIds.isEmpty {
@@ -777,6 +887,7 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         self.parentIds = resolvedParentIDs
         self.parentId = resolvedParentIDs?.first
         self.isExpanded = isExpanded
+        self.pillarIds = pillarIds
     }
 
     init(from decoder: Decoder) throws {
@@ -791,6 +902,7 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         let decodedParentIDs = try container.decodeIfPresent([String].self, forKey: .parentIds)
         let decodedParentID = try container.decodeIfPresent(String.self, forKey: .parentId)
         let isExpanded = try container.decodeIfPresent(Bool.self, forKey: .isExpanded)
+        let pillarIds = try container.decodeIfPresent([String].self, forKey: .pillarIds)
 
         self.init(
             id: id,
@@ -802,7 +914,8 @@ struct GraphNodeData: Codable, Equatable, Sendable {
             isDeactivated: isDeactivated,
             parentIds: decodedParentIDs,
             parentId: decodedParentID,
-            isExpanded: isExpanded
+            isExpanded: isExpanded,
+            pillarIds: pillarIds
         )
     }
 
@@ -818,6 +931,7 @@ struct GraphNodeData: Codable, Equatable, Sendable {
         try container.encodeIfPresent(parentIds, forKey: .parentIds)
         try container.encodeIfPresent(parentIds?.first, forKey: .parentId)
         try container.encodeIfPresent(isExpanded, forKey: .isExpanded)
+        try container.encodeIfPresent(pillarIds, forKey: .pillarIds)
     }
 }
 
@@ -833,6 +947,19 @@ struct GraphEdgeElement: Codable, Equatable, Sendable {
 }
 
 struct GraphEdgeData: Codable, Equatable, Sendable {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case source
+        case target
+        case label
+        case edgeType
+        case edgeColor
+        case tooltip
+        case strength
+        case isDeactivated
+        case pillarIds
+    }
+
     let id: String?
     let source: String
     let target: String
@@ -842,6 +969,7 @@ struct GraphEdgeData: Codable, Equatable, Sendable {
     let tooltip: String?
     let strength: Double?
     let isDeactivated: Bool?
+    let pillarIds: [String]?
 
     init(
         id: String? = nil,
@@ -852,7 +980,8 @@ struct GraphEdgeData: Codable, Equatable, Sendable {
         edgeColor: String?,
         tooltip: String?,
         strength: Double? = nil,
-        isDeactivated: Bool? = nil
+        isDeactivated: Bool? = nil,
+        pillarIds: [String]? = nil
     ) {
         self.id = id
         self.source = source
@@ -863,5 +992,34 @@ struct GraphEdgeData: Codable, Equatable, Sendable {
         self.tooltip = tooltip
         self.strength = strength
         self.isDeactivated = isDeactivated
+        self.pillarIds = pillarIds
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        source = try container.decode(String.self, forKey: .source)
+        target = try container.decode(String.self, forKey: .target)
+        label = try container.decodeIfPresent(String.self, forKey: .label)
+        edgeType = try container.decodeIfPresent(String.self, forKey: .edgeType)
+        edgeColor = try container.decodeIfPresent(String.self, forKey: .edgeColor)
+        tooltip = try container.decodeIfPresent(String.self, forKey: .tooltip)
+        strength = try container.decodeIfPresent(Double.self, forKey: .strength)
+        isDeactivated = try container.decodeIfPresent(Bool.self, forKey: .isDeactivated)
+        pillarIds = try container.decodeIfPresent([String].self, forKey: .pillarIds)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encode(source, forKey: .source)
+        try container.encode(target, forKey: .target)
+        try container.encodeIfPresent(label, forKey: .label)
+        try container.encodeIfPresent(edgeType, forKey: .edgeType)
+        try container.encodeIfPresent(edgeColor, forKey: .edgeColor)
+        try container.encodeIfPresent(tooltip, forKey: .tooltip)
+        try container.encodeIfPresent(strength, forKey: .strength)
+        try container.encodeIfPresent(isDeactivated, forKey: .isDeactivated)
+        try container.encodeIfPresent(pillarIds, forKey: .pillarIds)
     }
 }

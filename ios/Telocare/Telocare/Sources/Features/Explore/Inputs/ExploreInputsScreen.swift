@@ -15,6 +15,8 @@ struct ExploreInputsScreen: View {
     let onRefreshAllAppleHealth: () async -> Void
     let onToggleActive: (String) -> Void
     let planningMetadataByInterventionID: [String: HabitPlanningMetadata]
+    let pillarAssignments: [PillarAssignment]
+    let orderedPillars: [HealthPillarDefinition]
     let habitRungStatusByInterventionID: [String: HabitRungStatus]
     let plannedInterventionIDs: Set<String>
     let dailyPlanProposal: DailyPlanProposal?
@@ -31,6 +33,7 @@ struct ExploreInputsScreen: View {
     @State private var isPlannerTimelinePresented = false
     @State private var pendingHigherRungCompletion: HigherRungCompletionPrompt?
     private let gardenHierarchyBuilder = GardenHierarchyBuilder()
+    private let pillarInputsSectionBuilder = PillarInputsSectionBuilder()
     private static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -56,6 +59,8 @@ struct ExploreInputsScreen: View {
         onRefreshAllAppleHealth: @escaping () async -> Void,
         onToggleActive: @escaping (String) -> Void,
         planningMetadataByInterventionID: [String: HabitPlanningMetadata],
+        pillarAssignments: [PillarAssignment],
+        orderedPillars: [HealthPillarDefinition],
         habitRungStatusByInterventionID: [String: HabitRungStatus],
         plannedInterventionIDs: Set<String>,
         dailyPlanProposal: DailyPlanProposal?,
@@ -79,6 +84,8 @@ struct ExploreInputsScreen: View {
         self.onRefreshAllAppleHealth = onRefreshAllAppleHealth
         self.onToggleActive = onToggleActive
         self.planningMetadataByInterventionID = planningMetadataByInterventionID
+        self.pillarAssignments = pillarAssignments
+        self.orderedPillars = orderedPillars
         self.habitRungStatusByInterventionID = habitRungStatusByInterventionID
         self.plannedInterventionIDs = plannedInterventionIDs
         self.dailyPlanProposal = dailyPlanProposal
@@ -96,7 +103,7 @@ struct ExploreInputsScreen: View {
             ScrollView {
                 LazyVStack(spacing: TelocareTheme.Spacing.md, pinnedViews: [.sectionHeaders]) {
                     Section {
-                        gardenContentSection
+                        pillarOverviewSection
                         inputsListSection
                     } header: {
                         pinnedHeaderSection
@@ -135,12 +142,12 @@ struct ExploreInputsScreen: View {
         .sheet(isPresented: $isPlannerTimelinePresented) {
             PlannerTimelineSheet(
                 initialState: plannerTimeBudgetState,
+                planProposal: dailyPlanProposal,
                 onCancel: {
                     isPlannerTimelinePresented = false
                 },
                 onApply: { nextState in
                     onSetPlannerTimeBudgetState(nextState)
-                    isPlannerTimelinePresented = false
                 }
             )
         }
@@ -237,16 +244,15 @@ struct ExploreInputsScreen: View {
     @ViewBuilder
     private var pinnedHeaderSection: some View {
         VStack(spacing: TelocareTheme.Spacing.sm) {
-            GardenBreadcrumbView(
-                segments: breadcrumbSegments,
-                canGoBack: !resolvedNodePath.isEmpty,
-                onGoBack: goBackOneLevel,
-                onSelectDepth: selectBreadcrumbDepth
-            )
+            HStack {
+                Text("Health Pillars")
+                    .font(TelocareTheme.Typography.headline)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                Spacer()
+            }
             filterPillsSection
                 .accessibilityIdentifier(AccessibilityID.exploreInputsPinnedHeader)
         }
-        .id(resolvedNodePath)
         .padding(.horizontal, TelocareTheme.Spacing.md)
         .padding(.top, TelocareTheme.Spacing.md)
         .padding(.bottom, TelocareTheme.Spacing.xs)
@@ -254,31 +260,16 @@ struct ExploreInputsScreen: View {
     }
 
     @ViewBuilder
-    private var gardenContentSection: some View {
+    private var pillarOverviewSection: some View {
         VStack(spacing: TelocareTheme.Spacing.sm) {
-            HStack {
-                Text("Health Gardens")
-                    .font(TelocareTheme.Typography.headline)
-                    .foregroundStyle(TelocareTheme.charcoal)
-                Spacer()
-            }
-
             planningCard
 
-            if !hierarchyCurrentClusters.isEmpty {
-                gardenGrid
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
-            } else if let currentLeafCluster {
-                CurrentGardenCardView(cluster: currentLeafCluster)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
-
             HStack(spacing: TelocareTheme.Spacing.xs) {
-                Text("\(checkedTodayCount) of \(hierarchyFilteredActiveInputs.count) habits completed today")
+                Text("\(checkedTodayCount) of \(activeInputCount) habits completed today")
                     .font(TelocareTheme.Typography.caption)
                     .foregroundStyle(TelocareTheme.warmGray)
 
-                if checkedTodayCount == hierarchyFilteredActiveInputs.count && !hierarchyFilteredActiveInputs.isEmpty {
+                if checkedTodayCount == activeInputCount && activeInputCount > 0 {
                     Label("All done!", systemImage: "checkmark.circle.fill")
                         .font(TelocareTheme.Typography.caption)
                         .foregroundStyle(TelocareTheme.success)
@@ -287,55 +278,46 @@ struct ExploreInputsScreen: View {
         }
         .padding(.horizontal, TelocareTheme.Spacing.md)
         .padding(.top, TelocareTheme.Spacing.xs)
-        .accessibilityIdentifier(AccessibilityID.exploreInputsGardenHierarchy)
-        .animation(.easeInOut(duration: 0.2), value: resolvedNodePath)
-    }
-
-    private var gardenGrid: some View {
-        GardenGridView(
-            clusters: hierarchyCurrentClusters,
-            selectedNodeID: resolvedNodePath.last,
-            onSelectNode: selectSubGarden
-        )
+        .accessibilityIdentifier(AccessibilityID.exploreInputsPillarOverview)
     }
 
     @ViewBuilder
     private var planningCard: some View {
-        WarmCard {
-            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
-                HStack {
-                    Text("Daily Plan")
-                        .font(TelocareTheme.Typography.headline)
-                        .foregroundStyle(TelocareTheme.charcoal)
-                    Spacer()
-                    Text(planningMode.displayName)
-                        .font(TelocareTheme.Typography.small)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule().fill(planningMode == .flare ? TelocareTheme.coral : TelocareTheme.success)
-                        )
-                }
-
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Time available: \(plannerAvailableMinutes) min")
-                        .font(TelocareTheme.Typography.caption)
-                        .foregroundStyle(TelocareTheme.warmGray)
-                    Spacer()
-                    Text(
-                        "\(formattedClock(plannerTimeBudgetState.timelineWindow.wakeMinutes))-\(formattedClock(plannerTimeBudgetState.timelineWindow.sleepMinutes))"
-                    )
-                    .font(TelocareTheme.Typography.small)
-                    .foregroundStyle(TelocareTheme.warmGray)
-                }
-
-                Button {
-                    isPlannerTimelinePresented = true
-                } label: {
+        Button {
+            isPlannerTimelinePresented = true
+        } label: {
+            WarmCard {
+                VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
                     HStack {
-                        Image(systemName: "calendar.badge.clock")
-                        Text("Edit timeline (\(plannerTimeBudgetState.selectedSlotStartMinutes.count) slots)")
+                        Text("Daily Plan")
+                            .font(TelocareTheme.Typography.headline)
+                            .foregroundStyle(TelocareTheme.charcoal)
+                        Spacer()
+                        Text(planningMode.displayName)
+                            .font(TelocareTheme.Typography.small)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule().fill(planningMode == .flare ? TelocareTheme.coral : TelocareTheme.success)
+                            )
+                    }
+
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Time available: \(plannerAvailableMinutes) min")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Spacer()
+                        Text(
+                            "\(formattedClock(plannerTimeBudgetState.timelineWindow.wakeMinutes))-\(formattedClock(plannerTimeBudgetState.timelineWindow.sleepMinutes))"
+                        )
+                        .font(TelocareTheme.Typography.small)
+                        .foregroundStyle(TelocareTheme.warmGray)
+                    }
+
+                    HStack {
+                        Image(systemName: "list.bullet.rectangle")
+                        Text("See plan")
                         Spacer()
                         Image(systemName: "chevron.right")
                     }
@@ -350,35 +332,39 @@ struct ExploreInputsScreen: View {
                         )
                         .fill(TelocareTheme.cream)
                     )
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier(AccessibilityID.exploreInputsPlannerMinutes)
+                    .accessibilityIdentifier(AccessibilityID.exploreInputsPlannerMinutes)
 
-                if let dailyPlanProposal {
-                    Text("Planned \(dailyPlanProposal.actions.count) actions, using \(dailyPlanProposal.usedMinutes) min.")
-                        .font(TelocareTheme.Typography.caption)
-                        .foregroundStyle(TelocareTheme.warmGray)
+                    if let dailyPlanProposal {
+                        Text("Planned \(dailyPlanProposal.actions.count) actions, using \(dailyPlanProposal.usedMinutes) min.")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
 
-                    ForEach(dailyPlanProposal.actions.prefix(3)) { action in
-                        HStack(spacing: TelocareTheme.Spacing.xs) {
-                            Text(action.title)
-                                .font(TelocareTheme.Typography.caption)
-                                .foregroundStyle(TelocareTheme.charcoal)
-                            Spacer()
-                            Text("\(action.estimatedMinutes)m")
-                                .font(TelocareTheme.Typography.small)
-                                .foregroundStyle(TelocareTheme.warmGray)
+                        ForEach(dailyPlanProposal.actions.prefix(3)) { action in
+                            HStack(spacing: TelocareTheme.Spacing.xs) {
+                                Text(action.title)
+                                    .font(TelocareTheme.Typography.caption)
+                                    .foregroundStyle(TelocareTheme.charcoal)
+                                Spacer()
+                                Text("\(action.estimatedMinutes)m")
+                                    .font(TelocareTheme.Typography.small)
+                                    .foregroundStyle(TelocareTheme.warmGray)
+                            }
                         }
-                    }
 
-                    if let warning = dailyPlanProposal.warnings.first {
-                        Text(warning)
-                            .font(TelocareTheme.Typography.small)
-                            .foregroundStyle(TelocareTheme.coral)
+                        if let warning = dailyPlanProposal.warnings.first {
+                            Text(warning)
+                                .font(TelocareTheme.Typography.small)
+                                .foregroundStyle(TelocareTheme.coral)
+                        }
+                    } else {
+                        Text("No plan generated yet.")
+                            .font(TelocareTheme.Typography.caption)
+                            .foregroundStyle(TelocareTheme.warmGray)
                     }
                 }
             }
         }
+        .buttonStyle(.plain)
         .accessibilityIdentifier(AccessibilityID.exploreInputsPlannerCard)
     }
 
@@ -409,7 +395,11 @@ struct ExploreInputsScreen: View {
     }
 
     private var hierarchyFilteredActiveInputs: [InputStatus] {
-        hierarchyFilteredInputs.filter(\.isActive)
+        inputs.filter(\.isActive)
+    }
+
+    private var activeInputCount: Int {
+        hierarchyFilteredActiveInputs.count
     }
 
     private var checkedTodayCount: Int {
@@ -453,7 +443,7 @@ struct ExploreInputsScreen: View {
     }
 
     private func countFor(_ mode: InputFilterMode) -> Int {
-        let source = hierarchyFilteredInputs
+        let source = inputs
         switch mode {
         case .pending:
             return source.filter { $0.isActive && !$0.isCheckedToday }.count
@@ -475,7 +465,7 @@ struct ExploreInputsScreen: View {
 
     @ViewBuilder
     private var inputsListSection: some View {
-        if filteredInputs.isEmpty {
+        if filteredPillarSections.isEmpty {
             emptyStatePlaceholder
                 .padding(.horizontal, TelocareTheme.Spacing.md)
                 .padding(.bottom, TelocareTheme.Spacing.md)
@@ -486,17 +476,40 @@ struct ExploreInputsScreen: View {
                         .accessibilityIdentifier(AccessibilityID.exploreInputsNextBestActions)
                 }
 
-                ForEach(filteredInputs) { input in
-                    InputCard(
-                        input: input,
-                        planningMetadata: planningMetadataByInterventionID[input.id],
-                        rungStatus: habitRungStatusByInterventionID[input.id],
-                        isPlannedToday: plannedInterventionIDs.contains(input.id),
-                        onToggle: { handleCompletionTap(for: input) },
-                        onIncrementDose: { onIncrementDose(input.id) },
-                        onToggleActive: { onToggleActive(input.id) },
-                        onShowDetails: { showInputDetail(input) }
-                    )
+                ForEach(filteredPillarSections) { section in
+                    WarmCard {
+                        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+                            HStack {
+                                Text(section.title)
+                                    .font(TelocareTheme.Typography.headline)
+                                    .foregroundStyle(TelocareTheme.charcoal)
+                                Spacer()
+                                Text("\(section.inputs.count)")
+                                    .font(TelocareTheme.Typography.caption)
+                                    .foregroundStyle(TelocareTheme.warmGray)
+                            }
+                            .accessibilityIdentifier(AccessibilityID.exploreInputsPillarChip(pillar: section.pillar.id))
+
+                            ForEach(section.inputs) { input in
+                                InputCard(
+                                    input: input,
+                                    planningMetadata: planningMetadataByInterventionID[input.id],
+                                    rungStatus: habitRungStatusByInterventionID[input.id],
+                                    isPlannedToday: plannedInterventionIDs.contains(input.id),
+                                    onToggle: { handleCompletionTap(for: input) },
+                                    onIncrementDose: { onIncrementDose(input.id) },
+                                    onToggleActive: { onToggleActive(input.id) },
+                                    onShowDetails: { showInputDetail(input) }
+                                )
+
+                                if input.id != section.inputs.last?.id {
+                                    Divider()
+                                        .background(TelocareTheme.peach)
+                                }
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier(AccessibilityID.exploreInputsPillarSection(pillar: section.pillar.id))
                 }
             }
             .padding(.horizontal, TelocareTheme.Spacing.md)
@@ -504,19 +517,40 @@ struct ExploreInputsScreen: View {
         }
     }
 
-    /// Inputs sorted by impact score (most useful first), filtered by selected garden
+    /// Inputs sorted by impact score (most useful first)
     private var sortedInputs: [InputStatus] {
-        InputScoring.sortedByImpact(inputs: hierarchyFilteredInputs, graphData: graphData)
+        InputScoring.sortedByImpact(inputs: inputs, graphData: graphData)
     }
 
-    private var filteredInputs: [InputStatus] {
+    private var filteredPillarSections: [PillarInputsSection] {
+        let sections = pillarInputsSectionBuilder.build(
+            inputs: sortedInputs,
+            planningMetadataByInterventionID: planningMetadataByInterventionID,
+            pillarAssignments: pillarAssignments,
+            orderedPillars: orderedPillars
+        )
+
+        return sections.compactMap { section in
+            let filtered = filteredInputs(from: section.inputs)
+            if filtered.isEmpty {
+                return nil
+            }
+            return PillarInputsSection(
+                pillar: section.pillar,
+                title: section.title,
+                inputs: filtered
+            )
+        }
+    }
+
+    private func filteredInputs(from source: [InputStatus]) -> [InputStatus] {
         switch filterMode {
         case .pending:
-            return sortedInputs.filter { $0.isActive && !$0.isCheckedToday }
+            return source.filter { $0.isActive && !$0.isCheckedToday }
         case .completed:
-            return sortedInputs.filter { $0.isActive && $0.isCheckedToday }
+            return source.filter { $0.isActive && $0.isCheckedToday }
         case .available:
-            return sortedInputs.filter { !$0.isActive }
+            return source.filter { !$0.isActive }
         }
     }
 
@@ -529,7 +563,7 @@ struct ExploreInputsScreen: View {
     }
 
     private var nextBestActions: [InputStatus] {
-        let source = hierarchyFilteredInputs
+        let source = inputs
         let defaultOrderByID = Dictionary(uniqueKeysWithValues: source.enumerated().map { ($1.id, $0) })
         return source
             .filter { $0.isActive && !$0.isCheckedToday }
@@ -957,150 +991,269 @@ private struct HigherRungCompletionPrompt {
     let higherRungs: [HabitLadderRung]
 }
 
+private enum PlannerSheetMode {
+    case plan
+    case availability
+}
+
+private struct PlannedTimelineRow: Identifiable {
+    let minute: Int
+    let actionTitle: String?
+    let isActionStart: Bool
+
+    var id: Int {
+        minute
+    }
+}
+
+private struct TimelineRowLayout {
+    let rowHeight: CGFloat
+    let barHeight: CGFloat
+    let rowSpacing: CGFloat
+    let showsInlineText: Bool
+
+    static func resolve(availableHeight: CGFloat, rowCount: Int) -> TimelineRowLayout {
+        guard rowCount > 0 else {
+            return TimelineRowLayout(
+                rowHeight: 10,
+                barHeight: 8,
+                rowSpacing: 1,
+                showsInlineText: true
+            )
+        }
+
+        let minRowHeight: CGFloat = 3
+        let preferredRowHeight: CGFloat = 10
+        let preferredSpacing: CGFloat = 1
+        let rowCountCGFloat = CGFloat(rowCount)
+        let gapCount = max(0, rowCount - 1)
+
+        let rawRowHeight = (availableHeight - (CGFloat(gapCount) * preferredSpacing)) / rowCountCGFloat
+        if rawRowHeight >= preferredRowHeight {
+            return TimelineRowLayout(
+                rowHeight: preferredRowHeight,
+                barHeight: 8,
+                rowSpacing: preferredSpacing,
+                showsInlineText: true
+            )
+        }
+
+        let compressedSpacing = max(0, min(preferredSpacing, (availableHeight - (rowCountCGFloat * minRowHeight)) / CGFloat(max(1, gapCount))))
+        let compressedRowHeight = max(minRowHeight, (availableHeight - (CGFloat(gapCount) * compressedSpacing)) / rowCountCGFloat)
+        let compressedBarHeight = max(2, compressedRowHeight - 2)
+
+        return TimelineRowLayout(
+            rowHeight: compressedRowHeight,
+            barHeight: compressedBarHeight,
+            rowSpacing: compressedSpacing,
+            showsInlineText: compressedRowHeight >= 8
+        )
+    }
+}
+
 private struct PlannerTimelineSheet: View {
     let initialState: DailyTimeBudgetState
+    let planProposal: DailyPlanProposal?
     let onCancel: () -> Void
     let onApply: (DailyTimeBudgetState) -> Void
 
     @State private var timelineWindow: DailyTimelineWindow
     @State private var selectedSlots: Set<Int>
-    @State private var rowFrames: [Int: CGRect]
+    @State private var mode: PlannerSheetMode
+    @State private var slotFrames: [Int: CGRect]
     @State private var dragSelectionMode: Bool?
-    @State private var dragTouchedSlots: Set<Int>
+    @State private var dragAnchorSlot: Int?
+    @State private var dragBaseSelection: Set<Int>
 
     init(
         initialState: DailyTimeBudgetState,
+        planProposal: DailyPlanProposal?,
         onCancel: @escaping () -> Void,
         onApply: @escaping (DailyTimeBudgetState) -> Void
     ) {
         self.initialState = initialState
+        self.planProposal = planProposal
         self.onCancel = onCancel
         self.onApply = onApply
         _timelineWindow = State(initialValue: initialState.timelineWindow)
         _selectedSlots = State(initialValue: Set(initialState.selectedSlotStartMinutes))
-        _rowFrames = State(initialValue: [:])
-        _dragTouchedSlots = State(initialValue: [])
+        _mode = State(initialValue: .plan)
+        _slotFrames = State(initialValue: [:])
+        _dragAnchorSlot = State(initialValue: nil)
+        _dragBaseSelection = State(initialValue: Set(initialState.selectedSlotStartMinutes))
     }
 
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
-                Text("Select the time blocks you can realistically use today.")
-                    .font(TelocareTheme.Typography.caption)
-                    .foregroundStyle(TelocareTheme.warmGray)
-
-                HStack(spacing: TelocareTheme.Spacing.md) {
-                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
-                        Text("Wake")
-                            .font(TelocareTheme.Typography.small)
-                            .foregroundStyle(TelocareTheme.warmGray)
-                        DatePicker(
-                            "",
-                            selection: wakeBinding,
-                            displayedComponents: [.hourAndMinute]
-                        )
-                        .labelsHidden()
-                    }
-
-                    VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
-                        Text("Sleep")
-                            .font(TelocareTheme.Typography.small)
-                            .foregroundStyle(TelocareTheme.warmGray)
-                        DatePicker(
-                            "",
-                            selection: sleepBinding,
-                            displayedComponents: [.hourAndMinute]
-                        )
-                        .labelsHidden()
-                    }
-
-                    Spacer()
+                if mode == .plan {
+                    planContent
+                } else {
+                    availabilityContent
                 }
-
-                Text("Selected \(selectedSlots.count * 15) min")
-                    .font(TelocareTheme.Typography.caption)
-                    .foregroundStyle(TelocareTheme.charcoal)
-
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(timelineWindow.slotStartMinutes, id: \.self) { slotStartMinute in
-                            Button {
-                                toggleSlot(slotStartMinute)
-                            } label: {
-                                HStack {
-                                    Text(slotLabel(for: slotStartMinute))
-                                        .font(TelocareTheme.Typography.caption)
-                                        .foregroundStyle(TelocareTheme.charcoal)
-                                    Spacer()
-                                    if selectedSlots.contains(slotStartMinute) {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(TelocareTheme.success)
-                                    } else {
-                                        Image(systemName: "circle")
-                                            .foregroundStyle(TelocareTheme.muted)
-                                    }
-                                }
-                                .padding(.horizontal, TelocareTheme.Spacing.sm)
-                                .padding(.vertical, TelocareTheme.Spacing.sm)
-                                .background(
-                                    selectedSlots.contains(slotStartMinute)
-                                        ? TelocareTheme.peach.opacity(0.45)
-                                        : Color.clear
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .background(
-                                GeometryReader { geometry in
-                                    Color.clear.preference(
-                                        key: TimelineRowFramePreferenceKey.self,
-                                        value: [slotStartMinute: geometry.frame(in: .named("planner-timeline"))]
-                                    )
-                                }
-                            )
-
-                            Divider()
-                                .background(TelocareTheme.peach)
-                        }
-                    }
-                    .coordinateSpace(name: "planner-timeline")
-                    .onPreferenceChange(TimelineRowFramePreferenceKey.self) { rowFrames = $0 }
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                handleDrag(at: value.location)
-                            }
-                            .onEnded { _ in
-                                dragSelectionMode = nil
-                                dragTouchedSlots = []
-                            }
-                    )
-                }
-                .background(TelocareTheme.cream)
-                .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(TelocareTheme.Spacing.md)
             .background(TelocareTheme.sand)
-            .navigationTitle("Daily Timeline")
+            .navigationTitle(mode == .plan ? "Daily Plan" : "Choose Availability")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel)
+                    Button("Done", action: onCancel)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply") {
-                        onApply(
-                            DailyTimeBudgetState(
-                                timelineWindow: timelineWindow,
-                                selectedSlotStartMinutes: selectedSlots.sorted(),
-                                updatedAt: initialState.updatedAt
+                    if mode == .plan {
+                        Button("Choose Availability") {
+                            mode = .availability
+                        }
+                    } else {
+                        Button("Confirm") {
+                            onApply(
+                                DailyTimeBudgetState(
+                                    timelineWindow: timelineWindow,
+                                    selectedSlotStartMinutes: selectedSlots.sorted(),
+                                    updatedAt: initialState.updatedAt
+                                )
                             )
-                        )
+                            mode = .plan
+                        }
+                        .accessibilityIdentifier(AccessibilityID.exploreInputsPlannerMinutes)
                     }
                 }
             }
         }
         .presentationDetents([.large])
+    }
+
+    @ViewBuilder
+    private var planContent: some View {
+        Text("Planned actions shown across the availability you selected.")
+            .font(TelocareTheme.Typography.caption)
+            .foregroundStyle(TelocareTheme.warmGray)
+
+        HStack(alignment: .firstTextBaseline) {
+            Text("Available \(selectedSlots.count * 15) min")
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.charcoal)
+            Spacer()
+            Text("\(formattedClock(timelineWindow.wakeMinutes))-\(formattedClock(timelineWindow.sleepMinutes))")
+                .font(TelocareTheme.Typography.small)
+                .foregroundStyle(TelocareTheme.warmGray)
+        }
+
+        if let planProposal {
+            Text("Planned \(planProposal.actions.count) actions, using \(planProposal.usedMinutes) min.")
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.warmGray)
+        } else {
+            Text("No plan generated yet.")
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.warmGray)
+        }
+
+        GeometryReader { geometry in
+            let rows = scheduledRows
+            if rows.isEmpty {
+                ContentUnavailableView(
+                    "No selected availability",
+                    systemImage: "calendar.badge.exclamationmark",
+                    description: Text("Choose availability to see planned rows.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(TelocareTheme.cream)
+                .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+            } else {
+                let layout = rowLayout(for: geometry.size.height, rowCount: rows.count)
+                VStack(spacing: layout.rowSpacing) {
+                    ForEach(rows) { row in
+                        plannedRow(for: row, layout: layout)
+                    }
+                }
+                .padding(.horizontal, TelocareTheme.Spacing.xs)
+                .padding(.vertical, TelocareTheme.Spacing.sm)
+                .background(TelocareTheme.cream)
+                .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var availabilityContent: some View {
+        Text("Choose what hours you can be available for self-care today.")
+            .font(TelocareTheme.Typography.caption)
+            .foregroundStyle(TelocareTheme.warmGray)
+
+        HStack(spacing: TelocareTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                Text("Wake")
+                    .font(TelocareTheme.Typography.small)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                DatePicker(
+                    "",
+                    selection: wakeBinding,
+                    displayedComponents: [.hourAndMinute]
+                )
+                .labelsHidden()
+            }
+
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.xs) {
+                Text("Sleep")
+                    .font(TelocareTheme.Typography.small)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                DatePicker(
+                    "",
+                    selection: sleepBinding,
+                    displayedComponents: [.hourAndMinute]
+                )
+                .labelsHidden()
+            }
+
+            Spacer()
+        }
+
+        HStack(alignment: .firstTextBaseline) {
+            Text("Selected \(selectedSlots.count * 15) min")
+                .font(TelocareTheme.Typography.caption)
+                .foregroundStyle(TelocareTheme.charcoal)
+            Spacer()
+            Button("Reset all availability") {
+                resetAllAvailability()
+            }
+            .buttonStyle(.plain)
+            .font(TelocareTheme.Typography.small)
+            .foregroundStyle(selectedSlots.isEmpty ? TelocareTheme.muted : TelocareTheme.coral)
+            .disabled(selectedSlots.isEmpty)
+        }
+
+        GeometryReader { geometry in
+            let slots = timelineWindow.slotStartMinutes
+            let layout = rowLayout(for: geometry.size.height, rowCount: slots.count)
+            VStack(spacing: layout.rowSpacing) {
+                ForEach(slots, id: \.self) { slotStartMinute in
+                    availabilityRow(for: slotStartMinute, layout: layout)
+                }
+            }
+            .padding(.horizontal, TelocareTheme.Spacing.xs)
+            .padding(.vertical, TelocareTheme.Spacing.sm)
+            .background(TelocareTheme.cream)
+            .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+            .coordinateSpace(name: "planner-timeline")
+            .onPreferenceChange(TimelineRowFramePreferenceKey.self) { slotFrames = $0 }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        handleDrag(at: value.location)
+                    }
+                    .onEnded { _ in
+                        dragSelectionMode = nil
+                        dragAnchorSlot = nil
+                        dragBaseSelection = selectedSlots
+                    }
+            )
+        }
+        .frame(maxHeight: .infinity)
     }
 
     private var wakeBinding: Binding<Date> {
@@ -1131,34 +1284,197 @@ private struct PlannerTimelineSheet: View {
         )
     }
 
+    private func availabilityRow(for slotStartMinute: Int, layout: TimelineRowLayout) -> some View {
+        let isSelected = selectedSlots.contains(slotStartMinute)
+        return Button {
+            toggleSlot(slotStartMinute)
+        } label: {
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                Text(rowTimeLabel(for: slotStartMinute))
+                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .frame(width: 44, alignment: .leading)
+
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(isSelected ? TelocareTheme.success : TelocareTheme.sand)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
+                            .stroke(isSelected ? TelocareTheme.success : TelocareTheme.peach, lineWidth: 1)
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(height: layout.barHeight)
+            }
+            .frame(height: layout.rowHeight)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(slotLabel(for: slotStartMinute))
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .background(
+            GeometryReader { geometry in
+                Color.clear.preference(
+                    key: TimelineRowFramePreferenceKey.self,
+                    value: [slotStartMinute: geometry.frame(in: .named("planner-timeline"))]
+                )
+            }
+        )
+    }
+
+    private func plannedRow(for row: PlannedTimelineRow, layout: TimelineRowLayout) -> some View {
+        HStack(spacing: TelocareTheme.Spacing.sm) {
+            Text(formattedClock(row.minute))
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .foregroundStyle(TelocareTheme.warmGray)
+                .frame(width: 44, alignment: .leading)
+
+            HStack(spacing: TelocareTheme.Spacing.xs) {
+                if layout.showsInlineText {
+                    if let actionTitle = row.actionTitle {
+                        if row.isActionStart {
+                            Text(actionTitle)
+                                .font(TelocareTheme.Typography.small)
+                                .foregroundStyle(TelocareTheme.charcoal)
+                                .lineLimit(1)
+                        } else {
+                            Text("•")
+                                .font(TelocareTheme.Typography.small)
+                                .foregroundStyle(TelocareTheme.warmGray)
+                        }
+                        Spacer(minLength: 0)
+                    } else {
+                        Text("Open")
+                            .font(TelocareTheme.Typography.small)
+                            .foregroundStyle(TelocareTheme.warmGray)
+                        Spacer(minLength: 0)
+                    }
+                } else {
+                    if row.actionTitle != nil {
+                        Circle()
+                            .fill(TelocareTheme.charcoal.opacity(0.5))
+                            .frame(width: 3, height: 3)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+            .padding(.horizontal, TelocareTheme.Spacing.xs)
+            .frame(maxWidth: .infinity)
+            .frame(height: layout.rowHeight)
+            .background(row.actionTitle == nil ? TelocareTheme.sand : TelocareTheme.peach.opacity(0.45))
+            .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+        }
+    }
+
+    private func rowLayout(for availableHeight: CGFloat, rowCount: Int) -> TimelineRowLayout {
+        let contentHeight = max(0, availableHeight - (TelocareTheme.Spacing.sm * 2))
+        return TimelineRowLayout.resolve(availableHeight: contentHeight, rowCount: rowCount)
+    }
+
+    private func resetAllAvailability() {
+        selectedSlots = []
+        dragSelectionMode = nil
+        dragAnchorSlot = nil
+        dragBaseSelection = []
+    }
+
     private func handleDrag(at location: CGPoint) {
-        guard let touchedSlot = rowFrames.first(where: { _, frame in
+        guard mode == .availability else {
+            return
+        }
+        guard let touchedSlot = slotFrames.first(where: { _, frame in
             frame.contains(location)
         })?.key else {
             return
         }
-        guard !dragTouchedSlots.contains(touchedSlot) else {
+        if dragAnchorSlot == nil {
+            dragAnchorSlot = touchedSlot
+            dragBaseSelection = selectedSlots
+            dragSelectionMode = !selectedSlots.contains(touchedSlot)
+        }
+
+        guard let dragAnchorSlot else {
             return
         }
+        applyDragRange(anchor: dragAnchorSlot, current: touchedSlot)
+    }
 
-        let shouldSelect: Bool
-        if let dragSelectionMode {
-            shouldSelect = dragSelectionMode
-        } else {
-            shouldSelect = !selectedSlots.contains(touchedSlot)
-            dragSelectionMode = shouldSelect
+    private func applyDragRange(anchor: Int, current: Int) {
+        guard let shouldSelect = dragSelectionMode else {
+            return
         }
-
-        dragTouchedSlots.insert(touchedSlot)
+        let lower = min(anchor, current)
+        let upper = max(anchor, current)
+        let range = Set(
+            timelineWindow.slotStartMinutes.filter { minute in
+                minute >= lower && minute <= upper
+            }
+        )
         if shouldSelect {
-            selectedSlots.insert(touchedSlot)
+            selectedSlots = dragBaseSelection.union(range)
             return
         }
-        selectedSlots.remove(touchedSlot)
+        selectedSlots = dragBaseSelection.subtracting(range)
     }
 
     private func slotLabel(for minute: Int) -> String {
         "\(formattedClock(minute)) - \(formattedClock(minute + 15))"
+    }
+
+    private func rowTimeLabel(for minute: Int) -> String {
+        if minute % 60 == 0 {
+            return formattedClock(minute)
+        }
+        return ""
+    }
+
+    private var scheduledRows: [PlannedTimelineRow] {
+        let slots = selectedSlots.sorted()
+        guard !slots.isEmpty else {
+            return []
+        }
+        guard let planProposal else {
+            return slots.map { slot in
+                PlannedTimelineRow(minute: slot, actionTitle: nil, isActionStart: false)
+            }
+        }
+
+        var rows: [PlannedTimelineRow] = []
+        var slotIndex = 0
+
+        for action in planProposal.actions {
+            let requiredSlots = max(1, Int((Double(action.estimatedMinutes) / 15.0).rounded(.up)))
+            let endIndex = min(slots.count, slotIndex + requiredSlots)
+            guard slotIndex < endIndex else {
+                break
+            }
+
+            for currentIndex in slotIndex..<endIndex {
+                rows.append(
+                    PlannedTimelineRow(
+                        minute: slots[currentIndex],
+                        actionTitle: action.title,
+                        isActionStart: currentIndex == slotIndex
+                    )
+                )
+            }
+            slotIndex = endIndex
+            if slotIndex >= slots.count {
+                break
+            }
+        }
+
+        while slotIndex < slots.count {
+            rows.append(
+                PlannedTimelineRow(
+                    minute: slots[slotIndex],
+                    actionTitle: nil,
+                    isActionStart: false
+                )
+            )
+            slotIndex += 1
+        }
+
+        return rows.sorted(by: { left, right in
+            left.minute < right.minute
+        })
     }
 
     private func toggleSlot(_ minute: Int) {

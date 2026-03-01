@@ -1,6 +1,6 @@
 import process from 'node:process';
 import path from 'node:path';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import {
   edgeSignature,
@@ -13,8 +13,11 @@ import {
   UnknownRecord,
 } from './pillar-integrity-lib';
 
-const AUDIT_VERSION = 'user-graph-audit.v1';
-const DEFAULT_CANONICAL_GRAPH_PATH = 'ios/Telocare/Telocare/Resources/Graph/default-graph.json';
+const AUDIT_VERSION = 'user-graph-audit.v2';
+const DEFAULT_CANONICAL_GRAPH_PATHS = [
+  'data/default-graph.json',
+  'ios/Telocare/Telocare/Resources/Graph/default-graph.json',
+];
 
 const REF_USER_DATA_ROW = 'ref_user_data_row';
 const REF_USER_GRAPH_NODES = 'ref_user_graph_nodes';
@@ -77,6 +80,7 @@ interface GraphNodeRow {
   node_id: string;
   label: string;
   style_class: string;
+  tier: number | null;
   is_deactivated: boolean;
   parent_ids: string[];
   source_ref: string;
@@ -87,6 +91,7 @@ interface GraphEdgeRow {
   source_node_id: string;
   target_node_id: string;
   edge_type: string;
+  edge_color: string;
   label: string;
   is_deactivated: boolean;
   source_ref: string;
@@ -96,11 +101,14 @@ interface HabitLinkRow {
   intervention_id: string;
   name: string;
   graph_node_id: string | null;
+  graph_edge_ids: string[];
   is_active: boolean;
   is_hidden: boolean;
   pillars: string[];
   planning_tags: string[];
   source_node_exists: boolean;
+  source_edges_exist: boolean;
+  missing_graph_edge_ids: string[];
   outgoing_edge_ids: string[];
   target_node_ids: string[];
   missing_reasons: string[];
@@ -147,8 +155,10 @@ interface SummaryBlock {
   canonical_graph_edge_count: number;
   interventions_total: number;
   interventions_with_graph_node_id: number;
+  interventions_with_graph_edge_ids: number;
   habits_linked_count: number;
   habits_unlinked_count: number;
+  habits_missing_edge_links_count: number;
   outcome_questions_total: number;
   outcome_questions_linked_count: number;
   outcome_questions_unlinked_count: number;
@@ -196,6 +206,7 @@ interface ParsedInterventionRow {
   id: string;
   name: string;
   graphNodeID: string | null;
+  graphEdgeIDs: string[];
   pillars: string[];
   planningTags: string[];
 }
@@ -438,6 +449,7 @@ function buildEdgeRows(edges: GraphEdgeElement[]): GraphEdgeRow[] {
       source_node_id: edge.data.source,
       target_node_id: edge.data.target,
       edge_type: readOptionalString(edge.data.edgeType) ?? '',
+      edge_color: readOptionalString(edge.data.edgeColor) ?? '',
       label: readOptionalString(edge.data.label) ?? '',
       is_deactivated: edge.data.isDeactivated === true,
       source_ref: REF_USER_GRAPH_EDGES,
@@ -455,6 +467,7 @@ function buildNodeRows(nodes: GraphNodeElement[]): GraphNodeRow[] {
         node_id: node.data.id,
         label: readOptionalString(node.data.label) ?? '',
         style_class: readOptionalString(node.data.styleClass) ?? '',
+        tier: typeof node.data.tier === 'number' && Number.isFinite(node.data.tier) ? node.data.tier : null,
         is_deactivated: node.data.isDeactivated === true,
         parent_ids: parentIDs,
         source_ref: REF_USER_GRAPH_NODES,
@@ -466,6 +479,7 @@ function buildNodeRows(nodes: GraphNodeElement[]): GraphNodeRow[] {
       node_id: node.data.id,
       label: readOptionalString(node.data.label) ?? '',
       style_class: readOptionalString(node.data.styleClass) ?? '',
+      tier: typeof node.data.tier === 'number' && Number.isFinite(node.data.tier) ? node.data.tier : null,
       is_deactivated: node.data.isDeactivated === true,
       parent_ids: parentID === null ? [] : [parentID],
       source_ref: REF_USER_GRAPH_NODES,
@@ -564,10 +578,23 @@ function parseInterventions(
       planningTags = [];
     }
 
+    let graphEdgeIDs = readStringArray(entry.graphEdgeIds);
+    if (Object.prototype.hasOwnProperty.call(entry, 'graphEdgeIds') && !Array.isArray(entry.graphEdgeIds)) {
+      addViolation(violations, {
+        code: 'INTERVENTION_GRAPH_EDGE_IDS_INVALID',
+        severity: 'error',
+        message: `interventions_catalog.interventions[${index}].graphEdgeIds must be an array when present.`,
+        section: 'details.habit_links',
+        source_ref: REF_INTERVENTIONS_CATALOG,
+      });
+      graphEdgeIDs = [];
+    }
+
     rows.push({
       id,
       name: readOptionalString(entry.name) ?? id,
       graphNodeID,
+      graphEdgeIDs,
       pillars,
       planningTags,
     });
@@ -598,21 +625,95 @@ function parseProgressQuestions(
     };
   }
 
+  const parseQuestionRows = (
+    questions: unknown[],
+    contextLabel: string,
+  ): ParsedQuestionRow[] => {
+    const rows: ParsedQuestionRow[] = [];
+
+    for (let index = 0; index < questions.length; index += 1) {
+      const question = questions[index];
+      if (!isUnknownRecord(question)) {
+        addViolation(violations, {
+          code: 'PROGRESS_QUESTION_ENTRY_INVALID',
+          severity: 'error',
+          message: `${contextLabel}[${index}] must be an object.`,
+          section: 'details.outcome_question_links',
+          source_ref: REF_PROGRESS_QUESTIONS,
+        });
+        continue;
+      }
+
+      const id = readOptionalString(question.id);
+      const title = readOptionalString(question.title);
+      const sourceNodeIDs = readStringArray(question.sourceNodeIDs);
+      const sourceEdgeIDs = readStringArray(question.sourceEdgeIDs);
+
+      if (id === null || title === null) {
+        addViolation(violations, {
+          code: 'PROGRESS_QUESTION_ID_OR_TITLE_INVALID',
+          severity: 'error',
+          message: `${contextLabel}[${index}] must include id and title strings.`,
+          section: 'details.outcome_question_links',
+          source_ref: REF_PROGRESS_QUESTIONS,
+        });
+        continue;
+      }
+
+      if (!Array.isArray(question.sourceNodeIDs) || !Array.isArray(question.sourceEdgeIDs)) {
+        addViolation(violations, {
+          code: 'PROGRESS_QUESTION_SOURCES_INVALID',
+          severity: 'error',
+          message: `${contextLabel}[${index}] must include sourceNodeIDs[] and sourceEdgeIDs[].`,
+          section: 'details.outcome_question_links',
+          source_ref: REF_PROGRESS_QUESTIONS,
+        });
+        continue;
+      }
+
+      rows.push({
+        id,
+        title,
+        sourceNodeIDs,
+        sourceEdgeIDs,
+      });
+    }
+
+    return rows;
+  };
+
+  if (Object.prototype.hasOwnProperty.call(progressState, 'activeQuestions') && !Array.isArray(progressState.activeQuestions)) {
+    addViolation(violations, {
+      code: 'PROGRESS_ACTIVE_QUESTION_LIST_INVALID',
+      severity: 'error',
+      message: 'activeQuestions must be an array when present.',
+      section: 'details.outcome_question_links',
+      source_ref: REF_PROGRESS_QUESTIONS,
+    });
+  }
+
+  const activeQuestions = Array.isArray(progressState.activeQuestions) ? progressState.activeQuestions : [];
+  if (activeQuestions.length > 0) {
+    return {
+      rows: parseQuestionRows(activeQuestions, 'activeQuestions'),
+      reason: null,
+    };
+  }
+
   const proposal = isUnknownRecord(progressState.pendingProposal)
     ? progressState.pendingProposal
     : null;
-
   if (proposal === null) {
     addViolation(violations, {
-      code: 'PROGRESS_QUESTION_PROPOSAL_MISSING',
+      code: 'PROGRESS_QUESTION_SOURCES_MISSING',
       severity: 'warning',
-      message: 'pendingProposal missing in progressQuestionSetState; outcome question links unavailable.',
+      message: 'Both activeQuestions and pendingProposal are missing in progressQuestionSetState.',
       section: 'details.outcome_question_links',
       source_ref: REF_PROGRESS_QUESTIONS,
     });
     return {
       rows: [],
-      reason: 'pendingProposal missing',
+      reason: 'activeQuestions and pendingProposal missing',
     };
   }
 
@@ -630,58 +731,16 @@ function parseProgressQuestions(
     };
   }
 
-  const rows: ParsedQuestionRow[] = [];
-  for (let index = 0; index < proposal.questions.length; index += 1) {
-    const question = proposal.questions[index];
-    if (!isUnknownRecord(question)) {
-      addViolation(violations, {
-        code: 'PROGRESS_QUESTION_ENTRY_INVALID',
-        severity: 'error',
-        message: `pendingProposal.questions[${index}] must be an object.`,
-        section: 'details.outcome_question_links',
-        source_ref: REF_PROGRESS_QUESTIONS,
-      });
-      continue;
-    }
-
-    const id = readOptionalString(question.id);
-    const title = readOptionalString(question.title);
-    const sourceNodeIDs = readStringArray(question.sourceNodeIDs);
-    const sourceEdgeIDs = readStringArray(question.sourceEdgeIDs);
-
-    if (id === null || title === null) {
-      addViolation(violations, {
-        code: 'PROGRESS_QUESTION_ID_OR_TITLE_INVALID',
-        severity: 'error',
-        message: `pendingProposal.questions[${index}] must include id and title strings.`,
-        section: 'details.outcome_question_links',
-        source_ref: REF_PROGRESS_QUESTIONS,
-      });
-      continue;
-    }
-
-    if (!Array.isArray(question.sourceNodeIDs) || !Array.isArray(question.sourceEdgeIDs)) {
-      addViolation(violations, {
-        code: 'PROGRESS_QUESTION_SOURCES_INVALID',
-        severity: 'error',
-        message: `pendingProposal.questions[${index}] must include sourceNodeIDs[] and sourceEdgeIDs[].`,
-        section: 'details.outcome_question_links',
-        source_ref: REF_PROGRESS_QUESTIONS,
-      });
-      continue;
-    }
-
-    rows.push({
-      id,
-      title,
-      sourceNodeIDs,
-      sourceEdgeIDs,
-    });
-  }
-
+  addViolation(violations, {
+    code: 'PROGRESS_QUESTION_ACTIVE_FALLBACK_PENDING',
+    severity: 'warning',
+    message: 'Using pendingProposal.questions because activeQuestions is empty.',
+    section: 'details.outcome_question_links',
+    source_ref: REF_PROGRESS_QUESTIONS,
+  });
   return {
-    rows,
-    reason: null,
+    rows: parseQuestionRows(proposal.questions, 'pendingProposal.questions'),
+    reason: 'activeQuestions empty; using pendingProposal',
   };
 }
 
@@ -698,14 +757,20 @@ function buildHabitLinks(
   activeIDs: Set<string>,
   hiddenIDs: Set<string>,
   graphNodeIDSet: Set<string>,
+  graphEdgeIDSet: Set<string>,
   outgoingEdgesBySource: Map<string, GraphEdgeRow[]>,
 ): HabitLinkRow[] {
   return interventions.map((intervention) => {
     const graphNodeID = intervention.graphNodeID;
+    const graphEdgeIDs = intervention.graphEdgeIDs;
     const sourceExists = graphNodeID !== null && graphNodeIDSet.has(graphNodeID);
     const outgoingEdges = graphNodeID === null ? [] : outgoingEdgesBySource.get(graphNodeID) ?? [];
     const targetNodeIDs = [...new Set(outgoingEdges.map((edge) => edge.target_node_id))]
       .sort((left, right) => left.localeCompare(right));
+    const missingGraphEdgeIDs = graphEdgeIDs
+      .filter((edgeID) => !graphEdgeIDSet.has(edgeID))
+      .sort((left, right) => left.localeCompare(right));
+    const sourceEdgesExist = missingGraphEdgeIDs.length === 0;
 
     const missingReasons: string[] = [];
     if (graphNodeID === null) {
@@ -713,16 +778,22 @@ function buildHabitLinks(
     } else if (!sourceExists) {
       missingReasons.push('source_node_not_in_user_graph');
     }
+    if (graphEdgeIDs.length > 0 && !sourceEdgesExist) {
+      missingReasons.push('graph_edge_id_not_in_user_graph');
+    }
 
     return {
       intervention_id: intervention.id,
       name: intervention.name,
       graph_node_id: graphNodeID,
+      graph_edge_ids: graphEdgeIDs,
       is_active: activeIDs.has(intervention.id),
       is_hidden: hiddenIDs.has(intervention.id),
       pillars: intervention.pillars,
       planning_tags: intervention.planningTags,
       source_node_exists: sourceExists,
+      source_edges_exist: sourceEdgesExist,
+      missing_graph_edge_ids: missingGraphEdgeIDs,
       outgoing_edge_ids: outgoingEdges.map((edge) => edge.edge_id),
       target_node_ids: targetNodeIDs,
       missing_reasons: missingReasons,
@@ -832,10 +903,31 @@ export function buildAuditReport(input: BuildAuditInput): UserGraphAuditReport {
   const interventions = parseInterventions(input.interventionsCatalogData, violations);
   const activeIDs = new Set(readStringArray(input.userStore.activeInterventions));
   const hiddenIDs = new Set(readStringArray(input.userStore.hiddenInterventions));
-  const habitLinks = buildHabitLinks(interventions, activeIDs, hiddenIDs, graphNodeIDSet, outgoingEdgesBySource);
+  const habitLinks = buildHabitLinks(
+    interventions,
+    activeIDs,
+    hiddenIDs,
+    graphNodeIDSet,
+    graphEdgeIDSet,
+    outgoingEdgesBySource,
+  );
 
   const parsedQuestions = parseProgressQuestions(input.userStore, violations);
   const outcomeQuestionLinks = buildOutcomeQuestionLinks(parsedQuestions.rows, graphNodeIDSet, graphEdgeIDSet);
+
+  for (const habitLink of habitLinks) {
+    if (habitLink.missing_graph_edge_ids.length === 0) {
+      continue;
+    }
+
+    addViolation(violations, {
+      code: 'HABIT_GRAPH_EDGE_MISSING',
+      severity: 'error',
+      message: `Habit ${habitLink.intervention_id} references missing graphEdgeIds: ${habitLink.missing_graph_edge_ids.join(', ')}`,
+      section: 'details.habit_links',
+      source_ref: REF_INTERVENTIONS_CATALOG,
+    });
+  }
 
   if (!isUnknownRecord(input.outcomesMetadataData) || !Array.isArray(input.outcomesMetadataData.nodes)) {
     addViolation(violations, {
@@ -870,11 +962,13 @@ export function buildAuditReport(input: BuildAuditInput): UserGraphAuditReport {
 
   const habitsLinkedCount = habitLinks.filter((row) => row.source_node_exists).length;
   const habitsUnlinkedCount = habitLinks.length - habitsLinkedCount;
+  const habitsMissingEdgeLinksCount = habitLinks.filter((row) => row.missing_graph_edge_ids.length > 0).length;
 
   const outcomeQuestionsLinkedCount = outcomeQuestionLinks.filter((row) => row.link_status === 'linked').length;
   const outcomeQuestionsUnlinkedCount = outcomeQuestionLinks.length - outcomeQuestionsLinkedCount;
 
   const missingHabitSourceNodeCount = habitLinks.filter((row) => row.source_node_exists === false).length;
+  const missingHabitSourceEdgeCount = habitLinks.reduce((total, row) => total + row.missing_graph_edge_ids.length, 0);
   const missingQuestionNodeCount = outcomeQuestionLinks.reduce((total, row) => total + row.missing_node_ids.length, 0);
   const missingQuestionEdgeCount = outcomeQuestionLinks.reduce((total, row) => total + row.missing_edge_ids.length, 0);
 
@@ -885,13 +979,15 @@ export function buildAuditReport(input: BuildAuditInput): UserGraphAuditReport {
     canonical_graph_edge_count: canonicalGraph.edges.length,
     interventions_total: interventions.length,
     interventions_with_graph_node_id: interventions.filter((row) => row.graphNodeID !== null).length,
+    interventions_with_graph_edge_ids: interventions.filter((row) => row.graphEdgeIDs.length > 0).length,
     habits_linked_count: habitsLinkedCount,
     habits_unlinked_count: habitsUnlinkedCount,
+    habits_missing_edge_links_count: habitsMissingEdgeLinksCount,
     outcome_questions_total: outcomeQuestionLinks.length,
     outcome_questions_linked_count: outcomeQuestionsLinkedCount,
     outcome_questions_unlinked_count: outcomeQuestionsUnlinkedCount,
     missing_source_node_count: missingHabitSourceNodeCount + missingQuestionNodeCount,
-    missing_source_edge_count: missingQuestionEdgeCount,
+    missing_source_edge_count: missingHabitSourceEdgeCount + missingQuestionEdgeCount,
     outcome_questions_reason: parsedQuestions.reason,
     source_row_recency: {
       user_data: createSourceRecencyEntry(input.provenance.refs[REF_USER_DATA_ROW]),
@@ -942,7 +1038,8 @@ export function resolveCanonicalGraphFromSources(input: {
   firstPartyGraphData: unknown | null;
   firstPartyUpdatedAt: string | null;
   firstPartyVersion: number | null;
-  fallbackLocalPath: string;
+  fallbackLocalPath?: string;
+  fallbackLocalPaths?: string[];
 }): CanonicalGraphResolution {
   if (input.firstPartyGraphData !== null) {
     return {
@@ -955,14 +1052,26 @@ export function resolveCanonicalGraphFromSources(input: {
     };
   }
 
-  const graphData = loadGraphFromPath(input.fallbackLocalPath);
+  const fallbackLocalPaths = Array.isArray(input.fallbackLocalPaths)
+    ? input.fallbackLocalPaths
+    : input.fallbackLocalPath === undefined
+      ? []
+      : [input.fallbackLocalPath];
+
+  if (fallbackLocalPaths.length === 0) {
+    throw new Error('No fallback canonical graph path configured.');
+  }
+
+  const resolvedPath = fallbackLocalPaths.find((entry) => existsSync(entry))
+    ?? fallbackLocalPaths[0];
+  const graphData = loadGraphFromPath(resolvedPath);
   return {
     graphRaw: graphData,
     source: 'local_file',
     updatedAt: null,
     version: null,
     fallbackUsed: true,
-    sourcePathOrSelector: input.fallbackLocalPath,
+    sourcePathOrSelector: resolvedPath,
   };
 }
 
@@ -1096,6 +1205,7 @@ function printSummary(report: UserGraphAuditReport, outputPath: string): void {
     `Graph nodes ${report.summary.user_graph_node_count}/${report.summary.canonical_graph_node_count} | edges ${report.summary.user_graph_edge_count}/${report.summary.canonical_graph_edge_count}`,
   );
   console.log(`Habits linked/unlinked: ${report.summary.habits_linked_count}/${report.summary.habits_unlinked_count}`);
+  console.log(`Habits with missing graphEdgeIds: ${report.summary.habits_missing_edge_links_count}`);
   console.log(`Outcome questions linked/unlinked: ${report.summary.outcome_questions_linked_count}/${report.summary.outcome_questions_unlinked_count}`);
   console.log(`Missing source nodes: ${report.summary.missing_source_node_count}`);
   console.log(`Missing source edges: ${report.summary.missing_source_edge_count}`);
@@ -1228,7 +1338,7 @@ async function run(): Promise<void> {
     firstPartyGraphData: firstPartyGraphQuery.data?.data ?? null,
     firstPartyUpdatedAt: firstPartyGraphQuery.data?.updated_at ?? null,
     firstPartyVersion: firstPartyGraphQuery.data?.version ?? null,
-    fallbackLocalPath: path.resolve(process.cwd(), DEFAULT_CANONICAL_GRAPH_PATH),
+    fallbackLocalPaths: DEFAULT_CANONICAL_GRAPH_PATHS.map((entry) => path.resolve(process.cwd(), entry)),
   });
 
   const provenance = makeProvenance(

@@ -1,7 +1,7 @@
 import Foundation
 
 extension UserDataDocument {
-    func withPlannerPreferencesState(_ plannerPreferencesState: PlannerPreferencesState) -> UserDataDocument {
+    func withUserDefinedPillars(_ userDefinedPillars: [UserDefinedPillar]) -> UserDataDocument {
         UserDataDocument(
             version: version,
             lastExport: lastExport,
@@ -38,7 +38,7 @@ extension UserDataDocument {
         )
     }
 
-    func withHabitPlannerState(_ habitPlannerState: HabitPlannerState) -> UserDataDocument {
+    func withPillarAssignments(_ pillarAssignments: [PillarAssignment]) -> UserDataDocument {
         UserDataDocument(
             version: version,
             lastExport: lastExport,
@@ -75,7 +75,7 @@ extension UserDataDocument {
         )
     }
 
-    func withHealthLensState(_ healthLensState: HealthLensState) -> UserDataDocument {
+    func withPillarCheckIns(_ pillarCheckIns: [PillarCheckIn]) -> UserDataDocument {
         UserDataDocument(
             version: version,
             lastExport: lastExport,

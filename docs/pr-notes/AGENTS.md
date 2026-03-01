@@ -27,6 +27,11 @@ Treat notes as ordered events used to reconstruct current state.
 - Never invent or pad note content just to satisfy a template.
 - In PR descriptions, link the newest note file(s) used as current state.
 
+## Diagnostics Artifacts
+- Graph audits and screenshot runs may produce files under `artifacts/`.
+- `artifacts/` is generated output and is not committed.
+- When evidence depends on artifacts, reference the command and artifact path in the PR note text.
+
 ## Reading Rules (Event-Sourcing Style)
 - Sort note filenames lexicographically within each folder.
 - Read from oldest to newest to reconstruct state.

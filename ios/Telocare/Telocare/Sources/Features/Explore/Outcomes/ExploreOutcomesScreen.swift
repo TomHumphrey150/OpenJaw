@@ -12,6 +12,10 @@ struct ExploreOutcomesScreen: View {
     let morningOutcomeSelection: MorningOutcomeSelection
     let morningCheckInFields: [MorningOutcomeField]
     let requiredMorningCheckInFields: [MorningOutcomeField]
+    let foundationCheckInNightID: String
+    let foundationQuestions: [GraphDerivedProgressQuestion]
+    let foundationResponsesByQuestionID: [String: Int]
+    let foundationRequiredQuestionIDs: [String]
     let morningTrendMetrics: [MorningTrendMetric]
     let museConnectionStatusText: String
     let museRecordingStatusText: String
@@ -35,6 +39,7 @@ struct ExploreOutcomesScreen: View {
     let museCanStartRecordingFromFitCalibration: Bool
     let museCanStartRecordingWithFitOverride: Bool
     let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
+    let onSetFoundationCheckInValue: (Int?, String) -> Void
     let onScanForMuse: () -> Void
     let onConnectToMuse: () -> Void
     let onDisconnectMuse: () -> Void
@@ -53,6 +58,7 @@ struct ExploreOutcomesScreen: View {
 
     @State private var navigationPath = NavigationPath()
     @State private var isMorningCheckInExpanded: Bool
+    @State private var isFoundationCheckInExpanded: Bool
     @State private var selectedMorningMetric: MorningTrendMetric
     @State private var selectedNightMetric: NightTrendMetric
     @State private var isMuseDiagnosticsSharePresented = false
@@ -70,6 +76,10 @@ struct ExploreOutcomesScreen: View {
         morningOutcomeSelection: MorningOutcomeSelection,
         morningCheckInFields: [MorningOutcomeField],
         requiredMorningCheckInFields: [MorningOutcomeField],
+        foundationCheckInNightID: String,
+        foundationQuestions: [GraphDerivedProgressQuestion],
+        foundationResponsesByQuestionID: [String: Int],
+        foundationRequiredQuestionIDs: [String],
         morningTrendMetrics: [MorningTrendMetric],
         museConnectionStatusText: String,
         museRecordingStatusText: String,
@@ -93,6 +103,7 @@ struct ExploreOutcomesScreen: View {
         museCanStartRecordingFromFitCalibration: Bool,
         museCanStartRecordingWithFitOverride: Bool,
         onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void,
+        onSetFoundationCheckInValue: @escaping (Int?, String) -> Void,
         onScanForMuse: @escaping () -> Void,
         onConnectToMuse: @escaping () -> Void,
         onDisconnectMuse: @escaping () -> Void,
@@ -119,6 +130,10 @@ struct ExploreOutcomesScreen: View {
         self.morningOutcomeSelection = morningOutcomeSelection
         self.morningCheckInFields = morningCheckInFields
         self.requiredMorningCheckInFields = requiredMorningCheckInFields
+        self.foundationCheckInNightID = foundationCheckInNightID
+        self.foundationQuestions = foundationQuestions
+        self.foundationResponsesByQuestionID = foundationResponsesByQuestionID
+        self.foundationRequiredQuestionIDs = foundationRequiredQuestionIDs
         self.morningTrendMetrics = morningTrendMetrics
         self.museConnectionStatusText = museConnectionStatusText
         self.museRecordingStatusText = museRecordingStatusText
@@ -142,6 +157,7 @@ struct ExploreOutcomesScreen: View {
         self.museCanStartRecordingFromFitCalibration = museCanStartRecordingFromFitCalibration
         self.museCanStartRecordingWithFitOverride = museCanStartRecordingWithFitOverride
         self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
+        self.onSetFoundationCheckInValue = onSetFoundationCheckInValue
         self.onScanForMuse = onScanForMuse
         self.onConnectToMuse = onConnectToMuse
         self.onDisconnectMuse = onDisconnectMuse
@@ -160,6 +176,12 @@ struct ExploreOutcomesScreen: View {
         _isMorningCheckInExpanded = State(
             initialValue: !morningOutcomeSelection.isComplete(requiredFields: requiredMorningCheckInFields)
         )
+        _isFoundationCheckInExpanded = State(
+            initialValue: !Self.isFoundationCheckInComplete(
+                responsesByQuestionID: foundationResponsesByQuestionID,
+                requiredQuestionIDs: foundationRequiredQuestionIDs
+            )
+        )
         _selectedMorningMetric = State(initialValue: morningTrendMetrics.first ?? .composite)
         _selectedNightMetric = State(initialValue: .microArousalRatePerHour)
     }
@@ -171,7 +193,9 @@ struct ExploreOutcomesScreen: View {
                     flareSuggestionSection
                     morningGreetingCard
                     morningCheckInSection
+                    foundationCheckInSection
                     morningTrendSection
+                    measurementRoadmapSection
                     if isMuseSessionEnabled {
                         museSessionSection
                     }
@@ -209,9 +233,26 @@ struct ExploreOutcomesScreen: View {
         }
         .onChange(of: morningOutcomeSelection) { _, selection in
             guard selection.isComplete(requiredFields: requiredMorningCheckInFields) else { return }
+            let foundationComplete = Self.isFoundationCheckInComplete(
+                responsesByQuestionID: foundationResponsesByQuestionID,
+                requiredQuestionIDs: foundationRequiredQuestionIDs
+            )
+            guard foundationComplete else { return }
             guard isMorningCheckInExpanded else { return }
             withAnimation(.spring(response: 0.3)) {
                 isMorningCheckInExpanded = false
+            }
+        }
+        .onChange(of: foundationResponsesByQuestionID) { _, responses in
+            let isComplete = Self.isFoundationCheckInComplete(
+                responsesByQuestionID: responses,
+                requiredQuestionIDs: foundationRequiredQuestionIDs
+            )
+            guard isComplete else { return }
+            guard morningOutcomeSelection.isComplete(requiredFields: requiredMorningCheckInFields) else { return }
+            guard isFoundationCheckInExpanded else { return }
+            withAnimation(.spring(response: 0.3)) {
+                isFoundationCheckInExpanded = false
             }
         }
     }
@@ -349,6 +390,55 @@ struct ExploreOutcomesScreen: View {
             get: { morningOutcomeSelection.value(for: field) },
             set: { onSetMorningOutcomeValue($0, field) }
         )
+    }
+
+    @ViewBuilder
+    private var foundationCheckInSection: some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+            Button {
+                withAnimation(.spring(response: 0.3)) {
+                    isFoundationCheckInExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    WarmSectionHeader(
+                        title: "Pillar check-in",
+                        subtitle: "Night \(foundationCheckInNightID) • Required daily"
+                    )
+                    Spacer()
+                    Image(systemName: isFoundationCheckInExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(TelocareTheme.warmGray)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.exploreOutcomesFoundationCheckInToggle)
+            .accessibilityValue(isFoundationCheckInExpanded ? "Expanded" : "Collapsed")
+
+            if isFoundationCheckInExpanded {
+                VStack(spacing: TelocareTheme.Spacing.md) {
+                    ForEach(foundationQuestions, id: \.id) { question in
+                        FoundationEmojiRatingPicker(
+                            questionID: question.id,
+                            title: question.title,
+                            value: Binding(
+                                get: { foundationResponsesByQuestionID[question.id] },
+                                set: { onSetFoundationCheckInValue($0, question.id) }
+                            )
+                        )
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private static func isFoundationCheckInComplete(
+        responsesByQuestionID: [String: Int],
+        requiredQuestionIDs: [String]
+    ) -> Bool {
+        !requiredQuestionIDs.contains { responsesByQuestionID[$0] == nil }
     }
 
     private var morningTrendPoints: [OutcomeTrendPoint] {
@@ -573,6 +663,44 @@ struct ExploreOutcomesScreen: View {
         .accessibilityIdentifier(AccessibilityID.exploreOutcomesNightChart)
         .accessibilityLabel("Night outcomes trend chart")
         .accessibilityValue(nightChartAccessibilityValue)
+    }
+
+    @ViewBuilder
+    private var measurementRoadmapSection: some View {
+        WarmCard {
+            VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
+                WarmSectionHeader(
+                    title: "Measurement roadmap",
+                    subtitle: "Planned evidence bundles"
+                )
+
+                Text("Daily: steps, sleep regularity, hydration, mood check-in.")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Weekly: exercise completion, social count, stress check, alcohol-free days.")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Monthly and quarterly: PSQI, PHQ-9, GAD-7, PSS-10, MEDAS, loneliness, financial distress.")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Biannual and annual: labs, dental, VO2max, lipid and inflammation markers, preventive screening.")
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.exploreOutcomesMeasurementRoadmap)
+        .accessibilityLabel("Measurement roadmap")
+        .accessibilityValue(
+            "Daily metrics, weekly adherence, monthly and quarterly questionnaires, and annual preventive markers."
+        )
     }
 
     @ViewBuilder
@@ -1044,6 +1172,92 @@ private struct NightRecordCard: View {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(TelocareTheme.muted)
             }
+        }
+    }
+}
+
+private struct FoundationEmojiRatingPicker: View {
+    let questionID: String
+    let title: String
+    @Binding var value: Int?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
+            HStack(spacing: TelocareTheme.Spacing.sm) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 18, weight: .regular, design: .rounded))
+                    .foregroundStyle(TelocareTheme.coral)
+                Text(title)
+                    .font(TelocareTheme.Typography.headline)
+                    .foregroundStyle(TelocareTheme.charcoal)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                if let value {
+                    Text("\(emoji(for: value)) \(value)")
+                        .font(TelocareTheme.Typography.small)
+                        .foregroundStyle(TelocareTheme.coral)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(TelocareTheme.peach)
+                        .clipShape(Capsule())
+                }
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: TelocareTheme.Spacing.xs) {
+                    ForEach(0...10, id: \.self) { option in
+                        Button {
+                            value = option
+                        } label: {
+                            VStack(spacing: 4) {
+                                Text(emoji(for: option))
+                                    .font(.system(size: 20, weight: .regular, design: .rounded))
+                                Text("\(option)")
+                                    .font(TelocareTheme.Typography.small)
+                                    .foregroundStyle(value == option ? TelocareTheme.coral : TelocareTheme.warmGray)
+                            }
+                            .frame(width: 38, height: 50)
+                            .background(
+                                RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                                    .fill(value == option ? TelocareTheme.peach : Color.clear)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.small, style: .continuous)
+                                    .stroke(
+                                        value == option ? TelocareTheme.coral : TelocareTheme.muted.opacity(0.3),
+                                        lineWidth: value == option ? 2 : 1
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(title) \(option)")
+                        .accessibilityAddTraits(value == option ? .isSelected : [])
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .padding(TelocareTheme.Spacing.md)
+        .background(TelocareTheme.cream)
+        .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.exploreOutcomesFoundationQuestion(questionID: questionID))
+    }
+
+    private func emoji(for value: Int) -> String {
+        switch value {
+        case 0...2:
+            return "😌"
+        case 3...4:
+            return "🙂"
+        case 5:
+            return "😐"
+        case 6...7:
+            return "😟"
+        case 8...9:
+            return "😣"
+        default:
+            return "😫"
         }
     }
 }

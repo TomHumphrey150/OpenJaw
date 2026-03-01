@@ -105,6 +105,7 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
     let defaultOrder: Int?
     let legacyIds: [String]?
     let graphNodeId: String?
+    let graphEdgeIds: [String]?
     let trackingType: InterventionTrackingType?
     let doseConfig: DoseConfig?
     let timeOfDay: [InterventionTimeOfDay]?
@@ -131,6 +132,7 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         defaultOrder: Int?,
         legacyIds: [String]? = nil,
         graphNodeId: String? = nil,
+        graphEdgeIds: [String]? = nil,
         trackingType: InterventionTrackingType? = nil,
         doseConfig: DoseConfig? = nil,
         timeOfDay: [InterventionTimeOfDay]? = nil,
@@ -156,6 +158,7 @@ struct InterventionDefinition: Codable, Equatable, Sendable, Identifiable {
         self.defaultOrder = defaultOrder
         self.legacyIds = legacyIds
         self.graphNodeId = graphNodeId
+        self.graphEdgeIds = graphEdgeIds
         self.trackingType = trackingType
         self.doseConfig = doseConfig
         self.timeOfDay = timeOfDay

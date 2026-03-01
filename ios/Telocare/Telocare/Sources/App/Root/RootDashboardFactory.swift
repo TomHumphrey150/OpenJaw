@@ -1,14 +1,12 @@
 import Foundation
 
-@MainActor
 protocol RootDashboardFactory {
     func makeDashboard(
         document: UserDataDocument,
         firstPartyContent: FirstPartyContentBundle
-    ) -> AppViewModel
+    ) async -> AppViewModel
 }
 
-@MainActor
 struct DefaultRootDashboardFactory: RootDashboardFactory {
     private let snapshotBuilder: DashboardSnapshotBuilder
     private let userDataRepository: UserDataRepository
@@ -36,7 +34,7 @@ struct DefaultRootDashboardFactory: RootDashboardFactory {
     func makeDashboard(
         document: UserDataDocument,
         firstPartyContent: FirstPartyContentBundle
-    ) -> AppViewModel {
+    ) async -> AppViewModel {
         let snapshot = snapshotBuilder.build(
             from: document,
             firstPartyContent: firstPartyContent,
@@ -47,35 +45,41 @@ struct DefaultRootDashboardFactory: RootDashboardFactory {
             fallbackGraph: firstPartyContent.graphData
         )
 
-        return AppViewModel(
-            snapshot: snapshot,
-            graphData: graphData,
-            initialExperienceFlow: document.experienceFlow,
-            initialDailyCheckIns: document.dailyCheckIns,
-            initialDailyDoseProgress: document.dailyDoseProgress,
-            initialInterventionCompletionEvents: document.interventionCompletionEvents,
-            initialInterventionDoseSettings: document.interventionDoseSettings,
-            initialAppleHealthConnections: document.appleHealthConnections,
-            initialNightOutcomes: document.nightOutcomes,
-            initialMorningStates: document.morningStates,
-            initialMorningQuestionnaire: document.morningQuestionnaire,
-            initialProgressQuestionSetState: document.progressQuestionSetState,
-            initialPlannerPreferencesState: document.plannerPreferencesState,
-            initialHabitPlannerState: document.habitPlannerState,
-            initialHealthLensState: document.healthLensState,
-            initialGardenAliasOverrides: document.gardenAliasOverrides,
-            initialCustomCausalDiagram: document.customCausalDiagram,
-            initialActiveInterventions: document.activeInterventions,
-            initialInterventionsCatalog: firstPartyContent.interventionsCatalog,
-            initialFoundationCatalog: firstPartyContent.foundationCatalog,
-            initialPlanningPolicy: firstPartyContent.planningPolicy,
-            persistUserDataPatch: { patch in
-                try await userDataRepository.upsertUserDataPatch(patch)
-            },
-            appleHealthDoseService: appleHealthDoseService,
-            museSessionService: museSessionService,
-            museLicenseData: museLicenseData,
-            accessibilityAnnouncer: accessibilityAnnouncer
-        )
+        return await MainActor.run {
+            AppViewModel(
+                snapshot: snapshot,
+                graphData: graphData,
+                initialExperienceFlow: document.experienceFlow,
+                initialDailyCheckIns: document.dailyCheckIns,
+                initialDailyDoseProgress: document.dailyDoseProgress,
+                initialInterventionCompletionEvents: document.interventionCompletionEvents,
+                initialInterventionDoseSettings: document.interventionDoseSettings,
+                initialAppleHealthConnections: document.appleHealthConnections,
+                initialNightOutcomes: document.nightOutcomes,
+                initialMorningStates: document.morningStates,
+                initialFoundationCheckIns: document.foundationCheckIns,
+                initialUserDefinedPillars: document.userDefinedPillars,
+                initialPillarAssignments: document.pillarAssignments,
+                initialPillarCheckIns: document.pillarCheckIns,
+                initialMorningQuestionnaire: document.morningQuestionnaire,
+                initialProgressQuestionSetState: document.progressQuestionSetState,
+                initialPlannerPreferencesState: document.plannerPreferencesState,
+                initialHabitPlannerState: document.habitPlannerState,
+                initialHealthLensState: document.healthLensState,
+                initialGardenAliasOverrides: document.gardenAliasOverrides,
+                initialCustomCausalDiagram: document.customCausalDiagram,
+                initialActiveInterventions: document.activeInterventions,
+                initialInterventionsCatalog: firstPartyContent.interventionsCatalog,
+                initialFoundationCatalog: firstPartyContent.foundationCatalog,
+                initialPlanningPolicy: firstPartyContent.planningPolicy,
+                persistUserDataPatch: { patch in
+                    try await userDataRepository.upsertUserDataPatch(patch)
+                },
+                appleHealthDoseService: appleHealthDoseService,
+                museSessionService: museSessionService,
+                museLicenseData: museLicenseData,
+                accessibilityAnnouncer: accessibilityAnnouncer
+            )
+        }
     }
 }

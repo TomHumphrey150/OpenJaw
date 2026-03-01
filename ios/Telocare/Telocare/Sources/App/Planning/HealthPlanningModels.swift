@@ -254,7 +254,7 @@ struct DailyTimelineWindow: Codable, Equatable, Hashable, Sendable {
     let sleepMinutes: Int
 
     static let `default` = DailyTimelineWindow(
-        wakeMinutes: 6 * 60,
+        wakeMinutes: 8 * 60,
         sleepMinutes: 22 * 60
     )
 
@@ -405,6 +405,38 @@ enum HealthLensPreset: String, CaseIterable, Codable, Equatable, Hashable, Senda
     }
 }
 
+enum HealthLensMode: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
+    case all
+    case pillars
+
+    var displayName: String {
+        switch self {
+        case .all:
+            return "All"
+        case .pillars:
+            return "Pillars"
+        }
+    }
+}
+
+struct PillarLensSelection: Codable, Equatable, Hashable, Sendable {
+    let selectedPillarIDs: [HealthPillar]
+    let isAllSelected: Bool
+
+    init(selectedPillarIDs: [HealthPillar], isAllSelected: Bool) {
+        var deduped = Set<HealthPillar>()
+        self.selectedPillarIDs = selectedPillarIDs
+            .filter { deduped.insert($0).inserted }
+            .sorted { $0.id.localizedCaseInsensitiveCompare($1.id) == .orderedAscending }
+        self.isAllSelected = isAllSelected
+    }
+
+    static let all = PillarLensSelection(
+        selectedPillarIDs: [],
+        isAllSelected: true
+    )
+}
+
 struct LensControlPosition: Codable, Equatable, Hashable, Sendable {
     let horizontalRatio: Double
     let verticalRatio: Double
@@ -429,10 +461,22 @@ struct LensControlState: Codable, Equatable, Hashable, Sendable {
 }
 
 struct HealthLensState: Codable, Equatable, Hashable, Sendable {
-    let preset: HealthLensPreset
-    let selectedPillar: HealthPillar?
+    let mode: HealthLensMode
+    let pillarSelection: PillarLensSelection
     let updatedAt: String
     let controlState: LensControlState
+
+    init(
+        mode: HealthLensMode,
+        pillarSelection: PillarLensSelection,
+        updatedAt: String,
+        controlState: LensControlState = .default
+    ) {
+        self.mode = mode
+        self.pillarSelection = pillarSelection
+        self.updatedAt = updatedAt
+        self.controlState = controlState
+    }
 
     init(
         preset: HealthLensPreset,
@@ -440,13 +484,31 @@ struct HealthLensState: Codable, Equatable, Hashable, Sendable {
         updatedAt: String,
         controlState: LensControlState = .default
     ) {
-        self.preset = preset
-        self.selectedPillar = selectedPillar
-        self.updatedAt = updatedAt
-        self.controlState = controlState
+        switch preset {
+        case .all, .acute, .foundation:
+            self.init(
+                mode: .all,
+                pillarSelection: .all,
+                updatedAt: updatedAt,
+                controlState: controlState
+            )
+        case .pillar:
+            let selected = selectedPillar.map { [$0] } ?? []
+            self.init(
+                mode: .pillars,
+                pillarSelection: PillarLensSelection(
+                    selectedPillarIDs: selected,
+                    isAllSelected: false
+                ),
+                updatedAt: updatedAt,
+                controlState: controlState
+            )
+        }
     }
 
     private enum CodingKeys: String, CodingKey {
+        case mode
+        case pillarSelection
         case preset
         case selectedPillar
         case updatedAt
@@ -455,23 +517,59 @@ struct HealthLensState: Codable, Equatable, Hashable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        preset = try container.decodeIfPresent(HealthLensPreset.self, forKey: .preset) ?? .all
-        selectedPillar = try container.decodeIfPresent(HealthPillar.self, forKey: .selectedPillar)
-        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt) ?? ""
-        controlState = try container.decodeIfPresent(LensControlState.self, forKey: .controlState) ?? .default
+        let decodedUpdatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt) ?? ""
+        let decodedControlState = try container.decodeIfPresent(LensControlState.self, forKey: .controlState) ?? .default
+        let decodedMode = try container.decodeIfPresent(HealthLensMode.self, forKey: .mode)
+        let decodedSelection = try container.decodeIfPresent(PillarLensSelection.self, forKey: .pillarSelection)
+
+        if let decodedMode, let decodedSelection {
+            self.init(
+                mode: decodedMode,
+                pillarSelection: decodedSelection,
+                updatedAt: decodedUpdatedAt,
+                controlState: decodedControlState
+            )
+            return
+        }
+
+        let legacyPreset = try container.decodeIfPresent(HealthLensPreset.self, forKey: .preset) ?? .all
+        let legacySelectedPillar = try container.decodeIfPresent(HealthPillar.self, forKey: .selectedPillar)
+        self.init(
+            preset: legacyPreset,
+            selectedPillar: legacySelectedPillar,
+            updatedAt: decodedUpdatedAt,
+            controlState: decodedControlState
+        )
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(preset, forKey: .preset)
-        try container.encodeIfPresent(selectedPillar, forKey: .selectedPillar)
+        try container.encode(mode, forKey: .mode)
+        try container.encode(pillarSelection, forKey: .pillarSelection)
         try container.encode(updatedAt, forKey: .updatedAt)
         try container.encode(controlState, forKey: .controlState)
     }
 
+    var preset: HealthLensPreset {
+        switch mode {
+        case .all:
+            return .all
+        case .pillars:
+            return .pillar
+        }
+    }
+
+    var selectedPillar: HealthPillar? {
+        selectedPillarIDs.first
+    }
+
+    var selectedPillarIDs: [HealthPillar] {
+        pillarSelection.selectedPillarIDs
+    }
+
     static let `default` = HealthLensState(
-        preset: .all,
-        selectedPillar: nil,
+        mode: .all,
+        pillarSelection: .all,
         updatedAt: "",
         controlState: .default
     )

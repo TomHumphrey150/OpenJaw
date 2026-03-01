@@ -3,6 +3,7 @@ import WebKit
 
 struct GraphWebView: UIViewRepresentable {
     let graphData: CausalGraphData
+    let graphVersionHint: String?
     let graphSkin: GraphSkin
     let displayFlags: GraphDisplayFlags
     let focusedNodeID: String?
@@ -46,6 +47,7 @@ struct GraphWebView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         context.coordinator.sync(
             graphData: graphData,
+            graphVersionHint: graphVersionHint,
             graphSkin: graphSkin,
             displayFlags: displayFlags,
             focusedNodeID: focusedNodeID
@@ -67,6 +69,7 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
     private var isPageLoaded = false
     private var queuedJavaScript: [String] = []
     private var lastGraphData: CausalGraphData?
+    private var lastGraphVersionHint: String?
     private var lastGraphSkin: GraphSkin?
     private var lastDisplayFlags: GraphDisplayFlags?
     private var lastFocusedNodeID: String?
@@ -87,6 +90,7 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
 
     func sync(
         graphData: CausalGraphData,
+        graphVersionHint: String?,
         graphSkin: GraphSkin,
         displayFlags: GraphDisplayFlags,
         focusedNodeID: String?
@@ -96,9 +100,16 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
             lastGraphSkin = graphSkin
         }
 
-        if lastGraphData != graphData {
+        if let graphVersionHint {
+            if lastGraphVersionHint != graphVersionHint {
+                enqueue(command: .setGraphData(graphData))
+                lastGraphData = graphData
+                lastGraphVersionHint = graphVersionHint
+            }
+        } else if lastGraphData != graphData {
             enqueue(command: .setGraphData(graphData))
             lastGraphData = graphData
+            lastGraphVersionHint = nil
         }
 
         if lastDisplayFlags != displayFlags {

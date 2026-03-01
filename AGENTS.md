@@ -50,6 +50,7 @@ Graphical interfaces are welcome, but they must remain fully operable non-visual
   - App code/docs/test changes related to migration behavior.
 - Ignore:
   - `supabase/.temp/*` (local Supabase CLI state, machine-specific metadata).
+  - `artifacts/*` (generated diagnostics, audits, snapshots).
 
 ## Data Sync Contract
 - Personal app data is stored per-user in Supabase table `public.user_data` as a JSONB document.
@@ -91,6 +92,13 @@ Graphical interfaces are welcome, but they must remain fully operable non-visual
   - Read-only provenance-first graph audit for one user.
   - Emits one JSON bundle with graph nodes/edges, habit-to-graph links, outcome-question-to-graph links (from `progressQuestionSetState.pendingProposal.questions`), compact summary counts, strict validation results, and inline source references (`source_ref` + `provenance.refs`).
   - Exit codes: `0` success, `1` runtime/config/query error, `2` strict schema validation failure.
+- `npm run debug:user-pillar-audit -- --user-id <uuid> --pillar <pillar-id> [--report-out <path>] [--raw] [--pretty true|false]`
+  - Read-only pillar-scoped audit wrapper over `debug:user-graph-audit`.
+  - Emits pillar-filtered nodes/edges, habits, and outcome question links for fast diagnosis without full-user payload review.
+- `npm run snapshot:user-pillar-graphs -- --user-id <uuid> [--pillar <pillar-id>] [--pillars <a,b,c>] [--out <path>] [--include-isolated] [--no-compact-tiers] [--show-interventions] [--show-feedback] [--show-protective] [--width <px>] [--height <px>] [--scale <n>]`
+  - Read-only pillar graph screenshot generator using `ios/Telocare/Telocare/Resources/Graph/index.html`.
+  - Writes one PNG per pillar and a `manifest.json` with raw vs rendered node/edge counts under `artifacts/user-pillar-snapshots/` unless `--out` overrides.
+  - Default render compaction removes isolated nodes and compacts sparse tiers for readability; use `--include-isolated` and/or `--no-compact-tiers` for full-fidelity debug views.
 - `npm run patch:user-graph -- --user-id 58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14 --dry-run`
   - Read-only preview of additive canonical graph merge for social/relationship/financial nodes and edges.
 - `npm run patch:user-graph -- --user-id 58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14 --write`

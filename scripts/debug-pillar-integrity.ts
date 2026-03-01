@@ -1,6 +1,6 @@
 import process from 'node:process';
 import path from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import {
   buildPillarIntegrityReport,
@@ -30,6 +30,11 @@ interface ContentPayload {
   data: unknown;
   source: ContentSourceSummary;
 }
+
+const CANONICAL_GRAPH_PATHS = [
+  'data/default-graph.json',
+  'ios/Telocare/Telocare/Resources/Graph/default-graph.json',
+];
 
 function requiredEnv(...names: string[]): string {
   for (const name of names) {
@@ -278,10 +283,10 @@ async function run(): Promise<void> {
   const activeInterventionIDs = readStringArray(userStore.activeInterventions);
   const userGraph = resolveUserGraph(userStore);
 
-  const canonicalGraphPath = path.resolve(
-    process.cwd(),
-    'ios/Telocare/Telocare/Resources/Graph/default-graph.json',
-  );
+  const canonicalGraphPath = CANONICAL_GRAPH_PATHS
+    .map((entry) => path.resolve(process.cwd(), entry))
+    .find((entry) => existsSync(entry))
+    ?? path.resolve(process.cwd(), CANONICAL_GRAPH_PATHS[0]);
   const canonicalGraph = loadGraphFromPath(canonicalGraphPath);
 
   const report = buildPillarIntegrityReport({

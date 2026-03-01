@@ -68,6 +68,14 @@ From `ios/Telocare`:
 - Build app: `xcodebuild -workspace Telocare.xcworkspace -scheme Telocare -destination 'platform=iOS Simulator,name=iPhone 17' build`
 - Run tests: `xcodebuild -workspace Telocare.xcworkspace -scheme Telocare -destination 'platform=iOS Simulator,name=iPhone 17' test`
 
+Graph diagnostics scripts are run from repository root (`/Users/tomhumphrey/src/OpenJaw`):
+
+- `npm run debug:user-graph-audit -- --user-id <uuid> [--report-out <path>] [--raw]`
+- `npm run debug:user-pillar-audit -- --user-id <uuid> --pillar <pillar-id> [--report-out <path>] [--raw]`
+- `npm run snapshot:user-pillar-graphs -- --user-id <uuid> [--pillar <pillar-id>] [--out <path>] [--include-isolated] [--no-compact-tiers]`
+
+Generated output goes under `artifacts/` and must not be committed.
+
 ## Library
 
 Reference documents for `ios/`:

@@ -24,7 +24,11 @@
     "debug:graph-clusters": "node --env-file=.env.local scripts/debug-graph-clusters.mjs",
     "debug:foundation-coverage": "node --env-file=.env.local scripts/debug-foundation-coverage.mjs",
     "debug:pillar-integrity": "node --env-file=.env.local -r ts-node/register scripts/debug-pillar-integrity.ts",
+    "debug:user-pillar-audit": "node --env-file=.env.local -r ts-node/register scripts/debug-user-pillar-audit.ts",
+    "snapshot:user-pillar-graphs": "node --env-file=.env.local -r ts-node/register scripts/snapshot-user-pillar-graphs.ts",
     "patch:user-graph": "node --env-file=.env.local -r ts-node/register scripts/patch-user-graph.ts",
+    "patch:user-foundation-graph": "node --env-file=.env.local -r ts-node/register scripts/patch-user-foundation-graph.ts",
+    "migrate:acute-to-custom-pillars": "node --env-file=.env.local -r ts-node/register scripts/migrate-acute-to-custom-pillars.ts",
     "debug:user-graph-audit": "node --env-file=.env.local -r ts-node/register scripts/debug-user-graph-audit.ts"
   },
   "packageManager": "npm@10",
