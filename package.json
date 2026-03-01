@@ -30,7 +30,10 @@
     "patch:user-foundation-graph": "node --env-file=.env.local -r ts-node/register scripts/patch-user-foundation-graph.ts",
     "reset:progress-checkins": "node --env-file=.env.local -r ts-node/register scripts/reset-progress-checkins.ts",
     "migrate:acute-to-custom-pillars": "node --env-file=.env.local -r ts-node/register scripts/migrate-acute-to-custom-pillars.ts",
-    "debug:user-graph-audit": "node --env-file=.env.local -r ts-node/register scripts/debug-user-graph-audit.ts"
+    "debug:user-graph-audit": "node --env-file=.env.local -r ts-node/register scripts/debug-user-graph-audit.ts",
+    "graph:to-mermaid": "node --env-file=.env.local -r ts-node/register scripts/graph-to-mermaid.ts",
+    "seed:disclosure-curation": "node -r ts-node/register scripts/seed-graph-disclosure-curation.ts",
+    "mermaid:gallery": "node -r ts-node/register scripts/build-mermaid-gallery.ts"
   },
   "packageManager": "npm@10",
   "dependencies": {
@@ -47,6 +50,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
     "@vercel/node": "^3.0.0",
+    "mermaid": "^11.12.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "vercel": "^33.0.0"

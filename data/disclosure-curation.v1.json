@@ -1,0 +1,2274 @@
+{
+  "version": "disclosure-curation.v1.seed",
+  "generatedAt": "2026-03-01T13:37:40.335Z",
+  "sourceGraphPath": "ios/Telocare/Telocare/Resources/Graph/default-graph.json",
+  "sourceInterventionsPath": "data/interventions.json",
+  "sourcePlanningPolicyPath": "ios/Telocare/Telocare/Resources/Foundation/planner-policy-v1.json",
+  "nodes": [
+    {
+      "id": "ACID",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "AIRWAY_OBS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "ALCOHOL",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "BED_ELEV_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "BIOFEEDBACK_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "BOTOX_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "BREATHING_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "CAFFEINE",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "CATECHOL",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "CBT_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "CERVICAL",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "CIRCADIAN_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "CORTISOL",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "CS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "DOPAMINE",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "EAR",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "EXERCISE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "EXTERNAL_TRIGGERS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "FHP",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "FINANCIAL_STRAIN",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "FINANCIAL_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "GABA_DEF",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "GENETICS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "GERD",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "GLOBUS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "GLYCINE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "GRINDING",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "HEADACHES",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "HEALTH_ANXIETY",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "HEAT_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "HYDRATION",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "HYOID",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "JAW_RELAX_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "MASSAGE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "MEAL_TIMING_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "MG_DEF",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "MG_SUPP",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "MICRO",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "MINDFULNESS_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "MORNING_FAST_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "MULTI_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "NATURE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "NECK_TIGHTNESS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "NEG_PRESSURE",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "NEUROSYM_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "OSA",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "OSA_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "PEPSIN",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "PHYSIO_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "POSTURE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "PPI_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "REFLUX_DIET_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "RELATIONSHIP_STRAIN",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "RELATIONSHIP_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "RMMA",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SALIVA",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SCREENS_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "SLEEP_DEP",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SLEEP_HYG_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "SMOKING",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SOCIAL_ISOLATION",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SOCIAL_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "SPLINT",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "SSRI",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SSRI_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "STRESS",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "SYMPATHETIC",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "THEANINE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "TLESR",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "TMD",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "TONGUE_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "TOOTH",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "VAGAL",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "VIT_D",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "VIT_D_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "WARM_SHOWER_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    },
+    {
+      "id": "WINDUP",
+      "disclosureLevel": 2,
+      "pillarIds": []
+    },
+    {
+      "id": "YOGA_TX",
+      "disclosureLevel": 3,
+      "pillarIds": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge:HEALTH_ANXIETY|STRESS|forward|#0",
+      "source": "HEALTH_ANXIETY",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:STRESS|CORTISOL|forward|or 2.07#0",
+      "source": "STRESS",
+      "target": "CORTISOL",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "OR 2.07"
+    },
+    {
+      "id": "edge:STRESS|CATECHOL|forward|#0",
+      "source": "STRESS",
+      "target": "CATECHOL",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CORTISOL|SYMPATHETIC|forward|#0",
+      "source": "CORTISOL",
+      "target": "SYMPATHETIC",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CATECHOL|SYMPATHETIC|forward|#0",
+      "source": "CATECHOL",
+      "target": "SYMPATHETIC",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SYMPATHETIC|MICRO|forward|#0",
+      "source": "SYMPATHETIC",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:OSA|AIRWAY_OBS|forward|#0",
+      "source": "OSA",
+      "target": "AIRWAY_OBS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:AIRWAY_OBS|MICRO|forward|85.7% linked#0",
+      "source": "AIRWAY_OBS",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "85.7% linked"
+    },
+    {
+      "id": "edge:AIRWAY_OBS|NEG_PRESSURE|forward|#0",
+      "source": "AIRWAY_OBS",
+      "target": "NEG_PRESSURE",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:NEG_PRESSURE|TLESR|forward|#0",
+      "source": "NEG_PRESSURE",
+      "target": "TLESR",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:TLESR|ACID|forward|#0",
+      "source": "TLESR",
+      "target": "ACID",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:OSA|GERD|forward|62-78% comorbid#0",
+      "source": "OSA",
+      "target": "GERD",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "62-78% comorbid"
+    },
+    {
+      "id": "edge:GERD|ACID|forward|#0",
+      "source": "GERD",
+      "target": "ACID",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:GERD|PEPSIN|forward|#0",
+      "source": "GERD",
+      "target": "PEPSIN",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:ACID|VAGAL|forward|vagal afferents#0",
+      "source": "ACID",
+      "target": "VAGAL",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "vagal afferents"
+    },
+    {
+      "id": "edge:VAGAL|MICRO|forward|#0",
+      "source": "VAGAL",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:STRESS|GERD|forward|visceral hypersens.#0",
+      "source": "STRESS",
+      "target": "GERD",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "visceral hypersens."
+    },
+    {
+      "id": "edge:STRESS|SLEEP_DEP|forward|hyperarousal#0",
+      "source": "STRESS",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "hyperarousal"
+    },
+    {
+      "id": "edge:GENETICS|MICRO|forward|#0",
+      "source": "GENETICS",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SLEEP_DEP|MICRO|forward|#0",
+      "source": "SLEEP_DEP",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SLEEP_DEP|CORTISOL|forward|#0",
+      "source": "SLEEP_DEP",
+      "target": "CORTISOL",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SSRI|RMMA|forward|~24% risk#0",
+      "source": "SSRI",
+      "target": "RMMA",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "~24% risk"
+    },
+    {
+      "id": "edge:CAFFEINE|MICRO|forward|#0",
+      "source": "CAFFEINE",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CAFFEINE|GERD|dashed|#0",
+      "source": "CAFFEINE",
+      "target": "GERD",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:ALCOHOL|MICRO|forward|#0",
+      "source": "ALCOHOL",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:ALCOHOL|GERD|forward|#0",
+      "source": "ALCOHOL",
+      "target": "GERD",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SMOKING|MICRO|forward|#0",
+      "source": "SMOKING",
+      "target": "MICRO",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SMOKING|GERD|dashed|#0",
+      "source": "SMOKING",
+      "target": "GERD",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:GABA_DEF|RMMA|forward|#0",
+      "source": "GABA_DEF",
+      "target": "RMMA",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:DOPAMINE|RMMA|dashed|#0",
+      "source": "DOPAMINE",
+      "target": "RMMA",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:MG_DEF|GABA_DEF|forward|gaba cofactor#0",
+      "source": "MG_DEF",
+      "target": "GABA_DEF",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "GABA cofactor"
+    },
+    {
+      "id": "edge:VIT_D|RMMA|dashed|#0",
+      "source": "VIT_D",
+      "target": "RMMA",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:MICRO|RMMA|forward|79% precede#0",
+      "source": "MICRO",
+      "target": "RMMA",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "79% precede"
+    },
+    {
+      "id": "edge:RMMA|GRINDING|forward|#0",
+      "source": "RMMA",
+      "target": "GRINDING",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:RMMA|TMD|forward|or 2.25#0",
+      "source": "RMMA",
+      "target": "TMD",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "OR 2.25"
+    },
+    {
+      "id": "edge:RMMA|SALIVA|forward|periodontal reflex#0",
+      "source": "RMMA",
+      "target": "SALIVA",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "periodontal reflex"
+    },
+    {
+      "id": "edge:RMMA|CS|dashed|#0",
+      "source": "RMMA",
+      "target": "CS",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:SALIVA|GERD|protective|acid clearance#0",
+      "source": "SALIVA",
+      "target": "GERD",
+      "disclosureLevel": 2,
+      "edgeType": "protective",
+      "label": "acid clearance"
+    },
+    {
+      "id": "edge:SALIVA|NECK_TIGHTNESS|dashed|repeated swallowing#0",
+      "source": "SALIVA",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": "repeated swallowing"
+    },
+    {
+      "id": "edge:GRINDING|TOOTH|forward|#0",
+      "source": "GRINDING",
+      "target": "TOOTH",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:GRINDING|HEADACHES|forward|#0",
+      "source": "GRINDING",
+      "target": "HEADACHES",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:GRINDING|NECK_TIGHTNESS|dashed|#0",
+      "source": "GRINDING",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:TMD|CERVICAL|forward|#0",
+      "source": "TMD",
+      "target": "CERVICAL",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:TMD|EAR|forward|v3 spillover#0",
+      "source": "TMD",
+      "target": "EAR",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "V3 spillover"
+    },
+    {
+      "id": "edge:TMD|HYOID|forward|#0",
+      "source": "TMD",
+      "target": "HYOID",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:TMD|CS|forward|#0",
+      "source": "TMD",
+      "target": "CS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:TMD|HEADACHES|forward|#0",
+      "source": "TMD",
+      "target": "HEADACHES",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:FHP|TMD|forward|emg f=13.7#0",
+      "source": "FHP",
+      "target": "TMD",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "EMG F=13.7"
+    },
+    {
+      "id": "edge:FHP|HYOID|forward|#0",
+      "source": "FHP",
+      "target": "HYOID",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CERVICAL|CS|forward|tcc convergence#0",
+      "source": "CERVICAL",
+      "target": "CS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "TCC convergence"
+    },
+    {
+      "id": "edge:CERVICAL|HEADACHES|forward|cervicogenic#0",
+      "source": "CERVICAL",
+      "target": "HEADACHES",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "cervicogenic"
+    },
+    {
+      "id": "edge:CERVICAL|FHP|dashed|#0",
+      "source": "CERVICAL",
+      "target": "FHP",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:HYOID|GLOBUS|dashed|#0",
+      "source": "HYOID",
+      "target": "GLOBUS",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:CS|WINDUP|forward|#0",
+      "source": "CS",
+      "target": "WINDUP",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CS|HEADACHES|forward|#0",
+      "source": "CS",
+      "target": "HEADACHES",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CS|NECK_TIGHTNESS|forward|smd -1.10#0",
+      "source": "CS",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": "SMD -1.10"
+    },
+    {
+      "id": "edge:CS|GLOBUS|forward|#0",
+      "source": "CS",
+      "target": "GLOBUS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:WINDUP|NECK_TIGHTNESS|forward|#0",
+      "source": "WINDUP",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 2,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:GERD|GLOBUS|dashed|#0",
+      "source": "GERD",
+      "target": "GLOBUS",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:PEPSIN|GLOBUS|dashed|#0",
+      "source": "PEPSIN",
+      "target": "GLOBUS",
+      "disclosureLevel": 2,
+      "edgeType": "dashed",
+      "label": null
+    },
+    {
+      "id": "edge:NECK_TIGHTNESS|STRESS|feedback|hypervigilance#0",
+      "source": "NECK_TIGHTNESS",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": "hypervigilance"
+    },
+    {
+      "id": "edge:NECK_TIGHTNESS|SLEEP_DEP|feedback|disrupts sleep#0",
+      "source": "NECK_TIGHTNESS",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": "disrupts sleep"
+    },
+    {
+      "id": "edge:TMD|STRESS|feedback|#0",
+      "source": "TMD",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:HEADACHES|STRESS|feedback|#0",
+      "source": "HEADACHES",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:HEADACHES|SLEEP_DEP|feedback|#0",
+      "source": "HEADACHES",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:EAR|STRESS|feedback|health anxiety#0",
+      "source": "EAR",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": "health anxiety"
+    },
+    {
+      "id": "edge:GLOBUS|STRESS|feedback|health anxiety#0",
+      "source": "GLOBUS",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": "health anxiety"
+    },
+    {
+      "id": "edge:SOCIAL_ISOLATION|STRESS|feedback|#0",
+      "source": "SOCIAL_ISOLATION",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:RELATIONSHIP_STRAIN|STRESS|feedback|#0",
+      "source": "RELATIONSHIP_STRAIN",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:FINANCIAL_STRAIN|STRESS|feedback|#0",
+      "source": "FINANCIAL_STRAIN",
+      "target": "STRESS",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:FINANCIAL_STRAIN|SLEEP_DEP|feedback|#0",
+      "source": "FINANCIAL_STRAIN",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:SLEEP_DEP|OSA|feedback|#0",
+      "source": "SLEEP_DEP",
+      "target": "OSA",
+      "disclosureLevel": 2,
+      "edgeType": "feedback",
+      "label": null
+    },
+    {
+      "id": "edge:PPI_TX|GERD|forward|#0",
+      "source": "PPI_TX",
+      "target": "GERD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:PPI_TX|MG_DEF|dashed|depletes mg#0",
+      "source": "PPI_TX",
+      "target": "MG_DEF",
+      "disclosureLevel": 3,
+      "edgeType": "dashed",
+      "label": "depletes Mg"
+    },
+    {
+      "id": "edge:SPLINT|TOOTH|forward|#0",
+      "source": "SPLINT",
+      "target": "TOOTH",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MG_SUPP|GABA_DEF|forward|#0",
+      "source": "MG_SUPP",
+      "target": "GABA_DEF",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:YOGA_TX|GABA_DEF|forward|gaba +27%#0",
+      "source": "YOGA_TX",
+      "target": "GABA_DEF",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": "GABA +27%"
+    },
+    {
+      "id": "edge:YOGA_TX|CORTISOL|forward|#0",
+      "source": "YOGA_TX",
+      "target": "CORTISOL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:HYDRATION|ACID|forward|#0",
+      "source": "HYDRATION",
+      "target": "ACID",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:HYDRATION|SALIVA|forward|#0",
+      "source": "HYDRATION",
+      "target": "SALIVA",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:VIT_D_TX|VIT_D|forward|#0",
+      "source": "VIT_D_TX",
+      "target": "VIT_D",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MULTI_TX|MG_DEF|forward|#0",
+      "source": "MULTI_TX",
+      "target": "MG_DEF",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MORNING_FAST_TX|GERD|forward|#0",
+      "source": "MORNING_FAST_TX",
+      "target": "GERD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CIRCADIAN_TX|SLEEP_DEP|forward|#0",
+      "source": "CIRCADIAN_TX",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CIRCADIAN_TX|MICRO|forward|#0",
+      "source": "CIRCADIAN_TX",
+      "target": "MICRO",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MINDFULNESS_TX|STRESS|forward|#0",
+      "source": "MINDFULNESS_TX",
+      "target": "STRESS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+      "source": "MINDFULNESS_TX",
+      "target": "CORTISOL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:PHYSIO_TX|TMD|forward|#0",
+      "source": "PHYSIO_TX",
+      "target": "TMD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:PHYSIO_TX|FHP|forward|#0",
+      "source": "PHYSIO_TX",
+      "target": "FHP",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:PHYSIO_TX|CERVICAL|forward|#0",
+      "source": "PHYSIO_TX",
+      "target": "CERVICAL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:EXERCISE_TX|SLEEP_DEP|forward|#0",
+      "source": "EXERCISE_TX",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:EXERCISE_TX|CORTISOL|forward|#0",
+      "source": "EXERCISE_TX",
+      "target": "CORTISOL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:NATURE_TX|STRESS|forward|#0",
+      "source": "NATURE_TX",
+      "target": "STRESS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:NATURE_TX|CORTISOL|forward|#0",
+      "source": "NATURE_TX",
+      "target": "CORTISOL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:REFLUX_DIET_TX|GERD|forward|#0",
+      "source": "REFLUX_DIET_TX",
+      "target": "GERD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:REFLUX_DIET_TX|ACID|forward|#0",
+      "source": "REFLUX_DIET_TX",
+      "target": "ACID",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MEAL_TIMING_TX|GERD|forward|#0",
+      "source": "MEAL_TIMING_TX",
+      "target": "GERD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:POSTURE_TX|FHP|forward|#0",
+      "source": "POSTURE_TX",
+      "target": "FHP",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:POSTURE_TX|CERVICAL|forward|#0",
+      "source": "POSTURE_TX",
+      "target": "CERVICAL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:TONGUE_TX|HYOID|forward|#0",
+      "source": "TONGUE_TX",
+      "target": "HYOID",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:TONGUE_TX|AIRWAY_OBS|forward|#0",
+      "source": "TONGUE_TX",
+      "target": "AIRWAY_OBS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:JAW_RELAX_TX|RMMA|forward|#0",
+      "source": "JAW_RELAX_TX",
+      "target": "RMMA",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MASSAGE_TX|TMD|forward|#0",
+      "source": "MASSAGE_TX",
+      "target": "TMD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+      "source": "MASSAGE_TX",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:HEAT_TX|TMD|forward|#0",
+      "source": "HEAT_TX",
+      "target": "TMD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0",
+      "source": "HEAT_TX",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SOCIAL_TX|SOCIAL_ISOLATION|forward|#0",
+      "source": "SOCIAL_TX",
+      "target": "SOCIAL_ISOLATION",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:RELATIONSHIP_TX|RELATIONSHIP_STRAIN|forward|#0",
+      "source": "RELATIONSHIP_TX",
+      "target": "RELATIONSHIP_STRAIN",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:FINANCIAL_TX|FINANCIAL_STRAIN|forward|#0",
+      "source": "FINANCIAL_TX",
+      "target": "FINANCIAL_STRAIN",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BED_ELEV_TX|GERD|forward|#0",
+      "source": "BED_ELEV_TX",
+      "target": "GERD",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BED_ELEV_TX|ACID|forward|#0",
+      "source": "BED_ELEV_TX",
+      "target": "ACID",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SCREENS_TX|SLEEP_DEP|forward|#0",
+      "source": "SCREENS_TX",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0",
+      "source": "WARM_SHOWER_TX",
+      "target": "SYMPATHETIC",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:NEUROSYM_TX|VAGAL|forward|#0",
+      "source": "NEUROSYM_TX",
+      "target": "VAGAL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:NEUROSYM_TX|SYMPATHETIC|forward|#0",
+      "source": "NEUROSYM_TX",
+      "target": "SYMPATHETIC",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BREATHING_TX|SYMPATHETIC|forward|#0",
+      "source": "BREATHING_TX",
+      "target": "SYMPATHETIC",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BREATHING_TX|CORTISOL|forward|#0",
+      "source": "BREATHING_TX",
+      "target": "CORTISOL",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:THEANINE_TX|GABA_DEF|forward|#0",
+      "source": "THEANINE_TX",
+      "target": "GABA_DEF",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:GLYCINE_TX|GABA_DEF|forward|#0",
+      "source": "GLYCINE_TX",
+      "target": "GABA_DEF",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BIOFEEDBACK_TX|RMMA|forward|#0",
+      "source": "BIOFEEDBACK_TX",
+      "target": "RMMA",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:OSA_TX|OSA|forward|#0",
+      "source": "OSA_TX",
+      "target": "OSA",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SSRI_TX|SSRI|forward|#0",
+      "source": "SSRI_TX",
+      "target": "SSRI",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BOTOX_TX|RMMA|forward|#0",
+      "source": "BOTOX_TX",
+      "target": "RMMA",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+      "source": "BOTOX_TX",
+      "target": "NECK_TIGHTNESS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:CBT_TX|STRESS|forward|#0",
+      "source": "CBT_TX",
+      "target": "STRESS",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0",
+      "source": "SLEEP_HYG_TX",
+      "target": "SLEEP_DEP",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    },
+    {
+      "id": "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+      "source": "SLEEP_HYG_TX",
+      "target": "MICRO",
+      "disclosureLevel": 3,
+      "edgeType": "forward",
+      "label": null
+    }
+  ],
+  "disclosureMappings": [
+    {
+      "sourceId": "AIRWAY_OBS",
+      "targetId": "OSA",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "ALCOHOL",
+      "targetId": "EXTERNAL_TRIGGERS",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "ALCOHOL",
+      "targetId": "GERD",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "ALCOHOL",
+      "targetId": "SLEEP_DEP",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "CAFFEINE",
+      "targetId": "EXTERNAL_TRIGGERS",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "CAFFEINE",
+      "targetId": "GERD",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "CAFFEINE",
+      "targetId": "SLEEP_DEP",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "NEG_PRESSURE",
+      "targetId": "AIRWAY_OBS",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "SMOKING",
+      "targetId": "EXTERNAL_TRIGGERS",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "SMOKING",
+      "targetId": "GERD",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "SMOKING",
+      "targetId": "SLEEP_DEP",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "SSRI",
+      "targetId": "EXTERNAL_TRIGGERS",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    },
+    {
+      "sourceId": "SSRI",
+      "targetId": "RMMA",
+      "sourceLevel": 2,
+      "targetLevel": 2
+    }
+  ],
+  "interventionMappings": [
+    {
+      "interventionId": "activate_emg_tracker",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "BIOFEEDBACK_TX",
+        "RMMA"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "alcohol_limit",
+      "pillars": [
+        "avoidingDrugs",
+        "nutrition",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "ALCOHOL",
+        "GERD",
+        "MICRO"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:ALCOHOL|GERD|forward|#0",
+        "edge:ALCOHOL|MICRO|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "bed_elevation",
+      "pillars": [
+        "environment",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "ACID",
+        "BED_ELEV_TX",
+        "GERD"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:BED_ELEV_TX|ACID|forward|#0",
+        "edge:BED_ELEV_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "bedtime_routine",
+      "pillars": [
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "MICRO",
+        "SLEEP_DEP",
+        "SLEEP_HYG_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "biofeedback",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "BIOFEEDBACK_TX",
+        "RMMA"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "botox",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "BOTOX_TX",
+        "NECK_TIGHTNESS",
+        "RMMA"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:BOTOX_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:BOTOX_TX|RMMA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "breathe_right_strip",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "AIRWAY_OBS",
+        "OSA",
+        "OSA_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "caffeine_limit",
+      "pillars": [
+        "avoidingDrugs",
+        "nutrition",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "CAFFEINE",
+        "GERD",
+        "MICRO"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:CAFFEINE|GERD|dashed|#0",
+        "edge:CAFFEINE|MICRO|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "cbt",
+      "pillars": [
+        "medical",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "CBT_TX",
+        "HEALTH_ANXIETY",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:CBT_TX|STRESS|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "diaphragm_breathing",
+      "pillars": [
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "BREATHING_TX",
+        "CORTISOL",
+        "SYMPATHETIC"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:BREATHING_TX|CORTISOL|forward|#0",
+        "edge:BREATHING_TX|SYMPATHETIC|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "dymista_nasal_spray",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "OSA",
+        "OSA_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "emg_check",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "BIOFEEDBACK_TX",
+        "RMMA"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:BIOFEEDBACK_TX|RMMA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "exercise_minutes",
+      "pillars": [
+        "exercise"
+      ],
+      "maxDetailNodeIds": [
+        "CORTISOL",
+        "EXERCISE_TX",
+        "SYMPATHETIC"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:EXERCISE_TX|CORTISOL|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "financial_check_in",
+      "pillars": [
+        "financialSecurity"
+      ],
+      "maxDetailNodeIds": [
+        "FINANCIAL_STRAIN",
+        "FINANCIAL_TX",
+        "SLEEP_DEP",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:FINANCIAL_TX|FINANCIAL_STRAIN|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "gerd_treatment",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "ACID",
+        "GERD",
+        "PPI_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:PPI_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "glycine",
+      "pillars": [
+        "nutrition",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "GABA_DEF",
+        "GLYCINE_TX",
+        "SLEEP_DEP"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:GLYCINE_TX|GABA_DEF|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "heat_therapy",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "CERVICAL",
+        "HEAT_TX",
+        "NECK_TIGHTNESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:HEAT_TX|NECK_TIGHTNESS|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "intimacy_optional",
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "maxDetailNodeIds": [
+        "RELATIONSHIP_STRAIN",
+        "RELATIONSHIP_TX",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:RELATIONSHIP_TX|RELATIONSHIP_STRAIN|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "jaw_massage",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "MASSAGE_TX",
+        "NECK_TIGHTNESS",
+        "TMD"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:MASSAGE_TX|NECK_TIGHTNESS|forward|#0",
+        "edge:MASSAGE_TX|TMD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "jaw_relaxation",
+      "pillars": [
+        "medical",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "JAW_RELAX_TX",
+        "RMMA",
+        "TMD"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:JAW_RELAX_TX|RMMA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "l_theanine",
+      "pillars": [
+        "nutrition",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "GABA_DEF",
+        "THEANINE_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:THEANINE_TX|GABA_DEF|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "magnesium",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "GABA_DEF",
+        "MG_DEF",
+        "MG_SUPP"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:MG_SUPP|GABA_DEF|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "mindfulness_minutes",
+      "pillars": [
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "CORTISOL",
+        "MINDFULNESS_TX",
+        "STRESS",
+        "SYMPATHETIC"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:MINDFULNESS_TX|CORTISOL|forward|#0",
+        "edge:MINDFULNESS_TX|STRESS|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "morning_fast",
+      "pillars": [
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "GERD",
+        "MORNING_FAST_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:MORNING_FAST_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "morning_routine",
+      "pillars": [
+        "environment",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "CIRCADIAN_TX",
+        "SLEEP_DEP"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:CIRCADIAN_TX|SLEEP_DEP|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "multivitamin",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "MG_DEF",
+        "MULTI_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:MULTI_TX|MG_DEF|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "nature_exposure",
+      "pillars": [
+        "environment",
+        "exercise",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "CORTISOL",
+        "NATURE_TX",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:NATURE_TX|CORTISOL|forward|#0",
+        "edge:NATURE_TX|STRESS|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "neurosym_device",
+      "pillars": [
+        "medical",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "NEUROSYM_TX",
+        "SYMPATHETIC",
+        "VAGAL"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:NEUROSYM_TX|SYMPATHETIC|forward|#0",
+        "edge:NEUROSYM_TX|VAGAL|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "night_guard",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "GRINDING",
+        "SPLINT",
+        "TOOTH"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SPLINT|TOOTH|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "no_screens_prebed",
+      "pillars": [
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "SCREENS_TX",
+        "SLEEP_DEP"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SCREENS_TX|SLEEP_DEP|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "oura_score_goal",
+      "pillars": [
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "SLEEP_DEP",
+        "SLEEP_HYG_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "physio_stretches",
+      "pillars": [
+        "exercise",
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "CERVICAL",
+        "PHYSIO_TX",
+        "TMD"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:PHYSIO_TX|CERVICAL|forward|#0",
+        "edge:PHYSIO_TX|TMD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "posture",
+      "pillars": [
+        "environment",
+        "exercise"
+      ],
+      "maxDetailNodeIds": [
+        "CERVICAL",
+        "FHP",
+        "POSTURE_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:POSTURE_TX|CERVICAL|forward|#0",
+        "edge:POSTURE_TX|FHP|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "reflux_meal_timing",
+      "pillars": [
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "ACID",
+        "GERD",
+        "MEAL_TIMING_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:MEAL_TIMING_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "reflux_medications",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "ACID",
+        "GERD",
+        "PPI_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:PPI_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "reflux_trigger_avoidance",
+      "pillars": [
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "ACID",
+        "GERD",
+        "REFLUX_DIET_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "relationship_care",
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "maxDetailNodeIds": [
+        "RELATIONSHIP_STRAIN",
+        "RELATIONSHIP_TX",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:RELATIONSHIP_TX|RELATIONSHIP_STRAIN|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "sleep_apnea_treatment",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "AIRWAY_OBS",
+        "OSA",
+        "OSA_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:OSA_TX|OSA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "sleep_hours",
+      "pillars": [
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "MICRO",
+        "SLEEP_DEP",
+        "SLEEP_HYG_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SLEEP_HYG_TX|MICRO|forward|#0",
+        "edge:SLEEP_HYG_TX|SLEEP_DEP|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "social_connection",
+      "pillars": [
+        "socialLife",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "SOCIAL_ISOLATION",
+        "SOCIAL_TX",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SOCIAL_TX|SOCIAL_ISOLATION|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "ssri_review",
+      "pillars": [
+        "medical"
+      ],
+      "maxDetailNodeIds": [
+        "HEALTH_ANXIETY",
+        "SSRI",
+        "SSRI_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:SSRI_TX|SSRI|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "strict_diet_phase",
+      "pillars": [
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "ACID",
+        "GERD",
+        "REFLUX_DIET_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:REFLUX_DIET_TX|ACID|forward|#0",
+        "edge:REFLUX_DIET_TX|GERD|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "tongue_posture",
+      "pillars": [
+        "medical",
+        "sleep"
+      ],
+      "maxDetailNodeIds": [
+        "AIRWAY_OBS",
+        "HYOID",
+        "TONGUE_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:TONGUE_TX|AIRWAY_OBS|forward|#0",
+        "edge:TONGUE_TX|HYOID|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "vitamin_d",
+      "pillars": [
+        "medical",
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "VIT_D",
+        "VIT_D_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:VIT_D_TX|VIT_D|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "warm_shower",
+      "pillars": [
+        "sleep",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "SLEEP_DEP",
+        "STRESS",
+        "SYMPATHETIC",
+        "WARM_SHOWER_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "water_intake",
+      "pillars": [
+        "nutrition"
+      ],
+      "maxDetailNodeIds": [
+        "HYDRATION",
+        "SALIVA"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:HYDRATION|SALIVA|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "yoga_prebed",
+      "pillars": [
+        "exercise",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "CORTISOL",
+        "SYMPATHETIC",
+        "YOGA_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:YOGA_TX|CORTISOL|forward|#0"
+      ]
+    }
+  ],
+  "pillarConnectivity": [
+    {
+      "pillarId": "sleep",
+      "title": "Sleep",
+      "rank": 1,
+      "nodeCount": 20,
+      "edgeCount": 25,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "nutrition",
+      "title": "Nutrition",
+      "rank": 2,
+      "nodeCount": 20,
+      "edgeCount": 21,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "exercise",
+      "title": "Exercise",
+      "rank": 3,
+      "nodeCount": 11,
+      "edgeCount": 15,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "socialLife",
+      "title": "Social Life",
+      "rank": 4,
+      "nodeCount": 5,
+      "edgeCount": 4,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "stressManagement",
+      "title": "Stress Management",
+      "rank": 5,
+      "nodeCount": 20,
+      "edgeCount": 24,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "avoidingDrugs",
+      "title": "Avoiding Drugs",
+      "rank": 6,
+      "nodeCount": 4,
+      "edgeCount": 4,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "medical",
+      "title": "Medical",
+      "rank": 7,
+      "nodeCount": 35,
+      "edgeCount": 41,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "romanticPersonalCare",
+      "title": "Romantic / Personal Care",
+      "rank": 8,
+      "nodeCount": 3,
+      "edgeCount": 2,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "environment",
+      "title": "Environment",
+      "rank": 9,
+      "nodeCount": 11,
+      "edgeCount": 13,
+      "disconnectedNodeIds": []
+    },
+    {
+      "pillarId": "financialSecurity",
+      "title": "Financial Security",
+      "rank": 10,
+      "nodeCount": 4,
+      "edgeCount": 4,
+      "disconnectedNodeIds": []
+    }
+  ]
+}

@@ -22,11 +22,21 @@ interface ParsedArgs {
   showInterventions: boolean;
   showFeedbackEdges: boolean;
   showProtectiveEdges: boolean;
+  devicePreset: DevicePreset | null;
   width: number;
   height: number;
   scale: number;
   pretty: boolean;
   raw: boolean;
+}
+
+interface DevicePreset {
+  id: string;
+  widthPoints: number;
+  heightPoints: number;
+  statusBarPoints: number;
+  tabBarPoints: number;
+  defaultScale: number;
 }
 
 interface PillarSnapshotRow {
@@ -58,9 +68,45 @@ interface SnapshotManifest {
     width: number;
     height: number;
     scale: number;
+    device: string | null;
   };
   pillars: PillarSnapshotRow[];
 }
+
+const DEVICE_PRESETS: DevicePreset[] = [
+  {
+    id: 'iPhone-16',
+    widthPoints: 393,
+    heightPoints: 852,
+    statusBarPoints: 54,
+    tabBarPoints: 49,
+    defaultScale: 3,
+  },
+  {
+    id: 'iPhone-16-Plus',
+    widthPoints: 430,
+    heightPoints: 932,
+    statusBarPoints: 54,
+    tabBarPoints: 49,
+    defaultScale: 3,
+  },
+  {
+    id: 'iPhone-16-Pro',
+    widthPoints: 402,
+    heightPoints: 874,
+    statusBarPoints: 54,
+    tabBarPoints: 49,
+    defaultScale: 3,
+  },
+  {
+    id: 'iPhone-16-Pro-Max',
+    widthPoints: 440,
+    heightPoints: 956,
+    statusBarPoints: 54,
+    tabBarPoints: 49,
+    defaultScale: 3,
+  },
+];
 
 function hasFlag(name: string): boolean {
   return process.argv.includes(`--${name}`);
@@ -120,6 +166,24 @@ function parseScaleArg(fallback: number): number {
   return parsed;
 }
 
+function normalizeDeviceKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function resolveDevicePreset(rawDevice: string): DevicePreset {
+  const normalized = normalizeDeviceKey(rawDevice);
+  const matched = DEVICE_PRESETS.find((preset) => normalizeDeviceKey(preset.id) === normalized);
+  if (matched === undefined) {
+    const available = DEVICE_PRESETS.map((preset) => preset.id).join(', ');
+    throw new Error(`Unsupported --device "${rawDevice}". Available presets: ${available}`);
+  }
+  return matched;
+}
+
 function parsePillarIDs(): string[] {
   const ids = new Set<string>();
 
@@ -159,6 +223,14 @@ function parseArgs(): ParsedArgs {
       ? out
       : path.resolve(process.cwd(), out);
 
+  const deviceArg = getArg('device');
+  const devicePreset = deviceArg === null ? null : resolveDevicePreset(deviceArg);
+  const defaultWidth = devicePreset?.widthPoints ?? 1170;
+  const defaultHeight = devicePreset === null
+    ? 1400
+    : Math.max(1, devicePreset.heightPoints - devicePreset.statusBarPoints - devicePreset.tabBarPoints);
+  const defaultScale = devicePreset?.defaultScale ?? 2;
+
   return {
     userID,
     pillarIDs,
@@ -168,9 +240,10 @@ function parseArgs(): ParsedArgs {
     showInterventions: hasFlag('show-interventions'),
     showFeedbackEdges: hasFlag('show-feedback'),
     showProtectiveEdges: hasFlag('show-protective'),
-    width: parseIntegerArg('width', 1170),
-    height: parseIntegerArg('height', 1400),
-    scale: parseScaleArg(2),
+    devicePreset,
+    width: parseIntegerArg('width', defaultWidth),
+    height: parseIntegerArg('height', defaultHeight),
+    scale: parseScaleArg(defaultScale),
     pretty: parsePrettyOption(),
     raw: hasFlag('raw'),
   };
@@ -178,7 +251,7 @@ function parseArgs(): ParsedArgs {
 
 function printUsageAndExit(): never {
   console.error(
-    'Usage: npm run snapshot:user-pillar-graphs -- --user-id <uuid> [--pillar <pillar-id>] [--pillars <a,b,c>] [--out <path>] [--include-isolated] [--no-compact-tiers] [--show-interventions] [--show-feedback] [--show-protective] [--width <px>] [--height <px>] [--scale <n>] [--raw]',
+    'Usage: npm run snapshot:user-pillar-graphs -- --user-id <uuid> [--pillar <pillar-id>] [--pillars <a,b,c>] [--out <path>] [--device <name>] [--include-isolated] [--no-compact-tiers] [--show-interventions] [--show-feedback] [--show-protective] [--width <px>] [--height <px>] [--scale <n>] [--raw]',
   );
   process.exit(1);
 }
@@ -446,6 +519,7 @@ async function run(): Promise<void> {
         width: args.width,
         height: args.height,
         scale: args.scale,
+        device: args.devicePreset?.id ?? null,
       },
       pillars: manifestRows,
     };

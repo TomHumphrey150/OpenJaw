@@ -109,6 +109,35 @@ Graphical interfaces are welcome, but they must remain fully operable non-visual
 - `npm run debug:graph-clusters -- --user-id <uuid> [--max-depth <n>] [--report-out <path>]`
   - Read-only graph-cluster introspection for map connectivity and neighborhood analysis.
 
+## Mermaid Graph Debug Runbook (Text-First AI Diagnostics)
+- Purpose:
+  - Generate text-native graph projections that are easier/faster for AI structural reasoning than raw JSON.
+  - Keep a renderable local viewer for human inspection when needed.
+- Primary commands:
+  - Full graph Mermaid from DB user row:
+    - `npm run graph:to-mermaid -- --user-id <uuid> --out artifacts/user-graph.mmd`
+  - Pillar-scoped Mermaid from DB user row (preferred first step for large graphs):
+    - `npm run graph:to-mermaid -- --user-id <uuid> --pillar <pillar-id> --out artifacts/user-graph-<pillar>.mmd`
+  - Local gallery build (timestamp-sorted diagram picker):
+    - `npm run mermaid:gallery`
+    - Output: `artifacts/mermaid-gallery/index.html`
+- Behavior and limits:
+  - `graph:to-mermaid` validates syntax using Mermaid parser before writing output (unless `--no-validate`).
+  - `--pillar` uses `debug:user-graph-audit` + pillar filtering to derive a smaller focused subgraph.
+  - `--pillar` requires `--user-id` (or `SUPABASE_DEBUG_USER_ID`) and cannot be combined with `--graph-path`.
+  - Local gallery initializes Mermaid with raised secure limits:
+    - `maxEdges: 20000`
+    - `maxTextSize: 2000000`
+  - This avoids common Mermaid website failures such as edge/text-size cap errors.
+- When to use Mermaid vs JSON:
+  - Use Mermaid first for topology/causal-flow debugging and quick AI context.
+  - Use JSON for exact field-level validation (`disclosureLevel`, `parentIds`, `isDeactivated`, IDs, mappings).
+  - Treat Mermaid as a derived/debug representation, not source of truth.
+- Current measured size example (user `58a2c2cf-d04f-42d6-b7ff-5a44ba47ac14`, measured March 1, 2026):
+  - Graph JSON payload: `373,972` bytes (~`93,493` tokens).
+  - Full Mermaid output: `214,095` bytes (~`53,524` tokens).
+  - Mermaid was ~43% smaller for AI context in this case.
+
 ## Required Order for User Graph Patch
 1. Run `debug:pillar-integrity` for baseline.
 2. Run `patch:user-graph --dry-run`.

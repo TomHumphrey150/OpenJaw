@@ -1,0 +1,38 @@
+{
+  "nodes": [],
+  "edges": [],
+  "disclosureMappings": [],
+  "interventionMappings": [
+    {
+      "interventionId": "intimacy_optional",
+      "pillars": [
+        "romanticPersonalCare",
+        "socialLife"
+      ],
+      "maxDetailNodeIds": [
+        "RELATIONSHIP_STRAIN",
+        "RELATIONSHIP_TX",
+        "STRESS"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:RELATIONSHIP_TX|RELATIONSHIP_STRAIN|forward|#0"
+      ]
+    },
+    {
+      "interventionId": "warm_shower",
+      "pillars": [
+        "sleep",
+        "stressManagement"
+      ],
+      "maxDetailNodeIds": [
+        "SLEEP_DEP",
+        "STRESS",
+        "SYMPATHETIC",
+        "WARM_SHOWER_TX"
+      ],
+      "maxDetailEdgeIds": [
+        "edge:WARM_SHOWER_TX|SYMPATHETIC|forward|#0"
+      ]
+    }
+  ]
+}
