@@ -31,8 +31,11 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             graphMetadataMigratedDocument,
             planningPolicy: resolvedPlanningPolicy
         )
+        let progressHistoryResetDocument = withLegacyProgressCheckInScaleMigrationIfNeeded(
+            questionSetMigratedDocument
+        )
         let questionSetBackfilledDocument = withProgressQuestionSetActiveQuestionsMigrationIfNeeded(
-            questionSetMigratedDocument,
+            progressHistoryResetDocument,
             planningPolicy: resolvedPlanningPolicy
         )
         let planningStateMigratedDocument = withPlanningStateDefaultsIfMissing(questionSetBackfilledDocument)
@@ -191,27 +194,12 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
         }
 
         let sourceGraphVersion = document.customCausalDiagram?.graphVersion ?? "graph-unknown"
-        let fields = document.morningQuestionnaire?.enabledFields ?? [
-            .globalSensation,
-            .neckTightness,
-            .jawSoreness,
-            .earFullness,
-            .healthAnxiety,
-        ]
-        var questions = fields.map { field in
-            GraphDerivedProgressQuestion(
-                id: "morning.\(field.rawValue)",
-                title: Self.defaultQuestionTitle(for: field),
-                sourceNodeIDs: [],
-                sourceEdgeIDs: []
-            )
-        }
-        questions.append(contentsOf: Self.defaultPillarQuestions(
+        let questions = Self.deduplicatedQuestions(Self.defaultPillarQuestions(
             policy: planningPolicy,
             userDefinedPillars: document.userDefinedPillars
         ))
         let state = ProgressQuestionSetState(
-            activeQuestionSetVersion: "question-set.v1",
+            activeQuestionSetVersion: FoundationCheckInScale.questionSetVersion(for: sourceGraphVersion),
             activeSourceGraphVersion: sourceGraphVersion,
             activeQuestions: questions,
             declinedGraphVersions: [],
@@ -219,6 +207,31 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             updatedAt: Self.timestampNow()
         )
         return document.withProgressQuestionSetState(state)
+    }
+
+    private func withLegacyProgressCheckInScaleMigrationIfNeeded(_ document: UserDataDocument) -> UserDataDocument {
+        let hasCurrentQuestionSetVersion = document.progressQuestionSetState.map { state in
+            FoundationCheckInScale.usesCurrentQuestionSetVersion(state.activeQuestionSetVersion)
+        } ?? false
+
+        let hasLegacyFoundationScaleData = Self.hasLegacyFoundationScaleData(document.foundationCheckIns)
+        let hasLegacyPillarScaleData = Self.hasLegacyPillarScaleData(document.pillarCheckIns)
+
+        let requiresReset = !hasCurrentQuestionSetVersion || hasLegacyFoundationScaleData || hasLegacyPillarScaleData
+        guard requiresReset else {
+            return document
+        }
+
+        if document.morningStates.isEmpty,
+           document.foundationCheckIns.isEmpty,
+           document.pillarCheckIns.isEmpty {
+            return document
+        }
+
+        return document
+            .withMorningStates([])
+            .withFoundationCheckIns([])
+            .withPillarCheckIns([])
     }
 
     private func withProgressQuestionSetActiveQuestionsMigrationIfNeeded(
@@ -229,57 +242,30 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
             return document
         }
 
-        var activeQuestions = state.activeQuestions
-        var pendingProposal = state.pendingProposal
-        var didChange = false
+        let expectedQuestions = Self.deduplicatedQuestions(Self.defaultPillarQuestions(
+            policy: planningPolicy,
+            userDefinedPillars: document.userDefinedPillars
+        ))
+        let expectedQuestionIDs = Set(expectedQuestions.map(\.id))
+        let activeQuestionSetVersion = FoundationCheckInScale.questionSetVersion(for: state.activeSourceGraphVersion)
 
-        if activeQuestions.isEmpty,
-           let pending = pendingProposal,
-           pending.proposedQuestionSetVersion == state.activeQuestionSetVersion {
-            activeQuestions = pending.questions
-            pendingProposal = nil
-            didChange = true
-        }
+        let hasCurrentVersion = FoundationCheckInScale.usesCurrentQuestionSetVersion(state.activeQuestionSetVersion)
+        let hasExpectedQuestionIDs = Self.hasExpectedProgressQuestionIDs(
+            state.activeQuestions,
+            expectedQuestionIDs: expectedQuestionIDs
+        )
+        let shouldClearPendingProposal = state.pendingProposal != nil
 
-        if activeQuestions.isEmpty {
-            let morningFields = document.morningQuestionnaire?.enabledFields ?? [
-                .globalSensation,
-                .neckTightness,
-                .jawSoreness,
-                .earFullness,
-                .healthAnxiety,
-                .stressLevel,
-                .morningHeadache,
-                .dryMouth,
-            ]
-            var synthesizedQuestions = morningFields.map { field in
-                GraphDerivedProgressQuestion(
-                    id: "morning.\(field.rawValue)",
-                    title: Self.defaultQuestionTitle(for: field),
-                    sourceNodeIDs: [],
-                    sourceEdgeIDs: []
-                )
-            }
-
-            synthesizedQuestions.append(contentsOf: Self.defaultPillarQuestions(
-                policy: planningPolicy,
-                userDefinedPillars: document.userDefinedPillars
-            ))
-
-            activeQuestions = Self.deduplicatedQuestions(synthesizedQuestions)
-            didChange = true
-        }
-
-        guard didChange else {
+        if hasCurrentVersion && hasExpectedQuestionIDs && !shouldClearPendingProposal {
             return document
         }
 
         let nextState = ProgressQuestionSetState(
-            activeQuestionSetVersion: state.activeQuestionSetVersion,
+            activeQuestionSetVersion: activeQuestionSetVersion,
             activeSourceGraphVersion: state.activeSourceGraphVersion,
-            activeQuestions: activeQuestions,
+            activeQuestions: expectedQuestions,
             declinedGraphVersions: state.declinedGraphVersions,
-            pendingProposal: pendingProposal,
+            pendingProposal: nil,
             updatedAt: Self.timestampNow()
         )
         return document.withProgressQuestionSetState(nextState)
@@ -817,24 +803,30 @@ struct DefaultUserDataMigrationPipeline: UserDataMigrationPipeline {
         return deduped
     }
 
-    private static func defaultQuestionTitle(for field: MorningQuestionField) -> String {
-        switch field {
-        case .globalSensation:
-            return "Global sensation"
-        case .neckTightness:
-            return "Neck tightness"
-        case .jawSoreness:
-            return "Jaw soreness"
-        case .earFullness:
-            return "Ear fullness"
-        case .healthAnxiety:
-            return "Health anxiety"
-        case .stressLevel:
-            return "Stress level"
-        case .morningHeadache:
-            return "Morning headache"
-        case .dryMouth:
-            return "Dry mouth"
+    private static func hasExpectedProgressQuestionIDs(
+        _ questions: [GraphDerivedProgressQuestion],
+        expectedQuestionIDs: Set<String>
+    ) -> Bool {
+        if questions.count != expectedQuestionIDs.count {
+            return false
+        }
+
+        return Set(questions.map(\.id)) == expectedQuestionIDs
+    }
+
+    private static func hasLegacyFoundationScaleData(_ checkIns: [FoundationCheckIn]) -> Bool {
+        checkIns.contains { checkIn in
+            checkIn.responsesByQuestionId.values.contains { value in
+                !FoundationCheckInScale.isValid(value: value)
+            }
+        }
+    }
+
+    private static func hasLegacyPillarScaleData(_ checkIns: [PillarCheckIn]) -> Bool {
+        checkIns.contains { checkIn in
+            checkIn.responsesByPillarId.values.contains { value in
+                !FoundationCheckInScale.isValid(value: value)
+            }
         }
     }
 }

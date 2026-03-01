@@ -5,13 +5,9 @@ struct ExploreOutcomesScreen: View {
     let outcomes: OutcomeSummary
     let outcomeRecords: [OutcomeRecord]
     let outcomesMetadata: OutcomesMetadata
-    let morningStates: [MorningState]
     let chartMorningStates: [MorningState]
     let chartNightOutcomes: [NightOutcome]
     let chartExclusionNote: String?
-    let morningOutcomeSelection: MorningOutcomeSelection
-    let morningCheckInFields: [MorningOutcomeField]
-    let requiredMorningCheckInFields: [MorningOutcomeField]
     let foundationCheckInNightID: String
     let foundationQuestions: [GraphDerivedProgressQuestion]
     let foundationResponsesByQuestionID: [String: Int]
@@ -38,7 +34,6 @@ struct ExploreOutcomesScreen: View {
     let museFitReadyRequiredSeconds: Int
     let museCanStartRecordingFromFitCalibration: Bool
     let museCanStartRecordingWithFitOverride: Bool
-    let onSetMorningOutcomeValue: (Int?, MorningOutcomeField) -> Void
     let onSetFoundationCheckInValue: (Int?, String) -> Void
     let onScanForMuse: () -> Void
     let onConnectToMuse: () -> Void
@@ -57,7 +52,6 @@ struct ExploreOutcomesScreen: View {
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
-    @State private var isMorningCheckInExpanded: Bool
     @State private var isFoundationCheckInExpanded: Bool
     @State private var selectedMorningMetric: MorningTrendMetric
     @State private var selectedNightMetric: NightTrendMetric
@@ -69,13 +63,9 @@ struct ExploreOutcomesScreen: View {
         outcomes: OutcomeSummary,
         outcomeRecords: [OutcomeRecord],
         outcomesMetadata: OutcomesMetadata,
-        morningStates: [MorningState],
         chartMorningStates: [MorningState],
         chartNightOutcomes: [NightOutcome],
         chartExclusionNote: String?,
-        morningOutcomeSelection: MorningOutcomeSelection,
-        morningCheckInFields: [MorningOutcomeField],
-        requiredMorningCheckInFields: [MorningOutcomeField],
         foundationCheckInNightID: String,
         foundationQuestions: [GraphDerivedProgressQuestion],
         foundationResponsesByQuestionID: [String: Int],
@@ -102,7 +92,6 @@ struct ExploreOutcomesScreen: View {
         museFitReadyRequiredSeconds: Int,
         museCanStartRecordingFromFitCalibration: Bool,
         museCanStartRecordingWithFitOverride: Bool,
-        onSetMorningOutcomeValue: @escaping (Int?, MorningOutcomeField) -> Void,
         onSetFoundationCheckInValue: @escaping (Int?, String) -> Void,
         onScanForMuse: @escaping () -> Void,
         onConnectToMuse: @escaping () -> Void,
@@ -123,13 +112,9 @@ struct ExploreOutcomesScreen: View {
         self.outcomes = outcomes
         self.outcomeRecords = outcomeRecords
         self.outcomesMetadata = outcomesMetadata
-        self.morningStates = morningStates
         self.chartMorningStates = chartMorningStates
         self.chartNightOutcomes = chartNightOutcomes
         self.chartExclusionNote = chartExclusionNote
-        self.morningOutcomeSelection = morningOutcomeSelection
-        self.morningCheckInFields = morningCheckInFields
-        self.requiredMorningCheckInFields = requiredMorningCheckInFields
         self.foundationCheckInNightID = foundationCheckInNightID
         self.foundationQuestions = foundationQuestions
         self.foundationResponsesByQuestionID = foundationResponsesByQuestionID
@@ -156,7 +141,6 @@ struct ExploreOutcomesScreen: View {
         self.museFitReadyRequiredSeconds = museFitReadyRequiredSeconds
         self.museCanStartRecordingFromFitCalibration = museCanStartRecordingFromFitCalibration
         self.museCanStartRecordingWithFitOverride = museCanStartRecordingWithFitOverride
-        self.onSetMorningOutcomeValue = onSetMorningOutcomeValue
         self.onSetFoundationCheckInValue = onSetFoundationCheckInValue
         self.onScanForMuse = onScanForMuse
         self.onConnectToMuse = onConnectToMuse
@@ -173,9 +157,6 @@ struct ExploreOutcomesScreen: View {
         self.onAcceptFlareSuggestion = onAcceptFlareSuggestion
         self.onDismissFlareSuggestion = onDismissFlareSuggestion
         self.selectedSkinID = selectedSkinID
-        _isMorningCheckInExpanded = State(
-            initialValue: !morningOutcomeSelection.isComplete(requiredFields: requiredMorningCheckInFields)
-        )
         _isFoundationCheckInExpanded = State(
             initialValue: !Self.isFoundationCheckInComplete(
                 responsesByQuestionID: foundationResponsesByQuestionID,
@@ -192,7 +173,6 @@ struct ExploreOutcomesScreen: View {
                 VStack(spacing: TelocareTheme.Spacing.lg) {
                     flareSuggestionSection
                     morningGreetingCard
-                    morningCheckInSection
                     foundationCheckInSection
                     morningTrendSection
                     measurementRoadmapSection
@@ -231,25 +211,12 @@ struct ExploreOutcomesScreen: View {
                 onExportSetupDiagnostics: exportMuseSetupDiagnostics
             )
         }
-        .onChange(of: morningOutcomeSelection) { _, selection in
-            guard selection.isComplete(requiredFields: requiredMorningCheckInFields) else { return }
-            let foundationComplete = Self.isFoundationCheckInComplete(
-                responsesByQuestionID: foundationResponsesByQuestionID,
-                requiredQuestionIDs: foundationRequiredQuestionIDs
-            )
-            guard foundationComplete else { return }
-            guard isMorningCheckInExpanded else { return }
-            withAnimation(.spring(response: 0.3)) {
-                isMorningCheckInExpanded = false
-            }
-        }
         .onChange(of: foundationResponsesByQuestionID) { _, responses in
             let isComplete = Self.isFoundationCheckInComplete(
                 responsesByQuestionID: responses,
                 requiredQuestionIDs: foundationRequiredQuestionIDs
             )
             guard isComplete else { return }
-            guard morningOutcomeSelection.isComplete(requiredFields: requiredMorningCheckInFields) else { return }
             guard isFoundationCheckInExpanded else { return }
             withAnimation(.spring(response: 0.3)) {
                 isFoundationCheckInExpanded = false
@@ -344,54 +311,6 @@ struct ExploreOutcomesScreen: View {
         }
     }
 
-    // MARK: - Morning Check-in Section
-
-    @ViewBuilder
-    private var morningCheckInSection: some View {
-        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
-            Button {
-                withAnimation(.spring(response: 0.3)) {
-                    isMorningCheckInExpanded.toggle()
-                }
-            } label: {
-                HStack {
-                    WarmSectionHeader(
-                        title: "Morning check-in",
-                        subtitle: "Night \(morningOutcomeSelection.nightID)"
-                    )
-                    Spacer()
-                    Image(systemName: isMorningCheckInExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(TelocareTheme.warmGray)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier(AccessibilityID.exploreOutcomesMorningCheckInToggle)
-            .accessibilityValue(isMorningCheckInExpanded ? "Expanded" : "Collapsed")
-
-            if isMorningCheckInExpanded {
-                VStack(spacing: TelocareTheme.Spacing.md) {
-                    ForEach(morningCheckInFields) { field in
-                        EmojiRatingPicker(
-                            field: field,
-                            value: bindingForField(field)
-                        )
-                        .accessibilityIdentifier(field.accessibilityIdentifier)
-                    }
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-    }
-
-    private func bindingForField(_ field: MorningOutcomeField) -> Binding<Int?> {
-        Binding(
-            get: { morningOutcomeSelection.value(for: field) },
-            set: { onSetMorningOutcomeValue($0, field) }
-        )
-    }
-
     @ViewBuilder
     private var foundationCheckInSection: some View {
         VStack(alignment: .leading, spacing: TelocareTheme.Spacing.md) {
@@ -456,7 +375,7 @@ struct ExploreOutcomesScreen: View {
     }
 
     private var morningChartHeight: CGFloat {
-        isMorningCheckInExpanded ? 170 : 280
+        280
     }
 
     private var morningYAxisValues: [Double] {
@@ -503,12 +422,11 @@ struct ExploreOutcomesScreen: View {
     }
 
     private var morningChartAccessibilityValue: String {
-        let layout = isMorningCheckInExpanded ? "Compact" : "Expanded"
         guard let latest = morningTrendPoints.last else {
-            return "\(selectedMorningMetric.title), no data, \(layout), lower is better"
+            return "\(selectedMorningMetric.title), no data, lower is better"
         }
 
-        return "\(selectedMorningMetric.title), \(formattedMorningValue(latest.value)), \(morningEmoji(for: latest.value)), \(layout), lower is better"
+        return "\(selectedMorningMetric.title), \(formattedMorningValue(latest.value)), \(morningEmoji(for: latest.value)), lower is better"
     }
 
     private var nightChartAccessibilityValue: String {
@@ -597,7 +515,6 @@ struct ExploreOutcomesScreen: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .animation(.spring(response: 0.3), value: isMorningCheckInExpanded)
         .accessibilityIdentifier(AccessibilityID.exploreOutcomesMorningChart)
         .accessibilityLabel("Morning outcomes trend chart")
         .accessibilityValue(morningChartAccessibilityValue)
@@ -1193,7 +1110,7 @@ private struct FoundationEmojiRatingPicker: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 if let value {
-                    Text("\(emoji(for: value)) \(value)")
+                    Text("\(FoundationCheckInScale.emoji(for: value)) \(value)")
                         .font(TelocareTheme.Typography.small)
                         .foregroundStyle(TelocareTheme.coral)
                         .padding(.horizontal, 8)
@@ -1205,12 +1122,12 @@ private struct FoundationEmojiRatingPicker: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: TelocareTheme.Spacing.xs) {
-                    ForEach(0...10, id: \.self) { option in
+                    ForEach(FoundationCheckInScale.options, id: \.self) { option in
                         Button {
                             value = option
                         } label: {
                             VStack(spacing: 4) {
-                                Text(emoji(for: option))
+                                Text(FoundationCheckInScale.emoji(for: option))
                                     .font(.system(size: 20, weight: .regular, design: .rounded))
                                 Text("\(option)")
                                     .font(TelocareTheme.Typography.small)
@@ -1242,22 +1159,5 @@ private struct FoundationEmojiRatingPicker: View {
         .clipShape(RoundedRectangle(cornerRadius: TelocareTheme.CornerRadius.medium, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityID.exploreOutcomesFoundationQuestion(questionID: questionID))
-    }
-
-    private func emoji(for value: Int) -> String {
-        switch value {
-        case 0...2:
-            return "😌"
-        case 3...4:
-            return "🙂"
-        case 5:
-            return "😐"
-        case 6...7:
-            return "😟"
-        case 8...9:
-            return "😣"
-        default:
-            return "😫"
-        }
     }
 }

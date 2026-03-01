@@ -132,7 +132,6 @@ final class AppViewModel {
     private let graphKernel: GraphKernel
     private let graphProjectionHub: GraphProjectionHub
     private let graphPatchCodec: GraphPatchJSONCodec
-    private let progressQuestionProposalBuilder: ProgressQuestionProposalBuilder
     private let dailyPlanner: DailyPlanning
     private let flareDetectionService: FlareDetection
     private let planningMetadataResolver: HabitPlanningMetadataResolver
@@ -297,7 +296,6 @@ final class AppViewModel {
         morningOutcomeMutationService: MorningOutcomeMutationService = DefaultMorningOutcomeMutationService(),
         appleHealthSyncCoordinator: AppleHealthSyncCoordinator? = nil,
         museSessionCoordinator: MuseSessionCoordinator = DefaultMuseSessionCoordinator(),
-        progressQuestionProposalBuilder: ProgressQuestionProposalBuilder = ProgressQuestionProposalBuilder(),
         dailyPlanner: DailyPlanning? = nil,
         flareDetectionService: FlareDetection? = nil,
         planningMetadataResolver: HabitPlanningMetadataResolver? = nil,
@@ -473,7 +471,6 @@ final class AppViewModel {
             questionSetState: initialProgressQuestionSetState
         )
         graphPatchCodec = GraphPatchJSONCodec()
-        self.progressQuestionProposalBuilder = progressQuestionProposalBuilder
         self.dailyPlanner = resolvedDailyPlanner
         self.flareDetectionService = resolvedFlareDetectionService
         self.accessibilityAnnouncer = accessibilityAnnouncer
@@ -516,32 +513,16 @@ final class AppViewModel {
         isProfileSheetPresented = true
     }
 
-    var morningStateHistory: [MorningState] {
-        morningStates
-    }
-
     var morningCheckInFields: [MorningOutcomeField] {
-        let questionFields = questionDrivenMorningOutcomeFields()
-        if questionFields.isEmpty {
-            return configuredMorningOutcomeFields
-        }
-        return questionFields
+        configuredMorningOutcomeFields
     }
 
     var requiredMorningCheckInFields: [MorningOutcomeField] {
-        let questionFields = questionDrivenMorningOutcomeFields()
-        if questionFields.isEmpty {
-            return requiredMorningOutcomeFields
-        }
-        return questionFields
+        requiredMorningOutcomeFields
     }
 
     var morningTrendMetricOptions: [MorningTrendMetric] {
-        let questionFields = questionDrivenMorningOutcomeFields()
-        if questionFields.isEmpty {
-            return configuredMorningTrendMetrics
-        }
-        return Self.resolveMorningTrendMetrics(from: questionFields)
+        configuredMorningTrendMetrics
     }
 
     var foundationCheckInQuestions: [GraphDerivedProgressQuestion] {
@@ -569,18 +550,6 @@ final class AppViewModel {
         !foundationRequiredQuestionIDs.contains { questionID in
             foundationCheckInResponsesByQuestionID[questionID] == nil
         }
-    }
-
-    private func questionDrivenMorningOutcomeFields() -> [MorningOutcomeField] {
-        let questions = resolvedProgressQuestions()
-        if questions.isEmpty {
-            return []
-        }
-
-        let mapped = questions.compactMap { question in
-            Self.morningOutcomeField(fromProgressQuestionID: question.id)
-        }
-        return Self.deduplicatedMorningOutcomeFields(mapped)
     }
 
     private func resolvedProgressQuestions() -> [GraphDerivedProgressQuestion] {
@@ -1917,7 +1886,7 @@ final class AppViewModel {
 
     private func baselineProgressQuestionSetState(for graphVersion: String) -> ProgressQuestionSetState {
         ProgressQuestionSetState(
-            activeQuestionSetVersion: "questions-\(graphVersion)",
+            activeQuestionSetVersion: FoundationCheckInScale.questionSetVersion(for: graphVersion),
             activeSourceGraphVersion: graphVersion,
             activeQuestions: defaultActiveProgressQuestions(),
             declinedGraphVersions: [],
@@ -1927,26 +1896,14 @@ final class AppViewModel {
     }
 
     private func defaultActiveProgressQuestions() -> [GraphDerivedProgressQuestion] {
-        var questions = configuredMorningOutcomeFields.map { field in
-            GraphDerivedProgressQuestion(
-                id: Self.progressQuestionID(from: field),
-                title: field.displayTitle,
-                sourceNodeIDs: [],
-                sourceEdgeIDs: []
-            )
-        }
-        questions.append(contentsOf: activePillarsForProgress.map(defaultPillarQuestion(for:)))
-        return Self.deduplicatedProgressQuestions(questions)
+        Self.deduplicatedProgressQuestions(activePillarsForProgress.map(defaultPillarQuestion(for:)))
     }
 
     private func buildProgressQuestionSetProposal(for graphVersion: String) -> ProgressQuestionSetProposal {
-        progressQuestionProposalBuilder.build(
-            graphData: graphData,
-            inputs: snapshot.inputs.filter(\.isActive),
-            planningMetadataByInterventionID: planningMetadataByInterventionID,
-            policy: planningPolicy,
-            mode: planningMode,
-            graphVersion: graphVersion,
+        ProgressQuestionSetProposal(
+            sourceGraphVersion: graphVersion,
+            proposedQuestionSetVersion: FoundationCheckInScale.questionSetVersion(for: graphVersion),
+            questions: defaultActiveProgressQuestions(),
             createdAt: Self.timestamp(from: nowProvider())
         )
     }
@@ -3211,7 +3168,7 @@ final class AppViewModel {
     func setFoundationCheckInValue(_ value: Int?, for questionID: String) {
         guard mode == .explore else { return }
         guard foundationRequiredQuestionIDs.contains(questionID) else { return }
-        if let value, !(0...10).contains(value) {
+        if let value, !FoundationCheckInScale.isValid(value: value) {
             return
         }
 
@@ -4093,29 +4050,6 @@ final class AppViewModel {
         }
     }
 
-    private static func morningOutcomeField(fromProgressQuestionID questionID: String) -> MorningOutcomeField? {
-        switch questionID {
-        case "morning.globalSensation":
-            return .globalSensation
-        case "morning.neckTightness":
-            return .neckTightness
-        case "morning.jawSoreness":
-            return .jawSoreness
-        case "morning.earFullness":
-            return .earFullness
-        case "morning.healthAnxiety":
-            return .healthAnxiety
-        case "morning.stressLevel":
-            return .stressLevel
-        case "morning.morningHeadache":
-            return .morningHeadache
-        case "morning.dryMouth":
-            return .dryMouth
-        default:
-            return nil
-        }
-    }
-
     private var activePillarsForProgress: [HealthPillarDefinition] {
         projectedHealthLensPillars
     }
@@ -4145,10 +4079,6 @@ final class AppViewModel {
             sourceNodeIDs: sourceNodeIDs,
             sourceEdgeIDs: sourceEdgeIDs
         )
-    }
-
-    private static func progressQuestionID(from outcomeField: MorningOutcomeField) -> String {
-        "morning.\(outcomeField.rawValue)"
     }
 
     private static func deduplicatedProgressQuestions(
