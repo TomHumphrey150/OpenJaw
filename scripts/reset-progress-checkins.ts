@@ -22,9 +22,11 @@ interface ResetPlan {
   userID: string;
   updatedAt: string | null;
   nextStore: Record<string, unknown>;
+  dailyCheckInsCount: number;
   morningStatesCount: number;
   foundationCheckInsCount: number;
   pillarCheckInsCount: number;
+  hadMorningQuestionnaire: boolean;
   hadProgressQuestionSetState: boolean;
 }
 
@@ -136,6 +138,15 @@ function readArrayLength(store: Record<string, unknown>, key: string): number {
   return value.length;
 }
 
+function readObjectKeyCount(store: Record<string, unknown>, key: string): number {
+  const value = store[key];
+  if (!isUnknownRecord(value)) {
+    return 0;
+  }
+
+  return Object.keys(value).length;
+}
+
 function hasNonNullValue(store: Record<string, unknown>, key: string): boolean {
   if (!Object.prototype.hasOwnProperty.call(store, key)) {
     return false;
@@ -145,33 +156,39 @@ function hasNonNullValue(store: Record<string, unknown>, key: string): boolean {
 }
 
 function planReset(row: UserDataRow): ResetPlan | null {
+  const dailyCheckInsCount = readObjectKeyCount(row.store, 'dailyCheckIns');
   const morningStatesCount = readArrayLength(row.store, 'morningStates');
   const foundationCheckInsCount = readArrayLength(row.store, 'foundationCheckIns');
   const pillarCheckInsCount = readArrayLength(row.store, 'pillarCheckIns');
+  const hadMorningQuestionnaire = hasNonNullValue(row.store, 'morningQuestionnaire');
   const hadProgressQuestionSetState = hasNonNullValue(row.store, 'progressQuestionSetState');
 
   const shouldReset =
-    morningStatesCount > 0
+    dailyCheckInsCount > 0
+    || morningStatesCount > 0
     || foundationCheckInsCount > 0
-    || pillarCheckInsCount > 0
+    || hadMorningQuestionnaire
     || hadProgressQuestionSetState;
   if (!shouldReset) {
     return null;
   }
 
   const nextStore = structuredClone(row.store);
-  nextStore.morningStates = [];
-  nextStore.foundationCheckIns = [];
-  nextStore.pillarCheckIns = [];
-  nextStore.progressQuestionSetState = null;
+  delete nextStore.dailyCheckIns;
+  delete nextStore.morningStates;
+  delete nextStore.foundationCheckIns;
+  delete nextStore.progressQuestionSetState;
+  delete nextStore.morningQuestionnaire;
 
   return {
     userID: row.userID,
     updatedAt: row.updatedAt,
     nextStore,
+    dailyCheckInsCount,
     morningStatesCount,
     foundationCheckInsCount,
     pillarCheckInsCount,
+    hadMorningQuestionnaire,
     hadProgressQuestionSetState,
   };
 }
@@ -247,9 +264,14 @@ async function loadRowsForAllUsers(
 }
 
 function printPlan(mode: 'dry-run' | 'write', scannedRows: number, plans: ResetPlan[]): void {
+  const totalDailyCheckIns = plans.reduce((sum, row) => sum + row.dailyCheckInsCount, 0);
   const totalMorningStates = plans.reduce((sum, row) => sum + row.morningStatesCount, 0);
   const totalFoundationCheckIns = plans.reduce((sum, row) => sum + row.foundationCheckInsCount, 0);
   const totalPillarCheckIns = plans.reduce((sum, row) => sum + row.pillarCheckInsCount, 0);
+  const totalMorningQuestionnaires = plans.reduce(
+    (sum, row) => sum + (row.hadMorningQuestionnaire ? 1 : 0),
+    0,
+  );
   const totalProgressQuestionState = plans.reduce(
     (sum, row) => sum + (row.hadProgressQuestionSetState ? 1 : 0),
     0,
@@ -258,20 +280,23 @@ function printPlan(mode: 'dry-run' | 'write', scannedRows: number, plans: ResetP
   console.log(`Mode: ${mode}`);
   console.log(`Rows scanned: ${scannedRows}`);
   console.log(`Rows requiring reset: ${plans.length}`);
+  console.log(`Daily check-in day maps to remove: ${totalDailyCheckIns}`);
   console.log(`Morning states to clear: ${totalMorningStates}`);
   console.log(`Foundation check-ins to clear: ${totalFoundationCheckIns}`);
-  console.log(`Pillar check-ins to clear: ${totalPillarCheckIns}`);
+  console.log(`Pillar check-ins retained: ${totalPillarCheckIns}`);
+  console.log(`Morning questionnaires to remove: ${totalMorningQuestionnaires}`);
   console.log(`Progress question states to clear: ${totalProgressQuestionState}`);
 
   if (plans.length === 0) {
     return;
   }
 
-  console.log('Rows requiring reset (user_id | updated_at | morning/foundation/pillar/state):');
+  console.log('Rows requiring reset (user_id | updated_at | daily/morning/foundation/pillar/questionnaire/state):');
   for (const row of plans) {
+    const questionnaireFlag = row.hadMorningQuestionnaire ? 'yes' : 'no';
     const stateFlag = row.hadProgressQuestionSetState ? 'yes' : 'no';
     console.log(
-      `  ${row.userID} | ${row.updatedAt ?? '(missing)'} | ${row.morningStatesCount}/${row.foundationCheckInsCount}/${row.pillarCheckInsCount}/${stateFlag}`,
+      `  ${row.userID} | ${row.updatedAt ?? '(missing)'} | ${row.dailyCheckInsCount}/${row.morningStatesCount}/${row.foundationCheckInsCount}/${row.pillarCheckInsCount}/${questionnaireFlag}/${stateFlag}`,
     );
   }
 }

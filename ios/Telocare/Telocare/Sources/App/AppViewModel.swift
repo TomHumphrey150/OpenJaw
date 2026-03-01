@@ -685,6 +685,20 @@ final class AppViewModel {
         healthLensState.pillarSelection
     }
 
+    var projectedVisibleHealthLensPillars: [HealthPillarDefinition] {
+        let orderedPillars = projectedHealthLensPillars
+        if healthLensState.mode == .all || healthLensState.pillarSelection.isAllSelected {
+            return orderedPillars
+        }
+
+        let selectedPillarIDs = Set(healthLensState.selectedPillarIDs.map(\.id))
+        if selectedPillarIDs.isEmpty {
+            return []
+        }
+
+        return orderedPillars.filter { selectedPillarIDs.contains($0.id.id) }
+    }
+
     var projectedSelectedHealthLensPillars: [HealthPillar] {
         healthLensState.selectedPillarIDs
     }

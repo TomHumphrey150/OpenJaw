@@ -7,6 +7,23 @@ create table if not exists public.user_data (
   updated_at timestamptz not null default timezone('utc'::text, now())
 );
 
+alter table public.user_data
+drop constraint if exists user_data_only_pillar_checkins;
+
+alter table public.user_data
+add constraint user_data_only_pillar_checkins
+check (
+  not (
+    coalesce(public.user_data.data, '{}'::jsonb) ?| array[
+      'dailyCheckIns',
+      'morningStates',
+      'foundationCheckIns',
+      'progressQuestionSetState',
+      'morningQuestionnaire'
+    ]
+  )
+);
+
 alter table public.user_data enable row level security;
 
 drop policy if exists "Users can read own data" on public.user_data;
@@ -90,6 +107,12 @@ as $$
 declare
   affected_rows integer := 0;
   safe_patch jsonb := coalesce(patch, '{}'::jsonb);
+  sanitized_patch jsonb := safe_patch
+    - 'dailyCheckIns'
+    - 'morningStates'
+    - 'foundationCheckIns'
+    - 'progressQuestionSetState'
+    - 'morningQuestionnaire';
 begin
   if auth.uid() is null then
     raise exception 'Authentication required';
@@ -102,12 +125,19 @@ begin
   insert into public.user_data (user_id, data, updated_at)
   values (
     auth.uid(),
-    safe_patch,
+    sanitized_patch,
     timezone('utc'::text, now())
   )
   on conflict (user_id) do update
   set
-    data = coalesce(public.user_data.data, '{}'::jsonb) || safe_patch,
+    data = (
+      (coalesce(public.user_data.data, '{}'::jsonb) || sanitized_patch)
+      - 'dailyCheckIns'
+      - 'morningStates'
+      - 'foundationCheckIns'
+      - 'progressQuestionSetState'
+      - 'morningQuestionnaire'
+    ),
     updated_at = timezone('utc'::text, now());
 
   get diagnostics affected_rows = row_count;

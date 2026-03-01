@@ -28,6 +28,7 @@ enum AccessibilityID {
     static let profileMuseFeatureToggle = "profile.muse.feature.toggle"
     static let profileSignOutEntry = "profile.signout.entry"
     static let globalLensNub = "explore.lens.nub"
+    static let globalLensBadgeStrip = "explore.lens.badge.strip"
     static let globalLensSheet = "explore.lens.sheet"
     static let exploreOutcomesScreen = "explore.outcomes.screen"
     static let exploreSituationScreen = "explore.situation.screen"
@@ -165,6 +166,10 @@ enum AccessibilityID {
 
     static func exploreInputsLensPillar(pillar: String) -> String {
         "explore.inputs.lens.pillar.\(pillar)"
+    }
+
+    static func globalLensBadge(pillar: String) -> String {
+        "explore.lens.badge.\(pillar)"
     }
 
     static func exploreOutcomesFoundationQuestion(questionID: String) -> String {

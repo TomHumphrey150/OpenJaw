@@ -238,6 +238,38 @@ private struct BackfillDefaultGraphRequest: Encodable {
 
 private struct UpsertUserDataPatchRequest: Encodable {
     let patch: UserDataPatch
+
+    private enum CodingKeys: String, CodingKey {
+        case patch
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        let patchData = try JSONEncoder().encode(patch)
+        let sanitizedPatch = try JSONDecoder().decode(SanitizedPatchEnvelope.self, from: patchData)
+        try container.encode(sanitizedPatch, forKey: .patch)
+    }
+}
+
+private struct SanitizedPatchEnvelope: Codable {
+    let experienceFlow: ExperienceFlow?
+    let dailyDoseProgress: [String: [String: Double]]?
+    let interventionCompletionEvents: [InterventionCompletionEvent]?
+    let interventionDoseSettings: [String: DoseSettings]?
+    let appleHealthConnections: [String: AppleHealthConnection]?
+    let nightOutcomes: [NightOutcome]?
+    let pillarCheckIns: [PillarCheckIn]?
+    let userDefinedPillars: [UserDefinedPillar]?
+    let pillarAssignments: [PillarAssignment]?
+    let activeInterventions: [String]?
+    let hiddenInterventions: [String]?
+    let customCausalDiagram: CustomCausalDiagram?
+    let wakeDaySleepAttributionMigrated: Bool?
+    let gardenAliasOverrides: [GardenAliasOverride]?
+    let plannerPreferencesState: PlannerPreferencesState?
+    let habitPlannerState: HabitPlannerState?
+    let healthLensState: HealthLensState?
+    let globalLensSelection: HealthLensState?
 }
 
 private enum FirstPartyContentFetchError: Error, LocalizedError {

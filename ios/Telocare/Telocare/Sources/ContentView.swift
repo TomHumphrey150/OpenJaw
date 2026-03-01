@@ -80,6 +80,7 @@ private struct ReadyDashboardRootView: View {
         .safeAreaInset(edge: .top) {
             GlobalLensStatusBar(
                 label: dashboardViewModel.projectedHealthLensLabel,
+                visiblePillars: dashboardViewModel.projectedVisibleHealthLensPillars,
                 onTap: {
                     dashboardViewModel.setLensControlExpanded(true)
                 }
@@ -158,10 +159,11 @@ private struct ReadyDashboardRootView: View {
 
 private struct GlobalLensStatusBar: View {
     let label: String
+    let visiblePillars: [HealthPillarDefinition]
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        VStack(alignment: .leading, spacing: TelocareTheme.Spacing.sm) {
             HStack(spacing: 10) {
                 Image(systemName: "line.3.horizontal.decrease.circle.fill")
                     .font(.system(size: 18))
@@ -183,26 +185,89 @@ private struct GlobalLensStatusBar: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(TelocareTheme.warmGray)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(TelocareTheme.cream)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(TelocareTheme.peach, lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .contentShape(Rectangle())
+
+            if !visiblePillars.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: TelocareTheme.Spacing.sm) {
+                        ForEach(visiblePillars) { pillar in
+                            GlobalLensPillarBadge(pillar: pillar)
+                        }
+                    }
+                    .padding(.trailing, 4)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Visible pillars")
+                .accessibilityValue(visiblePillars.map(\.title).joined(separator: ", "))
+                .accessibilityIdentifier(AccessibilityID.globalLensBadgeStrip)
+            }
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(TelocareTheme.cream)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(TelocareTheme.peach, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
         .padding(.horizontal, TelocareTheme.Spacing.md)
         .padding(.top, 4)
         .padding(.bottom, 6)
         .background(TelocareTheme.sand.opacity(0.97))
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel("Global lens")
-        .accessibilityValue(label)
+        .accessibilityValue(accessibilityValue)
         .accessibilityHint("Opens global lens controls.")
         .accessibilityIdentifier(AccessibilityID.globalLensNub)
+    }
+
+    private var accessibilityValue: String {
+        if visiblePillars.isEmpty {
+            return label
+        }
+
+        let visiblePillarTitles = visiblePillars.map(\.title).joined(separator: ", ")
+        return "\(label). Showing \(visiblePillarTitles)"
+    }
+}
+
+private struct GlobalLensPillarBadge: View {
+    let pillar: HealthPillarDefinition
+
+    var body: some View {
+        Text(badgeText)
+            .font(TelocareTheme.Typography.small.weight(.bold))
+            .foregroundStyle(TelocareTheme.charcoal)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .frame(width: 30, height: 30)
+            .background(
+                Circle()
+                    .fill(TelocareTheme.peach)
+            )
+            .overlay(
+                Circle()
+                    .stroke(TelocareTheme.coral.opacity(0.35), lineWidth: 1)
+            )
+            .accessibilityLabel(pillar.title)
+            .accessibilityIdentifier(AccessibilityID.globalLensBadge(pillar: pillar.id.id))
+    }
+
+    private var badgeText: String {
+        let tokens = pillar.title.split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+        if tokens.isEmpty {
+            return "?"
+        }
+
+        if tokens.count == 1 {
+            return String(tokens[0].prefix(2)).uppercased()
+        }
+
+        let firstLetter = tokens[0].first.map(String.init) ?? ""
+        let secondLetter = tokens[1].first.map(String.init) ?? ""
+        return (firstLetter + secondLetter).uppercased()
     }
 }
 

@@ -24,6 +24,27 @@ struct UserDataPatch: Encodable, Equatable, Sendable {
     let healthLensState: HealthLensState?
     let globalLensSelection: HealthLensState?
 
+    private enum CodingKeys: String, CodingKey {
+        case experienceFlow
+        case dailyDoseProgress
+        case interventionCompletionEvents
+        case interventionDoseSettings
+        case appleHealthConnections
+        case nightOutcomes
+        case userDefinedPillars
+        case pillarAssignments
+        case pillarCheckIns
+        case activeInterventions
+        case hiddenInterventions
+        case customCausalDiagram
+        case wakeDaySleepAttributionMigrated
+        case gardenAliasOverrides
+        case plannerPreferencesState
+        case habitPlannerState
+        case healthLensState
+        case globalLensSelection
+    }
+
     init(
         experienceFlow: ExperienceFlow?,
         dailyCheckIns: [String: [String]]?,
