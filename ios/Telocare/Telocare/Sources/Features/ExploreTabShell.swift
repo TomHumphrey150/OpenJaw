@@ -32,11 +32,6 @@ struct ExploreTabShell: View {
                     orderedPillars: viewModel.projectedHealthLensPillars,
                     habitRungStatusByInterventionID: viewModel.projectedHabitRungStatusByInterventionID,
                     plannedInterventionIDs: viewModel.projectedPlannedInterventionIDs,
-                    dailyPlanProposal: viewModel.projectedDailyPlanProposal,
-                    planningMode: viewModel.planningMode,
-                    plannerAvailableMinutes: viewModel.plannerAvailableMinutes,
-                    plannerTimeBudgetState: viewModel.projectedPlannerTimeBudgetState,
-                    onSetPlannerTimeBudgetState: viewModel.setPlannerTimeBudgetState,
                     onRecordHigherRungCompletion: { interventionID, rungID in
                         viewModel.recordHigherRungCompletion(
                             interventionID: interventionID,

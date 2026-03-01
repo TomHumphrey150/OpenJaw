@@ -523,7 +523,7 @@ final class TelocareUITests: XCTestCase {
         XCTAssertTrue(waitForValueContaining("Latest", of: historyChart, timeout: 4))
     }
 
-    func testHabitsShowsNextBestActionsSection() {
+    func testHabitsDoesNotShowNextBestActionsSection() {
         let app = configuredApp(authState: .authenticated)
         app.launch()
 
@@ -534,7 +534,7 @@ final class TelocareUITests: XCTestCase {
         habitsTab.tap()
 
         let nextBestActions = element(withIdentifier: UIID.exploreInputsNextBestActions, in: app)
-        XCTAssertTrue(nextBestActions.waitForExistence(timeout: 4))
+        XCTAssertFalse(nextBestActions.exists)
     }
 
     func testHabitsGardenHierarchyHidesUntappedTopLevelSiblings() {
@@ -564,7 +564,6 @@ final class TelocareUITests: XCTestCase {
 
         XCTAssertTrue(firstPillarSection(in: app).waitForExistence(timeout: 4))
         XCTAssertTrue(scrollUntilHabitControlVisible(in: app, maxSwipes: 18))
-        XCTAssertTrue(element(withIdentifier: UIID.exploreInputsNextBestActions, in: app).waitForExistence(timeout: 4))
         XCTAssertTrue(element(withIdentifier: UIID.exploreInputsPinnedHeader, in: app).exists)
     }
 
