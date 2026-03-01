@@ -5,6 +5,11 @@ struct ExploreOutcomesScreen: View {
     let outcomes: OutcomeSummary
     let outcomeRecords: [OutcomeRecord]
     let outcomesMetadata: OutcomesMetadata
+    let allInputs: [InputStatus]
+    let planningMetadataByInterventionID: [String: HabitPlanningMetadata]
+    let pillarAssignments: [PillarAssignment]
+    let orderedPillars: [HealthPillarDefinition]
+    let pillarCheckIns: [PillarCheckIn]
     let chartMorningStates: [MorningState]
     let chartNightOutcomes: [NightOutcome]
     let chartExclusionNote: String?
@@ -49,6 +54,10 @@ struct ExploreOutcomesScreen: View {
     let flareSuggestion: FlareSuggestion?
     let onAcceptFlareSuggestion: () -> Void
     let onDismissFlareSuggestion: () -> Void
+    let selectedHealthLensPillarIDs: Set<String>
+    let isHealthLensAllSelected: Bool
+    let onSetHealthLensPillar: (HealthPillar) -> Void
+    let onSelectAllHealthLensPillars: () -> Void
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
@@ -58,11 +67,17 @@ struct ExploreOutcomesScreen: View {
     @State private var isMuseDiagnosticsSharePresented = false
     @State private var museDiagnosticsShareURLs: [URL] = []
     @State private var museDiagnosticsExportFeedback: String?
+    private let visualSnapshotBuilder = PillarVisualSnapshotBuilder()
 
     init(
         outcomes: OutcomeSummary,
         outcomeRecords: [OutcomeRecord],
         outcomesMetadata: OutcomesMetadata,
+        allInputs: [InputStatus],
+        planningMetadataByInterventionID: [String: HabitPlanningMetadata],
+        pillarAssignments: [PillarAssignment],
+        orderedPillars: [HealthPillarDefinition],
+        pillarCheckIns: [PillarCheckIn],
         chartMorningStates: [MorningState],
         chartNightOutcomes: [NightOutcome],
         chartExclusionNote: String?,
@@ -107,11 +122,20 @@ struct ExploreOutcomesScreen: View {
         flareSuggestion: FlareSuggestion?,
         onAcceptFlareSuggestion: @escaping () -> Void,
         onDismissFlareSuggestion: @escaping () -> Void,
+        selectedHealthLensPillarIDs: Set<String>,
+        isHealthLensAllSelected: Bool,
+        onSetHealthLensPillar: @escaping (HealthPillar) -> Void,
+        onSelectAllHealthLensPillars: @escaping () -> Void,
         selectedSkinID: TelocareSkinID
     ) {
         self.outcomes = outcomes
         self.outcomeRecords = outcomeRecords
         self.outcomesMetadata = outcomesMetadata
+        self.allInputs = allInputs
+        self.planningMetadataByInterventionID = planningMetadataByInterventionID
+        self.pillarAssignments = pillarAssignments
+        self.orderedPillars = orderedPillars
+        self.pillarCheckIns = pillarCheckIns
         self.chartMorningStates = chartMorningStates
         self.chartNightOutcomes = chartNightOutcomes
         self.chartExclusionNote = chartExclusionNote
@@ -156,6 +180,10 @@ struct ExploreOutcomesScreen: View {
         self.flareSuggestion = flareSuggestion
         self.onAcceptFlareSuggestion = onAcceptFlareSuggestion
         self.onDismissFlareSuggestion = onDismissFlareSuggestion
+        self.selectedHealthLensPillarIDs = selectedHealthLensPillarIDs
+        self.isHealthLensAllSelected = isHealthLensAllSelected
+        self.onSetHealthLensPillar = onSetHealthLensPillar
+        self.onSelectAllHealthLensPillars = onSelectAllHealthLensPillars
         self.selectedSkinID = selectedSkinID
         _isFoundationCheckInExpanded = State(
             initialValue: !Self.isFoundationCheckInComplete(
@@ -171,6 +199,7 @@ struct ExploreOutcomesScreen: View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: TelocareTheme.Spacing.lg) {
+                    harvestTableSection
                     flareSuggestionSection
                     morningGreetingCard
                     foundationCheckInSection
@@ -222,6 +251,42 @@ struct ExploreOutcomesScreen: View {
                 isFoundationCheckInExpanded = false
             }
         }
+    }
+
+    private var harvestTableSnapshots: [HarvestTableSnapshot] {
+        visualSnapshotBuilder.buildHarvestTable(
+            pillars: orderedPillars,
+            inputs: allInputs,
+            planningMetadataByInterventionID: planningMetadataByInterventionID,
+            pillarAssignments: pillarAssignments,
+            pillarCheckIns: pillarCheckIns
+        )
+    }
+
+    @ViewBuilder
+    private var harvestTableSection: some View {
+        if !harvestTableSnapshots.isEmpty {
+            HarvestTableGridSection(
+                snapshots: harvestTableSnapshots,
+                selectedPillarIDs: selectedHealthLensPillarIDs,
+                isAllSelected: isHealthLensAllSelected,
+                onTapPillar: toggleLensSelection(for:),
+                onShowAll: onSelectAllHealthLensPillars,
+                accessibilityIdentifier: AccessibilityID.exploreOutcomesHarvestTable,
+                cardAccessibilityIdentifier: AccessibilityID.exploreOutcomesHarvestTableCard(pillar:)
+            )
+        }
+    }
+
+    private func toggleLensSelection(for pillar: HealthPillar) {
+        if !isHealthLensAllSelected
+            && selectedHealthLensPillarIDs.count == 1
+            && selectedHealthLensPillarIDs.contains(pillar.id) {
+            onSelectAllHealthLensPillars()
+            return
+        }
+
+        onSetHealthLensPillar(pillar)
     }
 
     @ViewBuilder

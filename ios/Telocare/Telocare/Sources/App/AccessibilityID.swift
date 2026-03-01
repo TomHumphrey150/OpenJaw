@@ -107,10 +107,12 @@ enum AccessibilityID {
     static let exploreInputAppleHealthDisconnect = "explore.inputs.applehealth.disconnect"
     static let exploreInputAppleHealthRefresh = "explore.inputs.applehealth.refresh"
     static let exploreInputsUnifiedScroll = "explore.inputs.unified.scroll"
+    static let exploreInputsKitchenGarden = "explore.inputs.kitchen.garden"
     static let exploreInputsPinnedHeader = "explore.inputs.header.pinned"
     static let exploreInputsFilterPending = "explore.inputs.filter.pending"
     static let exploreInputsFilterCompleted = "explore.inputs.filter.completed"
     static let exploreInputsFilterAvailable = "explore.inputs.filter.available"
+    static let exploreInputsEmptySwitchToCompleted = "explore.inputs.empty.switch.completed"
     static let exploreInputsEmptySwitchToAvailable = "explore.inputs.empty.switch.available"
     static let exploreInputsGardenHierarchy = "explore.inputs.garden.hierarchy"
     static let exploreInputsPillarOverview = "explore.inputs.pillar.overview"
@@ -124,6 +126,7 @@ enum AccessibilityID {
     static let exploreInputsLensPillar = "explore.inputs.lens.pillar"
     static let exploreInputsLensManagePillars = "explore.inputs.lens.manage.pillars"
     static let exploreOutcomesFlareSuggestion = "explore.outcomes.flare.suggestion"
+    static let exploreOutcomesHarvestTable = "explore.outcomes.harvest.table"
     static let exploreOutcomesFlareAccept = "explore.outcomes.flare.accept"
     static let exploreOutcomesFlareDismiss = "explore.outcomes.flare.dismiss"
     static let exploreSituationEditButton = "explore.situation.edit.button"
@@ -164,6 +167,10 @@ enum AccessibilityID {
         "explore.inputs.pillar.section.\(pillar)"
     }
 
+    static func exploreInputsKitchenGardenCard(pillar: String) -> String {
+        "explore.inputs.kitchen.garden.card.\(pillar)"
+    }
+
     static func exploreInputsLensPillar(pillar: String) -> String {
         "explore.inputs.lens.pillar.\(pillar)"
     }
@@ -174,5 +181,9 @@ enum AccessibilityID {
 
     static func exploreOutcomesFoundationQuestion(questionID: String) -> String {
         "explore.outcomes.foundation.question.\(questionID)"
+    }
+
+    static func exploreOutcomesHarvestTableCard(pillar: String) -> String {
+        "explore.outcomes.harvest.table.card.\(pillar)"
     }
 }

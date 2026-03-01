@@ -754,6 +754,10 @@ final class AppViewModel {
         nightOutcomesFilteredForCurrentLens
     }
 
+    var projectedPillarCheckIns: [PillarCheckIn] {
+        pillarCheckIns
+    }
+
     var projectedProgressExcludedChartsNote: String? {
         guard !isGlobalLensAllSelected else {
             return nil

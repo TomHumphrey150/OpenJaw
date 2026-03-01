@@ -12,6 +12,7 @@ struct ExploreTabShell: View {
             lazyTab(tab: .inputs, accessibilityID: AccessibilityID.exploreInputsScreen) {
                 ExploreInputsScreen(
                     inputs: viewModel.projectedInputs,
+                    allInputs: viewModel.snapshot.inputs,
                     graphData: viewModel.graphData,
                     onToggleCheckedToday: viewModel.toggleInputCheckedToday,
                     onIncrementDose: viewModel.incrementInputDose,
@@ -29,7 +30,7 @@ struct ExploreTabShell: View {
                     onToggleActive: viewModel.toggleInputActive,
                     planningMetadataByInterventionID: viewModel.projectedPlanningMetadataByInterventionID,
                     pillarAssignments: viewModel.projectedPillarAssignments,
-                    orderedPillars: viewModel.projectedHealthLensPillars,
+                    orderedPillars: viewModel.projectedVisibleHealthLensPillars,
                     habitRungStatusByInterventionID: viewModel.projectedHabitRungStatusByInterventionID,
                     plannedInterventionIDs: viewModel.projectedPlannedInterventionIDs,
                     onRecordHigherRungCompletion: { interventionID, rungID in
@@ -38,6 +39,10 @@ struct ExploreTabShell: View {
                             achievedRungID: rungID
                         )
                     },
+                    selectedHealthLensPillarIDs: Set(viewModel.projectedSelectedHealthLensPillars.map(\.id)),
+                    isHealthLensAllSelected: viewModel.projectedHealthLensSelection.isAllSelected,
+                    onSetHealthLensPillar: viewModel.setHealthLensPillar,
+                    onSelectAllHealthLensPillars: viewModel.selectAllHealthLensPillars,
                     selectedSkinID: selectedSkinID
                 )
             }
@@ -86,6 +91,11 @@ struct ExploreTabShell: View {
                     outcomes: viewModel.snapshot.outcomes,
                     outcomeRecords: viewModel.snapshot.outcomeRecords,
                     outcomesMetadata: viewModel.snapshot.outcomesMetadata,
+                    allInputs: viewModel.snapshot.inputs,
+                    planningMetadataByInterventionID: viewModel.projectedPlanningMetadataByInterventionID,
+                    pillarAssignments: viewModel.projectedPillarAssignments,
+                    orderedPillars: viewModel.projectedVisibleHealthLensPillars,
+                    pillarCheckIns: viewModel.projectedPillarCheckIns,
                     chartMorningStates: viewModel.projectedProgressMorningStatesForCharts,
                     chartNightOutcomes: viewModel.projectedProgressNightOutcomesForCharts,
                     chartExclusionNote: viewModel.projectedProgressExcludedChartsNote,
@@ -132,6 +142,10 @@ struct ExploreTabShell: View {
                     flareSuggestion: viewModel.projectedFlareSuggestion,
                     onAcceptFlareSuggestion: viewModel.acceptFlareSuggestion,
                     onDismissFlareSuggestion: viewModel.dismissFlareSuggestion,
+                    selectedHealthLensPillarIDs: Set(viewModel.projectedSelectedHealthLensPillars.map(\.id)),
+                    isHealthLensAllSelected: viewModel.projectedHealthLensSelection.isAllSelected,
+                    onSetHealthLensPillar: viewModel.setHealthLensPillar,
+                    onSelectAllHealthLensPillars: viewModel.selectAllHealthLensPillars,
                     selectedSkinID: selectedSkinID
                 )
             }

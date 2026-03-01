@@ -1336,15 +1336,41 @@ struct AppViewModelTests {
     }
 
     @Test func exploreInputsEmptyStateGuidanceNudgesToAvailableWhenItemsExist() {
-        let pendingWithAvailable = ExploreInputsEmptyStateGuidance(filterMode: .pending, availableCount: 4)
+        let pendingWithAvailable = ExploreInputsEmptyStateGuidance(
+            filterMode: .pending,
+            availableCount: 4,
+            completedCount: 0
+        )
         #expect(pendingWithAvailable.shouldShowAvailableNudge)
         #expect(pendingWithAvailable.message.contains("Available"))
+        #expect(pendingWithAvailable.availableButtonTitle == "See 4 available habits")
+        #expect(pendingWithAvailable.shouldShowCompletedNudge == false)
 
-        let completedWithAvailable = ExploreInputsEmptyStateGuidance(filterMode: .completed, availableCount: 2)
+        let pendingWithCompletedAndAvailable = ExploreInputsEmptyStateGuidance(
+            filterMode: .pending,
+            availableCount: 3,
+            completedCount: 2
+        )
+        #expect(pendingWithCompletedAndAvailable.shouldShowCompletedNudge)
+        #expect(pendingWithCompletedAndAvailable.shouldShowAvailableNudge)
+        #expect(pendingWithCompletedAndAvailable.completedButtonTitle == "Show 2 done habits")
+        #expect(pendingWithCompletedAndAvailable.message == "No habits left to do right now.")
+
+        let completedWithAvailable = ExploreInputsEmptyStateGuidance(
+            filterMode: .completed,
+            availableCount: 2,
+            completedCount: 0
+        )
         #expect(completedWithAvailable.shouldShowAvailableNudge)
+        #expect(completedWithAvailable.shouldShowCompletedNudge == false)
 
-        let available = ExploreInputsEmptyStateGuidance(filterMode: .available, availableCount: 5)
+        let available = ExploreInputsEmptyStateGuidance(
+            filterMode: .available,
+            availableCount: 5,
+            completedCount: 1
+        )
         #expect(available.shouldShowAvailableNudge == false)
+        #expect(available.shouldShowCompletedNudge == false)
     }
 
     @Test func lensFilteringParitiesAcrossInputsMapAndProgressCharts() {

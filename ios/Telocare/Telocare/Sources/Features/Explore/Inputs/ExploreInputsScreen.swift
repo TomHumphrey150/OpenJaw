@@ -3,6 +3,7 @@ import UIKit
 
 struct ExploreInputsScreen: View {
     let inputs: [InputStatus]
+    let allInputs: [InputStatus]
     let graphData: CausalGraphData
     let onToggleCheckedToday: (String) -> Void
     let onIncrementDose: (String) -> Void
@@ -20,14 +21,17 @@ struct ExploreInputsScreen: View {
     let habitRungStatusByInterventionID: [String: HabitRungStatus]
     let plannedInterventionIDs: Set<String>
     let onRecordHigherRungCompletion: (String, String) -> Void
+    let selectedHealthLensPillarIDs: Set<String>
+    let isHealthLensAllSelected: Bool
+    let onSetHealthLensPillar: (HealthPillar) -> Void
+    let onSelectAllHealthLensPillars: () -> Void
     let selectedSkinID: TelocareSkinID
 
     @State private var navigationPath = NavigationPath()
     @State private var filterMode: InputFilterMode
-    @State private var gardenSelection = GardenHierarchySelection.all
     @State private var pendingHigherRungCompletion: HigherRungCompletionPrompt?
-    private let gardenHierarchyBuilder = GardenHierarchyBuilder()
     private let pillarInputsSectionBuilder = PillarInputsSectionBuilder()
+    private let visualSnapshotBuilder = PillarVisualSnapshotBuilder()
     private static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -41,6 +45,7 @@ struct ExploreInputsScreen: View {
 
     init(
         inputs: [InputStatus],
+        allInputs: [InputStatus],
         graphData: CausalGraphData,
         onToggleCheckedToday: @escaping (String) -> Void,
         onIncrementDose: @escaping (String) -> Void,
@@ -58,9 +63,14 @@ struct ExploreInputsScreen: View {
         habitRungStatusByInterventionID: [String: HabitRungStatus],
         plannedInterventionIDs: Set<String>,
         onRecordHigherRungCompletion: @escaping (String, String) -> Void,
+        selectedHealthLensPillarIDs: Set<String>,
+        isHealthLensAllSelected: Bool,
+        onSetHealthLensPillar: @escaping (HealthPillar) -> Void,
+        onSelectAllHealthLensPillars: @escaping () -> Void,
         selectedSkinID: TelocareSkinID
     ) {
         self.inputs = inputs
+        self.allInputs = allInputs
         self.graphData = graphData
         self.onToggleCheckedToday = onToggleCheckedToday
         self.onIncrementDose = onIncrementDose
@@ -78,6 +88,10 @@ struct ExploreInputsScreen: View {
         self.habitRungStatusByInterventionID = habitRungStatusByInterventionID
         self.plannedInterventionIDs = plannedInterventionIDs
         self.onRecordHigherRungCompletion = onRecordHigherRungCompletion
+        self.selectedHealthLensPillarIDs = selectedHealthLensPillarIDs
+        self.isHealthLensAllSelected = isHealthLensAllSelected
+        self.onSetHealthLensPillar = onSetHealthLensPillar
+        self.onSelectAllHealthLensPillars = onSelectAllHealthLensPillars
         self.selectedSkinID = selectedSkinID
         _filterMode = State(initialValue: inputs.contains(where: \.isActive) ? .pending : .available)
     }
@@ -87,6 +101,7 @@ struct ExploreInputsScreen: View {
             ScrollView {
                 LazyVStack(spacing: TelocareTheme.Spacing.md, pinnedViews: [.sectionHeaders]) {
                     Section {
+                        kitchenGardenSection
                         pillarOverviewSection
                         inputsListSection
                     } header: {
@@ -157,67 +172,48 @@ struct ExploreInputsScreen: View {
         inputs.first { $0.id == inputID }
     }
 
-    // MARK: - Garden Overview
-
-    private var gardenHierarchyResult: GardenHierarchyBuildResult {
-        gardenHierarchyBuilder.build(
-            inputs: inputs,
-            graphData: graphData,
-            selection: gardenSelection
+    private var kitchenGardenSnapshots: [KitchenGardenSnapshot] {
+        visualSnapshotBuilder.buildKitchenGarden(
+            pillars: orderedPillars,
+            inputs: allInputs,
+            planningMetadataByInterventionID: planningMetadataByInterventionID,
+            pillarAssignments: pillarAssignments
         )
     }
 
-    private var resolvedNodePath: [String] {
-        gardenHierarchyResult.resolvedNodePath
-    }
-
-    private var resolvedClusterPath: [GardenClusterSnapshot] {
-        gardenHierarchyResult.resolvedClusterPath
-    }
-
-    private var breadcrumbSegments: [GardenBreadcrumbSegment] {
-        var segments = [GardenBreadcrumbSegment(depth: 0, title: "All Gardens")]
-
-        for (index, cluster) in resolvedClusterPath.enumerated() {
-            segments.append(
-                GardenBreadcrumbSegment(
-                    depth: index + 1,
-                    title: cluster.title
-                )
+    @ViewBuilder
+    private var kitchenGardenSection: some View {
+        if !kitchenGardenSnapshots.isEmpty {
+            KitchenGardenGridSection(
+                snapshots: kitchenGardenSnapshots,
+                selectedPillarIDs: selectedHealthLensPillarIDs,
+                isAllSelected: isHealthLensAllSelected,
+                onTapPillar: toggleLensSelection(for:),
+                onShowAll: onSelectAllHealthLensPillars,
+                accessibilityIdentifier: AccessibilityID.exploreInputsKitchenGarden,
+                cardAccessibilityIdentifier: AccessibilityID.exploreInputsKitchenGardenCard(pillar:)
             )
+            .padding(.horizontal, TelocareTheme.Spacing.md)
+            .padding(.top, TelocareTheme.Spacing.sm)
         }
-
-        return segments
     }
 
-    private var hierarchyCurrentLevel: GardenHierarchyLevel? {
-        gardenHierarchyResult.levels.last
-    }
-
-    private var hierarchyCurrentClusters: [GardenClusterSnapshot] {
-        hierarchyCurrentLevel?.clusters ?? []
-    }
-
-    private var currentLeafCluster: GardenClusterSnapshot? {
-        guard !resolvedNodePath.isEmpty else {
-            return nil
-        }
-        guard hierarchyCurrentClusters.isEmpty else {
-            return nil
+    private func toggleLensSelection(for pillar: HealthPillar) {
+        if !isHealthLensAllSelected
+            && selectedHealthLensPillarIDs.count == 1
+            && selectedHealthLensPillarIDs.contains(pillar.id) {
+            onSelectAllHealthLensPillars()
+            return
         }
 
-        return gardenHierarchyBuilder.leafCluster(
-            nodePath: resolvedNodePath,
-            filteredInputs: hierarchyFilteredInputs,
-            graphData: graphData
-        )
+        onSetHealthLensPillar(pillar)
     }
 
     @ViewBuilder
     private var pinnedHeaderSection: some View {
         VStack(spacing: TelocareTheme.Spacing.sm) {
             HStack {
-                Text("Health Pillars")
+                Text("Habit Filters")
                     .font(TelocareTheme.Typography.headline)
                     .foregroundStyle(TelocareTheme.charcoal)
                 Spacer()
@@ -245,53 +241,29 @@ struct ExploreInputsScreen: View {
                         .foregroundStyle(TelocareTheme.success)
                 }
             }
+
+            if !isHealthLensAllSelected && !selectedHealthLensPillarIDs.isEmpty {
+                Text(selectedLensSummaryMessage)
+                    .font(TelocareTheme.Typography.caption)
+                    .foregroundStyle(TelocareTheme.warmGray)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(.horizontal, TelocareTheme.Spacing.md)
         .padding(.top, TelocareTheme.Spacing.xs)
         .accessibilityIdentifier(AccessibilityID.exploreInputsPillarOverview)
     }
 
-    private func selectBreadcrumbDepth(_ depth: Int) {
-        if depth <= 0 {
-            gardenSelection = .all
-            return
-        }
-
-        let keepCount = min(depth, resolvedNodePath.count)
-        gardenSelection.selectedNodePath = Array(resolvedNodePath.prefix(keepCount))
-    }
-
-    private func goBackOneLevel() {
-        guard !resolvedNodePath.isEmpty else {
-            return
-        }
-
-        gardenSelection.selectedNodePath = Array(resolvedNodePath.dropLast())
-    }
-
-    private func selectSubGarden(_ nodeID: String) {
-        gardenSelection.selectedNodePath = resolvedNodePath + [nodeID]
-    }
-
-    private var hierarchyFilteredInputs: [InputStatus] {
-        gardenHierarchyResult.filteredInputs
-    }
-
-    private var hierarchyFilteredActiveInputs: [InputStatus] {
+    private var activeInputs: [InputStatus] {
         inputs.filter(\.isActive)
     }
 
     private var activeInputCount: Int {
-        hierarchyFilteredActiveInputs.count
+        activeInputs.count
     }
 
     private var checkedTodayCount: Int {
-        hierarchyFilteredActiveInputs.filter(\.isCheckedToday).count
-    }
-
-    private var overallCompletion: Double {
-        guard !hierarchyFilteredActiveInputs.isEmpty else { return 0 }
-        return Double(checkedTodayCount) / Double(hierarchyFilteredActiveInputs.count)
+        activeInputs.filter(\.isCheckedToday).count
     }
 
     // MARK: - Filter Pills
@@ -340,7 +312,8 @@ struct ExploreInputsScreen: View {
     private var emptyStateGuidance: ExploreInputsEmptyStateGuidance {
         ExploreInputsEmptyStateGuidance(
             filterMode: filterMode,
-            availableCount: countFor(.available)
+            availableCount: countFor(.available),
+            completedCount: countFor(.completed)
         )
     }
 
@@ -372,6 +345,7 @@ struct ExploreInputsScreen: View {
                                 InputCard(
                                     input: input,
                                     planningMetadata: planningMetadataByInterventionID[input.id],
+                                    pillarTitles: pillarTitlesByInterventionID[input.id] ?? [],
                                     rungStatus: habitRungStatusByInterventionID[input.id],
                                     isPlannedToday: plannedInterventionIDs.contains(input.id),
                                     onToggle: { handleCompletionTap(for: input) },
@@ -395,12 +369,74 @@ struct ExploreInputsScreen: View {
         }
     }
 
+    private var pillarTitlesByInterventionID: [String: [String]] {
+        let rankByPillarID = Dictionary(
+            uniqueKeysWithValues: orderedPillars.enumerated().map { index, definition in
+                (definition.id.id, index)
+            }
+        )
+        let titleByPillarID = Dictionary(
+            uniqueKeysWithValues: orderedPillars.map { definition in
+                (definition.id.id, definition.title)
+            }
+        )
+
+        var idsByInterventionID: [String: Set<String>] = [:]
+        for (interventionID, metadata) in planningMetadataByInterventionID {
+            idsByInterventionID[interventionID, default: []].formUnion(metadata.pillars.map(\.id))
+        }
+        for assignment in pillarAssignments {
+            let pillarID = assignment.pillarId.trimmingCharacters(in: .whitespacesAndNewlines)
+            if pillarID.isEmpty {
+                continue
+            }
+            for interventionID in assignment.interventionIds {
+                idsByInterventionID[interventionID, default: []].insert(pillarID)
+            }
+        }
+
+        return idsByInterventionID.mapValues { pillarIDs in
+            pillarIDs
+                .sorted { left, right in
+                    let leftRank = rankByPillarID[left] ?? Int.max
+                    let rightRank = rankByPillarID[right] ?? Int.max
+                    if leftRank != rightRank {
+                        return leftRank < rightRank
+                    }
+                    return left.localizedCaseInsensitiveCompare(right) == .orderedAscending
+                }
+                .map { pillarID in
+                    titleByPillarID[pillarID] ?? HealthPillar(id: pillarID).displayName
+                }
+        }
+    }
+
     /// Inputs sorted by impact score (most useful first)
     private var sortedInputs: [InputStatus] {
         InputScoring.sortedByImpact(inputs: inputs, graphData: graphData)
     }
 
     private var filteredPillarSections: [PillarInputsSection] {
+        if !isHealthLensAllSelected,
+            selectedHealthLensPillarIDs.count == 1,
+            let selectedPillarID = selectedHealthLensPillarIDs.first {
+            let selectedPillar = HealthPillar(id: selectedPillarID)
+            let filtered = filteredInputs(from: sortedInputs)
+            if filtered.isEmpty {
+                return []
+            }
+
+            let focusedTitle = orderedPillars.first(where: { $0.id == selectedPillar })?.title
+                ?? selectedPillar.displayName
+            return [
+                PillarInputsSection(
+                    pillar: selectedPillar,
+                    title: focusedTitle,
+                    inputs: filtered
+                ),
+            ]
+        }
+
         let sections = pillarInputsSectionBuilder.build(
             inputs: sortedInputs,
             planningMetadataByInterventionID: planningMetadataByInterventionID,
@@ -419,6 +455,13 @@ struct ExploreInputsScreen: View {
                 inputs: filtered
             )
         }
+    }
+
+    private var selectedLensSummaryMessage: String {
+        if selectedHealthLensPillarIDs.count == 1 {
+            return "Showing all habits linked to this pillar, including cross-pillar links."
+        }
+        return "Showing all habits linked to selected pillars, including cross-pillar links."
     }
 
     private func filteredInputs(from source: [InputStatus]) -> [InputStatus] {
@@ -530,20 +573,51 @@ struct ExploreInputsScreen: View {
                 .font(TelocareTheme.Typography.body)
                 .foregroundStyle(TelocareTheme.warmGray)
                 .multilineTextAlignment(.center)
-            if emptyStateGuidance.shouldShowAvailableNudge {
+            if emptyStateGuidance.shouldShowCompletedNudge {
                 Button {
-                    filterMode = .available
+                    filterMode = .completed
                 } label: {
                     HStack(spacing: TelocareTheme.Spacing.xs) {
-                        Text("See available habits")
-                        Image(systemName: "arrow.right")
+                        Text(emptyStateGuidance.completedButtonTitle)
+                        Image(systemName: "checkmark.circle")
                     }
                     .font(TelocareTheme.Typography.body)
                     .padding(.horizontal, TelocareTheme.Spacing.md)
                     .padding(.vertical, TelocareTheme.Spacing.sm)
                 }
                 .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier(AccessibilityID.exploreInputsEmptySwitchToAvailable)
+                .accessibilityIdentifier(AccessibilityID.exploreInputsEmptySwitchToCompleted)
+            }
+            if emptyStateGuidance.shouldShowAvailableNudge {
+                if emptyStateGuidance.shouldShowCompletedNudge {
+                    Button {
+                        filterMode = .available
+                    } label: {
+                        HStack(spacing: TelocareTheme.Spacing.xs) {
+                            Text(emptyStateGuidance.availableButtonTitle)
+                            Image(systemName: "arrow.right")
+                        }
+                        .font(TelocareTheme.Typography.body)
+                        .padding(.horizontal, TelocareTheme.Spacing.md)
+                        .padding(.vertical, TelocareTheme.Spacing.sm)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier(AccessibilityID.exploreInputsEmptySwitchToAvailable)
+                } else {
+                    Button {
+                        filterMode = .available
+                    } label: {
+                        HStack(spacing: TelocareTheme.Spacing.xs) {
+                            Text(emptyStateGuidance.availableButtonTitle)
+                            Image(systemName: "arrow.right")
+                        }
+                        .font(TelocareTheme.Typography.body)
+                        .padding(.horizontal, TelocareTheme.Spacing.md)
+                        .padding(.vertical, TelocareTheme.Spacing.sm)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier(AccessibilityID.exploreInputsEmptySwitchToAvailable)
+                }
             }
             Spacer()
         }
@@ -571,10 +645,14 @@ enum InputFilterMode: CaseIterable {
 struct ExploreInputsEmptyStateGuidance: Equatable {
     let filterMode: InputFilterMode
     let availableCount: Int
+    let completedCount: Int
 
     var message: String {
         switch filterMode {
         case .pending:
+            if shouldShowCompletedNudge {
+                return "No habits left to do right now."
+            }
             if shouldShowAvailableNudge {
                 return "No active habits here right now.\nYou can add habits from Available."
             }
@@ -588,6 +666,24 @@ struct ExploreInputsEmptyStateGuidance: Equatable {
 
     var shouldShowAvailableNudge: Bool {
         filterMode != .available && availableCount > 0
+    }
+
+    var shouldShowCompletedNudge: Bool {
+        filterMode == .pending && completedCount > 0
+    }
+
+    var availableButtonTitle: String {
+        if availableCount == 1 {
+            return "See 1 available habit"
+        }
+        return "See \(availableCount) available habits"
+    }
+
+    var completedButtonTitle: String {
+        if completedCount == 1 {
+            return "Show 1 done habit"
+        }
+        return "Show \(completedCount) done habits"
     }
 }
 
@@ -634,12 +730,21 @@ private struct HigherRungCompletionPrompt {
 private struct InputCard: View {
     let input: InputStatus
     let planningMetadata: HabitPlanningMetadata?
+    let pillarTitles: [String]
     let rungStatus: HabitRungStatus?
     let isPlannedToday: Bool
     let onToggle: () -> Void
     let onIncrementDose: () -> Void
     let onToggleActive: () -> Void
     let onShowDetails: () -> Void
+
+    private var visiblePillarTitles: [String] {
+        Array(pillarTitles.prefix(2))
+    }
+
+    private var hiddenPillarCount: Int {
+        max(0, pillarTitles.count - visiblePillarTitles.count)
+    }
 
     var body: some View {
         WarmCard(padding: 0) {
@@ -658,13 +763,34 @@ private struct InputCard: View {
 
                             if let planningMetadata {
                                 HStack(spacing: TelocareTheme.Spacing.xs) {
-                                    Text(planningMetadata.pillars.first?.displayName ?? "General")
-                                        .font(TelocareTheme.Typography.small)
-                                        .foregroundStyle(TelocareTheme.warmGray)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(TelocareTheme.peach.opacity(0.45))
-                                        .clipShape(Capsule())
+                                    if visiblePillarTitles.isEmpty {
+                                        Text("General")
+                                            .font(TelocareTheme.Typography.small)
+                                            .foregroundStyle(TelocareTheme.warmGray)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(TelocareTheme.peach.opacity(0.45))
+                                            .clipShape(Capsule())
+                                    } else {
+                                        ForEach(visiblePillarTitles, id: \.self) { pillarTitle in
+                                            Text(pillarTitle)
+                                                .font(TelocareTheme.Typography.small)
+                                                .foregroundStyle(TelocareTheme.warmGray)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(TelocareTheme.peach.opacity(0.45))
+                                                .clipShape(Capsule())
+                                        }
+                                        if hiddenPillarCount > 0 {
+                                            Text("+\(hiddenPillarCount)")
+                                                .font(TelocareTheme.Typography.small)
+                                                .foregroundStyle(TelocareTheme.warmGray)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(TelocareTheme.peach.opacity(0.45))
+                                                .clipShape(Capsule())
+                                        }
+                                    }
 
                                     if planningMetadata.isAcute {
                                         Text("Acute")
